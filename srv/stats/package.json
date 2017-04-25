@@ -1,0 +1,11 @@
+{
+  "name": "stats-history",
+  "version": "1.0.0",
+  "description": "download the statistics packages for an aws account",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Jesse Bangs",
+  "license": "ISC"
+}
