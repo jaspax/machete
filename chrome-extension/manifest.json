@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "AMS Unlocked",
-  "description": "This extension extends and enriches the reporting available at ams.amazon.com",
+  "description": "Make your AMS reporting fully awesome.",
   "version": "1.0",
 
   "page_action": {
@@ -17,13 +17,13 @@
     "https://*.amazon.com/*"
   ],
   "background": {
-      "scripts": ["background.js", "ext/jquery.min.js"],
+      "scripts": ["background.js", "extern/jquery.min.js"],
       "persistent": false
   },
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/*"],
-          "js": ["inject.js", "ext/jquery.min.js"]
+          "js": ["inject.js", "extern/jquery.min.js"]
       }
   ]
 }
