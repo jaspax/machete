@@ -17,13 +17,13 @@
     "https://*.amazon.com/*"
   ],
   "background": {
-      "scripts": ["background.js", "jquery.min.js"],
+      "scripts": ["background.js", "ext/jquery.min.js"],
       "persistent": false
   },
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/*"],
-          "js": ["jquery.min.js", "load_data.js"]
+          "js": ["inject.js", "ext/jquery.min.js"]
       }
   ]
 }
