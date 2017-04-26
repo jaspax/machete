@@ -24,7 +24,7 @@
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/*"],
-          "js": ["inject.js", "extern/jquery.min.js", "extern/plotly-latest.min.js"]
+          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "inject.js"]
       }
   ]
 }
