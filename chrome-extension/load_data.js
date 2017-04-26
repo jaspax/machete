@@ -15,6 +15,12 @@ for (let btn in buttons) {
 }
 */
 
+chrome.runtime.sendMessage({
+    action: 'setSession', 
+    entityId: get_entityid(), 
+    cookies: document.cookie,
+});
+
 function get_entityid() {
     let qstring = window.location.search.substring(1);
     let qs = qstring.split('&');
@@ -29,23 +35,11 @@ function get_entityid() {
 
 function load_data_handler(campaign) {
     return () => {
-        let entityId = get_entityid();
-        let url = 'https://ams.amazon.com/api/rta/campaigns';
-        $.ajax(url, {
-            method: 'GET',
-            data: {
-                entityId: entityId,
-                status: null,
-                startDate: null,
-                endDate: null,
-            },
-            dataType: 'json',
-            success: (data, textStatus, xhr) => {
-                console.log(textStatus, ": ", data);
-            },
-            error: (xhr, textStatus, error) => {
-                console.warn(textStatus, ": ", error);
-            },
-        });
-    }
+        console.log("requesting data from background service");
+        chrome.runtime.sendMessage({
+            action: 'requestData',
+            entityId: get_entityid(),
+        }, 
+        (response) => console.log(response));
+    };
 }

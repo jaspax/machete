@@ -12,9 +12,14 @@
   },
   "permissions": [
     "tabs",
+    "alarms",
     "http://*.amazon.com/*",
     "https://*.amazon.com/*"
   ],
+  "background": {
+      "scripts": ["background.js", "jquery.min.js"],
+      "persistent": false
+  },
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/*"],
