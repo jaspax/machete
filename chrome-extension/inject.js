@@ -1,6 +1,8 @@
-const cellClass = 'ams-unlocked-showhistory';
+const prefix = 'ams-unlocked';
+const showHistoryClass = `${prefix}-showhistory`;
+const chartId = `${prefix}-chart`;
 
-const historyLink = $(`<a href="#" class="${cellClass}">Show performance history</a>`);
+const historyLink = $(`<a href="#" class="${showHistoryClass}">Show performance history</a>`);
 historyLink.click(function(evt) {
     // Get the campaign ID with a horrible bit of hackery. TODO: this is
     // tremendously fragile.
@@ -11,13 +13,18 @@ historyLink.click(function(evt) {
     campaign = campaign.substring(0, 22); // first 22 chars are the campaign ID; timestamp is appended for some reason
     console.log("discovered campaign", campaign);
     getDataHistory((data) => {
-        console.log("campaign data", data[campaign]);
+        showDataChart(campaign);
     });
 });
 
 window.setInterval(() => {
-    let actionCells = $('td.actions-cell').not(`:has(.${cellClass})`);
+    let actionCells = $('td.actions-cell').not(`:has(.${showHistoryClass})`);
     actionCells.append(historyLink);
+
+    let dashboard = $('#campaignDashboard');
+    if (dashboard.find(`#${chartId}`).length == 0) {
+        dashboard.append($(`<div id="${chartId}" style="display:none"></div>`));
+    }
 }, 100);
 
 let campaign_data = {}; // Populated on request
@@ -46,21 +53,21 @@ function getDataHistory(cb) {
         entityId: getEntityId(),
     },
     (response) => {
-        campaign_data = transformHistoryData(response)
+        campaign_data = transformHistoryData(response, {differential: true})
         cb(campaign_data);
     });
 }
 
 function showDataChart(campaign) {
-    const chartId = 'ams-unlocked-chart-'+campaign;
-    $('#'+chartId).slideDown();
+    let $chart = $('#'+chartId);
+    $chart.slideDown();
 
     var data = campaign_data[campaign];
 
     var impressions = {
       x: data.timestamps, 
       y: data.impressions,
-      mode: 'lines',
+      mode: 'lines+markers',
       connectgaps: true
     };
     var clicks = {
@@ -76,28 +83,26 @@ function showDataChart(campaign) {
       connectgaps: true
     }
 
-    var data = [impressions, clicks, sales];
+    //var series = [impressions, clicks, sales];
+    //var series = [impressions, clicks];
+    var series = [impressions];
 
     var layout = {
-      title: 'Performance over time',
-      showlegend: false
+      title: data.name,
+      showlegend: false,
+      height: 600,
+      width: $('#campaignDashboard').width(),
+      autosize: true,
     };
 
-    Plotly.newPlot(chartId, data, layout);
+    Plotly.newPlot(chartId, series, layout);
 }
 
-function transformHistoryData(data) {
-    // Get the first timestamp, as we'll need it later because we care mostly
-    // about relative timestamps
-    let firstTimestamp = Number.MAX_SAFE_INTEGER;
-    for (let d of data) {
-        if (parseInt(d.timestamp) < firstTimestamp)
-            firstTimestamp = d.timestamp;
-    }
-
+function transformHistoryData(data, opt) {
     // We have a series of timestamped snapshots; we want a series of parallel
     // arrays keyed by campaign id
     let campaign = {};
+    let lastItems = {};
     for (let d of data) {
         for (let item of d.aaData) {
             if (!campaign[item.campaignId]) {
@@ -110,11 +115,34 @@ function transformHistoryData(data) {
                 };
             }
             let c = campaign[item.campaignId];
-            c.timestamps.push(d.timestamp - firstTimestamp);
-            c.impressions.push(item.impressions);
-            c.clicks.push(item.clicks);
-            c.salesCount.push(item.attributedPurchases);
-            c.salesValue.push(item.attributedPurchasesCost);
+            c.name = item.name;
+
+            let lastItem = lastItems[item.campaignId];
+            lastItems[item.campaignId] = item;
+
+            // XXX: quick hack -- should do this in backend
+            if (lastItem) {
+                if (lastItem.impressions == item.impressions || lastItem.impressions > item.impressions)
+                    continue;
+            }
+
+            c.timestamps.push(new Date(d.timestamp).toISOString());
+            if (opt.differential) {
+                if (lastItem) {
+                    c.impressions.push(item.impressions - lastItem.impressions);
+                    c.clicks.push(item.clicks - lastItem.clicks);
+                    c.salesCount.push(item.attributedPurchases - lastItem.attributedPurchases);
+                    c.salesValue.push(item.attributedPurchasesCost - lastItem.attributedPurchasesCost);
+                }
+            }
+            else {
+                c.impressions.push(item.impressions);
+                c.clicks.push(item.clicks);
+                c.salesCount.push(item.attributedPurchases);
+                c.salesValue.push(item.attributedPurchasesCost);
+            }
+
+            lastItem = item;
         }
     }
 

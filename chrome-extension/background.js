@@ -2,7 +2,7 @@ const getSessionKey = req => `session_${req.entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 const getIndexKey = entityId => `index_${entityId}`;
 const getDataKey = (entityId, timestamp) => `data_${entityId}_${timestamp}`;
-const getTimestampFromKey = dataKey => dataKey.split('_').pop();
+const getTimestampFromKey = dataKey => parseInt(dataKey.split('_').pop());
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
@@ -31,7 +31,7 @@ function setSession(req, sendResponse) {
             let period = chrome.management.getSelf().installType == 'development' ? 1 : 60;
             chrome.alarms.create(sessionKey, {
                 when: Date.now() + 500,
-                periodInMinutes: period,
+                periodInMinutes: 60,
             });
             console.log('set alarm for', sessionKey);
         }
@@ -98,6 +98,8 @@ function storeIndex(entityId, dataKey) {
     localStorage.setItem(indexKey, JSON.stringify(index));
 }
 
+const numericKeys = ['impressions', 'clicks', 'attributedPurchases', 'attributedPurchasesCost'];
+
 function getDataHistory(entityId, sendResponse) { // TODO: date ranges, etc.
     let dataList = [];
     let index = getIndex(entityId);
@@ -107,6 +109,11 @@ function getDataHistory(entityId, sendResponse) { // TODO: date ranges, etc.
             let data = JSON.parse(dataJson);
             if (data && typeof data == 'object') {
                 data.timestamp = getTimestampFromKey(dataKey);
+                for (let key of numericKeys) {
+                    for (let stat of data.aaData) {
+                        stat[key] = parseFloat(stat[key].replace(',', ''));
+                    }
+                }
                 dataList.push(data);
             }
         }
