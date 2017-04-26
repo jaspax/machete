@@ -1,27 +1,16 @@
 // Inject the button, add a handler
 let search = $('#searchInput');
-let link = $('<a href="#">Load unlocked data</a>');
-link.click(load_data_handler());
+let link = $('<a href="#">Get data history</a>');
+link.click(getDataHistory);
 search.after(link);
-
-/*
-let buttons = $('.campaignStatusButon');
-for (let btn in buttons) {
-    let $btn = $(btn);
-    let prev = $btn.prev();
-    if (prev) {
-        let campaign = prev.name.replace('campaign_', '');
-    }
-}
-*/
 
 chrome.runtime.sendMessage({
     action: 'setSession', 
-    entityId: get_entityid(), 
+    entityId: getEntityId(), 
     cookies: document.cookie,
 });
 
-function get_entityid() {
+function getEntityId() {
     let qstring = window.location.search.substring(1);
     let qs = qstring.split('&');
     for (let q of qs) {
@@ -38,8 +27,16 @@ function load_data_handler(campaign) {
         console.log("requesting data from background service");
         chrome.runtime.sendMessage({
             action: 'requestData',
-            entityId: get_entityid(),
+            entityId: getEntityId(),
         }, 
         (response) => console.log(response));
     };
+}
+
+function getDataHistory() {
+    chrome.runtime.sendMessage({
+        action: 'getDataHistory',
+        entityId: getEntityId(),
+    },
+    (response) => console.log(response));
 }
