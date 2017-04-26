@@ -28,9 +28,10 @@ function setSession(req, sendResponse) {
     console.log('stored cookies', sessionKey, req.cookies);
     chrome.alarms.get(sessionKey, (alarm) => {
         if (!alarm) {
+            let period = chrome.management.getSelf().installType == 'development' ? 1 : 60;
             chrome.alarms.create(sessionKey, {
                 when: Date.now() + 500,
-                periodInMinutes: 1, // TODO: not this often, obviously
+                periodInMinutes: period,
             });
             console.log('set alarm for', sessionKey);
         }

@@ -13,6 +13,7 @@
   "permissions": [
     "tabs",
     "alarms",
+    "management",
     "http://*.amazon.com/*",
     "https://*.amazon.com/*"
   ],
@@ -23,7 +24,7 @@
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/*"],
-          "js": ["inject.js", "extern/jquery.min.js"]
+          "js": ["inject.js", "extern/jquery.min.js", "extern/plotly-latest.min.js"]
       }
   ]
 }
