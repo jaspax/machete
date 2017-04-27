@@ -1,5 +1,11 @@
-<html lang="ro"><head><meta content="text/html; charset=ISO-8859-2" http-equiv="content-type"><title>Notă de redirec&#539;ionare</title><style>body,div,a{font-family:arial,sans-serif}body{background-color:#fff;margin-top:3px}div{color:#000}a:link{color:#00c}a:visited{color:#551a8b}a:active{color:red}div._lFe{border-top:1px solid #bbb;border-bottom:1px solid #bbb;background:#f2f2f2;margin-top:1em;width:100%}div._kFe{padding:0.5em 0;margin-left:10px}div._jFe{margin-left:35px;margin-top:35px}</style><script>function go_back(){window.history.go(-1);return false;}
-
-function ctu(oi,ct){var link = document && document.referrer;var esc_link = "";var e = window && window.encodeURIComponent ?encodeURIComponent :escape;if (link){esc_link = e(link);}
-new Image().src = "/url?sa=T&url=" + esc_link + "&oi=" + e(oi)+ "&ct=" + e(ct);return false;}
-</script></head><body><div class="_lFe"><div class="_kFe"><font style="font-size:larger"><b>Notă de redirec&#539;ionare</b></font></div></div><div class="_jFe">&nbsp;Pagina pe care era&#539;i încearcă să vă trimită la <a href="https://commons.wikimedia.org/wiki/File:Unlock_icon.svg">https://commons.wikimedia.org/wiki/File:Unlock_icon.svg</a>.<br><br>&nbsp;Dacă nu dori&#539;i să vizita&#539;i această pagină, pute&#539;i să <a href="#" onclick="return go_back();" onmousedown="ctu('unauthorizedredirect','originlink');">reveni&#539;i la pagina anterioară</a>.<br><br><br></div></body></html>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.4, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+<g transform="matrix(1 0 0 -1 0 1638)">
+	<path d="M16.5,1630.688h-2.484c0,0.734-0.168,1.305-0.504,1.711s-0.848,0.609-1.535,0.609c-1.336,0-2.004-0.777-2.004-2.332v-2.801
+		h8.578v-9.07H7.125c-0.461,0-0.855,0.164-1.184,0.492s-0.492,0.727-0.492,1.195v7.383H7.5v2.812c0,1.406,0.43,2.594,1.289,3.562
+		s1.93,1.453,3.211,1.453s2.352-0.484,3.211-1.453S16.5,1632.094,16.5,1630.688z"/>
+</g>
+</svg>
