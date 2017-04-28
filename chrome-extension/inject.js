@@ -46,6 +46,7 @@ function addChartButtons(rows) {
                     console.log("charting campaign", campaignId, chart.label);
                     getDataHistory(getEntityId(), campaignId, (data) => {
                         renderChart(data, chart);
+                        $('body').scrollTop($('#'+chartId).offset().top);
                     });
                 });
                 $(cell).append(btn);
