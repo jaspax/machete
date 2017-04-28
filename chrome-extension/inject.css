@@ -2,3 +2,8 @@
     margin-top: 60px;
     display: none;
 }
+
+.ams-unlocked-chart-btn {
+	display: block;
+	text-align: right;
+}

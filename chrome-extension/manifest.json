@@ -28,5 +28,8 @@
           "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "inject.js"],
           "css": ["inject.css"]
       }
+  ],
+  "web_accessible_resources": [
+      "images/*"
   ]
 }

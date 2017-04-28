@@ -1,6 +1,9 @@
+'use strict';
+
 const prefix = 'ams-unlocked';
 const showHistoryClass = `${prefix}-showhistory`;
 const chartId = `${prefix}-chart`;
+const chartClass = `${prefix}-chart-btn`;
 const span = {
     second: 1000,
     minute: 1000 * 60,
@@ -9,35 +12,47 @@ const span = {
 };
 
 const charts = [
-    { label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour'} },
-    { label: "Clicks / day", config: {metric: 'clicks', rate: 'day'} },
-    { label: "Sales / day", config: {metric: 'salesCount', rate: 'day'} },
+    { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour'} },
+    { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day'} },
+    { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day'} },
 ];
 
-const historyLink = $(`<a href="#" class="${showHistoryClass}">Show performance history</a>`);
-historyLink.click(function(evt) {
-    // Get the campaignId with a horrible bit of hackery. TODO: this is
-    // tremendously fragile.
-    let firstCell = $(this).parent().siblings()[0];
-    let select = $(firstCell).find('select');
-    let selectName = select[0].name;
-    let campaignId = selectName.split('_').pop();
-    campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
-    console.log("discovered campaign", campaignId);
-    getDataHistory(getEntityId(), campaignId, (data) => {
-        renderChart(data, charts[0]);
-    });
-});
+const unlockSvg = chrome.runtime.getURL('images/unlock.svg');
 
 window.setInterval(() => {
-    let actionCells = $('td.actions-cell').not(`:has(.${showHistoryClass})`);
-    actionCells.append(historyLink);
+    let tableRows = $('#campaignTable tbody tr');
+    addChartButtons(tableRows);
 
     let dashboard = $('#campaignDashboard');
     if (dashboard.find(`#${chartId}`).length == 0) {
         dashboard.append($(`<div id="${chartId}"></div>`));
     }
 }, 100);
+
+function addChartButtons(rows) {
+    for (let row of rows) {
+        for (let chart of charts) {
+            let cells = $(row).children();
+            let cell = cells[chart.column];
+            if (cell && $(cell).find(`.${chartClass}`).length == 0) {
+                let select = $(cells[0]).find('select')[0];
+                if (!select)
+                    continue;
+                let selectName = select.name;
+                let campaignId = selectName.split('_').pop();
+                campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
+                let btn = $(`<a href="#" class="${chartClass}">Chart</a>`);
+                btn.click(function(evt) {
+                    console.log("charting campaign", campaignId, chart.label);
+                    getDataHistory(getEntityId(), campaignId, (data) => {
+                        renderChart(data, chart);
+                    });
+                });
+                $(cell).append(btn);
+            }
+        }
+    }
+}
 
 chrome.runtime.sendMessage({
     action: 'setSession', 
