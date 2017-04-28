@@ -33,9 +33,10 @@ function addChartButtons(rows) {
     for (let row of rows) {
         for (let chart of charts) {
             let cells = $(row).children();
-            let cell = cells[chart.column];
-            if (cell && $(cell).find(`.${chartClass}`).length == 0) {
+            let target = cells[chart.column];
+            if (target && $(target).find(`.${chartClass}`).length == 0) {
                 let select = $(cells[0]).find('select')[0];
+                let name = cells[1].innerText;
                 if (!select)
                     continue;
                 let selectName = select.name;
@@ -45,11 +46,11 @@ function addChartButtons(rows) {
                 btn.click(function(evt) {
                     console.log("charting campaign", campaignId, chart.label);
                     getDataHistory(getEntityId(), campaignId, (data) => {
-                        renderChart(data, chart);
+                        renderChart(data, name, chart);
                         $('body').scrollTop($('#'+chartId).offset().top);
                     });
                 });
-                $(cell).append(btn);
+                $(target).append(btn);
             }
         }
     }
@@ -85,7 +86,7 @@ function getDataHistory(entityId, campaignId, cb) {
     });
 }
 
-function renderChart(data, opt) {
+function renderChart(data, name, opt) {
     var data = transformHistoryData(data, opt.config);
 
     var series = {
@@ -97,7 +98,7 @@ function renderChart(data, opt) {
     };
 
     var layout = {
-      title: opt.label,
+      title: `${opt.label} - ${name}`,
       height: 600,
       width: $('#campaignDashboard').width(),
       autosize: true,
