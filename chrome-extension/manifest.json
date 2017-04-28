@@ -7,7 +7,7 @@
 
   "page_action": {
     "default_name": "AMS Unlocked",
-    "default_icon": "icon.png",
+    "default_icon": "images/icon.png",
     "default_popup": "popup.html"
   },
   "permissions": [
