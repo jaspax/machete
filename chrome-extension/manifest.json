@@ -13,7 +13,7 @@
   "permissions": [
     "tabs",
     "alarms",
-    "management",
+    "background", 
     "http://*.amazon.com/*",
     "https://*.amazon.com/*",
     "https://fierce-caverns-29914.herokuapp.com/"
