@@ -23,7 +23,7 @@ window.setInterval(() => {
 
     let dashboard = $('#campaignDashboard');
     if (dashboard.find(`#${chartId}`).length == 0) {
-        dashboard.append($(`<div id="${chartId}" style="display:none"></div>`));
+        dashboard.append($(`<div id="${chartId}"></div>`));
     }
 }, 100);
 
