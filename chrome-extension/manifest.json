@@ -15,7 +15,8 @@
     "alarms",
     "management",
     "http://*.amazon.com/*",
-    "https://*.amazon.com/*"
+    "https://*.amazon.com/*",
+    "https://fierce-caverns-29914.herokuapp.com/"
   ],
   "background": {
       "scripts": ["background.js", "extern/jquery.min.js"],

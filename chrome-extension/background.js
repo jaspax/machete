@@ -3,6 +3,7 @@ const getEntityIdFromSession = session => session.replace('session_', '');
 const getIndexKey = entityId => `index_${entityId}`;
 const getDataKey = (entityId, timestamp) => `data_${entityId}_${timestamp}`;
 const getTimestampFromKey = dataKey => parseInt(dataKey.split('_').pop());
+const serviceUrl = 'https://fierce-caverns-29914.herokuapp.com';
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
@@ -23,12 +24,28 @@ chrome.alarms.onAlarm.addListener((session) => {
 });
 
 function setSession(req, sendResponse) {
+    /* TODO: this way of getting session doesn't actually work, alas.
+    let sessionEndpoint = `${serviceUrl}/session/${req.entityId}`;
+    console.log("making request to", sessionEndpoint);
+    $.ajax(sessionEndpoint, {
+        method: 'PUT',
+        data: req.cookies,
+        contentType: 'text/plain',
+        success: (data, textStatus, xhr) => {
+            console.log(textStatus, ": ", data);
+        },
+        error: (xhr, textStatus, error) => {
+            console.warn(textStatus, ": ", error);
+        },
+    });
+    */
+
     let sessionKey = getSessionKey(req);
     localStorage.setItem(sessionKey, req.cookies);
     console.log('stored cookies', sessionKey, req.cookies);
     chrome.alarms.get(sessionKey, (alarm) => {
         if (!alarm) {
-            let period = chrome.management.getSelf().installType == 'development' ? 1 : 60;
+            let period = 60;
             chrome.alarms.create(sessionKey, {
                 when: Date.now() + 500,
                 periodInMinutes: 60,
@@ -73,8 +90,24 @@ function storeData(entityId, timestamp, data) {
     let dataKey = getDataKey(entityId, timestamp);
     let json = JSON.stringify(data);
     localStorage.setItem(dataKey, json);
+    storeDataCloud(entityId, timestamp, data);
 
     storeIndex(entityId, dataKey);
+}
+
+function storeDataCloud(entityId, timestamp, data) {
+    $.ajax({
+        url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
+        method: 'PUT',
+        data: data,
+        dataType: 'json',
+        success: (data, status) => {
+            console.log('cloud storage', status);
+        },
+        error: (xhr, status, error) => {
+            console.log('cloud storage', status, error);
+        }
+    });
 }
 
 function getIndex(entityId) {
