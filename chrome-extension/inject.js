@@ -1,6 +1,18 @@
 const prefix = 'ams-unlocked';
 const showHistoryClass = `${prefix}-showhistory`;
 const chartId = `${prefix}-chart`;
+const span = {
+    second: 1000,
+    minute: 1000 * 60,
+    hour:   1000 * 60 * 60,
+    day:    1000 * 60 * 60 * 24,
+};
+
+const charts = [
+    { label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour'} },
+    { label: "Clicks / day", config: {metric: 'clicks', rate: 'day'} },
+    { label: "Sales / day", config: {metric: 'salesCount', rate: 'day'} },
+];
 
 const historyLink = $(`<a href="#" class="${showHistoryClass}">Show performance history</a>`);
 historyLink.click(function(evt) {
@@ -13,7 +25,7 @@ historyLink.click(function(evt) {
     campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
     console.log("discovered campaign", campaignId);
     getDataHistory(getEntityId(), campaignId, (data) => {
-        showDataChart(data);
+        renderChart(data, charts[0]);
     });
 });
 
@@ -53,86 +65,60 @@ function getDataHistory(entityId, campaignId, cb) {
     },
     (response) => {
         console.log('data response', response);
-        let data = transformHistoryData(response.data, {differential: true})
-        cb(data);
+        cb(response.data);
     });
 }
 
-function showDataChart(data) {
-    let $chart = $('#'+chartId);
-    $chart.slideDown();
+function renderChart(data, opt) {
+    var data = transformHistoryData(data, opt.config);
 
-    var impressions = {
-      x: data.timestamps, 
-      y: data.impressions,
+    var series = {
+      x: data.timestamps,
+      y: data[opt.config.metric],
       mode: 'lines+markers',
-      name: 'Impressions/hr',
+      name: opt.config.metric,
       line: {shape: 'spline'},
       connectgaps: true
     };
-    var clicks = {
-      x: data.timestamps, 
-      y: data.clicks,
-      mode: 'lines',
-      name: 'Clicks/hr',
-      connectgaps: true
-    }
-    var sales = {
-      x: data.timestamps, 
-      y: data.salesCount,
-      mode: 'lines',
-      name: 'Sales/hr',
-      connectgaps: true
-    }
-
-    //var series = [impressions, clicks, sales];
-    //var series = [impressions, clicks];
-    var series = [impressions];
 
     var layout = {
-      title: "Impressions per hour",
+      title: opt.label,
       height: 600,
       width: $('#campaignDashboard').width(),
       autosize: true,
     };
 
-    Plotly.newPlot(chartId, series, layout);
-}
+    Plotly.newPlot(chartId, [series], layout);
+
+    let $chart = $('#'+chartId);
+    $chart.slideDown();
+};
 
 function transformHistoryData(data, opt) {
     // We have a series of timestamped snapshots; we want a series of parallel
     // arrays keyed by campaignId
+    let metric = opt.metric;
     let c = {
         timestamps: [],
-        impressions: [],
-        clicks: [],
-        salesCount: [],
-        salesValue: [],
+        [metric]: []
     };
     let lastItem;
     for (let item of data) {
-        // XXX: quick hack -- should do this in backend
-        if (lastItem) {
-            if (lastItem.impressions == item.impressions || lastItem.impressions > item.impressions)
+        // XXX: quick hack -- do this in backend?
+        if (lastItem && lastItem[metric] >= item[metric]) {
                 continue;
         }
 
         c.timestamps.push(new Date(item.timestamp).toISOString());
-        if (opt.differential) {
+        if (opt.rate) {
             if (lastItem) {
                 let timeDiff = item.timestamp - lastItem.timestamp;
-                let hours = timeDiff/(1000 * 60 * 60);
-                c.impressions.push((item.impressions - lastItem.impressions)/hours);
-                c.clicks.push((item.clicks - lastItem.clicks)/hours);
-                c.salesCount.push((item.salesCount - lastItem.salesCount)/hours);
-                c.salesValue.push((item.salesValue - lastItem.salesValue)/hours);
+                let denom = timeDiff/span[opt.rate];
+                c[metric].push((item[metric] - lastItem[metric])/denom);
             }
         }
         else {
-            c.impressions.push(item.impressions);
-            c.clicks.push(item.clicks);
-            c.salesCount.push(item.salesCount);
-            c.salesValue.push(item.salesValue);
+            c[metric].push(item[metric]);
         }
 
         lastItem = item;
