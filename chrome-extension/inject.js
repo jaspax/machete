@@ -92,7 +92,6 @@ function renderChart(data, opt) {
       y: data[opt.config.metric],
       mode: 'lines+markers',
       name: opt.config.metric,
-      line: {shape: 'spline'},
       connectgaps: true
     };
 
