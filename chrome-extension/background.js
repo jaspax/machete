@@ -1,8 +1,5 @@
 const getSessionKey = req => `session_${req.entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
-const getIndexKey = entityId => `index_${entityId}`;
-const getDataKey = (entityId, timestamp) => `data_${entityId}_${timestamp}`;
-const getTimestampFromKey = dataKey => parseInt(dataKey.split('_').pop());
 const serviceUrl = 'https://fierce-caverns-29914.herokuapp.com';
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
@@ -11,7 +8,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     else if (req.action == 'requestData')
         requestData(req, sendResponse);
     else if (req.action == 'getDataHistory')
-        getDataHistory(req.entityId, sendResponse);
+        getDataHistory(req.entityId, req.campaignId, sendResponse);
     else 
         sendResponse('unknown action');
     return true;
@@ -94,46 +91,16 @@ function storeDataCloud(entityId, timestamp, data) {
     });
 }
 
-function getIndex(entityId) {
-    let indexKey = getIndexKey(entityId);
-    let indexJson = localStorage.getItem(indexKey);
-    let index = [];
-    if (indexJson) {
-        index = JSON.parse(indexJson);
-    }
-    return index;
-}
-
-function storeIndex(entityId, dataKey) {
-    let indexKey = getIndexKey(entityId);
-    let indexJson = localStorage.getItem(indexKey);
-    let index = [];
-    if (indexJson) {
-        index = JSON.parse(indexJson);
-    }
-    index.push(dataKey);
-    localStorage.setItem(indexKey, JSON.stringify(index));
-}
-
-const numericKeys = ['impressions', 'clicks', 'attributedPurchases', 'attributedPurchasesCost'];
-
-function getDataHistory(entityId, sendResponse) { // TODO: date ranges, etc.
-    let dataList = [];
-    let index = getIndex(entityId);
-    for (let dataKey of index) {
-        let dataJson = localStorage.getItem(dataKey);
-        if (dataJson) {
-            let data = JSON.parse(dataJson);
-            if (data && typeof data == 'object') {
-                data.timestamp = getTimestampFromKey(dataKey);
-                for (let key of numericKeys) {
-                    for (let stat of data.aaData) {
-                        stat[key] = parseFloat(stat[key].replace(',', ''));
-                    }
-                }
-                dataList.push(data);
-            }
-        }
-    }
-    sendResponse(dataList);
+function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date ranges, etc.
+    $.ajax({
+        url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
+        method: 'GET',
+        dataType: 'json',
+        success: (data, status) => {
+            sendResponse({data});
+        },
+        error: (xhr, status, error) => {
+            sendResponse({error, status});
+        },
+    });
 }

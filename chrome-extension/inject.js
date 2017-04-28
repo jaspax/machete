@@ -4,16 +4,16 @@ const chartId = `${prefix}-chart`;
 
 const historyLink = $(`<a href="#" class="${showHistoryClass}">Show performance history</a>`);
 historyLink.click(function(evt) {
-    // Get the campaign ID with a horrible bit of hackery. TODO: this is
+    // Get the campaignId with a horrible bit of hackery. TODO: this is
     // tremendously fragile.
     let firstCell = $(this).parent().siblings()[0];
     let select = $(firstCell).find('select');
     let selectName = select[0].name;
-    let campaign = selectName.split('_').pop();
-    campaign = campaign.substring(0, 22); // first 22 chars are the campaign ID; timestamp is appended for some reason
-    console.log("discovered campaign", campaign);
-    getDataHistory((data) => {
-        showDataChart(campaign);
+    let campaignId = selectName.split('_').pop();
+    campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
+    console.log("discovered campaign", campaignId);
+    getDataHistory(getEntityId(), campaignId, (data) => {
+        showDataChart(data);
     });
 });
 
@@ -26,8 +26,6 @@ window.setInterval(() => {
         dashboard.append($(`<div id="${chartId}" style="display:none"></div>`));
     }
 }, 100);
-
-let campaign_data = {}; // Populated on request
 
 chrome.runtime.sendMessage({
     action: 'setSession', 
@@ -47,39 +45,43 @@ function getEntityId() {
     return undefined;
 }
 
-function getDataHistory(cb) {
+function getDataHistory(entityId, campaignId, cb) {
     chrome.runtime.sendMessage({
         action: 'getDataHistory',
-        entityId: getEntityId(),
+        entityId: entityId,
+        campaignId: campaignId,
     },
     (response) => {
-        campaign_data = transformHistoryData(response, {differential: true})
-        cb(campaign_data);
+        console.log('data response', response);
+        let data = transformHistoryData(response.data, {differential: true})
+        cb(data);
     });
 }
 
-function showDataChart(campaign) {
+function showDataChart(data) {
     let $chart = $('#'+chartId);
     $chart.slideDown();
-
-    var data = campaign_data[campaign];
 
     var impressions = {
       x: data.timestamps, 
       y: data.impressions,
       mode: 'lines+markers',
+      name: 'Impressions/hr',
+      line: {shape: 'spline'},
       connectgaps: true
     };
     var clicks = {
       x: data.timestamps, 
       y: data.clicks,
       mode: 'lines',
+      name: 'Clicks/hr',
       connectgaps: true
     }
     var sales = {
       x: data.timestamps, 
       y: data.salesCount,
       mode: 'lines',
+      name: 'Sales/hr',
       connectgaps: true
     }
 
@@ -88,8 +90,7 @@ function showDataChart(campaign) {
     var series = [impressions];
 
     var layout = {
-      title: data.name,
-      showlegend: false,
+      title: "Impressions per hour",
       height: 600,
       width: $('#campaignDashboard').width(),
       autosize: true,
@@ -100,51 +101,42 @@ function showDataChart(campaign) {
 
 function transformHistoryData(data, opt) {
     // We have a series of timestamped snapshots; we want a series of parallel
-    // arrays keyed by campaign id
-    let campaign = {};
-    let lastItems = {};
-    for (let d of data) {
-        for (let item of d.aaData) {
-            if (!campaign[item.campaignId]) {
-                campaign[item.campaignId] = {
-                    timestamps: [],
-                    impressions: [],
-                    clicks: [],
-                    salesCount: [],
-                    salesValue: [],
-                };
-            }
-            let c = campaign[item.campaignId];
-            c.name = item.name;
-
-            let lastItem = lastItems[item.campaignId];
-            lastItems[item.campaignId] = item;
-
-            // XXX: quick hack -- should do this in backend
-            if (lastItem) {
-                if (lastItem.impressions == item.impressions || lastItem.impressions > item.impressions)
-                    continue;
-            }
-
-            c.timestamps.push(new Date(d.timestamp).toISOString());
-            if (opt.differential) {
-                if (lastItem) {
-                    c.impressions.push(item.impressions - lastItem.impressions);
-                    c.clicks.push(item.clicks - lastItem.clicks);
-                    c.salesCount.push(item.attributedPurchases - lastItem.attributedPurchases);
-                    c.salesValue.push(item.attributedPurchasesCost - lastItem.attributedPurchasesCost);
-                }
-            }
-            else {
-                c.impressions.push(item.impressions);
-                c.clicks.push(item.clicks);
-                c.salesCount.push(item.attributedPurchases);
-                c.salesValue.push(item.attributedPurchasesCost);
-            }
-
-            lastItem = item;
+    // arrays keyed by campaignId
+    let c = {
+        timestamps: [],
+        impressions: [],
+        clicks: [],
+        salesCount: [],
+        salesValue: [],
+    };
+    let lastItem;
+    for (let item of data) {
+        // XXX: quick hack -- should do this in backend
+        if (lastItem) {
+            if (lastItem.impressions == item.impressions || lastItem.impressions > item.impressions)
+                continue;
         }
+
+        c.timestamps.push(new Date(item.timestamp).toISOString());
+        if (opt.differential) {
+            if (lastItem) {
+                let timeDiff = item.timestamp - lastItem.timestamp;
+                let hours = timeDiff/(1000 * 60 * 60);
+                c.impressions.push((item.impressions - lastItem.impressions)/hours);
+                c.clicks.push((item.clicks - lastItem.clicks)/hours);
+                c.salesCount.push((item.salesCount - lastItem.salesCount)/hours);
+                c.salesValue.push((item.salesValue - lastItem.salesValue)/hours);
+            }
+        }
+        else {
+            c.impressions.push(item.impressions);
+            c.clicks.push(item.clicks);
+            c.salesCount.push(item.salesCount);
+            c.salesValue.push(item.salesValue);
+        }
+
+        lastItem = item;
     }
 
-    return campaign;
+    return c;
 }
