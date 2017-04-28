@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
     let timestamp = Date.now();
-    requestData({entityId}, (data) => storeData(entityId, timestamp, data));
+    requestData({entityId}, (data) => storeDataCloud(entityId, timestamp, data));
 });
 
 function setSession(req, sendResponse) {
@@ -83,30 +83,14 @@ function requestData(req, sendResponse) {
     });
 }
 
-function storeData(entityId, timestamp, data) {
-    // We store an 'index', which is a serialized array of keys which contain
-    // timestamped data. When storing data, we first have to append to the index
-    // then store the data in the actual key.
-    let dataKey = getDataKey(entityId, timestamp);
-    let json = JSON.stringify(data);
-    localStorage.setItem(dataKey, json);
-    storeDataCloud(entityId, timestamp, data);
-
-    storeIndex(entityId, dataKey);
-}
-
 function storeDataCloud(entityId, timestamp, data) {
     $.ajax({
         url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
         method: 'PUT',
-        data: data,
-        dataType: 'json',
-        success: (data, status) => {
-            console.log('cloud storage', status);
-        },
-        error: (xhr, status, error) => {
-            console.log('cloud storage', status, error);
-        }
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (data, status) => console.log('cloud storage', status), 
+        error: (xhr, status, error) => console.warn('cloud storage', status, error),
     });
 }
 
