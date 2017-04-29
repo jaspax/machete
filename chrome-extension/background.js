@@ -17,7 +17,14 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
     let timestamp = Date.now();
-    requestData({entityId}, (data) => storeDataCloud(entityId, timestamp, data));
+    requestData({entityId}, (data) => {
+        if (data.error) {
+            console.warn('request data', data.error);
+            return;
+        }
+        console.log('request data success');
+        storeDataCloud(entityId, timestamp, data.data);
+    });
 });
 
 function setSession(req, sendResponse) {
@@ -69,14 +76,8 @@ function requestData(req, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => {
-            sendResponse(data);
-            console.log(textStatus, ": ", data);
-        },
-        error: (xhr, textStatus, error) => {
-            sendResponse(error);
-            console.warn(textStatus, ": ", error);
-        },
+        success: (data, textStatus, xhr) => sendResponse({data}),
+        error: (xhr, textStatus, error) => sendResponse({error}),
     });
 }
 
