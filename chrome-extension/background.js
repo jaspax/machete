@@ -1,4 +1,4 @@
-const getSessionKey = req => `session_${req.entityId}`;
+const getSessionKey = entityId => `session_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 const serviceUrl = 'https://fierce-caverns-29914.herokuapp.com';
 
@@ -6,7 +6,9 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
         setSession(req, sendResponse);
     else if (req.action == 'requestData')
-        requestData(req, sendResponse);
+        requestData(req.entityId, sendResponse);
+    else if (req.action == 'requestKeywordData')
+        requestKeywordData(req.entityId, req.adGroupId, sendResponse);
     else if (req.action == 'getDataHistory')
         getDataHistory(req.entityId, req.campaignId, sendResponse);
     else 
@@ -17,7 +19,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
     let timestamp = Date.now();
-    requestData({entityId}, (data) => {
+    requestData(entityId, (data) => {
         if (data.error) {
             console.warn('request data', data.error);
             return;
@@ -60,15 +62,36 @@ function setSession(req, sendResponse) {
     sendResponse('ok');
 }
 
-function requestData(req, sendResponse) {
-    let sessionKey = getSessionKey(req);
+function requestData(entityId, sendResponse) {
+    let sessionKey = getSessionKey(entityId);
     let url = 'https://ams.amazon.com/api/rta/campaigns';
     document.cookie = localStorage.getItem(sessionKey);
-    console.log('requesting for', sessionKey);
+    console.log('requesting campaign data for', entityId);
     $.ajax(url, {
         method: 'GET',
         data: {
-            entityId: req.entityId,
+            entityId,
+            /* TODO: use these once Amazon actually supports them
+            status: null,
+            startDate: null,
+            endDate: null,
+            */
+        },
+        dataType: 'json',
+        success: (data, textStatus, xhr) => sendResponse({data}),
+        error: (xhr, textStatus, error) => sendResponse({error}),
+    });
+}
+
+function requestKeywordData(entityId, adGroupId, sendResponse) {
+    let sessionKey = getSessionKey(entityId);
+    let url = 'https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList';
+    document.cookie = localStorage.getItem(sessionKey);
+    console.log('requesting keyword data for', entityId, adGroupId);
+    $.ajax(url, {
+        method: 'POST',
+        data: {
+            entityId, adGroupId,
             /* TODO: use these once Amazon actually supports them
             status: null,
             startDate: null,

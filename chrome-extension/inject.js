@@ -27,7 +27,26 @@ window.setInterval(() => {
     if (dashboard.find(`#${chartId}`).length == 0) {
         dashboard.append($(`<div id="${chartId}"></div>`));
     }
+
+    let keywordBtn = $('#showKeywordInputsButton');
+    if (keywordBtn.length && keywordBtn.siblings(`.${chartClass}`).length == 0) {
+        addKeywordButton(keywordBtn);
+    }
 }, 100);
+
+function getQueryArgs() {
+    let qstring = window.location.search.substring(1);
+    let qs = qstring.split('&');
+    let args = {};
+    for (let q of qs) {
+        let parts = q.split('=');
+        args[parts[0]] = parts[1];
+    }
+    return args;
+}
+
+const getEntityId = () => getQueryArgs()['entityId'];
+const getCampaignId = () => getQueryArgs()['campaignId'];
 
 function addChartButtons(rows) {
     for (let row of rows) {
@@ -56,23 +75,24 @@ function addChartButtons(rows) {
     }
 }
 
+function addKeywordButton(keywordBtn) {
+    let entityId = getEntityId();
+    let campaignId = getCampaignId();
+    let adGroupId = $('input[name=adGroupId]')[0].value;
+    let btn = $(`<a href="#" class="${chartClass}">KeywordChart</a>`);
+    btn.click(function(evt) {
+        getKeywordData(getEntityId(), adGroupId, (data) => {
+            // TODO: actually chart something
+        });
+    });
+    $(keywordBtn).after(btn);
+}
+
 chrome.runtime.sendMessage({
     action: 'setSession', 
     entityId: getEntityId(), 
     cookies: document.cookie,
 });
-
-function getEntityId() {
-    let qstring = window.location.search.substring(1);
-    let qs = qstring.split('&');
-    for (let q of qs) {
-        let parts = q.split('=');
-        if (parts[0] == 'entityId') {
-            return parts[1];
-        }
-    }
-    return undefined;
-}
 
 function getDataHistory(entityId, campaignId, cb) {
     chrome.runtime.sendMessage({
@@ -85,6 +105,18 @@ function getDataHistory(entityId, campaignId, cb) {
         cb(response.data);
     });
 }
+
+function getKeywordData(entityId, adGroupId, cb) {
+    chrome.runtime.sendMessage({
+        action: 'requestKeywordData',
+        entityId: entityId,
+        adGroupId: adGroupId,
+    },
+    (response) => {
+        console.log('keyword data response', response);
+        cb(response.data);
+    });
+}; 
 
 function renderChart(data, name, opt) {
     var data = transformHistoryData(data, opt.config);
