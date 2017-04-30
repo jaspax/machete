@@ -93,31 +93,6 @@ function addCampaignTabs(tabs) {
         tabs.parent().children('div').addClass('a-hidden');
         tabs.parent().find('#ams-unlocked-keyword-analysis').removeClass('a-hidden');
         $(`#${chartId}`).show();
-        window.setTimeout(() => {
-            let chartData = {
-                mode: 'markers',
-                x: kws.avgCpc,
-                y: kws.clicks,
-                text: kws.kw.map((kw, i) => 
-                    `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: $${kws.avgCpc[i]}<br />Avg COS: ${kws.acos[i]}%`),
-                hoverinfo: 'text',
-                marker: {
-                    sizemode: 'diameter',
-                    size: kws.impressions.map(x => (Math.log2(x)+1) * 2),
-                    color: kws.acos,
-                    colorscale: [[0, 'rgb(0, 255, 0)'], [0.5, 'rgb(255, 255, 0)'], [1, 'rgb(255, 0, 0)']],
-                },
-            };
-            let layout = {
-                xaxis: {title: 'Average CPC'},
-                yaxis: {title: 'Number of clicks'},
-                margin: {t: 20},
-                height: 600,
-                width: $('.a-box-inner').width(),
-                hovermode: 'closest'
-            };
-            Plotly.newPlot(chartId, [chartData], layout, {showLink: false});
-        }, 100);
     });
     $(tabs.children()[0]).after(li);
 
@@ -128,10 +103,37 @@ function addCampaignTabs(tabs) {
     });
 
     let adGroupId = $('input[name=adGroupId]')[0].value;
-    let kws;
 
     getKeywordData(getEntityId(), adGroupId, (data) => {
-        kws = transformKeywordData(data);
+        let kws = transformKeywordData(data);
+        renderKeywordChart(kws, {});
+
+        let filteredData = data.aaData.filter(x => x.status == 'ENABLED');
+        renderKeywordTable(filteredData, { 
+            tableSelector: '#ams-unlocked-click-ratio',
+            filterFn: (x) => numberize(x.clicks),
+            metricFn: (x) => numberize(x.clicks)/numberize(x.impressions), 
+            formatFn: (x) => `${x*10000}`,
+        });
+        renderKeywordTable(filteredData, { 
+            tableSelector: '#ams-unlocked-acos',
+            filterFn: (x) => numberize(x.clicks) && numberize(x.acos) > 100,
+            metricFn: (x) => -numberize(x.acos),
+            formatFn: (x) => x ? `${-x}%` : "(no sales)",
+            limit: 10,
+        });
+        renderKeywordTable(filteredData, {
+            tableSelector: '#ams-unlocked-spend',
+            filterFn: (x) => numberize(x.clicks) && !numberize(x.sales),
+            metricFn: (x) => -numberize(x.spend),
+            formatFn: (x) => `$${-x}`,
+            limit: 10,
+        });
+        renderKeywordTable(filteredData, { 
+            tableSelector: '#ams-unlocked-impressions',
+            metricFn: (x) => numberize(x.impressions),
+            formatFn: (x) => x || 0,
+        });
     });
 }
 
@@ -180,6 +182,32 @@ function renderChart(data, name, opt) {
     let $chart = $('#'+chartId);
     $chart.slideDown();
 };
+
+function renderKeywordChart(kws, opt) {
+    let chartData = {
+        mode: 'markers',
+        x: kws.avgCpc,
+        y: kws.clicks,
+        text: kws.kw.map((kw, i) => 
+            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: $${kws.avgCpc[i]}<br />Avg COS: ${kws.acos[i]}%`),
+        hoverinfo: 'text',
+        marker: {
+            sizemode: 'diameter',
+            size: kws.impressions.map(x => (Math.log2(x)+1) * 2),
+            color: kws.acos,
+            colorscale: [[0, 'rgb(0, 255, 0)'], [0.5, 'rgb(255, 255, 0)'], [1, 'rgb(255, 0, 0)']],
+        },
+    };
+    let layout = {
+        xaxis: {title: 'Average CPC'},
+        yaxis: {title: 'Number of clicks'},
+        margin: {t: 20},
+        height: 600,
+        width: $('.a-box-inner').width(),
+        hovermode: 'closest'
+    };
+    Plotly.plot(chartId, [chartData], layout, {showLink: false});
+}
 
 function transformHistoryData(data, opt) {
     // We have a series of timestamped snapshots; we want a series of parallel
@@ -246,4 +274,24 @@ function numberize(str) {
     str = str.replace(',', '');
     str = str.replace(' ', '');
     return parseFloat(str);
+}
+
+function renderKeywordTable(data, opts) {
+    if (opts.filterFn)
+        data = data.filter(opts.filterFn);
+    let sorted = data.sort((a, b) => opts.metricFn(a) - opts.metricFn(b));
+    let limit = opts.limit || 20;
+    let formatFn = opts.formatFn ? opts.formatFn : (x) => x;
+    let table = $(opts.tableSelector);
+    let row = table.find('.ams-unlocked-repeat');
+
+    for (let i = 0; i < sorted.length && i < limit; i++) {
+        let kw = sorted[i];
+        let newRow = row.clone();
+        newRow.find('.ams-unlocked-keyword').text(kw.keyword);
+        newRow.find('.ams-unlocked-p1').text(formatFn(opts.metricFn(kw)));
+        newRow.show();
+        table.append(newRow);
+    }
+    row.hide();
 }
