@@ -7,10 +7,12 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         setSession(req, sendResponse);
     else if (req.action == 'requestData')
         requestData(req.entityId, sendResponse);
-    else if (req.action == 'requestKeywordData')
-        requestKeywordData(req.entityId, req.adGroupId, sendResponse);
     else if (req.action == 'getDataHistory')
         getDataHistory(req.entityId, req.campaignId, sendResponse);
+    else if (req.action == 'requestKeywordData')
+        requestKeywordData(req.entityId, req.adGroupId, sendResponse);
+    else if (req.action == 'getKeywordData')
+        getKeywordData(req.entityId, req.adGroupId, sendResponse);
     else 
         sendResponse('unknown action');
     return true;
@@ -129,6 +131,20 @@ function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
 function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date ranges, etc.
     $.ajax({
         url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
+        method: 'GET',
+        dataType: 'json',
+        success: (data, status) => {
+            sendResponse({data});
+        },
+        error: (xhr, status, error) => {
+            sendResponse({error, status});
+        },
+    });
+}
+
+function getKeywordData(entityId, adGroupId, sendResponse) {
+    $.ajax({
+        url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
         method: 'GET',
         dataType: 'json',
         success: (data, status) => {

@@ -105,45 +105,43 @@ function addCampaignTabs(tabs) {
     let adGroupId = $('input[name=adGroupId]')[0].value;
 
     getKeywordData(getEntityId(), adGroupId, (data) => {
-        let kws = transformKeywordData(data);
-        renderKeywordChart(kws, {});
+        renderKeywordChart(transformKeywordData(data), {});
 
-        let filteredData = data.aaData.filter(x => x.status == 'ENABLED');
-        renderKeywordTable(filteredData, { 
+        renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-click-ratio',
-            filterFn: (x) => numberize(x.clicks),
-            metricFn: (x) => numberize(x.clicks)/numberize(x.impressions), 
+            filterFn: (x) => x.clicks,
+            metricFn: (x) => x.clicks/x.impressions, 
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
-        renderKeywordTable(filteredData, { 
+        renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-acos',
-            filterFn: (x) => numberize(x.clicks) && numberize(x.acos) > 100,
-            metricFn: (x) => -numberize(x.acos),
+            filterFn: (x) => x.clicks && x.acos > 100,
+            metricFn: (x) => -x.acos,
             formatFn: (x) => x ? `${-x}%` : "(no sales)",
             limit: 10,
         });
-        renderKeywordTable(filteredData, {
+        renderKeywordTable(data, {
             tableSelector: '#ams-unlocked-spend',
-            filterFn: (x) => numberize(x.clicks) && !numberize(x.sales),
-            metricFn: (x) => -numberize(x.spend),
+            filterFn: (x) => x.clicks && !x.sales,
+            metricFn: (x) => -x.spend,
             formatFn: (x) => `$${-x}`,
             limit: 10,
         });
-        renderKeywordTable(filteredData, { 
+        renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-impressions',
-            metricFn: (x) => numberize(x.impressions),
+            metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
         });
-        renderKeywordTable(filteredData, { 
+        renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-high-click-ratio',
-            filterFn: (x) => numberize(x.clicks),
-            metricFn: (x) => -(numberize(x.clicks)/numberize(x.impressions)), 
+            filterFn: (x) => x.clicks,
+            metricFn: (x) => -(x.clicks/x.impressions), 
             formatFn: (x) => `${Math.round(-x*10000)}`,
         });
-        renderKeywordTable(filteredData, { 
+        renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-low-acos',
-            filterFn: (x) => numberize(x.sales),
-            metricFn: (x) => numberize(x.acos),
+            filterFn: (x) => x.sales,
+            metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
             limit: 10,
         });
@@ -163,13 +161,19 @@ function getDataHistory(entityId, campaignId, cb) {
 
 function getKeywordData(entityId, adGroupId, cb) {
     chrome.runtime.sendMessage({
-        action: 'requestKeywordData',
+        action: 'getKeywordData', // from our server
         entityId: entityId,
         adGroupId: adGroupId,
     },
     (response) => {
         cb(response.data);
     });
+    chrome.runtime.sendMessage({
+        action: 'requestKeywordData', // from the Amazon servers. TODO: this is gonna get moved to the cloud
+        entityId: entityId,
+        adGroupId: adGroupId,
+    },
+    (response) => console.log('requestKeywordData', response));
 }; 
 
 function renderChart(data, name, opt) {
@@ -255,7 +259,6 @@ function transformHistoryData(data, opt) {
     return c;
 }
 
-// TODO: move this stuff up to the server
 function transformKeywordData(data, opt) {
     let kws = {
         kw: [],
@@ -266,29 +269,17 @@ function transformKeywordData(data, opt) {
         acos: [],
         avgCpc: [],
     };
-    for (let k of data.aaData) {
-        if (!k.clicks || !parseInt(k.clicks))
-            continue;
-        if (k.status != 'ENABLED')
-            continue;
+    for (let k of data) {
         kws.kw.push(k.keyword);
-        kws.impressions.push(numberize(k.impressions));
-        kws.clicks.push(numberize(k.clicks));
-        kws.spend.push(numberize(k.spend));
-        kws.sales.push(numberize(k.sales));
-        kws.acos.push(numberize(k.acos));
-        kws.avgCpc.push(numberize(k.avgCpc));
+        kws.impressions.push(k.impressions);
+        kws.clicks.push(k.clicks);
+        kws.spend.push(k.spend);
+        kws.sales.push(k.sales);
+        kws.acos.push(k.acos);
+        kws.avgCpc.push(k.avgCpc);
     }
 
     return kws;
-}
-
-function numberize(str) {
-    if (!str)
-        return str;
-    str = str.replace(',', '');
-    str = str.replace(' ', '');
-    return parseFloat(str);
 }
 
 function renderKeywordTable(data, opts) {
