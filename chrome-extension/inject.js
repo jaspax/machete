@@ -113,7 +113,7 @@ function addCampaignTabs(tabs) {
             tableSelector: '#ams-unlocked-click-ratio',
             filterFn: (x) => numberize(x.clicks),
             metricFn: (x) => numberize(x.clicks)/numberize(x.impressions), 
-            formatFn: (x) => `${x*10000}`,
+            formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(filteredData, { 
             tableSelector: '#ams-unlocked-acos',
@@ -133,6 +133,19 @@ function addCampaignTabs(tabs) {
             tableSelector: '#ams-unlocked-impressions',
             metricFn: (x) => numberize(x.impressions),
             formatFn: (x) => x || 0,
+        });
+        renderKeywordTable(filteredData, { 
+            tableSelector: '#ams-unlocked-high-click-ratio',
+            filterFn: (x) => numberize(x.clicks),
+            metricFn: (x) => -(numberize(x.clicks)/numberize(x.impressions)), 
+            formatFn: (x) => `${Math.round(-x*10000)}`,
+        });
+        renderKeywordTable(filteredData, { 
+            tableSelector: '#ams-unlocked-low-acos',
+            filterFn: (x) => numberize(x.sales),
+            metricFn: (x) => numberize(x.acos),
+            formatFn: (x) => `${x}%`,
+            limit: 10,
         });
     });
 }
