@@ -261,6 +261,7 @@ function transformKeywordData(data, opt) {
         kw: [],
         impressions: [],
         spend: [],
+        sales: [],
         clicks: [],
         acos: [],
         avgCpc: [],
@@ -272,8 +273,9 @@ function transformKeywordData(data, opt) {
             continue;
         kws.kw.push(k.keyword);
         kws.impressions.push(numberize(k.impressions));
-        kws.spend.push(numberize(k.spend));
         kws.clicks.push(numberize(k.clicks));
+        kws.spend.push(numberize(k.spend));
+        kws.sales.push(numberize(k.sales));
         kws.acos.push(numberize(k.acos));
         kws.avgCpc.push(numberize(k.avgCpc));
     }

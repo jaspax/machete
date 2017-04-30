@@ -99,7 +99,7 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => sendResponse({data}),
+        success: (data, textStatus, xhr) => { storeKeywordDataCloud(entityId, adGroupId, Date.now(), data); sendResponse({data}) },
         error: (xhr, textStatus, error) => sendResponse({error}),
     });
 }
@@ -112,6 +112,17 @@ function storeDataCloud(entityId, timestamp, data) {
         contentType: 'application/json',
         success: (data, status) => console.log('cloud storage', status), 
         error: (xhr, status, error) => console.warn('cloud storage', status, error),
+    });
+}
+
+function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
+    $.ajax({
+        url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (data, status) => console.log('keyword storage', status), 
+        error: (xhr, status, error) => console.warn('keyword storage', status, error),
     });
 }
 
