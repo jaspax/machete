@@ -70,7 +70,6 @@ function addChartButtons(rows) {
                 campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
                 let btn = $(`<a href="#" class="${chartClass}">Chart</a>`);
                 btn.click(function(evt) {
-                    console.log("charting campaign", campaignId, chart.label);
                     getDataHistory(getEntityId(), campaignId, (data) => {
                         renderChart(data, name, chart);
                         $('body').scrollTop($('#'+chartId).offset().top);
@@ -117,7 +116,6 @@ function addCampaignTabs(tabs) {
                 width: $('.a-box-inner').width(),
                 hovermode: 'closest'
             };
-            console.log(chartData);
             Plotly.newPlot(chartId, [chartData], layout, {showLink: false});
         }, 100);
     });
@@ -126,10 +124,7 @@ function addCampaignTabs(tabs) {
     // Fetch the url we want in order to actually embed it in the page
     $.ajax({
         url: chrome.runtime.getURL('keywordAnalytics.html'),
-        success: (data, textStatus, xhr) => {
-            console.log(data);
-            tabs.parent().append(data);
-        },
+        success: (data, textStatus, xhr) => tabs.parent().append(data),
     });
 
     let adGroupId = $('input[name=adGroupId]')[0].value;
@@ -147,7 +142,6 @@ function getDataHistory(entityId, campaignId, cb) {
         campaignId: campaignId,
     },
     (response) => {
-        console.log('data response', response);
         cb(response.data);
     });
 }
@@ -159,7 +153,6 @@ function getKeywordData(entityId, adGroupId, cb) {
         adGroupId: adGroupId,
     },
     (response) => {
-        console.log('keyword data response', response);
         cb(response.data);
     });
 }; 
@@ -233,6 +226,8 @@ function transformKeywordData(data, opt) {
     };
     for (let k of data.aaData) {
         if (!k.clicks || !parseInt(k.clicks))
+            continue;
+        if (k.status != 'ENABLED')
             continue;
         kws.kw.push(k.keyword);
         kws.impressions.push(numberize(k.impressions));
