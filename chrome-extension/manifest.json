@@ -18,8 +18,7 @@
     "tabs",
     "alarms",
     "background", 
-    "http://*.amazon.com/*",
-    "https://*.amazon.com/*",
+    "https://ams.amazon.com/*",
     "https://fierce-caverns-29914.herokuapp.com/"
   ],
   "background": {
