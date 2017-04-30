@@ -104,7 +104,7 @@ function addCampaignTabs(tabs) {
                 hoverinfo: 'text',
                 marker: {
                     sizemode: 'diameter',
-                    size: kws.impressions.map(x => Math.log(x) * 2),
+                    size: kws.impressions.map(x => (Math.log2(x)+1) * 2),
                     color: kws.acos,
                     colorscale: [[0, 'rgb(0, 255, 0)'], [0.5, 'rgb(255, 255, 0)'], [1, 'rgb(255, 0, 0)']],
                 },
