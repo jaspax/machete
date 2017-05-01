@@ -140,7 +140,7 @@ function addCampaignTabs(tabs) {
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-low-acos',
-            filterFn: (x) => x.sales,
+            filterFn: (x) => x.sales && x.acos < 100,
             metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
             limit: 10,
