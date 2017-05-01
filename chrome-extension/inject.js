@@ -166,14 +166,31 @@ function getKeywordData(entityId, adGroupId, cb) {
         adGroupId: adGroupId,
     },
     (response) => {
-        cb(response.data);
+        // If we have data, return it immediately
+        if (response.data.length) {
+            cb(response.data);
+        }
+
+        // After querying our own (fast) servers, query Amazon. TODO: this is
+        // gonna get moved to the cloud
+        chrome.runtime.sendMessage({
+            action: 'requestKeywordData',
+            entityId: entityId,
+            adGroupId: adGroupId,
+        }, 
+        (amsResponse) => {
+            console.log('requestKeywordData', response)
+            if (!response.data.length) {
+                // Try our servers again
+                chrome.runtime.sendMessage({
+                    action: 'getKeywordData', // from our server
+                    entityId: entityId,
+                    adGroupId: adGroupId,
+                },
+                (response) => cb(response.data));
+            }
+        });
     });
-    chrome.runtime.sendMessage({
-        action: 'requestKeywordData', // from the Amazon servers. TODO: this is gonna get moved to the cloud
-        entityId: entityId,
-        adGroupId: adGroupId,
-    },
-    (response) => console.log('requestKeywordData', response));
 }; 
 
 function renderChart(data, name, opt) {

@@ -101,13 +101,13 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => { storeKeywordDataCloud(entityId, adGroupId, Date.now(), data); sendResponse({data}) },
+        success: (data, textStatus, xhr) => storeKeywordDataCloud(entityId, adGroupId, Date.now(), data).then(sendResponse({data})),
         error: (xhr, textStatus, error) => sendResponse({error}),
     });
 }
 
 function storeDataCloud(entityId, timestamp, data) {
-    $.ajax({
+    return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
         method: 'PUT',
         data: JSON.stringify(data),
@@ -117,8 +117,8 @@ function storeDataCloud(entityId, timestamp, data) {
     });
 }
 
-function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
-    $.ajax({
+function storeKeywordDataCloud(entityId, adGroupId, timestamp, data, cb) {
+    return $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
         method: 'PUT',
         data: JSON.stringify(data),
