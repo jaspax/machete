@@ -185,4 +185,6 @@ function renderKeywordTable(data, opts) {
         order: [[1, opts.order || 'asc']],
         columns: [{ title: "Keyword" }, { title: opts.columnTitle }],
     });
+
+    $(opts.tableSelector).width('100%'); // TODO: figure out why DataTables is setting this to 0
 }
