@@ -15,3 +15,7 @@
 #ams-unlocked-keyword-analysis h3 {
     margin-top: 30px;
 }
+
+.ams-unlocked-chart-horizontal {
+    display: inline-block;
+}
