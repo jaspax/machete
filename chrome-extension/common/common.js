@@ -22,3 +22,10 @@ function getQueryArgs() {
     }
     return args;
 }
+
+function moneyFmt(val) {
+    if (Number.isNaN(+val)) {
+        return '--';
+    }
+    return `$${(+val).toFixed(2)}`;
+}

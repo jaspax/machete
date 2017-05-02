@@ -70,7 +70,7 @@ function addCampaignTabs(tabs) {
             order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
             metricFn: (x) => x.spend,
-            formatFn: (x) => `$${x}`,
+            formatFn: moneyFmt,
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-impressions',
@@ -102,7 +102,7 @@ function addCampaignTabs(tabs) {
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesQuartileCutoff.sales,
             metricFn: (x) => x.sales,
-            formatFn: (x) => `$${x}`,
+            formatFn: moneyFmt,
         });
     });
 }
@@ -227,7 +227,7 @@ function renderKeywordChart(kws, opt) {
         x: kws.avgCpc,
         y: kws.clicks,
         text: kws.kw.map((kw, i) => 
-            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: $${kws.avgCpc[i]}<br />Avg COS: ${kws.acos[i]}%`),
+            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: $${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${kws.acos[i]}%`),
         hoverinfo: 'text',
         marker: {
             sizemode: 'diameter',
