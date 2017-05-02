@@ -21,18 +21,23 @@
     "https://fierce-caverns-29914.herokuapp.com/"
   ],
   "background": {
-      "scripts": ["background.js", "extern/jquery.min.js"],
+      "scripts": ["background/background.js", "extern/jquery.min.js"],
       "persistent": false
   },
   "content_scripts": [
       {
-          "matches": ["https://ams.amazon.com/ads/*"],
-          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "inject.js"],
+          "matches": ["https://ams.amazon.com/ads/campaigns/*"],
+          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "common/common.js", "dashboard/dashboard.js"],
+          "css": ["inject.css"]
+      },
+      {
+          "matches": ["https://ams.amazon.com/ads/campaign/*"],
+          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "common/common.js", "campaign/campaign.js"],
           "css": ["inject.css"]
       }
   ],
   "web_accessible_resources": [
       "images/*",
-      "*.html"
+      "*/*.html"
   ]
 }

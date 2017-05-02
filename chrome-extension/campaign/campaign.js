@@ -1,4 +1,5 @@
 const tabClass = `${prefix}-tab`;
+const chartId = `${prefix}-kwchart`;
 
 window.setInterval(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
@@ -24,7 +25,7 @@ function addCampaignTabs(tabs) {
 
     // Fetch the url we want in order to actually embed it in the page
     $.ajax({
-        url: chrome.runtime.getURL('keywordAnalytics.html'),
+        url: chrome.runtime.getURL('campaign/keywordAnalytics.html'),
         success: (data, textStatus, xhr) => tabs.parent().append(data),
     });
 
@@ -94,7 +95,6 @@ function getKeywordData(entityId, adGroupId, cb) {
             adGroupId: adGroupId,
         }, 
         (amsResponse) => {
-            console.log('requestKeywordData', response)
             if (!response.data.length) {
                 // Try our servers again
                 chrome.runtime.sendMessage({
