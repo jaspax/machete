@@ -42,43 +42,52 @@ function addCampaignTabs(tabs) {
         let minImpressions = totalImpressions / (data.length * 10);
 
         renderKeywordTable(data, { 
+            tableSelector: '#ams-unlocked-acos',
+            columnTitle: 'ACOS',
+            order: 'desc',
+            filterFn: (x) => x.clicks && x.acos > 100,
+            metricFn: (x) => x.acos,
+            formatFn: (x) => x ? `${x}%` : "(no sales)",
+        });
+        renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-click-ratio',
+            columnTitle: 'Clicks per 10K impressions',
+            order: 'asc',
             filterFn: (x) => x.clicks && x.impressions > minImpressions,
             metricFn: (x) => x.clicks/x.impressions, 
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
-        renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-acos',
-            filterFn: (x) => x.clicks && x.acos > 100,
-            metricFn: (x) => -x.acos,
-            formatFn: (x) => x ? `${-x}%` : "(no sales)",
-            limit: 10,
-        });
         renderKeywordTable(data, {
             tableSelector: '#ams-unlocked-spend',
+            columnTitle: 'Spend',
+            order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
-            metricFn: (x) => -x.spend,
-            formatFn: (x) => `$${-x}`,
-            limit: 10,
+            metricFn: (x) => x.spend,
+            formatFn: (x) => `$${x}`,
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-impressions',
+            columnTitle: 'Impressions',
+            order: 'asc',
             filterFn: (x) => x.impressions < minImpressions,
             metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-high-click-ratio',
+            columnTitle: 'Impressions',
+            order: 'desc',
             filterFn: (x) => x.clicks && x.impressions > minImpressions,
-            metricFn: (x) => -(x.clicks/x.impressions), 
-            formatFn: (x) => `${Math.round(-x*10000)}`,
+            metricFn: (x) => x.clicks/x.impressions, 
+            formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-low-acos',
+            columnTitle: 'ACOS',
+            order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
-            limit: 10,
         });
     });
 }
@@ -166,21 +175,14 @@ function renderKeywordChart(kws, opt) {
 }
 
 function renderKeywordTable(data, opts) {
-    if (opts.filterFn)
-        data = data.filter(opts.filterFn);
-    let sorted = data.sort((a, b) => opts.metricFn(a) - opts.metricFn(b));
-    let limit = opts.limit || 20;
-    let formatFn = opts.formatFn ? opts.formatFn : (x) => x;
-    let table = $(opts.tableSelector);
-    let row = table.find('.ams-unlocked-repeat');
+    data = data.filter(opts.filterFn ? opts.filterFn : x => true);
 
-    for (let i = 0; i < sorted.length && i < limit; i++) {
-        let kw = sorted[i];
-        let newRow = row.clone();
-        newRow.find('.ams-unlocked-keyword').text(kw.keyword);
-        newRow.find('.ams-unlocked-p1').text(formatFn(opts.metricFn(kw)));
-        newRow.show();
-        table.append(newRow);
-    }
-    row.hide();
+    let formatFn = opts.formatFn ? opts.formatFn : x => x;
+    data = data.map(x => [x.keyword, formatFn(opts.metricFn(x))]);
+
+    $(opts.tableSelector).DataTable({
+        data: data,
+        order: [[1, opts.order || 'asc']],
+        columns: [{ title: "Keyword" }, { title: opts.columnTitle }],
+    });
 }

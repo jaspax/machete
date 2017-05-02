@@ -32,8 +32,9 @@
       },
       {
           "matches": ["https://ams.amazon.com/ads/campaign/*"],
-          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "common/common.js", "campaign/campaign.js"],
-          "css": ["inject.css"]
+          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "extern/jquery.dataTables.min.js",
+                 "common/common.js", "campaign/campaign.js"],
+          "css": ["inject.css", "extern/jquery.dataTables.min.css"]
       }
   ],
   "web_accessible_resources": [
