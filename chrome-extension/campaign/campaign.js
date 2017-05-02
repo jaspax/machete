@@ -34,9 +34,16 @@ function addCampaignTabs(tabs) {
     getKeywordData(getEntityId(), adGroupId, (data) => {
         renderKeywordChart(transformKeywordData(data), {});
 
+        // We often don't want to display data for points with very low numbers
+        // of impressions, so we set a "minimum meaningful impressions" value at
+        // 10% of what would be the value if all keywords had the same number of
+        // impressions.
+        let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
+        let minImpressions = totalImpressions / (data.length * 10);
+
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-click-ratio',
-            filterFn: (x) => x.clicks,
+            filterFn: (x) => x.clicks && x.impressions > minImpressions,
             metricFn: (x) => x.clicks/x.impressions, 
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
@@ -56,18 +63,19 @@ function addCampaignTabs(tabs) {
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-impressions',
+            filterFn: (x) => x.impressions < minImpressions,
             metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-high-click-ratio',
-            filterFn: (x) => x.clicks,
+            filterFn: (x) => x.clicks && x.impressions > minImpressions,
             metricFn: (x) => -(x.clicks/x.impressions), 
             formatFn: (x) => `${Math.round(-x*10000)}`,
         });
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-low-acos',
-            filterFn: (x) => x.sales && x.acos < 100,
+            filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
             limit: 10,
