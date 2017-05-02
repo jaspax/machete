@@ -41,6 +41,8 @@ function addCampaignTabs(tabs) {
         let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
         let minImpressions = totalImpressions / (data.length * 10);
 
+        let salesQuartileCutoff = data.sort((a, b) => a.sales - b.sales)[Math.round(data.length / 4)];
+
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-acos',
             columnTitle: 'ACOS',
@@ -88,6 +90,14 @@ function addCampaignTabs(tabs) {
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
+        });
+        renderKeywordTable(data, { 
+            tableSelector: '#ams-unlocked-high-sales',
+            columnTitle: 'Sales',
+            order: 'desc',
+            filterFn: (x) => x.sales && x.sales >= salesQuartileCutoff.sales,
+            metricFn: (x) => x.sales,
+            formatFn: (x) => `$${x}`,
         });
     });
 }
