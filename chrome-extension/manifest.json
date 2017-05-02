@@ -3,7 +3,7 @@
 
   "name": "AMS Unlocked",
   "description": "Make your AMS reporting fully rad with campaign history graphs, keyword charts, and extra awesome.",
-  "version": "0.3",
+  "version": "0.4",
   "icons": { 
       "16": "images/unlock-16.png",
       "48": "images/unlock-48.png",
