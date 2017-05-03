@@ -8,31 +8,27 @@ window.setInterval(() => {
     }
 }, 100);
 
-function updateStatus(keywordIdList, enable, cb) {
-    let operation = enable ? "ENABLE" : "PAUSE";
+function updateKeyword(keywordIdList, operation, dataValues, cb) {
     let entityId = getEntityId();
     let keywordIds = keywordIdList.join(',');
-    $.ajax({
+    let postData = Object.assign({operation, entityId, keywordIds}, dataValues);
+    return $.ajax({
         url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
         method: 'POST',
-        data: {operation, entityId, keywordIds},
+        data: postData,
         dataType: 'json',
-        success: (data, textStatus, xhr) => cb(data),
+        success: (data, textStatus, xhr) => cb(Object.assign(data, dataValues)),
         error: (xhr, error, status) => cb({error}),
     });
 }
 
+function updateStatus(keywordIdList, enable, cb) {
+    let operation = enable ? "ENABLE" : "PAUSE";
+    return updateKeyword(keywordIdList, operation, {}, cb);
+}
+
 function updateBid(keywordIdList, bid, cb) {
-    let entityId = getEntityId();
-    let keywordIds = keywordIdList.join(',');
-    $.ajax({
-        url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
-        method: 'POST',
-        data: {operation: 'UPDATE', bid, entityId, keywordIds},
-        dataType: 'json',
-        success: (data, textStatus, xhr) => cb(data),
-        error: (xhr, error, status) => cb({error}),
-    });
+    return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
 }
 
 function addCampaignTabs(tabs) {
@@ -278,12 +274,22 @@ function renderKeywordTable(data, opts) {
     data = data.filter(opts.filterFn ? opts.filterFn : x => true);
 
     let formatFn = opts.formatFn ? opts.formatFn : x => x;
-    data = data.map(x => [x.keyword, formatFn(opts.metricFn(x)), renderModifyCell(x)]);
+    data = data.map(x => [
+        x.keyword, 
+        formatFn(opts.metricFn(x)), 
+        renderKeywordStatus(x),
+        renderKeywordBid(x),
+    ]);
 
     $(opts.tableSelector).DataTable({
         data: data,
         order: [[1, opts.order || 'asc']],
-        columns: [{ title: "Keyword" }, { title: opts.columnTitle }, { title: "Modify" }],
+        columns: [
+            { title: "Keyword" }, 
+            { title: opts.columnTitle }, 
+            { title: "Status" },
+            { title: "Bid" },
+        ],
     });
 
     $(opts.tableSelector).width('100%'); // TODO: figure out why DataTables is setting this to 0
@@ -296,7 +302,7 @@ $(document).on('click', '.ams-unlocked-kwstatus', function() {
     updateStatus([keyword.id], !keyword.enabled, (result) => {
         if (result.success) {
             keyword.enabled = !keyword.enabled;
-            renderKeywordStatus(keyword, $(this).parents('.ams-unlocked-kwmodify'));
+            renderKeywordStatus(keyword, $(this));
         }
         else {
             console.error('problems updating status:', result);
@@ -306,46 +312,40 @@ $(document).on('click', '.ams-unlocked-kwstatus', function() {
     });
 });
 
-$(document).on('click', '.bidInplaceEditWrapper input[name=save]', function() {
-    let container = $(this).parents('.bidInplaceEditWrapper');
-    let input = container.find('input[name=keyword-bid]');
-    let keyword = JSON.parse(container.attr('data-ams-unlocked-keyword'));
-    container.children().hide();
-    container.find('.loading-small').show();
+$(document).on('click', '.ams-unlocked-kwbid input[name=save]', function() {
+    let cell = $(this).parents('.ams-unlocked-kwbid');
+    let keyword = JSON.parse(cell.attr('data-ams-unlocked-keyword'));
+    let input = cell.find('input[name=keyword-bid]');
+    cell.children().hide();
+    cell.find('.loading-small').show();
     updateBid([keyword.id], input.val(), (result) => {
         if (result.success) {
-            keyword.bid = input.val();
-            renderKeywordBid(keyword, container);
+            keyword.bid = result.bid;
+            renderKeywordBid(keyword, cell);
         }
         else {
             console.error('problems updating status:', result);
         }
-        container.children().show();
-        container.find('.loading-small').hide();
+        cell.children().show();
+        cell.find('.loading-small').hide();
     });
 });
 
-function renderModifyCell(keyword) {
-    let cell = $('#ams-unlocked-kwmodify').clone();
+function renderKeywordBid(keyword, cell) {
+    cell = cell || $('#ams-unlocked-kwbid').clone();
     cell.removeAttr('id');
+    cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
 
-    renderKeywordBid(keyword, cell);
-    renderKeywordStatus(keyword, cell);
+    cell.find('input[name=keyword-bid]')
+        .attr('value', keyword.bid);
 
-    cell.show();
     return cell[0].outerHTML;
 }
 
-function renderKeywordBid(keyword, cell) {
-    cell.find('.bidInplaceEditWrapper')
-        .attr('data-ams-unlocked-keyword', JSON.stringify(keyword))
-    cell.find('.bidInplaceEditWrapper input[name=keyword-bid]')
-        .attr('value', keyword.bid);
-}
-
 function renderKeywordStatus(keyword, cell) {
-    cell.find('.ams-unlocked-kwstatus')
-        .attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
+    cell = cell || $('#ams-unlocked-kwstatus').clone();
+    cell.removeAttr('id');
+    cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
 
     let statusImg = cell.find('.ams-dropdown-status');
     let statusTxt = cell.find('.ams-unlocked-kwstatus-current');
@@ -359,4 +359,6 @@ function renderKeywordStatus(keyword, cell) {
         statusImg.addClass('ams-status-paused');
         statusTxt.text('Paused');
     }
+
+    return cell[0].outerHTML;
 }

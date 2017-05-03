@@ -71,28 +71,27 @@
 </div>
 
 <!-- Templates -->
-<div id="ams-unlocked-kwmodify" class="ams-unlocked-kwmodify">
-    <div class="ams-unlocked-kwstatus" title="Click to toggle" data-ams-unlocked-keyword="">
-        <span class="a-button a-button-small">
-            <span class="a-button-inner a-dropdown-status">
-                <span class="a-button-text">
-                    <span class="ams-status-active ams-dropdown-status"></span>
-                    <span class="ams-unlocked-kwstatus-current">Enabled</span>
-                </span>
+<div id="ams-unlocked-kwstatus" class="ams-unlocked-kwstatus" title="Click to toggle" style="display:none">
+    <span class="a-button a-button-small">
+        <span class="a-button-inner a-dropdown-status">
+            <span class="a-button-text">
+                <span class="ams-status-active ams-dropdown-status"></span>
+                <span class="ams-unlocked-kwstatus-current">Enabled</span>
             </span>
         </span>
-        <div class="loading-small hidden" style="display:none"></div>
-    </div>
-    <div class="bidInplaceEditWrapper">
-        <span>
-            <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
+    </span>
+    <div class="loading-small hidden" style="display:none"></div>
+</div>
+
+<div id="ams-unlocked-kwbid" class="ams-unlocked-kwbid" style="display:none">
+    <span>
+        <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
+    </span>
+    <span class="a-button a-button-primary a-button-small">
+        <span class="a-button-inner">
+            <input name="save" class="a-button-input" type="submit" value="save">
+            <span class="a-button-text" aria-hidden="true">Save</span>
         </span>
-		<span class="a-button a-button-primary a-button-small">
-            <span class="a-button-inner">
-                <input name="save" class="a-button-input" type="submit" value="save">
-                <span class="a-button-text" aria-hidden="true">Save</span>
-            </span>
-        </span>
-        <div class="loading-small hidden" style="display: none;"></div>
-    </div>
+    </span>
+    <div class="loading-small hidden" style="display: none;"></div>
 </div>
