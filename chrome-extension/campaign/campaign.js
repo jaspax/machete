@@ -444,8 +444,8 @@ function renderBulkUpdate(data, opts) {
     bulk[0].data = data;
     bulk[0].opts = opts;
 
-    renderKeywordStatus(data[0], bulk.find('.ams-unlocked-kwstatus-bulk'));
-    renderKeywordBid(data[0], bulk.find('.ams-unlocked-kwbid-bulk'));
+    renderKeywordStatus(data[0] || {}, bulk.find('.ams-unlocked-kwstatus-bulk'));
+    renderKeywordBid(data[0] || {}, bulk.find('.ams-unlocked-kwbid-bulk'));
 
     bulk.show();
 
