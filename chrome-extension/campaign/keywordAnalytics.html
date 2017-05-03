@@ -24,53 +24,66 @@
         <section>
             <h1>Underperforming keywords</h1>
             <h3>Keywords with ACOS over 100%:</h3>
-            <table id="ams-unlocked-acos" class="a-bordered a-spacing-base a-size-small display">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div id="ams-unlocked-acos">
+                <table class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
 
             <h3>Keywords spending money without sales:</h3>
-            <table id="ams-unlocked-spend" class="a-bordered a-spacing-base a-size-small display">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div id="ams-unlocked-spend">
+                <table class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
 
             <h3>Keywords with few clicks per impression:</h3>
-            <table id="ams-unlocked-click-ratio" class="a-bordered a-spacing-base a-size-small display">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div id="ams-unlocked-click-ratio">
+                <table class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
             
             <h3>Keywords with few impressions:</h3>
-            <table id="ams-unlocked-impressions" class="a-bordered a-spacing-base a-size-small display">
-            </table>
+            <div id="ams-unlocked-impressions">
+                <table  class="a-bordered a-spacing-base a-size-small display">
+                </table>
+            </div>
         </section>
         <section>
             <h1>Overperforming keywords</h1>
 
             <h3>Keywords with high clicks-to-impressions ratio</h3>
-            <table id="ams-unlocked-high-click-ratio" class="a-bordered a-spacing-base a-size-small display">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div id="ams-unlocked-high-click-ratio">
+                <table class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
 
             <h3>Keywords with low ACOS</h3>
-            <table id="ams-unlocked-low-acos" class="a-bordered a-spacing-base a-size-small display">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div id="ams-unlocked-low-acos">
+                <table class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
 
             <h3>Keywords with highest gross sales</h3>
-            <table id="ams-unlocked-high-sales" class="a-bordered a-spacing-base a-size-small display">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div id="ams-unlocked-high-sales">
+                <table class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </section>
     </div>
     
 </div>
 
-<!-- Templates -->
+<!-- Template: Enabled/Paused status button in tables -->
 <div id="ams-unlocked-kwstatus" class="ams-unlocked-kwstatus" title="Click to toggle" style="display:none">
     <span class="a-button a-button-small">
         <span class="a-button-inner a-dropdown-status">
@@ -83,6 +96,7 @@
     <div class="loading-small hidden" style="display:none"></div>
 </div>
 
+<!-- Template: Bid edit cell button in tables -->
 <div id="ams-unlocked-kwbid" class="ams-unlocked-kwbid" style="display:none">
     <span>
         <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
@@ -94,4 +108,33 @@
         </span>
     </span>
     <div class="loading-small hidden" style="display: none;"></div>
+</div>
+
+<!-- Template: Bulk edit control accompanying -->
+<div id="ams-unlocked-kwupdate-bulk" class="ams-unlocked-kwupdate-bulk" style="display:none">
+    <div class="ams-unlocked-kwbulk-label">Update all keywords in this table</div>
+    <div class="ams-unlocked-kwstatus-bulk" title="Click to toggle">
+        <span class="a-button a-button-small">
+            <span class="a-button-inner a-dropdown-status">
+                <span class="a-button-text">
+                    <span class="ams-status-active ams-dropdown-status"></span>
+                    <span class="ams-unlocked-kwstatus-current">Enabled</span>
+                </span>
+            </span>
+        </span>
+        <div class="loading-small hidden" style="display:none"></div>
+    </div>
+
+    <div class="ams-unlocked-kwbid-bulk">
+        <span>
+            <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
+        </span>
+        <span class="a-button a-button-primary a-button-small">
+            <span class="a-button-inner">
+                <input name="save" class="a-button-input" type="submit" value="save">
+                <span class="a-button-text" aria-hidden="true">Save</span>
+            </span>
+        </span>
+        <div class="loading-small hidden" style="display: none;"></div>
+    </div>
 </div>

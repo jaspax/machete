@@ -10,16 +10,29 @@ window.setInterval(() => {
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
     let entityId = getEntityId();
-    let keywordIds = keywordIdList.join(',');
-    let postData = Object.assign({operation, entityId, keywordIds}, dataValues);
-    return $.ajax({
-        url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
-        method: 'POST',
-        data: postData,
-        dataType: 'json',
-        success: (data, textStatus, xhr) => cb(Object.assign(data, dataValues)),
-        error: (xhr, error, status) => cb({error}),
-    });
+    
+    // TODO: the parameters to the Amazon API imply that you can pass more than
+    // 1 keyword at a time, but testing this shows that doing so just generates
+    // an error. So we do it the stupid way instead, with a loop.
+    let requests = [];
+    for (let id of keywordIdList) {
+        let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
+        requests.push($.ajax({
+            url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
+            method: 'POST',
+            data: postData,
+            dataType: 'json',
+        }));
+    }
+
+    // TODO: in the case that we have a lot of these (bulk update), implement
+    // progress feedback.
+    $.when.apply($, requests)
+        .done((result) => {
+            result.length ? cb(Object.assign(result[0], dataValues))
+                          : cb(Object.assign(result, dataValues));
+        })
+        .fail((error) => cb({error}));
 }
 
 function updateStatus(keywordIdList, enable, cb) {
@@ -78,7 +91,7 @@ function addCampaignTabs(tabs) {
         let clickRatioTopQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.75)];
 
         renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-acos',
+            selector: '#ams-unlocked-acos',
             columnTitle: 'ACOS',
             order: 'desc',
             filterFn: (x) => x.clicks && x.acos > 100,
@@ -86,7 +99,7 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => x ? `${x}%` : "(no sales)",
         });
         renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-click-ratio',
+            selector: '#ams-unlocked-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
             filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) <= clickRatio(clickRatioBottomQuartile),
@@ -94,7 +107,7 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(data, {
-            tableSelector: '#ams-unlocked-spend',
+            selector: '#ams-unlocked-spend',
             columnTitle: 'Spend',
             order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
@@ -102,7 +115,7 @@ function addCampaignTabs(tabs) {
             formatFn: moneyFmt,
         });
         renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-impressions',
+            selector: '#ams-unlocked-impressions',
             columnTitle: 'Impressions',
             order: 'asc',
             filterFn: (x) => x.impressions < minImpressions,
@@ -110,7 +123,7 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => x || 0,
         });
         renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-high-click-ratio',
+            selector: '#ams-unlocked-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
             filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) >= clickRatio(clickRatioTopQuartile),
@@ -118,7 +131,7 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-low-acos',
+            selector: '#ams-unlocked-low-acos',
             columnTitle: 'ACOS',
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
@@ -126,7 +139,7 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => `${x}%`,
         });
         renderKeywordTable(data, { 
-            tableSelector: '#ams-unlocked-high-sales',
+            selector: '#ams-unlocked-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
@@ -277,7 +290,15 @@ function renderKeywordChart(kws, opt) {
 }
 
 function renderKeywordTable(data, opts) {
+    let container = $(opts.selector);
+    let table = container.find('.ams-unlocked-kwtable');
+
     data = data.filter(opts.filterFn ? opts.filterFn : x => true);
+    
+    // Render the bulk update button -- pass in a copy of the array since we're
+    // going to modify it below.
+    let bulk = renderBulkUpdate([].concat(data), opts);
+    table.before(bulk);
 
     let formatFn = opts.formatFn ? opts.formatFn : x => x;
     data = data.map(x => [
@@ -287,7 +308,8 @@ function renderKeywordTable(data, opts) {
         renderKeywordBid(x),
     ]);
 
-    $(opts.tableSelector).DataTable({
+    table.DataTable({
+        retrieve: true,
         data: data,
         order: [[1, opts.order || 'asc']],
         columns: [
@@ -298,7 +320,18 @@ function renderKeywordTable(data, opts) {
         ],
     });
 
-    $(opts.tableSelector).width('100%'); // TODO: figure out why DataTables is setting this to 0
+    table.width('100%'); // TODO: figure out why DataTables is setting this to 0
+}
+
+function getBoundKeywords(elem) {
+    let keywordAttr = elem.attr('data-ams-unlocked-keyword');
+    if (keywordAttr) {
+        return [JSON.parse(keywordAttr)];
+    }
+    let parent = elem.closest('[data-ams-unlocked-kwupdate-bulk]');
+    if (parent) {
+        return parent.keywords;
+    }
 }
 
 $(document).on('click', '.ams-unlocked-kwstatus', function() {
@@ -369,4 +402,53 @@ function renderKeywordStatus(keyword, cell) {
     }
 
     return cell[0].outerHTML;
+}
+
+$(document).on('click', '.ams-unlocked-kwstatus-bulk', function() {
+    let container = $(this).parents('.ams-unlocked-kwupdate-bulk');
+    let data = container[0].data;
+    let enabled = data[0].enabled;
+    $(this).find('.a-button').hide();
+    $(this).find('.loading-small').show();
+    updateStatus(data.map(kw => kw.id), !enabled, (result) => {
+        if (result.success) {
+            data.forEach(x => x.enabled = !enabled);
+            renderKeywordTable(data, container[0].opts);
+        }
+        else {
+            console.error('problems updating status:', result);
+        }
+    });
+});
+
+$(document).on('click', '.ams-unlocked-kwbid-bulk input[name=save]', function() {
+    let container = $(this).parents('.ams-unlocked-kwupdate-bulk');
+    let cell = $(this).parents('.ams-unlocked-kwbid-bulk');
+    let input = cell.find('input[name=keyword-bid]');
+    let data = container[0].data;
+    cell.children().hide();
+    cell.find('.loading-small').show();
+    updateBid(data.map(kw => kw.id), input.val(), (result) => {
+        if (result.success) {
+            data.forEach(kw => kw.bid = result.bid);
+            renderKeywordTable(data, container[0].opts);
+        }
+        else {
+            console.error('problems updating status:', result);
+        }
+    });
+});
+
+function renderBulkUpdate(data, opts) {
+    let bulk = $('#ams-unlocked-kwupdate-bulk').clone();
+    bulk.removeAttr('id');
+    bulk[0].data = data;
+    bulk[0].opts = opts;
+
+    renderKeywordStatus(data[0], bulk.find('.ams-unlocked-kwstatus-bulk'));
+    renderKeywordBid(data[0], bulk.find('.ams-unlocked-kwbid-bulk'));
+
+    bulk.show();
+
+    return bulk;
 }
