@@ -67,4 +67,29 @@
             </table>
         </section>
     </div>
+    
+</div>
+
+<!-- Templates -->
+<div id="ams-unlocked-kwmodify" class="ams-unlocked-kwmodify">
+    <div class="ams-unlocked-kwstatus" title="Click to toggle" data-ams-unlocked-keyword="">
+        <span class="a-button a-button-small">
+            <span class="a-button-inner a-dropdown-status">
+                <span class="a-button-text">
+                    <span class="ams-status-active ams-dropdown-status"></span>
+                    <span class="ams-unlocked-kwstatus-current">Enabled</span>
+                </span>
+            </span>
+        </span>
+        <div class="loading-small" style="display:none"></div>
+    </div>
+    <div class="bidInplaceEditWrapper">
+        Bid: 
+        <span class="a-declarative" data-action="a-keyword-bid-inplace-edit" data-a-keyword-bid-inplace-edit="">
+            <input type="text" maxlength="6" value="$0.15" name="keyword-bid" class="a-input-text inplaceBidInput">
+        </span>
+        <div class="a-box a-alert-inline a-alert-inline-success hidden bidSaveSuccess" style="display: none;"><div class="a-box-inner a-alert-container"><i class="a-icon a-icon-alert"></i><div class="a-alert-content"></div></div></div>
+        <div class="a-box a-alert-inline a-alert-inline-error hidden bidSaveError" style="display: none;"><div class="a-box-inner a-alert-container"><i class="a-icon a-icon-alert"></i><div class="a-alert-content"></div></div></div>
+        <div class="loading-small hidden bidSaving" style="display: none;"></div>
+    </div>
 </div>

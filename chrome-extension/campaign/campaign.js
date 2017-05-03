@@ -8,6 +8,21 @@ window.setInterval(() => {
     }
 }, 100);
 
+function updateStatus(keywordIdList, enable, cb) {
+    let operation = enable ? "ENABLE" : "PAUSE";
+    let entityId = getEntityId();
+    let keywordIds = keywordIdList.join(',');
+    $.ajax({
+        url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
+        method: 'POST',
+        data: {operation, entityId, keywordIds},
+        dataType: 'json',
+        success: (data, textStatus, xhr) => cb(data),
+        error: (xhr, error, status) => cb({error}),
+    });
+
+}
+
 function addCampaignTabs(tabs) {
     // Add in the analytics tab
     let a = $('<a href="#">Keyword Analytics</a>');
@@ -251,13 +266,61 @@ function renderKeywordTable(data, opts) {
     data = data.filter(opts.filterFn ? opts.filterFn : x => true);
 
     let formatFn = opts.formatFn ? opts.formatFn : x => x;
-    data = data.map(x => [x.keyword, formatFn(opts.metricFn(x))]);
+    data = data.map(x => [x.keyword, formatFn(opts.metricFn(x)), renderModifyCell(x)]);
 
     $(opts.tableSelector).DataTable({
         data: data,
         order: [[1, opts.order || 'asc']],
-        columns: [{ title: "Keyword" }, { title: opts.columnTitle }],
+        columns: [{ title: "Keyword" }, { title: opts.columnTitle }, { title: "Modify" }],
     });
 
     $(opts.tableSelector).width('100%'); // TODO: figure out why DataTables is setting this to 0
+}
+
+$(document).on('click', '.ams-unlocked-kwstatus', function() {
+    let keyword = JSON.parse($(this).attr('data-ams-unlocked-keyword'));
+    $(this).find('.a-button').hide();
+    $(this).find('.loading-small').show();
+    updateStatus([keyword.id], !keyword.enabled, (result) => {
+        if (result.success) {
+            keyword.enabled = !keyword.enabled;
+            renderKeywordStatus(keyword, $(this).parents('.ams-unlocked-kwmodify'));
+        }
+        else {
+            console.error('problems updating status:', result);
+        }
+        $(this).find('.a-button').show();
+        $(this).find('.loading-small').hide();
+    });
+});
+
+function renderModifyCell(keyword) {
+    let cell = $('#ams-unlocked-kwmodify').clone();
+    cell.removeAttr('id');
+
+    let kwdata = cell.find('.bidInplaceEditWrapper .a-declarative');
+    kwdata.attr('data-a-keyword-bid-inplace-edit', JSON.stringify({keywordId: keyword.id}));
+
+    renderKeywordStatus(keyword, cell);
+
+    cell.show();
+    return cell[0].outerHTML;
+}
+
+function renderKeywordStatus(keyword, cell) {
+    cell.find('.ams-unlocked-kwstatus')
+        .attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
+
+    let statusImg = cell.find('.ams-dropdown-status');
+    let statusTxt = cell.find('.ams-unlocked-kwstatus-current');
+    if (keyword.enabled) {
+        statusImg.addClass('ams-status-active');
+        statusImg.removeClass('ams-status-paused');
+        statusTxt.text('Enabled');
+    }
+    else {
+        statusImg.removeClass('ams-status-active');
+        statusImg.addClass('ams-status-paused');
+        statusTxt.text('Paused');
+    }
 }

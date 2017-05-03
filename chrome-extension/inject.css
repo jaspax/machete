@@ -19,3 +19,15 @@
 .ams-unlocked-chart-horizontal {
     display: inline-block;
 }
+
+#ams-unlocked-kwmodify {
+    display: none;
+}
+
+.ams-unlocked-kwmodify {
+    text-align: right;
+}
+
+.ams-unlocked-kwmodify > div {
+    display: inline-block;
+}
