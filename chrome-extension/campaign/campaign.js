@@ -139,6 +139,14 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => `${x}%`,
         });
         renderKeywordTable(data, { 
+            selector: '#ams-unlocked-high-profit',
+            columnTitle: 'Profit (Sales - Spend)',
+            order: 'desc',
+            filterFn: (x) => x.sales && x.acos < 100,
+            metricFn: (x) => x.sales - x.spend,
+            formatFn: moneyFmt,
+        });
+        renderKeywordTable(data, { 
             selector: '#ams-unlocked-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
