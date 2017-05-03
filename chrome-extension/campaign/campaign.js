@@ -250,7 +250,7 @@ function renderKeywordChart(kws, opt) {
         x: kws.avgCpc,
         y: kws.clicks,
         text: kws.kw.map((kw, i) => 
-            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: $${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${kws.acos[i]}%`),
+            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${kws.acos[i]}%`),
         hoverinfo: 'text',
         marker: {
             sizemode: 'diameter',
