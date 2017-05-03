@@ -291,14 +291,17 @@ function renderKeywordChart(kws, opt) {
 
 function renderKeywordTable(data, opts) {
     let container = $(opts.selector);
-    let table = container.find('.ams-unlocked-kwtable');
+    container.empty();
 
     data = data.filter(opts.filterFn ? opts.filterFn : x => true);
     
     // Render the bulk update button -- pass in a copy of the array since we're
     // going to modify it below.
     let bulk = renderBulkUpdate([].concat(data), opts);
-    table.before(bulk);
+    container.append(bulk);
+
+    let table = cloneTemplate("ams-unlocked-kwtable");
+    container.append(table);
 
     let formatFn = opts.formatFn ? opts.formatFn : x => x;
     data = data.map(x => [
@@ -309,7 +312,6 @@ function renderKeywordTable(data, opts) {
     ]);
 
     table.DataTable({
-        retrieve: true,
         data: data,
         order: [[1, opts.order || 'asc']],
         columns: [
@@ -371,8 +373,7 @@ $(document).on('click', '.ams-unlocked-kwbid input[name=save]', function() {
 });
 
 function renderKeywordBid(keyword, cell) {
-    cell = cell || $('#ams-unlocked-kwbid').clone();
-    cell.removeAttr('id');
+    cell = cell || cloneTemplate('ams-unlocked-kwbid');
     cell.show();
     cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
 
@@ -383,8 +384,7 @@ function renderKeywordBid(keyword, cell) {
 }
 
 function renderKeywordStatus(keyword, cell) {
-    cell = cell || $('#ams-unlocked-kwstatus').clone();
-    cell.removeAttr('id');
+    cell = cell || cloneTemplate('ams-unlocked-kwstatus');
     cell.show();
     cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
 
@@ -440,8 +440,7 @@ $(document).on('click', '.ams-unlocked-kwbid-bulk input[name=save]', function() 
 });
 
 function renderBulkUpdate(data, opts) {
-    let bulk = $('#ams-unlocked-kwupdate-bulk').clone();
-    bulk.removeAttr('id');
+    let bulk = cloneTemplate('ams-unlocked-kwupdate-bulk');
     bulk[0].data = data;
     bulk[0].opts = opts;
 
@@ -451,4 +450,12 @@ function renderBulkUpdate(data, opts) {
     bulk.show();
 
     return bulk;
+}
+
+function cloneTemplate(id) {
+    let elem = $('#'+id).clone();
+    elem.removeAttr('id');
+    elem.show();
+    elem.removeClass('a-hidden'); // Amazon adds this to our elements for some reason
+    return elem;
 }
