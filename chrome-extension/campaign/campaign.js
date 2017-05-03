@@ -69,7 +69,13 @@ function addCampaignTabs(tabs) {
         let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
         let minImpressions = totalImpressions / (data.length * 10);
 
-        let salesQuartileCutoff = data.sort((a, b) => a.sales - b.sales)[Math.round(data.length / 4)];
+        let hasEnoughImpressions = x => x.clicks && x.impressions > minImpressions;
+        let clickRatio = x => x.clicks/x.impressions;
+
+        let salesTopQuartile = data.sort((a, b) => b.sales - a.sales)[Math.round(data.length / 4)];
+        let clickRatioSort = data.filter(hasEnoughImpressions).sort((a, b) => clickRatio(a) - clickRatio(b));
+        let clickRatioBottomQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.25)];
+        let clickRatioTopQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.75)];
 
         renderKeywordTable(data, { 
             tableSelector: '#ams-unlocked-acos',
@@ -83,8 +89,8 @@ function addCampaignTabs(tabs) {
             tableSelector: '#ams-unlocked-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
-            filterFn: (x) => x.clicks && x.impressions > minImpressions,
-            metricFn: (x) => x.clicks/x.impressions, 
+            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) <= clickRatio(clickRatioBottomQuartile),
+            metricFn: clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(data, {
@@ -107,8 +113,8 @@ function addCampaignTabs(tabs) {
             tableSelector: '#ams-unlocked-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
-            filterFn: (x) => x.clicks && x.impressions > minImpressions,
-            metricFn: (x) => x.clicks/x.impressions, 
+            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) >= clickRatio(clickRatioTopQuartile),
+            metricFn: clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(data, { 
@@ -123,7 +129,7 @@ function addCampaignTabs(tabs) {
             tableSelector: '#ams-unlocked-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
-            filterFn: (x) => x.sales && x.sales >= salesQuartileCutoff.sales,
+            filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
             metricFn: (x) => x.sales,
             formatFn: moneyFmt,
         });
