@@ -31,3 +31,25 @@
 .ams-unlocked-kwmodify > div {
     display: inline-block;
 }
+
+.ams-unlocked-templates {
+    display: none;
+}
+
+.ams-unlocked-kwupdate-bulk {
+    display: block;
+    float: right;
+    position: relative;
+    top: -25px;
+    border: 1px solid rgb(166, 166, 166);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.ams-unlocked-kwbulk-label {
+    font-weight: bold;
+}
+
+.ams-unlocked-kwstatus-bulk, .ams-unlocked-kwbid-bulk {
+    display: inline-block;
+}
