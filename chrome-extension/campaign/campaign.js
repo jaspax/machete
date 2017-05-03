@@ -20,7 +20,19 @@ function updateStatus(keywordIdList, enable, cb) {
         success: (data, textStatus, xhr) => cb(data),
         error: (xhr, error, status) => cb({error}),
     });
+}
 
+function updateBid(keywordIdList, bid, cb) {
+    let entityId = getEntityId();
+    let keywordIds = keywordIdList.join(',');
+    $.ajax({
+        url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
+        method: 'POST',
+        data: {operation: 'UPDATE', bid, entityId, keywordIds},
+        dataType: 'json',
+        success: (data, textStatus, xhr) => cb(data),
+        error: (xhr, error, status) => cb({error}),
+    });
 }
 
 function addCampaignTabs(tabs) {
@@ -294,17 +306,41 @@ $(document).on('click', '.ams-unlocked-kwstatus', function() {
     });
 });
 
+$(document).on('click', '.bidInplaceEditWrapper input[name=save]', function() {
+    let container = $(this).parents('.bidInplaceEditWrapper');
+    let input = container.find('input[name=keyword-bid]');
+    let keyword = JSON.parse(container.attr('data-ams-unlocked-keyword'));
+    container.children().hide();
+    container.find('.loading-small').show();
+    updateBid([keyword.id], input.val(), (result) => {
+        if (result.success) {
+            keyword.bid = input.val();
+            renderKeywordBid(keyword, container);
+        }
+        else {
+            console.error('problems updating status:', result);
+        }
+        container.children().show();
+        container.find('.loading-small').hide();
+    });
+});
+
 function renderModifyCell(keyword) {
     let cell = $('#ams-unlocked-kwmodify').clone();
     cell.removeAttr('id');
 
-    let kwdata = cell.find('.bidInplaceEditWrapper .a-declarative');
-    kwdata.attr('data-a-keyword-bid-inplace-edit', JSON.stringify({keywordId: keyword.id}));
-
+    renderKeywordBid(keyword, cell);
     renderKeywordStatus(keyword, cell);
 
     cell.show();
     return cell[0].outerHTML;
+}
+
+function renderKeywordBid(keyword, cell) {
+    cell.find('.bidInplaceEditWrapper')
+        .attr('data-ams-unlocked-keyword', JSON.stringify(keyword))
+    cell.find('.bidInplaceEditWrapper input[name=keyword-bid]')
+        .attr('value', keyword.bid);
 }
 
 function renderKeywordStatus(keyword, cell) {

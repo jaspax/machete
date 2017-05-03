@@ -81,15 +81,18 @@
                 </span>
             </span>
         </span>
-        <div class="loading-small" style="display:none"></div>
+        <div class="loading-small hidden" style="display:none"></div>
     </div>
     <div class="bidInplaceEditWrapper">
-        Bid: 
-        <span class="a-declarative" data-action="a-keyword-bid-inplace-edit" data-a-keyword-bid-inplace-edit="">
-            <input type="text" maxlength="6" value="$0.15" name="keyword-bid" class="a-input-text inplaceBidInput">
+        <span>
+            <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
         </span>
-        <div class="a-box a-alert-inline a-alert-inline-success hidden bidSaveSuccess" style="display: none;"><div class="a-box-inner a-alert-container"><i class="a-icon a-icon-alert"></i><div class="a-alert-content"></div></div></div>
-        <div class="a-box a-alert-inline a-alert-inline-error hidden bidSaveError" style="display: none;"><div class="a-box-inner a-alert-container"><i class="a-icon a-icon-alert"></i><div class="a-alert-content"></div></div></div>
-        <div class="loading-small hidden bidSaving" style="display: none;"></div>
+		<span class="a-button a-button-primary a-button-small">
+            <span class="a-button-inner">
+                <input name="save" class="a-button-input" type="submit" value="save">
+                <span class="a-button-text" aria-hidden="true">Save</span>
+            </span>
+        </span>
+        <div class="loading-small hidden" style="display: none;"></div>
     </div>
 </div>
