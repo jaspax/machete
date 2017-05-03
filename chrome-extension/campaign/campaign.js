@@ -340,6 +340,7 @@ $(document).on('click', '.ams-unlocked-kwbid input[name=save]', function() {
 function renderKeywordBid(keyword, cell) {
     cell = cell || $('#ams-unlocked-kwbid').clone();
     cell.removeAttr('id');
+    cell.show();
     cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
 
     cell.find('input[name=keyword-bid]')
@@ -351,6 +352,7 @@ function renderKeywordBid(keyword, cell) {
 function renderKeywordStatus(keyword, cell) {
     cell = cell || $('#ams-unlocked-kwstatus').clone();
     cell.removeAttr('id');
+    cell.show();
     cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
 
     let statusImg = cell.find('.ams-dropdown-status');
