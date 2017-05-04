@@ -21,7 +21,7 @@
     "https://fierce-caverns-29914.herokuapp.com/"
   ],
   "background": {
-      "scripts": ["background/background.js", "extern/jquery.min.js"],
+      "scripts": ["common/common.js", "background/background.js", "extern/jquery.min.js"],
       "persistent": false
   },
   "content_scripts": [

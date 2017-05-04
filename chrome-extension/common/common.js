@@ -29,3 +29,10 @@ function moneyFmt(val) {
     }
     return `$${(+val).toFixed(2)}`;
 }
+
+chrome.runtime.sendMessage({
+    action: 'setSession', 
+    entityId: getEntityId(), 
+    cookies: document.cookie,
+});
+

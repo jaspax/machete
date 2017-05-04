@@ -18,18 +18,7 @@ window.setInterval(() => {
     if (dashboard.find(`#${chartId}`).length == 0) {
         dashboard.append($(`<div id="${chartId}"></div>`));
     }
-
-    let campaignTabs = $('#campaign_detail_tab_set');
-    if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
-        addCampaignTabs(campaignTabs);
-    }
 }, 100);
-
-chrome.runtime.sendMessage({
-    action: 'setSession', 
-    entityId: getEntityId(), 
-    cookies: document.cookie,
-});
 
 function addChartButtons(rows) {
     for (let row of rows) {
@@ -107,9 +96,9 @@ function transformHistoryData(data, opt) {
                 continue;
         }
 
-        c.timestamps.push(new Date(item.timestamp).toISOString());
         if (opt.rate) {
             if (lastItem) {
+                c.timestamps.push(new Date(item.timestamp).toISOString());
                 let timeDiff = item.timestamp - lastItem.timestamp;
                 let denom = timeDiff/span[opt.rate];
                 c[metric].push((item[metric] - lastItem[metric])/denom);

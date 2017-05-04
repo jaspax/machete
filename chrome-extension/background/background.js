@@ -1,4 +1,5 @@
 const getSessionKey = entityId => `session_${entityId}`;
+const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 const serviceUrl = 'https://fierce-caverns-29914.herokuapp.com';
 
@@ -33,7 +34,10 @@ function setSession(req, sendResponse) {
     console.log('stored cookies', sessionKey, req.cookies);
     
     // Always request data on login, then set the alarm
-    requestCampaignData(req.entityId, () => console.log("stored campaign data"));
+    let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
+    if (!lastCampaignData || Date.now() - lastCampaignData >= span.hour) {
+        requestCampaignData(req.entityId, () => console.log("stored campaign data"));
+    }
     chrome.alarms.get(sessionKey, (alarm) => {
         if (!alarm) {
             let period = 60;
@@ -88,6 +92,8 @@ function requestCampaignData(entityId, sendResponse) {
         },
         error: (xhr, textStatus, error) => sendResponse({error}),
     });
+
+    localStorage.setItem(getCampaignDataKey(entityId), timestamp);
 }
 
 function requestKeywordData(entityId, adGroupId, sendResponse) {
