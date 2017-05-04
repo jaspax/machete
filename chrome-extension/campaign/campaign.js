@@ -132,11 +132,17 @@ function generateHistoryReports() {
     getCampaignHistory(getEntityId(), getCampaignId(), (data) => {
         let metrics = ['impressions', 'clicks', 'salesCount'];
         data = parallelizeHistoryData(data, {rate: 'day', metrics});
-        renderHistoryChart(data, metrics);
+        renderHistoryChart(data, {
+            labels: {
+                impressions: 'Impressions',
+                clicks: 'Clicks',
+                salesCount: 'Sales',
+            },
+        });
     });
 }
 
-function renderHistoryChart(data) {
+function renderHistoryChart(data, opts) {
     let series = [];
     for (let key of Object.keys(data)) {
         if (key == 'timestamps')
@@ -146,18 +152,20 @@ function renderHistoryChart(data) {
           x: data.timestamps,
           y: data[key],
           mode: 'lines+markers',
-          name: key,
+          name: opts.labels[key],
           connectgaps: true
         });
     }
 
+    let historyChartId = 'ams-unlocked-campaign-history-chart';
+
     var layout = {
-      width: 800,
+      width: 840,
       height: 600,
       autosize: true,
     };
 
-    Plotly.newPlot('ams-unlocked-campaign-history-chart', series, layout);
+    Plotly.newPlot(historyChartId, series, layout);
 };
 
 
