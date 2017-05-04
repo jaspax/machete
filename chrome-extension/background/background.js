@@ -101,7 +101,8 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => storeKeywordDataCloud(entityId, adGroupId, Date.now(), data).then(sendResponse({data})),
+        success: (data, textStatus, xhr) => 
+            storeKeywordDataCloud(entityId, adGroupId, Date.now(), data).then(() => sendResponse({data})),
         error: (xhr, textStatus, error) => sendResponse({error}),
     });
 }

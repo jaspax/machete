@@ -68,29 +68,31 @@ function addCampaignTabs(tabs) {
     let adGroupId = $('input[name=adGroupId]')[0].value;
 
     getKeywordData(getEntityId(), adGroupId, (data) => {
-        renderKeywordChart(transformKeywordData(data), {});
+        let enabledKws = data.filter(kw => kw.enabled);
+
+        renderKeywordChart(transformKeywordData(enabledKws), {});
         /* TODO: excluding these until we decide if/when they're actually useful
-        renderSpendPieChart(data);
-        renderClicksHistogram(data);
-        renderImpressionsHistogram(data);
+        renderSpendPieChart(enabledKws);
+        renderClicksHistogram(enabledKws);
+        renderImpressionsHistogram(enabledKws);
         */
 
         // We often don't want to display data for points with very low numbers
         // of impressions, so we set a "minimum meaningful impressions" value at
         // 10% of what would be the value if all keywords had the same number of
         // impressions.
-        let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
-        let minImpressions = totalImpressions / (data.length * 10);
+        let totalImpressions = enabledKws.reduce((acc, val) => acc + val.impressions, 0);
+        let minImpressions = totalImpressions / (enabledKws.length * 10);
 
         let hasEnoughImpressions = x => x.clicks && x.impressions > minImpressions;
         let clickRatio = x => x.clicks/x.impressions;
 
-        let salesTopQuartile = data.sort((a, b) => b.sales - a.sales)[Math.round(data.length / 4)];
-        let clickRatioSort = data.filter(hasEnoughImpressions).sort((a, b) => clickRatio(a) - clickRatio(b));
+        let salesTopQuartile = enabledKws.sort((a, b) => b.sales - a.sales)[Math.round(enabledKws.length / 4)];
+        let clickRatioSort = enabledKws.filter(hasEnoughImpressions).sort((a, b) => clickRatio(a) - clickRatio(b));
         let clickRatioBottomQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.25)];
         let clickRatioTopQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.75)];
 
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-acos',
             columnTitle: 'ACOS',
             order: 'desc',
@@ -98,7 +100,7 @@ function addCampaignTabs(tabs) {
             metricFn: (x) => x.acos,
             formatFn: (x) => x ? `${x}%` : "(no sales)",
         });
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
@@ -106,7 +108,7 @@ function addCampaignTabs(tabs) {
             metricFn: clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
-        renderKeywordTable(data, {
+        renderKeywordTable(enabledKws, {
             selector: '#ams-unlocked-spend',
             columnTitle: 'Spend',
             order: 'desc',
@@ -114,7 +116,7 @@ function addCampaignTabs(tabs) {
             metricFn: (x) => x.spend,
             formatFn: moneyFmt,
         });
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-impressions',
             columnTitle: 'Impressions',
             order: 'asc',
@@ -122,7 +124,7 @@ function addCampaignTabs(tabs) {
             metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
         });
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
@@ -130,7 +132,7 @@ function addCampaignTabs(tabs) {
             metricFn: clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-low-acos',
             columnTitle: 'ACOS',
             order: 'asc',
@@ -138,7 +140,7 @@ function addCampaignTabs(tabs) {
             metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
         });
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-high-profit',
             columnTitle: 'Profit (Sales - Spend)',
             order: 'desc',
@@ -146,13 +148,23 @@ function addCampaignTabs(tabs) {
             metricFn: (x) => x.sales - x.spend,
             formatFn: moneyFmt,
         });
-        renderKeywordTable(data, { 
+        renderKeywordTable(enabledKws, { 
             selector: '#ams-unlocked-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
             metricFn: (x) => x.sales,
             formatFn: moneyFmt,
+        });
+
+        // This is the only one that uses disabled keywords
+        renderKeywordTable(data, { 
+            selector: '#ams-unlocked-paused',
+            columnTitle: 'ACOS',
+            order: 'desc',
+            filterFn: (x) => !x.enabled,
+            metricFn: (x) => x.acos,
+            formatFn: (x) => `${x}%`,
         });
     });
 }
@@ -235,15 +247,16 @@ function getKeywordData(entityId, adGroupId, cb) {
             adGroupId: adGroupId,
         }, 
         (amsResponse) => {
-            if (!response.data.length) {
-                // Try our servers again
-                chrome.runtime.sendMessage({
-                    action: 'getKeywordData', // from our server
-                    entityId: entityId,
-                    adGroupId: adGroupId,
-                },
-                (response) => cb(response.data));
-            }
+            // Try our servers again. This may fire the callback again and cause
+            // us to redraw.
+            chrome.runtime.sendMessage({
+                action: 'getKeywordData', // from our server
+                entityId: entityId,
+                adGroupId: adGroupId,
+            }, 
+            (response) => {
+                cb(response.data);
+            });
         });
     });
 }; 
