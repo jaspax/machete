@@ -6,7 +6,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
         setSession(req, sendResponse);
     else if (req.action == 'requestData')
-        requestData(req.entityId, sendResponse);
+        requestCampaignData(req.entityId, sendResponse);
     else if (req.action == 'getDataHistory')
         getDataHistory(req.entityId, req.campaignId, sendResponse);
     else if (req.action == 'requestKeywordData')
@@ -21,18 +21,33 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
     let timestamp = Date.now();
-    requestData(entityId, (data) => {
-        if (data.error) {
-            console.warn('request data', data.error);
-            return;
-        }
-        console.log('request data success');
-        storeDataCloud(entityId, timestamp, data.data);
+    requestCampaignData(entityId, (data) => {
+        data.error ? console.warn('request data', data.error)
+                   : console.log('request data success');
     });
 });
 
 function setSession(req, sendResponse) {
-    /* TODO: this way of getting session doesn't actually work, alas.
+    let sessionKey = getSessionKey(req.entityId);
+    localStorage.setItem(sessionKey, req.cookies);
+    console.log('stored cookies', sessionKey, req.cookies);
+    
+    // Always request data on login, then set the alarm
+    requestCampaignData(req.entityId, () => console.log("stored campaign data"));
+    chrome.alarms.get(sessionKey, (alarm) => {
+        if (!alarm) {
+            let period = 60;
+            chrome.alarms.create(sessionKey, {
+                when: Date.now() + 500,
+                periodInMinutes: 60,
+            });
+            console.log('set alarm for', sessionKey);
+        }
+    });
+    sendResponse('ok');
+
+    /* TODO: this way of posting the session into the cloud doesn't actually
+     * work, alas
     let sessionEndpoint = `${serviceUrl}/session/${req.entityId}`;
     console.log("making request to", sessionEndpoint);
     $.ajax(sessionEndpoint, {
@@ -48,28 +63,14 @@ function setSession(req, sendResponse) {
     });
     */
 
-    let sessionKey = getSessionKey(req);
-    localStorage.setItem(sessionKey, req.cookies);
-    console.log('stored cookies', sessionKey, req.cookies);
-    chrome.alarms.get(sessionKey, (alarm) => {
-        if (!alarm) {
-            let period = 60;
-            chrome.alarms.create(sessionKey, {
-                when: Date.now() + 500,
-                periodInMinutes: 60,
-            });
-            console.log('set alarm for', sessionKey);
-        }
-    });
-    sendResponse('ok');
 }
 
-function requestData(entityId, sendResponse) {
+function requestCampaignData(entityId, sendResponse) {
     let sessionKey = getSessionKey(entityId);
-    let url = 'https://ams.amazon.com/api/rta/campaigns';
+    let timestamp = Date.now();
     document.cookie = localStorage.getItem(sessionKey);
     console.log('requesting campaign data for', entityId);
-    $.ajax(url, {
+    $.ajax('https://ams.amazon.com/api/rta/campaigns', {
         method: 'GET',
         data: {
             entityId,
@@ -80,17 +81,21 @@ function requestData(entityId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => sendResponse({data}),
+        success: (data, textStatus, xhr) => {
+            storeDataCloud(entityId, timestamp, data)
+                .then(() => sendResponse({data}))
+                .fail((error) => sendResponse({error}));
+        },
         error: (xhr, textStatus, error) => sendResponse({error}),
     });
 }
 
 function requestKeywordData(entityId, adGroupId, sendResponse) {
     let sessionKey = getSessionKey(entityId);
-    let url = 'https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList';
+    let timestamp = Date.now();
     document.cookie = localStorage.getItem(sessionKey);
     console.log('requesting keyword data for', entityId, adGroupId);
-    $.ajax(url, {
+    $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
         method: 'POST',
         data: {
             entityId, adGroupId,
@@ -101,8 +106,11 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => 
-            storeKeywordDataCloud(entityId, adGroupId, Date.now(), data).then(() => sendResponse({data})),
+        success: (data, textStatus, xhr) => {
+            storeKeywordDataCloud(entityId, adGroupId, timestamp, data)
+                .then(() => sendResponse({data}))
+                .fail((error) => sendResponse({error}));
+        },
         error: (xhr, textStatus, error) => sendResponse({error}),
     });
 }
