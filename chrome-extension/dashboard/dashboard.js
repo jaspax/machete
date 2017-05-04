@@ -5,10 +5,10 @@ const chartId = `${prefix}-chart`;
 const chartClass = `${prefix}-chart-btn`;
 
 const charts = [
-    { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour'} },
-    { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day'} },
-    { column: 9, label: "Spend / day", config: {metric: 'spend', rate: 'day'} },
-    { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day'} },
+    { column: 6, label: "Impressions / hour", config: {metrics: ['impressions'], rate: 'hour'} },
+    { column: 7, label: "Clicks / day", config: {metrics: ['clicks'], rate: 'day'} },
+    { column: 9, label: "Spend / day", config: {metrics: ['spend'], rate: 'day'} },
+    { column: 10, label: "Sales / day", config: {metrics: ['salesCount'], rate: 'day'} },
 ];
 
 window.setInterval(() => {
@@ -77,7 +77,7 @@ function getDataHistory(entityId, campaignId, cb) {
 }
 
 function renderChart(data, name, opt) {
-    var data = transformHistoryData(data, opt.config);
+    var data = parallelizeHistoryData(data, opt.config);
 
     var series = {
       x: data.timestamps,
@@ -96,36 +96,3 @@ function renderChart(data, name, opt) {
 
     Plotly.newPlot(opt.id, [series], layout);
 };
-
-function transformHistoryData(data, opt) {
-    // We have a series of timestamped snapshots; we want a series of parallel
-    // arrays keyed by campaignId
-    let metric = opt.metric;
-    let c = {
-        timestamps: [],
-        [metric]: []
-    };
-    let lastItem;
-    for (let item of data) {
-        // XXX: quick hack -- do this in backend?
-        if (lastItem && lastItem[metric] >= item[metric]) {
-                continue;
-        }
-
-        if (opt.rate) {
-            if (lastItem) {
-                c.timestamps.push(new Date(item.timestamp).toISOString());
-                let timeDiff = item.timestamp - lastItem.timestamp;
-                let denom = timeDiff/span[opt.rate];
-                c[metric].push((item[metric] - lastItem[metric])/denom);
-            }
-        }
-        else {
-            c[metric].push(item[metric]);
-        }
-
-        lastItem = item;
-    }
-
-    return c;
-}

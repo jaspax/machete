@@ -18,13 +18,14 @@ window.setInterval(() => {
         let adGroupIdInput = $('input[name=adGroupId]');
         if (adGroupIdInput.length) {
             let adGroupId = adGroupIdInput.val();
-            generateKeywordData(adGroupId);
+            generateKeywordReports(adGroupId);
+            generateHistoryReports();
             hasAdGroup = true;
         }
     }
 }, 100);
 
-function generateKeywordData(adGroupId) {
+function generateKeywordReports(adGroupId) {
     getKeywordData(getEntityId(), adGroupId, (data) => {
         let enabledKws = data.filter(kw => kw.enabled);
 
@@ -126,6 +127,39 @@ function generateKeywordData(adGroupId) {
         });
     });
 }
+
+function generateHistoryReports() {
+    getCampaignHistory(getEntityId(), getCampaignId(), (data) => {
+        let metrics = ['impressions', 'clicks', 'salesCount'];
+        data = parallelizeHistoryData(data, {rate: 'day', metrics});
+        renderHistoryChart(data, metrics);
+    });
+}
+
+function renderHistoryChart(data) {
+    let series = [];
+    for (let key of Object.keys(data)) {
+        if (key == 'timestamps')
+            continue;
+
+        series.push({
+          x: data.timestamps,
+          y: data[key],
+          mode: 'lines+markers',
+          name: key,
+          connectgaps: true
+        });
+    }
+
+    var layout = {
+      width: 800,
+      height: 600,
+      autosize: true,
+    };
+
+    Plotly.newPlot('ams-unlocked-campaign-history-chart', series, layout);
+};
+
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
     let entityId = getEntityId();
@@ -246,6 +280,15 @@ function renderImpressionsHistogram(data) {
     Plotly.plot('ams-unlocked-impressions-histo', [chartData], {height: 400, width: 400, showlegend: false});
 }
 
+function getCampaignHistory(entityId, campaignId, cb) {
+    chrome.runtime.sendMessage({
+        action: 'getDataHistory',
+        entityId: entityId,
+        campaignId: campaignId,
+    },
+    (response) => cb(response.data));
+}
+
 function getKeywordData(entityId, adGroupId, cb) {
     chrome.runtime.sendMessage({
         action: 'getKeywordData', // from our server
@@ -324,7 +367,8 @@ function renderKeywordChart(kws, opt) {
         margin: {t: 20},
         height: 600,
         width: $('.a-box-inner').width(),
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false,
     };
     Plotly.plot(chartId, [chartData], layout, {showLink: false});
 }
@@ -363,17 +407,6 @@ function renderKeywordTable(data, opts) {
     });
 
     table.width('100%'); // TODO: figure out why DataTables is setting this to 0
-}
-
-function getBoundKeywords(elem) {
-    let keywordAttr = elem.attr('data-ams-unlocked-keyword');
-    if (keywordAttr) {
-        return [JSON.parse(keywordAttr)];
-    }
-    let parent = elem.closest('[data-ams-unlocked-kwupdate-bulk]');
-    if (parent) {
-        return parent.keywords;
-    }
 }
 
 $(document).on('click', '.ams-unlocked-kwstatus', function() {
