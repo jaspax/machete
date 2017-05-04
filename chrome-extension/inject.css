@@ -4,8 +4,13 @@
 }
 
 .ams-unlocked-chart-btn {
-	display: block;
+	display: inline-block;
 	text-align: right;
+    background: linear-gradient(to bottom,#f7dfa5,#f0c14b);
+    width: 18px;
+    height: 18px;
+    margin: 2px 4px;
+    padding: 1px;
 }
 
 #ams-unlocked-keyword-analysis h1 {

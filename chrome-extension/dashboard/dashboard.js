@@ -33,7 +33,7 @@ function addChartButtons(rows) {
                 let selectName = select.name;
                 let campaignId = selectName.split('_').pop();
                 campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
-                let btn = $(`<a href="#" class="${chartClass}">Chart</a>`);
+                let btn = $(`<a href="#" class="${chartClass}"><img src="${chartPng}" /></a>`);
                 btn.click(function(evt) {
                     getDataHistory(getEntityId(), campaignId, (data) => {
                         renderChart(data, name, chart);
