@@ -1,72 +1,30 @@
 const tabClass = `${prefix}-tab`;
 const chartId = `${prefix}-kwchart`;
 
+const ourTabs = [
+    // note: these wind up appended in the reverse order they're listed here
+    {label: "Campaign History", content: "history.html"},
+    {label: "Keyword Analytics", content: "keywordAnalytics.html"},
+];
+
+let hasAdGroup = false;
 window.setInterval(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
     if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
         addCampaignTabs(campaignTabs);
     }
+
+    if (!hasAdGroup) {
+        let adGroupIdInput = $('input[name=adGroupId]');
+        if (adGroupIdInput.length) {
+            let adGroupId = adGroupIdInput.val();
+            generateKeywordData(adGroupId);
+            hasAdGroup = true;
+        }
+    }
 }, 100);
 
-function updateKeyword(keywordIdList, operation, dataValues, cb) {
-    let entityId = getEntityId();
-    
-    // TODO: the parameters to the Amazon API imply that you can pass more than
-    // 1 keyword at a time, but testing this shows that doing so just generates
-    // an error. So we do it the stupid way instead, with a loop.
-    let requests = [];
-    for (let id of keywordIdList) {
-        let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
-        requests.push($.ajax({
-            url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
-            method: 'POST',
-            data: postData,
-            dataType: 'json',
-        }));
-    }
-
-    // TODO: in the case that we have a lot of these (bulk update), implement
-    // progress feedback.
-    $.when.apply($, requests)
-        .done((result) => {
-            result.length ? cb(Object.assign(result[0], dataValues))
-                          : cb(Object.assign(result, dataValues));
-        })
-        .fail((error) => cb({error}));
-}
-
-function updateStatus(keywordIdList, enable, cb) {
-    let operation = enable ? "ENABLE" : "PAUSE";
-    return updateKeyword(keywordIdList, operation, {}, cb);
-}
-
-function updateBid(keywordIdList, bid, cb) {
-    return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
-}
-
-function addCampaignTabs(tabs) {
-    // Add in the analytics tab
-    let a = $('<a href="#">Keyword Analytics</a>');
-    let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
-    li.append(a);
-    a.click(function(evt) {
-        // Hide all of the body content except the one we want
-        li.addClass('a-active');
-        li.siblings().removeClass('a-active');
-        tabs.parent().children('div').addClass('a-hidden');
-        tabs.parent().find('#ams-unlocked-keyword-analysis').removeClass('a-hidden');
-        $(`#${chartId}`).show();
-    });
-    $(tabs.children()[0]).after(li);
-
-    // Fetch the url we want in order to actually embed it in the page
-    $.ajax({
-        url: chrome.runtime.getURL('campaign/keywordAnalytics.html'),
-        success: (data, textStatus, xhr) => tabs.parent().append(data),
-    });
-
-    let adGroupId = $('input[name=adGroupId]')[0].value;
-
+function generateKeywordData(adGroupId) {
     getKeywordData(getEntityId(), adGroupId, (data) => {
         let enabledKws = data.filter(kw => kw.enabled);
 
@@ -167,6 +125,67 @@ function addCampaignTabs(tabs) {
             formatFn: (x) => `${x}%`,
         });
     });
+}
+
+function updateKeyword(keywordIdList, operation, dataValues, cb) {
+    let entityId = getEntityId();
+    
+    // TODO: the parameters to the Amazon API imply that you can pass more than
+    // 1 keyword at a time, but testing this shows that doing so just generates
+    // an error. So we do it the stupid way instead, with a loop.
+    let requests = [];
+    for (let id of keywordIdList) {
+        let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
+        requests.push($.ajax({
+            url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
+            method: 'POST',
+            data: postData,
+            dataType: 'json',
+        }));
+    }
+
+    // TODO: in the case that we have a lot of these (bulk update), implement
+    // progress feedback.
+    $.when.apply($, requests)
+        .done((result) => {
+            result.length ? cb(Object.assign(result[0], dataValues))
+                          : cb(Object.assign(result, dataValues));
+        })
+        .fail((error) => cb({error}));
+}
+
+function updateStatus(keywordIdList, enable, cb) {
+    let operation = enable ? "ENABLE" : "PAUSE";
+    return updateKeyword(keywordIdList, operation, {}, cb);
+}
+
+function updateBid(keywordIdList, bid, cb) {
+    return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
+}
+
+function addCampaignTabs(tabs) {
+    for (let tab of ourTabs) {
+        let a = $(`<a href="#">${tab.label}</a>`);
+        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
+        li.append(a);
+
+        let container = $(`<div id="ams-unlocked-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+        tabs.parent().append(container);
+
+        a.click(function(evt) {
+            li.addClass('a-active');
+            li.siblings().removeClass('a-active');
+            tabs.parent().children('div').addClass('a-hidden');
+            container.removeClass('a-hidden');
+        });
+        $(tabs.children()[0]).after(li);
+
+        // Fetch the url we want in order to actually embed it in the page
+        $.ajax({
+            url: chrome.runtime.getURL('campaign/'+tab.content),
+            success: (data, textStatus, xhr) => container.append(data),
+        });
+    }
 }
 
 function renderSpendPieChart(data) {
