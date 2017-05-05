@@ -130,28 +130,56 @@ function generateKeywordReports(adGroupId) {
 }
 
 function generateHistoryReports() {
-    getCampaignHistory(getEntityId(), getCampaignId(), (data) => {
-        let metrics = ['impressions', 'clicks', 'salesCount'];
-        data = parallelizeHistoryData(data, {rate: 'day', metrics});
-
-        renderHistoryChart(data, {
-            labels: {
-                impressions: 'Impressions',
-                clicks: 'Clicks',
-                salesCount: 'Sales',
-            },
-        });
-    });
+    getCampaignHistory(getEntityId(), getCampaignId(), (data) => renderHistoryChart(data));
 }
 
-function renderHistoryChart(data, opts) {
-    let series = [];
-    let keys = Object.keys(data).filter(k => k != 'timestamps');
+function renderHistoryChart(data) {
+    let metrics = ['impressions', 'clicks', 'salesCount'];
+
+    let impressionsData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions'});
+    let maxImpressions = Math.max.apply(null, impressionsData.impressions);
+
+    let clicksData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks'});
+    let maxClicks = Math.max.apply(null, clicksData.clicks);
+
+    let salesCountData = parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
+    let maxSales = Math.max.apply(null, salesCountData.salesCount);
+
+    let series = [
+        {
+          x: impressionsData.timestamps,
+          y: impressionsData.impressions,
+          mode: 'lines',
+          fill: 'tozeroy',
+          name: 'Impressions',
+          yaxis: 'y',
+          connectgaps: true,
+        },
+        {
+          x: clicksData.timestamps,
+          y: clicksData.clicks,
+          mode: 'lines',
+          line: { dash: 'dot', width: 2 },
+          name: 'Clicks',
+          yaxis: 'y2',
+          connectgaps: true,
+        },
+        {
+          x: salesCountData.timestamps,
+          y: salesCountData.salesCount,
+          mode: 'lines',
+          name: 'Sales',
+          yaxis: 'y3',
+          connectgaps: true,
+        },
+    ];
 
     var layout = {
+      title: 'Campaign History',
       width: 840,
       height: 600,
       autosize: true,
+      margin: { l: 20, b: 40 },
       xaxis: {
           autorange: true,
           showgrid: true,
@@ -160,38 +188,32 @@ function renderHistoryChart(data, opts) {
           autotick: true,
           showticklabels: true
       },
+      yaxis: { // impressions
+        range: [0, maxImpressions * 1.1],
+        showgrid: false,
+        zeroline: true,
+        showline: true,
+        showticklabels: false,
+      }, 
+      yaxis2: { // clicks
+        range: [0, maxClicks * 1.5],
+        showgrid: false,
+        zeroline: true,
+        showline: true,
+        showticklabels: false,
+        overlaying: 'y',
+      }, 
+      yaxis3: { // sales
+        range: [0, maxSales * 2],
+        showgrid: false,
+        zeroline: true,
+        showline: true,
+        showticklabels: false,
+        overlaying: 'y',
+      }, 
     };
 
-    for (let index in keys) {
-        index = +index;
-        let key = keys[index];
-        let yAxisKey = 'yaxis' + (index ? index + 1 : '');
-
-        series.push({
-          x: data.timestamps,
-          y: data[key],
-          mode: 'lines',
-          fill: 'tozeroy',
-          name: opts.labels[key],
-          yaxis: yAxisKey.replace('axis', ''),
-          connectgaps: true
-        });
-
-        layout[yAxisKey] = { 
-            autorange: true,
-            showgrid: false,
-            zeroline: true,
-            showline: true,
-            showticklabels: false,
-        };
-        if (index)
-            layout[yAxisKey].overlaying = 'y';
-    }
-
     let historyChartId = 'ams-unlocked-campaign-history-chart';
-
-    // NEXT soomething about y-axis here
-
     Plotly.newPlot(historyChartId, series, layout);
 };
 
