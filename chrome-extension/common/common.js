@@ -37,23 +37,34 @@ chrome.runtime.sendMessage({
     cookies: document.cookie,
 });
 
+// Convert a series of timestamped structs into an object with one or more
+// parallel arrays. The arrays which are built are based on opt.metric or
+// opt.metrics (if more than one), and you can get raw values, or the rate of
+// change from the previous value if opt.rate is set.
 function parallelizeHistoryData(data, opt) {
-    // We have a series of timestamped snapshots; we want a series of parallel
-    // arrays keyed by campaignId
     let metrics = opt.metrics || [opt.metric];
-    let c = {
-        timestamps: [],
-    };
+    let c = { timestamps: [] };
     metrics.forEach(metric => c[metric] = []);
+
     let lastItem;
+    data = data.sort((a, b) => a.timestamp - b.timestamp);
     for (let item of data) {
-        // Ignore two consecutive items with the same impressions as noise
-        if (lastItem && lastItem.impressions >= item.impressions) {
-                continue;
+        // Don't modify the original items in the data array!
+        item = Object.assign({}, item);
+
+        if (opt.chunk) {
+            // Round off all time values to their nearest chunk
+            item.timestamp = item.timestamp - (item.timestamp % span[opt.chunk]);
+
+            if (lastItem) {
+                let timeDiff = item.timestamp - lastItem.timestamp;
+                if (!timeDiff)
+                    continue;
+            }
         }
 
-        // When using opt.rate, the first entry doesn't generate an entry, so no
-        // timestamp or else our arrays get off
+        // When using opt.rate, the first entry doesn't generate a data point,
+        // so no timestamp or else our arrays get off
         if (!opt.rate || lastItem) {
             c.timestamps.push(new Date(item.timestamp).toISOString());
         }
