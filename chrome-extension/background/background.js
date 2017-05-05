@@ -3,6 +3,15 @@ const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 const serviceUrl = 'https://fierce-caverns-29914.herokuapp.com';
 
+chrome.runtime.onInstalled.addListener(details => {
+    if (details.reason == 'install') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('common/welcome.html') });
+    }
+    else if (details.reason == 'update') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('common/changelog.html') });
+    }
+});
+
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
         setSession(req, sendResponse);

@@ -40,7 +40,7 @@
       }
   ],
   "web_accessible_resources": [
-      "images/*",
+      "images/**",
       "*/*.html"
   ]
 }

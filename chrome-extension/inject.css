@@ -66,3 +66,36 @@
 .ams-unlocked-kwstatus-bulk, .ams-unlocked-kwbid-bulk {
     display: inline-block;
 }
+
+.ams-unlocked-outer {
+    width: 900px;
+    margin: auto;
+}
+
+.ams-unlocked-welcome {
+    text-align: center;
+    font-size: 18pt;
+}
+
+.ams-unlocked-wrapper {
+    border-width: 0px 1px;
+    border-color: rgb(228, 228, 228);
+    border-style: solid;
+    padding: 40px;
+    font-size: 12pt;
+}
+
+.ams-unlocked-screenshot {
+    display: block;
+    margin: auto;
+    border: 1px solid rgb(228, 228, 228);
+    border-radius: 8px;
+    padding: 10px;
+    max-width: 80%;
+    box-shadow: 4px 4px 5px rgb(166, 166, 166);
+}
+
+.ams-unlocked-wrapper h2 {
+    font-size: 21px;
+    color: rgb(196, 85, 0);
+}
