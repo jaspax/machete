@@ -9,6 +9,7 @@ const charts = [
     { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day', chunk: 'day', round: true} },
     { column: 9, label: "Spend / day", config: {metric: 'spend', rate: 'day', chunk: 'day', round: false} },
     { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day', chunk: 'day', round: false} },
+    { column: 11, label: "ACOS", config: {metric: 'acos', chunk: 'day', round: false} },
 ];
 
 window.setInterval(() => {
