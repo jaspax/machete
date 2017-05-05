@@ -90,7 +90,11 @@ function requestCampaignData(entityId, sendResponse) {
                 .then(() => sendResponse({data}))
                 .fail((error) => sendResponse({error}));
         },
-        error: (xhr, textStatus, error) => sendResponse({error}),
+        error: (xhr, textStatus, error) => {
+            if (xhr.status == 401) // Unauthorized
+                notifyNeedCredentials(entityId);
+            sendResponse({error});
+        },
     });
 
     localStorage.setItem(getCampaignDataKey(entityId), timestamp);
@@ -168,5 +172,20 @@ function getKeywordData(entityId, adGroupId, sendResponse) {
         error: (xhr, status, error) => {
             sendResponse({error, status});
         },
+    });
+}
+
+function notifyNeedCredentials(entityId) {
+    let notificationId = `${prefix}-${entityId}-need-credentials`;
+    chrome.notifications.create(notificationId, {
+        type: "basic",
+        iconUrl: "images/unlock-128.png",
+        title: "Sign in to AMS",
+        message: "AMS Unlocked needs you to sign in to AMS so it can keep your campaign history up-to-date.",
+        contextMessage: "Click on this notification to sign in at https://ams.amazon.com",
+    });
+    chrome.notifications.onClicked.addListener((clickId) => {
+        if (clickId == notificationId)
+            chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
     });
 }
