@@ -45,8 +45,16 @@ function addChartButtons(rows) {
                     popup = $('#'+chartId).clone();
                     popup.attr('id', newId);
                     popup.addClass(chartId);
+                    
+                    // hard-coded element width below b/c popup.width() doesn't
+                    // work as required
                     let pos = btn.position();
-                    popup.css({top: pos.top + btn.height() + 6, left: pos.left});
+                    if (pos.left + 420 > $(document).width()) { 
+                        popup.css({top: pos.top + btn.height() + 6, left: pos.left + btn.width() - 414});
+                    }
+                    else {
+                        popup.css({top: pos.top + btn.height() + 6, left: pos.left});
+                    }
                     btn.after(popup);
                 }
                 popup.show();
@@ -90,7 +98,7 @@ function renderChart(data, name, opt) {
 
     let height = 300;
     if (data.timestamps.length < 3) {
-        height = 250; // leaving room for link below
+        height = 270; // leaving room for link below
     }
 
     var layout = {
