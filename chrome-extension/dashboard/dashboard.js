@@ -88,13 +88,23 @@ function renderChart(data, name, opt) {
       connectgaps: true
     };
 
+    let height = 300;
+    if (data.timestamps.length < 3) {
+        height = 250; // leaving room for link below
+    }
+
     var layout = {
       title: `${opt.label}<br />${name}`,
       width: 400,
-      height: 300,
-      autosize: true,
+      height,
       margin: { l: 40, r: 20, b: 25, t: 60, pad: 4 },
     };
 
     Plotly.newPlot(opt.id, [series], layout, {displayModeBar: false});
+
+    let container = $('#'+opt.id);
+    if (data.timestamps.length < 3 && container.find('a.ams-unlocked-lodata').length == 0) {
+        let lowDataHref = chrome.runtime.getURL('common/low-data.html');
+        container.append(`<p><a class="ams-unlocked-lodata" target="_blank" href="${lowDataHref}">Why don't I see any data?</a></p>`);
+    }
 };
