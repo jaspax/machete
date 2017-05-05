@@ -136,10 +136,10 @@ function generateHistoryReports() {
 function renderHistoryChart(data) {
     let metrics = ['impressions', 'clicks', 'salesCount'];
 
-    let impressionsData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions'});
+    let impressionsData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions', round: true});
     let maxImpressions = Math.max.apply(null, impressionsData.impressions);
 
-    let clicksData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks'});
+    let clicksData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks', round: true});
     let maxClicks = Math.max.apply(null, clicksData.clicks);
 
     let salesCountData = parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
@@ -175,11 +175,10 @@ function renderHistoryChart(data) {
     ];
 
     var layout = {
-      title: 'Campaign History',
-      width: 840,
+      width: 800,
       height: 600,
-      autosize: true,
-      margin: { l: 20, b: 40 },
+      margin: { l: 20, b: 40, t: 20, r: 20 },
+      legend: {x: 0, y: 1},
       xaxis: {
           autorange: true,
           showgrid: true,
