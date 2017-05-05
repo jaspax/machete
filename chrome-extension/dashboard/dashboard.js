@@ -21,48 +21,49 @@ window.setInterval(() => {
     }
 }, 100);
 
-// This dismisses the chart flyout clicking anywhere outside the chart
 function addChartButtons(rows) {
     for (let row of rows) {
         for (let chart of charts) {
             let cells = $(row).children();
             let target = cells[chart.column];
-            if (target && $(target).find(`.${chartClass}`).length == 0) {
-                let select = $(cells[0]).find('select')[0];
-                let name = cells[1].innerText;
-                if (!select)
-                    continue;
-                let selectName = select.name;
-                let campaignId = selectName.split('_').pop();
-                campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
-                let btn = $(`<a href="#" class="${chartClass}"><img src="${chartPng}" /></a>`);
-                btn.click(function(evt) {
-                    let newId = chartId+campaignId+chart.config.metric;
-                    let popup = btn.parent().find('#'+newId);
-                    if (!popup.length) {
-                        popup = $('#'+chartId).clone();
-                        popup.attr('id', newId);
-                        popup.addClass(chartId);
-                        let pos = btn.position();
-                        popup.css({top: pos.top + btn.height() + 6, left: pos.left});
-                        btn.after(popup);
-                    }
-                    popup.show();
+            if (!target || $(target).find(`.${chartClass}`).length > 0)
+                continue;
 
-                    getDataHistory(getEntityId(), campaignId, (data) => {
-                        renderChart(data, name, Object.assign({id: newId}, chart));
+            let select = $(cells[0]).find('select')[0];
+            let name = cells[1].innerText;
+            if (!select)
+                continue;
 
-                        // Clicking anywhere outside the chart dismisses the chart
-                        $(document).on('click', function() {
-                            if (!$.contains(popup[0], this)) {
-                                popup.hide();
-                                $(document).off('click');
-                            }
-                        });
+            let selectName = select.name;
+            let campaignId = selectName.split('_').pop();
+            campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
+            let btn = $(`<a href="#" class="${chartClass}"><img src="${chartPng}" /></a>`);
+            btn.click(function(evt) {
+                let newId = chartId+campaignId+chart.config.metric;
+                let popup = btn.parent().find('#'+newId);
+                if (!popup.length) {
+                    popup = $('#'+chartId).clone();
+                    popup.attr('id', newId);
+                    popup.addClass(chartId);
+                    let pos = btn.position();
+                    popup.css({top: pos.top + btn.height() + 6, left: pos.left});
+                    btn.after(popup);
+                }
+                popup.show();
+
+                getDataHistory(getEntityId(), campaignId, (data) => {
+                    renderChart(data, name, Object.assign({id: newId}, chart));
+
+                    // Clicking anywhere outside the chart dismisses the chart
+                    $(document).on('click', function() {
+                        if (!$.contains(popup[0], this)) {
+                            popup.hide();
+                            $(document).off('click');
+                        }
                     });
                 });
-                $(target).append(btn);
-            }
+            });
+            $(target).append(btn);
         }
     }
 }
@@ -92,7 +93,8 @@ function renderChart(data, name, opt) {
       width: 400,
       height: 300,
       autosize: true,
+      margin: { l: 40, r: 20, b: 25, t: 60, pad: 4 },
     };
 
-    Plotly.newPlot(opt.id, [series], layout);
+    Plotly.newPlot(opt.id, [series], layout, {displayModeBar: false});
 };
