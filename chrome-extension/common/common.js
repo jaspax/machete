@@ -56,11 +56,16 @@ function parallelizeHistoryData(data, opt) {
             // Round off all time values to their nearest chunk
             item.timestamp = item.timestamp - (item.timestamp % span[opt.chunk]);
 
-            if (lastItem) {
-                let timeDiff = item.timestamp - lastItem.timestamp;
-                if (!timeDiff)
-                    continue;
-            }
+            if (lastItem && !(item.timestamp - lastItem.timestamp))
+                continue;
+        }
+
+        // Skip this data point unless one of our metrics actually increased.
+        // (It's possible for frequently-sampled data to occasionally go down,
+        // even though logically that's impossible, due to weirdness in Amazon's
+        // backend.)
+        if (lastItem && !metrics.some(metric => item[metric] > lastItem[metric])) {
+            continue;
         }
 
         // When using opt.rate, the first entry doesn't generate a data point,
@@ -72,9 +77,11 @@ function parallelizeHistoryData(data, opt) {
         for (let metric of metrics) {
             if (opt.rate) {
                 if (lastItem) {
-                    let timeDiff = item.timestamp - lastItem.timestamp;
-                    let denom = timeDiff/span[opt.rate];
-                    c[metric].push((item[metric] - lastItem[metric])/denom);
+                    let rateFactor = (item.timestamp - lastItem.timestamp)/span[opt.rate];
+                    let normalized = (item[metric] - lastItem[metric])/rateFactor;
+                    if (opt.round)
+                        normalized = Math.round(normalized);
+                    c[metric].push(normalized);
                 }
             }
             else {
