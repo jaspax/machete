@@ -40,10 +40,11 @@ chrome.runtime.sendMessage({
 function parallelizeHistoryData(data, opt) {
     // We have a series of timestamped snapshots; we want a series of parallel
     // arrays keyed by campaignId
+    let metrics = opt.metrics || [opt.metric];
     let c = {
         timestamps: [],
     };
-    opt.metrics.forEach(metric => c[metric] = []);
+    metrics.forEach(metric => c[metric] = []);
     let lastItem;
     for (let item of data) {
         // Ignore two consecutive items with the same impressions as noise
@@ -57,7 +58,7 @@ function parallelizeHistoryData(data, opt) {
             c.timestamps.push(new Date(item.timestamp).toISOString());
         }
 
-        for (let metric of opt.metrics) {
+        for (let metric of metrics) {
             if (opt.rate) {
                 if (lastItem) {
                     let timeDiff = item.timestamp - lastItem.timestamp;

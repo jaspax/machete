@@ -5,10 +5,10 @@ const chartId = `${prefix}-chart`;
 const chartClass = `${prefix}-chart-btn`;
 
 const charts = [
-    { column: 6, label: "Impressions / hour", config: {metrics: ['impressions'], rate: 'hour'} },
-    { column: 7, label: "Clicks / day", config: {metrics: ['clicks'], rate: 'day'} },
-    { column: 9, label: "Spend / day", config: {metrics: ['spend'], rate: 'day'} },
-    { column: 10, label: "Sales / day", config: {metrics: ['salesCount'], rate: 'day'} },
+    { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour'} },
+    { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day'} },
+    { column: 9, label: "Spend / day", config: {metric: 'spend', rate: 'day'} },
+    { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day'} },
 ];
 
 window.setInterval(() => {
