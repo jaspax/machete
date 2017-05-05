@@ -7,22 +7,23 @@ const ourTabs = [
     {label: "Keyword Analytics", content: "keywordAnalytics.html"},
 ];
 
-let hasAdGroup = false;
-window.setInterval(() => {
+let makeTabsInterval = window.setInterval(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
     if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
         addCampaignTabs(campaignTabs);
+        window.clearInterval(makeTabsInterval);
     }
+}, 100);
 
-    if (!hasAdGroup) {
-        let adGroupIdInput = $('input[name=adGroupId]');
-        if (adGroupIdInput.length) {
-            let adGroupId = adGroupIdInput.val();
-            generateKeywordReports(adGroupId);
-            generateHistoryReports();
-            hasAdGroup = true;
-        }
-    }
+let genReportsInterval = window.setInterval(() => {
+    let adGroupIdInput = $('input[name=adGroupId]');
+    if (!adGroupIdInput.length)
+        return;
+
+    let adGroupId = adGroupIdInput[0].value;
+    generateKeywordReports(adGroupId);
+    generateHistoryReports();
+    window.clearInterval(genReportsInterval);
 }, 100);
 
 function generateKeywordReports(adGroupId) {
@@ -132,6 +133,7 @@ function generateHistoryReports() {
     getCampaignHistory(getEntityId(), getCampaignId(), (data) => {
         let metrics = ['impressions', 'clicks', 'salesCount'];
         data = parallelizeHistoryData(data, {rate: 'day', metrics});
+
         renderHistoryChart(data, {
             labels: {
                 impressions: 'Impressions',
@@ -144,26 +146,51 @@ function generateHistoryReports() {
 
 function renderHistoryChart(data, opts) {
     let series = [];
-    for (let key of Object.keys(data)) {
-        if (key == 'timestamps')
-            continue;
-
-        series.push({
-          x: data.timestamps,
-          y: data[key],
-          mode: 'lines+markers',
-          name: opts.labels[key],
-          connectgaps: true
-        });
-    }
-
-    let historyChartId = 'ams-unlocked-campaign-history-chart';
+    let keys = Object.keys(data).filter(k => k != 'timestamps');
 
     var layout = {
       width: 840,
       height: 600,
       autosize: true,
+      xaxis: {
+          autorange: true,
+          showgrid: true,
+          zeroline: false,
+          showline: false,
+          autotick: true,
+          showticklabels: true
+      },
     };
+
+    for (let index in keys) {
+        index = +index;
+        let key = keys[index];
+        let yAxisKey = 'yaxis' + (index ? index + 1 : '');
+
+        series.push({
+          x: data.timestamps,
+          y: data[key],
+          mode: 'lines',
+          fill: 'tozeroy',
+          name: opts.labels[key],
+          yaxis: yAxisKey.replace('axis', ''),
+          connectgaps: true
+        });
+
+        layout[yAxisKey] = { 
+            autorange: true,
+            showgrid: false,
+            zeroline: true,
+            showline: true,
+            showticklabels: false,
+        };
+        if (index)
+            layout[yAxisKey].overlaying = 'y';
+    }
+
+    let historyChartId = 'ams-unlocked-campaign-history-chart';
+
+    // NEXT soomething about y-axis here
 
     Plotly.newPlot(historyChartId, series, layout);
 };
