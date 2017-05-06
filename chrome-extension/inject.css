@@ -85,6 +85,13 @@
     font-size: 12pt;
 }
 
+.machete-wrapper::before {
+    content: url(/images/machete-128.png);
+    margin: auto;
+    display: block;
+    text-align: center;
+}
+
 .machete-screenshot {
     display: block;
     margin: auto;
@@ -99,3 +106,4 @@
     font-size: 21px;
     color: rgb(196, 85, 0);
 }
+
