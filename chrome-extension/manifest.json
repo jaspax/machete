@@ -6,14 +6,14 @@
   "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
   "version": "0.6",
   "icons": { 
-      "16": "images/unlock-16.png",
-      "48": "images/unlock-48.png",
-      "128": "images/unlock-128.png" 
+      "16": "images/machete-16.png",
+      "48": "images/machete-48.png",
+      "128": "images/machete-128.png" 
   },
 
   "page_action": {
     "default_name": "Machete",
-    "default_icon": "images/unlock-128.png"
+    "default_icon": "images/machete-128.png"
   },
   "permissions": [
     "alarms",

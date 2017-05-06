@@ -10,7 +10,6 @@ const span = {
 
 const getEntityId = () => getQueryArgs()['entityId'];
 const getCampaignId = () => getQueryArgs()['campaignId'];
-const unlockSvg = chrome.runtime.getURL('images/unlock.svg');
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
 
 function getQueryArgs() {
