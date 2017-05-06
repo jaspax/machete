@@ -1,7 +1,7 @@
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
-const serviceUrl = 'https://fierce-caverns-29914.herokuapp.com';
+const serviceUrl = 'https://machete-app.com';
 
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {

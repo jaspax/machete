@@ -21,7 +21,7 @@
     "notifications",
     "tabs",
     "https://ams.amazon.com/*",
-    "https://fierce-caverns-29914.herokuapp.com/"
+    "https://machete-app.com/*"
   ],
   "background": {
       "scripts": ["common/common.js", "background/background.js", "extern/jquery.min.js"],
