@@ -1,4 +1,4 @@
-.ams-unlocked-chart {
+.machete-chart {
     position: absolute;
     z-index: 100;
     top: 0px;
@@ -11,7 +11,7 @@
     border-radius: 10px;
 }
 
-.ams-unlocked-chart-btn {
+.machete-chart-btn {
 	display: inline-block;
 	text-align: right;
     background: linear-gradient(to bottom,#f7dfa5,#f0c14b);
@@ -21,35 +21,35 @@
     padding: 1px;
 }
 
-#ams-unlocked-keyword-analysis h1 {
+#machete-keyword-analysis h1 {
     margin-top: 50px;
 }
 
-#ams-unlocked-keyword-analysis h3 {
+#machete-keyword-analysis h3 {
     margin-top: 30px;
 }
 
-.ams-unlocked-chart-horizontal {
+.machete-chart-horizontal {
     display: inline-block;
 }
 
-#ams-unlocked-kwmodify {
+#machete-kwmodify {
     display: none;
 }
 
-.ams-unlocked-kwmodify {
+.machete-kwmodify {
     text-align: right;
 }
 
-.ams-unlocked-kwmodify > div {
+.machete-kwmodify > div {
     display: inline-block;
 }
 
-.ams-unlocked-templates {
+.machete-templates {
     display: none;
 }
 
-.ams-unlocked-kwupdate-bulk {
+.machete-kwupdate-bulk {
     display: block;
     float: right;
     position: relative;
@@ -59,25 +59,25 @@
     border-radius: 4px;
 }
 
-.ams-unlocked-kwbulk-label {
+.machete-kwbulk-label {
     font-weight: bold;
 }
 
-.ams-unlocked-kwstatus-bulk, .ams-unlocked-kwbid-bulk {
+.machete-kwstatus-bulk, .machete-kwbid-bulk {
     display: inline-block;
 }
 
-.ams-unlocked-outer {
+.machete-outer {
     width: 900px;
     margin: auto;
 }
 
-.ams-unlocked-welcome {
+.machete-welcome {
     text-align: center;
     font-size: 18pt;
 }
 
-.ams-unlocked-wrapper {
+.machete-wrapper {
     border-width: 0px 1px;
     border-color: rgb(228, 228, 228);
     border-style: solid;
@@ -85,7 +85,7 @@
     font-size: 12pt;
 }
 
-.ams-unlocked-screenshot {
+.machete-screenshot {
     display: block;
     margin: auto;
     border: 1px solid rgb(228, 228, 228);
@@ -95,7 +95,7 @@
     box-shadow: 4px 4px 5px rgb(166, 166, 166);
 }
 
-.ams-unlocked-wrapper h2 {
+.machete-wrapper h2 {
     font-size: 21px;
     color: rgb(196, 85, 0);
 }

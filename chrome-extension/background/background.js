@@ -190,8 +190,8 @@ function notifyNeedCredentials(entityId) {
         type: "basic",
         iconUrl: "images/unlock-128.png",
         title: "Sign in to AMS",
-        message: "AMS Unlocked needs you to sign in to AMS so it can keep your campaign history up-to-date.",
-        contextMessage: "Click on this notification to sign in at https://ams.amazon.com",
+        message: "Machete needs you to sign in to AMS so it can keep your campaign history up-to-date.",
+        contextMessage: "Click on this notification to sign in at https://ams.amazon.com/",
     });
     chrome.notifications.onClicked.addListener((clickId) => {
         if (clickId == notificationId)

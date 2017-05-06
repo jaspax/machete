@@ -112,8 +112,8 @@ function renderChart(data, name, opt) {
     Plotly.newPlot(opt.id, [series], layout, {displayModeBar: false});
 
     let container = $('#'+opt.id);
-    if (data.timestamps.length < 3 && container.find('a.ams-unlocked-lodata').length == 0) {
+    if (data.timestamps.length < 3 && container.find(`a.${prefix}-lodata`).length == 0) {
         let lowDataHref = chrome.runtime.getURL('common/low-data.html');
-        container.append(`<p><a class="ams-unlocked-lodata" target="_blank" href="${lowDataHref}">Why don't I see any data?</a></p>`);
+        container.append(`<p><a class="${prefix}-lodata" target="_blank" href="${lowDataHref}">Why don't I see any data?</a></p>`);
     }
 };

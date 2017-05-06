@@ -53,7 +53,7 @@ function generateKeywordReports(adGroupId) {
         let clickRatioTopQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.75)];
 
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-acos',
+            selector: '#machete-acos',
             columnTitle: 'ACOS',
             order: 'desc',
             filterFn: (x) => x.clicks && x.acos > 100,
@@ -61,7 +61,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: (x) => x ? `${x}%` : "(no sales)",
         });
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-click-ratio',
+            selector: '#machete-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
             filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) <= clickRatio(clickRatioBottomQuartile),
@@ -69,7 +69,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(enabledKws, {
-            selector: '#ams-unlocked-spend',
+            selector: '#machete-spend',
             columnTitle: 'Spend',
             order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
@@ -77,7 +77,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: moneyFmt,
         });
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-impressions',
+            selector: '#machete-impressions',
             columnTitle: 'Impressions',
             order: 'asc',
             filterFn: (x) => x.impressions < minImpressions,
@@ -85,7 +85,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: (x) => x || 0,
         });
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-high-click-ratio',
+            selector: '#machete-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
             filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) >= clickRatio(clickRatioTopQuartile),
@@ -93,7 +93,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-low-acos',
+            selector: '#machete-low-acos',
             columnTitle: 'ACOS',
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
@@ -101,7 +101,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: (x) => `${x}%`,
         });
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-high-profit',
+            selector: '#machete-high-profit',
             columnTitle: 'Profit (Sales - Spend)',
             order: 'desc',
             filterFn: (x) => x.sales && x.acos < 100,
@@ -109,7 +109,7 @@ function generateKeywordReports(adGroupId) {
             formatFn: moneyFmt,
         });
         renderKeywordTable(enabledKws, { 
-            selector: '#ams-unlocked-high-sales',
+            selector: '#machete-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
@@ -119,7 +119,7 @@ function generateKeywordReports(adGroupId) {
 
         // This is the only one that uses disabled keywords
         renderKeywordTable(data, { 
-            selector: '#ams-unlocked-paused',
+            selector: '#machete-paused',
             columnTitle: 'ACOS',
             order: 'desc',
             filterFn: (x) => !x.enabled,
@@ -212,7 +212,7 @@ function renderHistoryChart(data) {
       }, 
     };
 
-    let historyChartId = 'ams-unlocked-campaign-history-chart';
+    let historyChartId = 'machete-campaign-history-chart';
     Plotly.newPlot(historyChartId, series, layout);
 };
 
@@ -259,7 +259,7 @@ function addCampaignTabs(tabs) {
         let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
         li.append(a);
 
-        let container = $(`<div id="ams-unlocked-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+        let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
         tabs.parent().append(container);
 
         a.click(function(evt) {
@@ -291,7 +291,7 @@ function renderSpendPieChart(data) {
         type: 'pie',
     };
 
-    Plotly.plot('ams-unlocked-spend-pie', [chartData], {height: 400, width: 400, showlegend: false});
+    Plotly.plot('machete-spend-pie', [chartData], {height: 400, width: 400, showlegend: false});
 }
 
 function bucketize(data, binKey, valueKey) {
@@ -321,7 +321,7 @@ function renderClicksHistogram(data) {
         marker: { color: 'lightblue' },
     };
 
-    Plotly.plot('ams-unlocked-clicks-histo', [chartData], {height: 400, width: 400, showlegend: false});
+    Plotly.plot('machete-clicks-histo', [chartData], {height: 400, width: 400, showlegend: false});
 }
 
 function renderImpressionsHistogram(data) {
@@ -333,7 +333,7 @@ function renderImpressionsHistogram(data) {
         marker: { color: 'lightblue' },
     };
 
-    Plotly.plot('ams-unlocked-impressions-histo', [chartData], {height: 400, width: 400, showlegend: false});
+    Plotly.plot('machete-impressions-histo', [chartData], {height: 400, width: 400, showlegend: false});
 }
 
 function getCampaignHistory(entityId, campaignId, cb) {
@@ -440,7 +440,7 @@ function renderKeywordTable(data, opts) {
     let bulk = renderBulkUpdate([].concat(data), opts);
     container.append(bulk);
 
-    let table = cloneTemplate("ams-unlocked-kwtable");
+    let table = cloneTemplate("machete-kwtable");
     container.append(table);
 
     let formatFn = opts.formatFn ? opts.formatFn : x => x;
@@ -465,8 +465,8 @@ function renderKeywordTable(data, opts) {
     table.width('100%'); // TODO: figure out why DataTables is setting this to 0
 }
 
-$(document).on('click', '.ams-unlocked-kwstatus', function() {
-    let keyword = JSON.parse($(this).attr('data-ams-unlocked-keyword'));
+$(document).on('click', '.machete-kwstatus', function() {
+    let keyword = JSON.parse($(this).attr('data-machete-keyword'));
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
     updateStatus([keyword.id], !keyword.enabled, (result) => {
@@ -482,9 +482,9 @@ $(document).on('click', '.ams-unlocked-kwstatus', function() {
     });
 });
 
-$(document).on('click', '.ams-unlocked-kwbid input[name=save]', function() {
-    let cell = $(this).parents('.ams-unlocked-kwbid');
-    let keyword = JSON.parse(cell.attr('data-ams-unlocked-keyword'));
+$(document).on('click', '.machete-kwbid input[name=save]', function() {
+    let cell = $(this).parents('.machete-kwbid');
+    let keyword = JSON.parse(cell.attr('data-machete-keyword'));
     let input = cell.find('input[name=keyword-bid]');
     cell.children().hide();
     cell.find('.loading-small').show();
@@ -502,9 +502,9 @@ $(document).on('click', '.ams-unlocked-kwbid input[name=save]', function() {
 });
 
 function renderKeywordBid(keyword, cell) {
-    cell = cell || cloneTemplate('ams-unlocked-kwbid');
+    cell = cell || cloneTemplate('machete-kwbid');
     cell.show();
-    cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
+    cell.attr('data-machete-keyword', JSON.stringify(keyword));
 
     cell.find('input[name=keyword-bid]')
         .attr('value', keyword.bid);
@@ -513,12 +513,12 @@ function renderKeywordBid(keyword, cell) {
 }
 
 function renderKeywordStatus(keyword, cell) {
-    cell = cell || cloneTemplate('ams-unlocked-kwstatus');
+    cell = cell || cloneTemplate('machete-kwstatus');
     cell.show();
-    cell.attr('data-ams-unlocked-keyword', JSON.stringify(keyword));
+    cell.attr('data-machete-keyword', JSON.stringify(keyword));
 
     let statusImg = cell.find('.ams-dropdown-status');
-    let statusTxt = cell.find('.ams-unlocked-kwstatus-current');
+    let statusTxt = cell.find('.machete-kwstatus-current');
     if (keyword.enabled) {
         statusImg.addClass('ams-status-active');
         statusImg.removeClass('ams-status-paused');
@@ -533,8 +533,8 @@ function renderKeywordStatus(keyword, cell) {
     return cell[0].outerHTML;
 }
 
-$(document).on('click', '.ams-unlocked-kwstatus-bulk', function() {
-    let container = $(this).parents('.ams-unlocked-kwupdate-bulk');
+$(document).on('click', '.machete-kwstatus-bulk', function() {
+    let container = $(this).parents('.machete-kwupdate-bulk');
     let data = container[0].data;
     let enabled = data[0].enabled;
     $(this).find('.a-button').hide();
@@ -550,9 +550,9 @@ $(document).on('click', '.ams-unlocked-kwstatus-bulk', function() {
     });
 });
 
-$(document).on('click', '.ams-unlocked-kwbid-bulk input[name=save]', function() {
-    let container = $(this).parents('.ams-unlocked-kwupdate-bulk');
-    let cell = $(this).parents('.ams-unlocked-kwbid-bulk');
+$(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
+    let container = $(this).parents('.machete-kwupdate-bulk');
+    let cell = $(this).parents('.machete-kwbid-bulk');
     let input = cell.find('input[name=keyword-bid]');
     let data = container[0].data;
     cell.children().hide();
@@ -569,12 +569,12 @@ $(document).on('click', '.ams-unlocked-kwbid-bulk input[name=save]', function() 
 });
 
 function renderBulkUpdate(data, opts) {
-    let bulk = cloneTemplate('ams-unlocked-kwupdate-bulk');
+    let bulk = cloneTemplate('machete-kwupdate-bulk');
     bulk[0].data = data;
     bulk[0].opts = opts;
 
-    renderKeywordStatus(data[0] || {}, bulk.find('.ams-unlocked-kwstatus-bulk'));
-    renderKeywordBid(data[0] || {}, bulk.find('.ams-unlocked-kwbid-bulk'));
+    renderKeywordStatus(data[0] || {}, bulk.find('.machete-kwstatus-bulk'));
+    renderKeywordBid(data[0] || {}, bulk.find('.machete-kwbid-bulk'));
 
     bulk.show();
 

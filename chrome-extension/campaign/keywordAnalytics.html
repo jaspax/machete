@@ -2,12 +2,12 @@
     page. Note that most of the classes applied to the outer div are defined on
     the Amazon page, and we're hijacking them for our own purposes. -->
 
-<div id="ams-unlocked-keyword-analysis">
+<div id="machete-keyword-analysis">
     <div class="a-box-inner">
         <section>
             <h1>Keyword Performance</h1>
-            <div id="ams-unlocked-kwchart"></div>
-            <div class="ams-unlocked-explanation">
+            <div id="machete-kwchart"></div>
+            <div class="machete-explanation">
                 <h3>Understanding this chart</h3>
                 <p>The <b>x-axis</b> indicates the average CPC for each keyword. (This is different from the bid, and indicates the actual amount you paid on average for these clicks.)</p>
                 <p>The <b>y-axis</b> indicates the number of clicks for each keyword.</p>
@@ -18,64 +18,64 @@
         <!-- TODO: excluded until/unless we decide they're actually useful
         <section>
             <h1>Sales and Spending Distribution</h1>
-            <div class="ams-unlocked-chart-horizonal" id="ams-unlocked-spend-pie"></div>
-            <div class="ams-unlocked-chart-horizontal" id="ams-unlocked-clicks-histo"></div>
-            <div class="ams-unlocked-chart-horizontal" id="ams-unlocked-impressions-histo"></div>
+            <div class="machete-chart-horizonal" id="machete-spend-pie"></div>
+            <div class="machete-chart-horizontal" id="machete-clicks-histo"></div>
+            <div class="machete-chart-horizontal" id="machete-impressions-histo"></div>
         </section>
         -->
         <section>
             <h1>Underperforming keywords</h1>
             <h3>Keywords with ACOS over 100%:</h3>
-            <div id="ams-unlocked-acos"></div>
+            <div id="machete-acos"></div>
 
             <h3>Keywords spending money without sales:</h3>
-            <div id="ams-unlocked-spend"></div>
+            <div id="machete-spend"></div>
 
             <h3>Keywords with few clicks per impression:</h3>
-            <div id="ams-unlocked-click-ratio"></div>
+            <div id="machete-click-ratio"></div>
             
             <h3>Keywords with few impressions:</h3>
-            <div id="ams-unlocked-impressions"></div>
+            <div id="machete-impressions"></div>
         </section>
         <section>
             <h1>Overperforming keywords</h1>
 
             <h3>Keywords with high clicks-to-impressions ratio</h3>
-            <div id="ams-unlocked-high-click-ratio"></div>
+            <div id="machete-high-click-ratio"></div>
 
             <h3>Keywords with low ACOS</h3>
-            <div id="ams-unlocked-low-acos"></div>
+            <div id="machete-low-acos"></div>
 
             <h3>Keywords with highest profit</h3>
-            <div id="ams-unlocked-high-profit"></div>
+            <div id="machete-high-profit"></div>
 
             <h3>Keywords with highest gross sales</h3>
-            <div id="ams-unlocked-high-sales"></div>
+            <div id="machete-high-sales"></div>
         </section>
 
         <section>
             <h1>Paused keywords</h1>
-            <div id="ams-unlocked-paused"></div>
+            <div id="machete-paused"></div>
         </section>
     </div>
     
 </div>
 
-<div class="ams-unlocked-templates">
+<div class="machete-templates">
 
     <!-- Template: Table with bulk edit control -->
-    <table id="ams-unlocked-kwtable" class="ams-unlocked-kwtable a-bordered a-spacing-base a-size-small display">
+    <table id="machete-kwtable" class="machete-kwtable a-bordered a-spacing-base a-size-small display">
         <thead></thead>
         <tbody></tbody>
     </table>
 
     <!-- Template: Enabled/Paused status button in tables -->
-    <div id="ams-unlocked-kwstatus" class="ams-unlocked-kwstatus" title="Click to toggle">
+    <div id="machete-kwstatus" class="machete-kwstatus" title="Click to toggle">
         <span class="a-button a-button-small">
             <span class="a-button-inner a-dropdown-status">
                 <span class="a-button-text">
                     <span class="ams-status-active ams-dropdown-status"></span>
-                    <span class="ams-unlocked-kwstatus-current">Enabled</span>
+                    <span class="machete-kwstatus-current">Enabled</span>
                 </span>
             </span>
         </span>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- Template: Bid edit cell button in tables -->
-    <div id="ams-unlocked-kwbid" class="ams-unlocked-kwbid">
+    <div id="machete-kwbid" class="machete-kwbid">
         <span>
             <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
         </span>
@@ -97,20 +97,20 @@
     </div>
 
     <!-- Template: Bulk edit control accompanying -->
-    <div id="ams-unlocked-kwupdate-bulk" class="ams-unlocked-kwupdate-bulk">
-        <div class="ams-unlocked-kwbulk-label">Bulk update these keywords</div>
-        <div class="ams-unlocked-kwstatus-bulk" title="Click to toggle">
+    <div id="machete-kwupdate-bulk" class="machete-kwupdate-bulk">
+        <div class="machete-kwbulk-label">Bulk update these keywords</div>
+        <div class="machete-kwstatus-bulk" title="Click to toggle">
             <span class="a-button a-button-small">
                 <span class="a-button-inner a-dropdown-status">
                     <span class="a-button-text">
                         <span class="ams-status-active ams-dropdown-status"></span>
-                        <span class="ams-unlocked-kwstatus-current">Enabled</span>
+                        <span class="machete-kwstatus-current">Enabled</span>
                     </span>
                 </span>
             </span>
             <div class="loading-small hidden" style="display:none"></div>
         </div>
-        <div class="ams-unlocked-kwbid-bulk">
+        <div class="machete-kwbid-bulk">
             <span>
                 <input type="text" maxlength="6" value="" name="keyword-bid" class="a-input-text inplaceBidInput">
             </span>

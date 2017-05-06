@@ -1,6 +1,6 @@
 'use strict';
 
-const prefix = 'ams-unlocked';
+const prefix = 'machete';
 const span = {
     second: 1000,
     minute: 1000 * 60,

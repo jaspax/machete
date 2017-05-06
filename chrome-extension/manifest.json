@@ -1,8 +1,9 @@
 {
   "manifest_version": 2,
 
-  "name": "AMS Unlocked",
-  "description": "Make your AMS reporting fully rad with campaign history graphs, keyword charts, and extra awesome.",
+  "name": "Machete - Your tool for cutting through Amazon Marketing Services",
+  "short_name": "Machete",
+  "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
   "version": "0.6",
   "icons": { 
       "16": "images/unlock-16.png",
@@ -11,7 +12,7 @@
   },
 
   "page_action": {
-    "default_name": "AMS Unlocked",
+    "default_name": "Machete",
     "default_icon": "images/unlock-128.png"
   },
   "permissions": [
