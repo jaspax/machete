@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "Machete - Your tool for cutting through Amazon Marketing Services",
+  "name": "Machete - Your tool for cutting through AMS",
   "short_name": "Machete",
   "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
   "version": "0.6",

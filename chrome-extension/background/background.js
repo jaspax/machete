@@ -191,7 +191,7 @@ function notifyNeedCredentials(entityId) {
         iconUrl: "images/machete-128.png",
         title: "Sign in to AMS",
         message: "Machete needs you to sign in to AMS so it can keep your campaign history up-to-date.",
-        contextMessage: "Click on this notification to sign in at https://ams.amazon.com/",
+        contextMessage: "Click to sign in at https://ams.amazon.com/",
     });
     chrome.notifications.onClicked.addListener((clickId) => {
         if (clickId == notificationId)
