@@ -19,7 +19,6 @@
     "alarms",
     "background", 
     "notifications",
-    "tabs",
     "https://ams.amazon.com/*",
     "https://machete-app.com/*"
   ],
