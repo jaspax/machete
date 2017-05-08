@@ -2,6 +2,23 @@ const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 const serviceUrl = 'https://machete-app.com';
+const sid = () => localStorage.getItem('sid');
+
+function guid() {
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
+function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+}
+
+
+// Put this in root b/c we want it EVERY time this is invoked, even if the user
+// blows away local storage for some reason
+if (!sid()) {
+    localStorage.setItem('sid', guid());
+}
 
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {
@@ -23,6 +40,8 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         requestKeywordData(req.entityId, req.adGroupId, sendResponse);
     else if (req.action == 'getKeywordData')
         getKeywordData(req.entityId, req.adGroupId, sendResponse);
+    else if (req.action == 'getSid')
+        sendResponse();
     else 
         sendResponse('unknown action');
     return true;
@@ -135,6 +154,7 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
 }
 
 function storeDataCloud(entityId, timestamp, data) {
+    document.cookie = `sid=${sid()}`;
     return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -146,6 +166,7 @@ function storeDataCloud(entityId, timestamp, data) {
 }
 
 function storeKeywordDataCloud(entityId, adGroupId, timestamp, data, cb) {
+    document.cookie = `sid=${sid()}`;
     return $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -157,6 +178,7 @@ function storeKeywordDataCloud(entityId, adGroupId, timestamp, data, cb) {
 }
 
 function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date ranges, etc.
+    document.cookie = `sid=${sid()}`;
     $.ajax({
         url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
         method: 'GET',
@@ -171,6 +193,7 @@ function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date rang
 }
 
 function getKeywordData(entityId, adGroupId, sendResponse) {
+    document.cookie = `sid=${sid()}`;
     $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
         method: 'GET',
