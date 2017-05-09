@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     else if (req.action == 'getKeywordData')
         getKeywordData(req.entityId, req.adGroupId, sendResponse);
     else if (req.action == 'getSid')
-        sendResponse();
+        sendResponse(sid());
     else 
         sendResponse('unknown action');
     return true;
