@@ -100,7 +100,6 @@ function setSession(req, sendResponse) {
 function requestCampaignData(entityId, sendResponse) {
     let sessionKey = getSessionKey(entityId);
     let timestamp = Date.now();
-    document.cookie = localStorage.getItem(sessionKey);
     console.log('requesting campaign data for', entityId);
     $.ajax('https://ams.amazon.com/api/rta/campaigns', {
         method: 'GET',
@@ -131,7 +130,6 @@ function requestCampaignData(entityId, sendResponse) {
 function requestKeywordData(entityId, adGroupId, sendResponse) {
     let sessionKey = getSessionKey(entityId);
     let timestamp = Date.now();
-    document.cookie = localStorage.getItem(sessionKey);
     console.log('requesting keyword data for', entityId, adGroupId);
     $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
         method: 'POST',
@@ -154,7 +152,6 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
 }
 
 function storeDataCloud(entityId, timestamp, data) {
-    document.cookie = `sid=${sid()}`;
     return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -166,7 +163,6 @@ function storeDataCloud(entityId, timestamp, data) {
 }
 
 function storeKeywordDataCloud(entityId, adGroupId, timestamp, data, cb) {
-    document.cookie = `sid=${sid()}`;
     return $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -178,7 +174,6 @@ function storeKeywordDataCloud(entityId, adGroupId, timestamp, data, cb) {
 }
 
 function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date ranges, etc.
-    document.cookie = `sid=${sid()}`;
     $.ajax({
         url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
         method: 'GET',
@@ -193,7 +188,6 @@ function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date rang
 }
 
 function getKeywordData(entityId, adGroupId, sendResponse) {
-    document.cookie = `sid=${sid()}`;
     $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
         method: 'GET',
