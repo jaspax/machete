@@ -15,6 +15,8 @@ chrome.runtime.onInstalled.addListener(details => {
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
         setSession(req, sendResponse);
+    else if (req.action == 'getAllowedCampaigns') 
+        getAllowedCampaigns(req.entityId, sendResponse);
     else if (req.action == 'requestData')
         requestCampaignData(req.entityId, sendResponse);
     else if (req.action == 'getDataHistory')
@@ -39,8 +41,6 @@ chrome.alarms.onAlarm.addListener((session) => {
 
 function setSession(req, sendResponse) {
     let sessionKey = getSessionKey(req.entityId);
-    localStorage.setItem(sessionKey, req.cookies);
-    console.log('stored cookies', sessionKey, req.cookies);
     
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
@@ -79,7 +79,6 @@ function setSession(req, sendResponse) {
 }
 
 function requestCampaignData(entityId, sendResponse) {
-    let sessionKey = getSessionKey(entityId);
     let timestamp = Date.now();
     console.log('requesting campaign data for', entityId);
     $.ajax('https://ams.amazon.com/api/rta/campaigns', {
@@ -109,7 +108,6 @@ function requestCampaignData(entityId, sendResponse) {
 }
 
 function requestKeywordData(entityId, adGroupId, sendResponse) {
-    let sessionKey = getSessionKey(entityId);
     let timestamp = Date.now();
     console.log('requesting keyword data for', entityId, adGroupId);
     $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
