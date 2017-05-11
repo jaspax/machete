@@ -60,6 +60,16 @@ function setSession(req, sendResponse) {
     sendResponse('ok');
 }
 
+function getAllowedCampaigns(entityId, sendResponse) {
+    return $.ajax({
+        url: `${serviceUrl}/api/data/${entityId}/allowed`,
+        method: 'GET',
+        dataType: 'json',
+        success: (data, status) => sendResponse({data}),
+        error: (xhr, status, error) => sendResponse({error}),
+    });
+}
+
 function requestCampaignData(entityId, sendResponse) {
     let timestamp = Date.now();
     console.log('requesting campaign data for', entityId);

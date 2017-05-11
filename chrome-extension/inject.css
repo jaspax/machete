@@ -21,6 +21,10 @@
     padding: 1px;
 }
 
+.machete-chart-btn-disabled {
+    background: linear-gradient(to bottom, rgb(231,233,236), rgb(141, 144, 150));
+}
+
 #machete-keyword-analysis h1 {
     margin-top: 50px;
 }

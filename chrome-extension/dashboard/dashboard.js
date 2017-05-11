@@ -3,6 +3,8 @@
 const showHistoryClass = `${prefix}-showhistory`;
 const chartId = `${prefix}-chart`;
 const chartClass = `${prefix}-chart-btn`;
+const chartClassDisabled = `${prefix}-chart-btn-disabled`;
+let allowedCampaigns = [];
 
 const charts = [
     { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true} },
@@ -22,6 +24,15 @@ window.setInterval(() => {
     }
 }, 100);
 
+chrome.runtime.sendMessage({
+    action: 'getAllowedCampaigns', 
+    entityId: getEntityId(),
+},
+(response) => {
+    console.log('campaign data', response);
+    allowedCampaigns = response.data || [];
+});
+
 function addChartButtons(rows) {
     for (let row of rows) {
         for (let chart of charts) {
@@ -38,7 +49,12 @@ function addChartButtons(rows) {
             let selectName = select.name;
             let campaignId = selectName.split('_').pop();
             campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
-            let btn = $(`<a href="#" class="${chartClass}"><img src="${chartPng}" /></a>`);
+
+            let btnClasses = chartClass;
+            if (!allowedCampaigns.includes(campaignId)) {
+                btnClasses += ` ${chartClassDisabled}`;
+            }
+            let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
             btn.click(function(evt) {
                 let newId = chartId+campaignId+chart.config.metric;
                 let popup = btn.parent().find('#'+newId);
