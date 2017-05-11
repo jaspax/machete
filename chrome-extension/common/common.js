@@ -8,12 +8,32 @@ const span = {
     day:    1000 * 60 * 60 * 24,
 };
 
-const getEntityId = () => getQueryArgs()['entityId'];
-const getCampaignId = () => getQueryArgs()['campaignId'];
+function getEntityId() {
+    let entityId = getQueryArgs()['entityId'];
+    if (entityId) {
+        return entityId;
+    }
+
+    let navLink = $('.topNavLogo')[0].href;
+    let query = navLink.substring(navLink.indexOf('?') + 1);
+    entityId = getQueryArgs(query)['entityId'];
+    return entityId;
+}
+
+function getCampaignId() {
+    let campaignId = getQueryArgs()['campaignId'];
+    if (campaignId) {
+        return campaignId;
+    }
+
+    campaignId = $('input[name=campaignId]').val();
+    return campaignId;
+}
+
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
 
-function getQueryArgs() {
-    let qstring = window.location.search.substring(1);
+function getQueryArgs(str) {
+    let qstring = str || window.location.search.substring(1);
     let qs = qstring.split('&');
     let args = {};
     for (let q of qs) {
