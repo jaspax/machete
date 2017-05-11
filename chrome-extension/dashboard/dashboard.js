@@ -58,11 +58,7 @@ function addChartButtons(rows) {
                     }
                     btn.after(popup);
                 }
-                popup.show();
-
-                getDataHistory(getEntityId(), campaignId, (data) => {
-                    renderChart(data, name, Object.assign({id: newId}, chart));
-
+                popup.slideDown(200, function() {
                     // Clicking anywhere outside the chart dismisses the chart
                     $(document).on('click', function() {
                         if (!$.contains(popup[0], this)) {
@@ -70,6 +66,10 @@ function addChartButtons(rows) {
                             $(document).off('click');
                         }
                     });
+                });
+
+                getDataHistory(getEntityId(), campaignId, (data) => {
+                    renderChart(data, name, Object.assign({id: newId}, chart));
                 });
             });
             $(target).append(btn);
