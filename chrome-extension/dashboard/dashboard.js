@@ -2,6 +2,7 @@
 
 const showHistoryClass = `${prefix}-showhistory`;
 const chartId = `${prefix}-chart`;
+const chartLoginRequired = `${prefix}-chart-login-required`;
 const chartClass = `${prefix}-chart-btn`;
 const chartClassDisabled = `${prefix}-chart-btn-disabled`;
 let allowedCampaigns = [];
@@ -17,11 +18,6 @@ const charts = [
 window.setInterval(() => {
     let tableRows = $('#campaignTable tbody tr');
     addChartButtons(tableRows);
-
-    let dashboard = $('#campaignDashboard');
-    if (dashboard.find(`#${chartId}`).length == 0) {
-        dashboard.append($(`<div id="${chartId}" style="display:none"></div>`));
-    }
 }, 100);
 
 chrome.runtime.sendMessage({
@@ -29,8 +25,16 @@ chrome.runtime.sendMessage({
     entityId: getEntityId(),
 },
 (response) => {
-    console.log('campaign data', response);
     allowedCampaigns = response.data || [];
+});
+
+const templateUrl = chrome.runtime.getURL('dashboard/templates.html');
+$.ajax(templateUrl, {
+    method: 'GET',
+    success: (data, textStatus, xhr) => {
+        let dashboard = $('#campaignDashboard');
+        dashboard.append(data);
+    },
 });
 
 function addChartButtons(rows) {
@@ -51,7 +55,8 @@ function addChartButtons(rows) {
             campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
 
             let btnClasses = chartClass;
-            if (!allowedCampaigns.includes(campaignId)) {
+            let allowed = allowedCampaigns.includes(campaignId);
+            if (!allowed) {
                 btnClasses += ` ${chartClassDisabled}`;
             }
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
@@ -59,9 +64,15 @@ function addChartButtons(rows) {
                 let newId = chartId+campaignId+chart.config.metric;
                 let popup = btn.parent().find('#'+newId);
                 if (!popup.length) {
-                    popup = $('#'+chartId).clone();
+                    if (allowed) {
+                        popup = $('#'+chartId).hide().clone();
+                        popup.addClass(chartId);
+                    }
+                    else {
+                        popup = $('#'+chartLoginRequired).hide().clone();
+                        popup.addClass(chartLoginRequired);
+                    }
                     popup.attr('id', newId);
-                    popup.addClass(chartId);
                     
                     // hard-coded element width below b/c popup.width() doesn't
                     // work as required
@@ -75,7 +86,7 @@ function addChartButtons(rows) {
                     btn.after(popup);
                 }
                 popup.slideDown(200, function() {
-                    // Clicking anywhere outside the chart dismisses the chart
+                    // Clicking anywhere outside the popup dismisses the chart
                     $(document).on('click', function() {
                         if (!$.contains(popup[0], this)) {
                             popup.hide();
@@ -84,9 +95,11 @@ function addChartButtons(rows) {
                     });
                 });
 
-                getDataHistory(getEntityId(), campaignId, (data) => {
-                    renderChart(data, name, Object.assign({id: newId}, chart));
-                });
+                if (allowed) {
+                    getDataHistory(getEntityId(), campaignId, (data) => {
+                        renderChart(data, name, Object.assign({id: newId}, chart));
+                    });
+                }
             });
             $(target).append(btn);
         }
