@@ -58,24 +58,6 @@ function setSession(req, sendResponse) {
         }
     });
     sendResponse('ok');
-
-    /* TODO: this way of posting the session into the cloud doesn't actually
-     * work, alas
-    let sessionEndpoint = `${serviceUrl}/session/${req.entityId}`;
-    console.log("making request to", sessionEndpoint);
-    $.ajax(sessionEndpoint, {
-        method: 'PUT',
-        data: req.cookies,
-        contentType: 'text/plain',
-        success: (data, textStatus, xhr) => {
-            console.log(textStatus, ": ", data);
-        },
-        error: (xhr, textStatus, error) => {
-            console.warn(textStatus, ": ", error);
-        },
-    });
-    */
-
 }
 
 function requestCampaignData(entityId, sendResponse) {
