@@ -32,7 +32,6 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
-    let timestamp = Date.now();
     requestCampaignData(entityId, (data) => {
         data.error ? console.warn('request data', data.error)
                    : console.log('request data success');
@@ -49,7 +48,6 @@ function setSession(req, sendResponse) {
     }
     chrome.alarms.get(sessionKey, (alarm) => {
         if (!alarm) {
-            let period = 60;
             chrome.alarms.create(sessionKey, {
                 when: Date.now() + 500,
                 periodInMinutes: 60,
@@ -65,7 +63,7 @@ function getAllowedCampaigns(entityId, sendResponse) {
         url: `${serviceUrl}/api/data/${entityId}/allowed`,
         method: 'GET',
         dataType: 'json',
-        success: (data, status) => sendResponse({data}),
+        success: (data) => sendResponse({data}),
         error: (xhr, status, error) => sendResponse({error}),
     });
 }
@@ -84,7 +82,7 @@ function requestCampaignData(entityId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => {
+        success: (data) => {
             storeDataCloud(entityId, timestamp, data)
                 .then(() => sendResponse({data}))
                 .fail((error) => sendResponse({error}));
@@ -113,7 +111,7 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data, textStatus, xhr) => {
+        success: (data) => {
             storeKeywordDataCloud(entityId, adGroupId, timestamp, data)
                 .then(() => sendResponse({data}))
                 .fail((error) => sendResponse({error}));
@@ -133,7 +131,7 @@ function storeDataCloud(entityId, timestamp, data) {
     });
 }
 
-function storeKeywordDataCloud(entityId, adGroupId, timestamp, data, cb) {
+function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     return $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -149,7 +147,7 @@ function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date rang
         url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
         method: 'GET',
         dataType: 'json',
-        success: (data, status) => {
+        success: (data) => {
             sendResponse({data});
         },
         error: (xhr, status, error) => {
@@ -163,7 +161,7 @@ function getKeywordData(entityId, adGroupId, sendResponse) {
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
         method: 'GET',
         dataType: 'json',
-        success: (data, status) => {
+        success: (data) => {
             sendResponse({data});
         },
         error: (xhr, status, error) => {

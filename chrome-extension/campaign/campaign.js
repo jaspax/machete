@@ -145,8 +145,6 @@ function generateHistoryReports() {
 }
 
 function renderHistoryChart(data) {
-    let metrics = ['impressions', 'clicks', 'salesCount'];
-
     let impressionsData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions', round: true});
     let maxImpressions = Math.max.apply(null, impressionsData.impressions);
 
@@ -225,8 +223,7 @@ function renderHistoryChart(data) {
 
     let historyChartId = 'machete-campaign-history-chart';
     Plotly.newPlot(historyChartId, series, layout);
-};
-
+}
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
     let entityId = getEntityId();
@@ -273,7 +270,7 @@ function addCampaignTabs(tabs) {
         let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
         tabs.parent().append(container);
 
-        a.click(function(evt) {
+        a.click(function() {
             li.addClass('a-active');
             li.siblings().removeClass('a-active');
             tabs.parent().children('div').addClass('a-hidden');
@@ -287,11 +284,12 @@ function addCampaignTabs(tabs) {
         // Fetch the url we want in order to actually embed it in the page
         $.ajax({
             url: chrome.runtime.getURL('campaign/'+tab.content),
-            success: (data, textStatus, xhr) => container.append(data),
+            success: (data) => container.append(data),
         });
     }
 }
 
+/* TODO: commenting out until we decide we want to do something with them
 function renderSpendPieChart(data) {
     let target = 100;
     let sumSpend = (acc, x) => acc + x.spend;
@@ -349,6 +347,7 @@ function renderImpressionsHistogram(data) {
 
     Plotly.plot('machete-impressions-histo', [chartData], {height: 400, width: 400, showlegend: false});
 }
+*/
 
 function getCampaignHistory(entityId, campaignId, cb) {
     chrome.runtime.sendMessage({
@@ -378,7 +377,7 @@ function getKeywordData(entityId, adGroupId, cb) {
             entityId: entityId,
             adGroupId: adGroupId,
         }, 
-        (amsResponse) => {
+        () => {
             // Try our servers again. This may fire the callback again and cause
             // us to redraw.
             chrome.runtime.sendMessage({
@@ -391,9 +390,9 @@ function getKeywordData(entityId, adGroupId, cb) {
             });
         });
     });
-}; 
+}
 
-function transformKeywordData(data, opt) {
+function transformKeywordData(data) {
     let kws = {
         kw: [],
         impressions: [],
@@ -416,7 +415,7 @@ function transformKeywordData(data, opt) {
     return kws;
 }
 
-function renderKeywordChart(kws, opt) {
+function renderKeywordChart(kws) {
     let chartData = {
         mode: 'markers',
         x: kws.avgCpc,
@@ -447,7 +446,7 @@ function renderKeywordTable(data, opts) {
     let container = $(opts.selector);
     container.empty();
 
-    data = data.filter(opts.filterFn ? opts.filterFn : x => true);
+    data = data.filter(opts.filterFn ? opts.filterFn : () => true);
     
     // Render the bulk update button -- pass in a copy of the array since we're
     // going to modify it below.

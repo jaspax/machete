@@ -1,6 +1,3 @@
-'use strict';
-
-const showHistoryClass = `${prefix}-showhistory`;
 const chartId = `${prefix}-chart`;
 const chartLoginRequired = `${prefix}-chart-login-required`;
 const chartClass = `${prefix}-chart-btn`;
@@ -31,7 +28,7 @@ chrome.runtime.sendMessage({
 const templateUrl = chrome.runtime.getURL('dashboard/templates.html');
 $.ajax(templateUrl, {
     method: 'GET',
-    success: (data, textStatus, xhr) => {
+    success: (data) => {
         let dashboard = $('#campaignDashboard');
         dashboard.append(data);
     },
@@ -60,7 +57,7 @@ function addChartButtons(rows) {
                 btnClasses += ` ${chartClassDisabled}`;
             }
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
-            btn.click(function(evt) {
+            btn.click(function() {
                 let newId = chartId+campaignId+chart.config.metric;
                 let popup = btn.parent().find('#'+newId);
                 if (!popup.length) {
@@ -116,9 +113,9 @@ function getDataHistory(entityId, campaignId, cb) {
 }
 
 function renderChart(data, name, opt) {
-    var data = parallelizeHistoryData(data, opt.config);
+    data = parallelizeHistoryData(data, opt.config);
 
-    var series = {
+    const series = {
       x: data.timestamps,
       y: data[opt.config.metric],
       mode: 'lines+markers',
@@ -131,7 +128,7 @@ function renderChart(data, name, opt) {
         height = 270; // leaving room for link below
     }
 
-    var layout = {
+    const layout = {
       title: `${opt.label}<br />${name}`,
       width: 400,
       height,
@@ -145,4 +142,4 @@ function renderChart(data, name, opt) {
         let lowDataHref = chrome.runtime.getURL('common/low-data.html');
         container.append(`<p><a class="${prefix}-lodata" target="_blank" href="${lowDataHref}">Why don't I see any data?</a></p>`);
     }
-};
+}

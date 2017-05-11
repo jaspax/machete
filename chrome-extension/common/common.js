@@ -1,5 +1,3 @@
-'use strict';
-
 const prefix = 'machete';
 const span = {
     second: 1000,
@@ -9,19 +7,19 @@ const span = {
 };
 
 function getEntityId() {
-    let entityId = getQueryArgs()['entityId'];
+    let entityId = getQueryArgs().entityId;
     if (entityId) {
         return entityId;
     }
 
     let navLink = $('.topNavLogo')[0].href;
     let query = navLink.substring(navLink.indexOf('?') + 1);
-    entityId = getQueryArgs(query)['entityId'];
+    entityId = getQueryArgs(query).entityId;
     return entityId;
 }
 
 function getCampaignId() {
-    let campaignId = getQueryArgs()['campaignId'];
+    let campaignId = getQueryArgs().campaignId;
     if (campaignId) {
         return campaignId;
     }
@@ -65,7 +63,7 @@ function parallelizeHistoryData(data, opt) {
     let c = { timestamps: [] };
     metrics.forEach(metric => c[metric] = []);
 
-    let lastItem;
+    let lastItem = null;
     data = data.sort((a, b) => a.timestamp - b.timestamp);
     for (let item of data) {
         // Don't modify the original items in the data array!
@@ -73,7 +71,7 @@ function parallelizeHistoryData(data, opt) {
 
         if (opt.chunk) {
             // Round off all time values to their nearest chunk
-            item.timestamp = item.timestamp - (item.timestamp % span[opt.chunk]);
+            item.timestamp -= item.timestamp % span[opt.chunk];
 
             if (lastItem && !(item.timestamp - lastItem.timestamp))
                 continue;
@@ -94,17 +92,17 @@ function parallelizeHistoryData(data, opt) {
         }
 
         for (let metric of metrics) {
-            if (opt.rate) {
-                if (lastItem) {
-                    let rateFactor = (item.timestamp - lastItem.timestamp)/span[opt.rate];
-                    let normalized = (item[metric] - lastItem[metric])/rateFactor;
-                    if (opt.round)
-                        normalized = Math.round(normalized);
-                    c[metric].push(normalized);
-                }
-            }
-            else {
+            if (!opt.rate) {
                 c[metric].push(item[metric]);
+                continue;
+            }
+
+            if (lastItem) {
+                let rateFactor = (item.timestamp - lastItem.timestamp)/span[opt.rate];
+                let normalized = (item[metric] - lastItem[metric])/rateFactor;
+                if (opt.round)
+                    normalized = Math.round(normalized);
+                c[metric].push(normalized);
             }
         }
 
