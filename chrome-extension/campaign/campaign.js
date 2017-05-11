@@ -1,5 +1,6 @@
 const tabClass = `${prefix}-tab`;
 const chartId = `${prefix}-kwchart`;
+let campaignAllowed = true;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
@@ -25,6 +26,16 @@ let genReportsInterval = window.setInterval(() => {
     generateHistoryReports();
     window.clearInterval(genReportsInterval);
 }, 100);
+
+chrome.runtime.sendMessage({
+    action: 'getAllowedCampaigns',
+    entityId: getEntityId(),
+},
+(response) => {
+    if (response && response.data) {
+        campaignAllowed = response.data.includes(getCampaignId());
+    }
+});
 
 function generateKeywordReports(adGroupId) {
     getKeywordData(getEntityId(), adGroupId, (data) => {
@@ -267,6 +278,9 @@ function addCampaignTabs(tabs) {
             li.siblings().removeClass('a-active');
             tabs.parent().children('div').addClass('a-hidden');
             container.removeClass('a-hidden');
+            if (campaignAllowed) {
+                $('.machete-campaign-login-required').hide();
+            }
         });
         $(tabs.children()[0]).after(li);
 
