@@ -172,17 +172,29 @@ function getKeywordData(entityId, adGroupId, sendResponse) {
     });
 }
 
+let notificationExists = false;
 function notifyNeedCredentials(entityId) {
-    let notificationId = `${prefix}-${entityId}-need-credentials`;
-    chrome.notifications.create(notificationId, {
-        type: "basic",
-        iconUrl: "images/machete-128.png",
-        title: "Sign in to AMS",
-        message: "Machete needs you to sign in to AMS so it can keep your campaign history up-to-date.",
-        contextMessage: "Click to sign in at https://ams.amazon.com/",
-    });
-    chrome.notifications.onClicked.addListener((clickId) => {
-        if (clickId == notificationId)
-            chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
-    });
+    if (!notificationExists) {
+        let notificationId = `${prefix}-${entityId}-need-credentials`;
+        chrome.notifications.create(notificationId, {
+            type: "basic",
+            iconUrl: "images/machete-128.png",
+            title: "Sign in to AMS",
+            message: "Machete needs you to sign in to AMS so it can keep your campaign history up-to-date.",
+            contextMessage: "Click to sign in at https://ams.amazon.com/",
+            isClickable: true,
+            requireInteraction: true,
+        });
+
+        notificationExists = true;
+        const listener = (clickId) => {
+            if (clickId == notificationId) {
+                chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
+                chrome.notifications.clear(notificationId);
+                notificationExists = false;
+            }
+        };
+        chrome.notifications.onClicked.addListener(listener);
+        chrome.notifications.onClosed.addListener(listener);
+    }
 }
