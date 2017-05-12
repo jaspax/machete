@@ -23,7 +23,7 @@
     "https://machete-app.com/*"
   ],
   "background": {
-      "scripts": ["common/common.js", "background/background.js", "extern/jquery.min.js"],
+      "scripts": ["extern/jquery.min.js", "common/common.js", "background/background.js"],
       "persistent": false
   },
   "content_scripts": [
