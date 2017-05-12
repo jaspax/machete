@@ -126,7 +126,7 @@ function renderChart(data, name, opt) {
 
     let height = 300;
     if (data.timestamps.length < 3) {
-        height = 270; // leaving room for link below
+        height = 270; // leaving room for the lodata link
     }
 
     const layout = {
@@ -139,8 +139,9 @@ function renderChart(data, name, opt) {
     Plotly.newPlot(opt.id, [series], layout, {displayModeBar: false});
 
     let container = $('#'+opt.id);
-    if (data.timestamps.length < 3 && container.find(`a.${prefix}-lodata`).length == 0) {
-        let lowDataHref = chrome.runtime.getURL('common/low-data.html');
-        container.append(`<p><a class="${prefix}-lodata" target="_blank" href="${lowDataHref}">Why don't I see any data?</a></p>`);
+    if (data.timestamps.length < 3) {
+        let a = container.find(`a.${prefix}-lodata`)
+        a[0].href = chrome.runtime.getURL('common/low-data.html');
+        a.show();
     }
 }
