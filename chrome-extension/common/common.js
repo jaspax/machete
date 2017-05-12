@@ -15,7 +15,11 @@ function getEntityId() {
     let navLink = $('.topNavLogo')[0].href;
     let query = navLink.substring(navLink.indexOf('?') + 1);
     entityId = getQueryArgs(query).entityId;
-    return entityId;
+    if (entityId) {
+        return entityId;
+    }
+
+    throw new Error('could not discover entityId');
 }
 
 function getCampaignId() {
@@ -25,7 +29,11 @@ function getCampaignId() {
     }
 
     campaignId = $('input[name=campaignId]').val();
-    return campaignId;
+    if (campaignId) {
+        return campaignId;
+    }
+
+    throw new Error('could not discover campaignId');
 }
 
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');

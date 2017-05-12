@@ -3,6 +3,15 @@ const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 let serviceUrl = 'https://machete-app.com';
 
+function checkEntityId(entityId, sendResponse) {
+    const valid = entityId && entityId != 'undefined' && entityId != 'null';
+    if (valid)
+        return valid;
+    if (sendResponse)
+        sendResponse({error: 'invalid entityId: ' + entityId});
+    return false;
+}
+
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {
         chrome.tabs.create({ url: chrome.runtime.getURL('common/welcome.html') });
@@ -32,6 +41,11 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
+    if (!checkEntityId(entityId)) {
+        chrome.alarms.clear(session); // Stop this stupid alarm
+        return;
+    }
+
     requestCampaignData(entityId, (data) => {
         data.error ? console.warn('request data', data.error)
                    : console.log('request data success');
@@ -59,6 +73,8 @@ function setSession(req, sendResponse) {
 }
 
 function getAllowedCampaigns(entityId, sendResponse) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}/allowed`,
         method: 'GET',
@@ -69,6 +85,8 @@ function getAllowedCampaigns(entityId, sendResponse) {
 }
 
 function requestCampaignData(entityId, sendResponse) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     let timestamp = Date.now();
     console.log('requesting campaign data for', entityId);
     $.ajax('https://ams.amazon.com/api/rta/campaigns', {
@@ -98,6 +116,8 @@ function requestCampaignData(entityId, sendResponse) {
 }
 
 function requestKeywordData(entityId, adGroupId, sendResponse) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     let timestamp = Date.now();
     console.log('requesting keyword data for', entityId, adGroupId);
     $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
@@ -121,6 +141,8 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
 }
 
 function storeDataCloud(entityId, timestamp, data) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -132,6 +154,8 @@ function storeDataCloud(entityId, timestamp, data) {
 }
 
 function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     return $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -143,6 +167,8 @@ function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
 }
 
 function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date ranges, etc.
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     $.ajax({
         url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
         method: 'GET',
@@ -157,6 +183,8 @@ function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date rang
 }
 
 function getKeywordData(entityId, adGroupId, sendResponse) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
     $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
         method: 'GET',
