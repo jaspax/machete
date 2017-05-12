@@ -77,6 +77,15 @@ function parallelizeHistoryData(data, opt) {
                 continue;
         }
 
+        // Filter out things by date range
+        if (opt.startTimestamp && item.timestamp < opt.startTimestamp) {
+            continue;
+        }
+
+        if (opt.endTimestamp && item.timestamp > opt.endTimestamp) {
+            continue;
+        }
+
         // Skip this data point unless one of our metrics actually increased.
         // (It's possible for frequently-sampled data to occasionally go down,
         // even though logically that's impossible, due to weirdness in Amazon's
