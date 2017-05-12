@@ -2,7 +2,6 @@ const chartId = `${prefix}-chart`;
 const chartLoginRequired = `${prefix}-chart-login-required`;
 const chartClass = `${prefix}-chart-btn`;
 const chartClassDisabled = `${prefix}-chart-btn-disabled`;
-let allowedCampaigns = [];
 
 const charts = [
     { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true} },
@@ -12,17 +11,16 @@ const charts = [
     { column: 11, label: "ACOS", config: {metric: 'acos', chunk: 'day', round: false} },
 ];
 
-window.setInterval(() => {
-    let tableRows = $('#campaignTable tbody tr');
-    addChartButtons(tableRows);
-}, 100);
-
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns', 
     entityId: getEntityId(),
 },
 (response) => {
-    allowedCampaigns = response.data || [];
+    const allowedCampaigns = response.data || [];
+    window.setInterval(() => {
+        let tableRows = $('#campaignTable tbody tr');
+        addChartButtons(tableRows, allowedCampaigns);
+    }, 100);
 });
 
 const templateUrl = chrome.runtime.getURL('dashboard/templates.html');
@@ -34,7 +32,7 @@ $.ajax(templateUrl, {
     },
 });
 
-function addChartButtons(rows) {
+function addChartButtons(rows, allowedCampaigns) {
     for (let row of rows) {
         for (let chart of charts) {
             let cells = $(row).children();
