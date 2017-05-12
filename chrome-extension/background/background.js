@@ -185,14 +185,13 @@ function notifyNeedCredentials(entityId) {
         });
 
         notificationExists = true;
-        const listener = (clickId) => {
+        chrome.notifications.onClicked.addListener((clickId) => {
             if (clickId == notificationId) {
                 chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
                 chrome.notifications.clear(notificationId);
                 notificationExists = false;
             }
-        };
-        chrome.notifications.onClicked.addListener(listener);
-        chrome.notifications.onClosed.addListener(listener);
+        });
+        chrome.notifications.onClosed.addListener(() => notificationExists = false);
     }
 }
