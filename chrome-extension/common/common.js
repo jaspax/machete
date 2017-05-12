@@ -56,11 +56,13 @@ function moneyFmt(val) {
     return `$${(+val).toFixed(2)}`;
 }
 
-chrome.runtime.sendMessage({
-    action: 'setSession', 
-    entityId: getEntityId(), 
-    cookies: document.cookie,
-});
+if (window.location.href.includes('ams')) {
+    chrome.runtime.sendMessage({
+        action: 'setSession', 
+        entityId: getEntityId(), 
+        cookies: document.cookie,
+    });
+}
 
 // Convert a series of timestamped structs into an object with one or more
 // parallel arrays. The arrays which are built are based on opt.metric or
