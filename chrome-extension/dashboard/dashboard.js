@@ -47,7 +47,7 @@ function addChartButtons(rows, allowedCampaigns) {
 
             let selectName = select.name;
             let campaignId = selectName.split('_').pop();
-            campaignId = campaignId.substring(0, 22); // first 22 chars are the campaignId; timestamp is appended for some reason
+            campaignId = campaignId.substring(0, campaignId.length - 13); // first 22 chars are the campaignId; timestamp is appended for some reason
 
             let btnClasses = chartClass;
             let allowed = allowedCampaigns.includes(campaignId);
@@ -138,7 +138,7 @@ function renderChart(data, name, opt) {
 
     let container = $('#'+opt.id);
     if (data.timestamps.length < 3) {
-        let a = container.find(`a.${prefix}-lodata`)
+        let a = container.find(`a.${prefix}-lodata`);
         a[0].href = chrome.runtime.getURL('common/low-data.html');
         a.show();
     }

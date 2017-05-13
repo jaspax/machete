@@ -74,7 +74,7 @@ function setSession(req, sendResponse) {
 
 function getAllowedCampaigns(entityId, sendResponse) {
     if (!checkEntityId(entityId, sendResponse))
-        return;
+        return Promise.resolve([]);
     return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}/allowed`,
         method: 'GET',
@@ -141,8 +141,6 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
 }
 
 function storeDataCloud(entityId, timestamp, data) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
     return $.ajax({
         url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
         method: 'PUT',
@@ -154,8 +152,6 @@ function storeDataCloud(entityId, timestamp, data) {
 }
 
 function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
     return $.ajax({
         url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
         method: 'PUT',
