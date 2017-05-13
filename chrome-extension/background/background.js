@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
     if (!checkEntityId(entityId)) {
-        chrome.alarms.clear(session); // Stop this stupid alarm
+        chrome.alarms.clear(session, cleared => console.log("cleared useless alarm", cleared));
         return;
     }
 
