@@ -366,7 +366,7 @@ function getKeywordData(entityId, adGroupId, cb) {
     },
     (response) => {
         // If we have data, return it immediately
-        if (response.data.length) {
+        if (response && response.data && response.data.length) {
             cb(response.data);
         }
 

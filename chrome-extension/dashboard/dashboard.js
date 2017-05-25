@@ -47,7 +47,7 @@ function addChartButtons(rows, allowedCampaigns) {
 
             let selectName = select.name;
             let campaignId = selectName.split('_').pop();
-            campaignId = campaignId.substring(0, campaignId.length - 13); // first 22 chars are the campaignId; timestamp is appended for some reason
+            campaignId = campaignId.substring(0, campaignId.length - 13); // timestamp is appended for some reason
 
             let btnClasses = chartClass;
             let allowed = allowedCampaigns.includes(campaignId);

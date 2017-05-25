@@ -101,6 +101,10 @@ function requestCampaignData(entityId, sendResponse) {
         },
         dataType: 'json',
         success: (data) => {
+            if (data && data.aaData && data.aaData.length) {
+                let campaignIds = data.aaData.map(x => x.campaignId);
+                requestCampaignStatus(entityId, campaignIds, timestamp);
+            }
             storeDataCloud(entityId, timestamp, data)
                 .then(() => sendResponse({data}))
                 .fail((error) => sendResponse({error}));
@@ -113,6 +117,25 @@ function requestCampaignData(entityId, sendResponse) {
     });
 
     localStorage.setItem(getCampaignDataKey(entityId), timestamp);
+}
+
+function requestCampaignStatus(entityId, campaignIds, timestamp) {
+    $.ajax('https://ams.amazon.com/api/rta/campaign-status', {
+        method: 'GET',
+        data: { 
+            entityId, 
+            campaignIds: campaignIds.join(','),
+        },
+        dataType: 'json',
+        success: (data) => {
+            storeStatusCloud(entityId, timestamp, data)
+                .then(() => console.log('stored campaign status data successfully'))
+                .fail((error) => console.log('error storing campaign status:', error));
+        },
+        error: (xhr, textStatus, error) => {
+            console.log('error storing campaign status', error);
+        },
+    });
 }
 
 function requestKeywordData(entityId, adGroupId, sendResponse) {
@@ -148,6 +171,17 @@ function storeDataCloud(entityId, timestamp, data) {
         contentType: 'application/json',
         success: (data, status) => console.log('cloud storage', status), 
         error: (xhr, status, error) => console.warn('cloud storage', status, error),
+    });
+}
+
+function storeStatusCloud(entityId, timestamp, data) {
+    return $.ajax({
+        url: `${serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`,
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (data, status) => console.log('status storage', status), 
+        error: (xhr, status, error) => console.warn('status storage', status, error),
     });
 }
 
