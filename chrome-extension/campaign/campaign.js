@@ -1,6 +1,5 @@
 const tabClass = `${prefix}-tab`;
 const chartId = `${prefix}-kwchart`;
-let campaignAllowed = true;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
@@ -8,32 +7,34 @@ const ourTabs = [
     {label: "Keyword Analytics", content: "keywordAnalytics.html"},
 ];
 
-let makeTabsInterval = window.setInterval(() => {
-    let campaignTabs = $('#campaign_detail_tab_set');
-    if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
-        addCampaignTabs(campaignTabs);
-        window.clearInterval(makeTabsInterval);
-    }
-}, 100);
-
-let genReportsInterval = window.setInterval(() => {
-    let adGroupIdInput = $('input[name=adGroupId]');
-    if (!adGroupIdInput.length)
-        return;
-
-    let adGroupId = adGroupIdInput[0].value;
-    generateKeywordReports(adGroupId);
-    generateHistoryReports();
-    window.clearInterval(genReportsInterval);
-}, 100);
-
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns',
     entityId: getEntityId(),
 },
 (response) => {
     if (response && response.data) {
-        campaignAllowed = response.data.includes(getCampaignId());
+        const campaignAllowed = response.data.includes(getCampaignId());
+
+        let makeTabsInterval = window.setInterval(() => {
+            let campaignTabs = $('#campaign_detail_tab_set');
+            if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
+                addCampaignTabs(campaignTabs, campaignAllowed);
+                window.clearInterval(makeTabsInterval);
+            }
+        }, 100);
+
+        if (campaignAllowed) {
+            let genReportsInterval = window.setInterval(() => {
+                let adGroupIdInput = $('input[name=adGroupId]');
+                if (!adGroupIdInput.length)
+                    return;
+
+                let adGroupId = adGroupIdInput[0].value;
+                generateKeywordReports(adGroupId);
+                generateHistoryReports();
+                window.clearInterval(genReportsInterval);
+            }, 100);
+        }
     }
 });
 
@@ -261,7 +262,7 @@ function updateBid(keywordIdList, bid, cb) {
     return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
 }
 
-function addCampaignTabs(tabs) {
+function addCampaignTabs(tabs, campaignAllowed) {
     for (let tab of ourTabs) {
         let a = $(`<a href="#">${tab.label}</a>`);
         let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
@@ -370,8 +371,7 @@ function getKeywordData(entityId, adGroupId, cb) {
             cb(response.data);
         }
 
-        // After querying our own (fast) servers, query Amazon. TODO: this is
-        // gonna get moved to the cloud
+        // After querying our own (fast) servers, query Amazon.
         chrome.runtime.sendMessage({
             action: 'requestKeywordData',
             entityId: entityId,
@@ -443,6 +443,7 @@ function renderKeywordChart(kws) {
 }
 
 function renderKeywordTable(data, opts) {
+    opts = opts || {};
     let container = $(opts.selector);
     container.empty();
 
@@ -555,7 +556,9 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
     updateStatus(data.map(kw => kw.id), !enabled, (result) => {
         if (result.success) {
             data.forEach(x => x.enabled = !enabled);
-            renderKeywordTable(data, container[0].opts);
+            if (!opts.skipTable) {
+                renderKeywordTable(data, container[0].opts);
+            }
         }
         else {
             console.error('problems updating status:', result);
@@ -573,7 +576,9 @@ $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
     updateBid(data.map(kw => kw.id), input.val(), (result) => {
         if (result.success) {
             data.forEach(kw => kw.bid = result.bid);
-            renderKeywordTable(data, container[0].opts);
+            if (!opts.skipTable) {
+                renderKeywordTable(data, container[0].opts);
+            }
         }
         else {
             console.error('problems updating status:', result);
