@@ -40,6 +40,14 @@ chrome.runtime.sendMessage({
 
 function generateKeywordReports(adGroupId) {
     getKeywordData(getEntityId(), adGroupId, (data) => {
+        // Render the bulk update control on the main keyword list
+        const allTable = $('#keywordTableControls');
+        if (allTable.find('#machete-bulk-all').length == 0) {
+            const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reload: true});
+            bulkAll.attr('id', 'machete-bulk-all');
+            $('#keywordTableControls').children().first().append(bulkAll);
+        }
+
         let enabledKws = data.filter(kw => kw.enabled);
 
         renderKeywordChart(transformKeywordData(enabledKws), {});
@@ -549,7 +557,9 @@ function renderKeywordStatus(keyword, cell) {
 
 $(document).on('click', '.machete-kwstatus-bulk', function() {
     let container = $(this).parents('.machete-kwupdate-bulk');
+    container.find('.machete-kwupdate-error').text('');
     let data = container[0].data;
+    let opts = container[0].opts;
     let enabled = data[0].enabled;
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
@@ -559,8 +569,14 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
             if (!opts.skipTable) {
                 renderKeywordTable(data, container[0].opts);
             }
+            if (opts.reload) {
+                window.location.reload(true);
+            }
         }
         else {
+            const errMsg = `There was an error applying the bulk update. 
+                Please refresh this page and try again. (Error was: ${result})`;
+            container.find('.machete-kwupdate-error').text(errMsg);
             console.error('problems updating status:', result);
         }
     });
@@ -568,9 +584,11 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
 
 $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
     let container = $(this).parents('.machete-kwupdate-bulk');
+    container.find('.machete-kwupdate-error').text('');
     let cell = $(this).parents('.machete-kwbid-bulk');
     let input = cell.find('input[name=keyword-bid]');
     let data = container[0].data;
+    let opts = container[0].opts;
     cell.children().hide();
     cell.find('.loading-small').show();
     updateBid(data.map(kw => kw.id), input.val(), (result) => {
@@ -579,8 +597,14 @@ $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
             if (!opts.skipTable) {
                 renderKeywordTable(data, container[0].opts);
             }
+            if (opts.reload) {
+                window.location.reload(true);
+            }
         }
         else {
+            const errMsg = `There was an error applying the bulk update. 
+                Please refresh this page and try again. (Error was: ${result})`;
+            container.find('.machete-kwupdate-error').text(errMsg);
             console.error('problems updating status:', result);
         }
     });

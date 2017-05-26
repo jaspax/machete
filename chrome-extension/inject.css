@@ -70,6 +70,11 @@
     border-radius: 4px;
 }
 
+.machete-kwupdate-error {
+    color: red;
+    font-size: 11pt;
+}
+
 .machete-kwbulk-label {
     font-weight: bold;
 }
