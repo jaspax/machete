@@ -83,6 +83,10 @@
     display: inline-block;
 }
 
+#machete-bulk-all {
+    margin-left: 8px;
+}
+
 .machete-outer {
     width: 900px;
     margin: auto;

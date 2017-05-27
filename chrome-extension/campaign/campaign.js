@@ -43,9 +43,13 @@ function generateKeywordReports(adGroupId) {
         // Render the bulk update control on the main keyword list
         const allTable = $('#keywordTableControls');
         if (allTable.find('#machete-bulk-all').length == 0) {
-            const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reload: true});
+            const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
             bulkAll.attr('id', 'machete-bulk-all');
-            $('#keywordTableControls').children().first().append(bulkAll);
+            // Hack ourselves into the Amazon layout
+            const first = $('#keywordTableControls').children().first();
+            first.removeClass('a-span8');
+            first.addClass('a-span4');
+            first.after(bulkAll);
         }
 
         let enabledKws = data.filter(kw => kw.enabled);
@@ -569,7 +573,7 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
             if (!opts.skipTable) {
                 renderKeywordTable(data, container[0].opts);
             }
-            if (opts.reload) {
+            if (opts.reloadOnUpdate) {
                 window.location.reload(true);
             }
         }
@@ -597,7 +601,7 @@ $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
             if (!opts.skipTable) {
                 renderKeywordTable(data, container[0].opts);
             }
-            if (opts.reload) {
+            if (opts.reloadOnUpdate) {
                 window.location.reload(true);
             }
         }
