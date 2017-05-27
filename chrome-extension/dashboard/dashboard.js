@@ -80,8 +80,13 @@ function addChartButtons(rows, allowedCampaigns) {
                 else {
                     popup.css({top: pos.top + btn.height() + 6, left: pos.left});
                 }
+                const bodyTop = $('body').scrollTop();
+                const bodyLeft = $('body').scrollLeft();
 
                 popup.slideDown(200, function() {
+                    $('body').scrollTop(bodyTop);
+                    $('body').scrollLeft(bodyLeft);
+
                     // Clicking anywhere outside the popup dismisses the chart
                     $(document).on('click', function() {
                         if (!$.contains(popup[0], this)) {
