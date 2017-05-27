@@ -57,7 +57,7 @@ function addChartButtons(rows, allowedCampaigns) {
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
             btn.click(function() {
                 let newId = chartId+campaignId+chart.config.metric;
-                let popup = btn.parent().find('#'+newId);
+                let popup = $('#'+newId);
                 if (!popup.length) {
                     if (allowed) {
                         popup = $('#'+chartId).hide().clone();
@@ -68,18 +68,19 @@ function addChartButtons(rows, allowedCampaigns) {
                         popup.addClass(chartLoginRequired);
                     }
                     popup.attr('id', newId);
-                    
-                    // hard-coded element width below b/c popup.width() doesn't
-                    // work as required
-                    let pos = btn.position();
-                    if (pos.left + 420 > $(document).width()) { 
-                        popup.css({top: pos.top + btn.height() + 6, left: pos.left + btn.width() - 414});
-                    }
-                    else {
-                        popup.css({top: pos.top + btn.height() + 6, left: pos.left});
-                    }
-                    btn.after(popup);
+                    $(document.body).append(popup);
                 }
+                // hard-coded element width below b/c popup.width() doesn't
+                // work as required. must reposition every time we display in
+                // order to work correctly with scrolling.
+                let pos = btn.offset();
+                if (pos.left + 420 > $(document).width()) { 
+                    popup.css({top: pos.top + btn.height() + 6, left: pos.left + btn.width() - 414});
+                }
+                else {
+                    popup.css({top: pos.top + btn.height() + 6, left: pos.left});
+                }
+
                 popup.slideDown(200, function() {
                     // Clicking anywhere outside the popup dismisses the chart
                     $(document).on('click', function() {
