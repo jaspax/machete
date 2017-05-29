@@ -3,8 +3,8 @@ const chartId = `${prefix}-kwchart`;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
-    {label: "Campaign History", content: "history.html"},
-    {label: "Keyword Analytics", content: "keywordAnalytics.html"},
+    {label: "Campaign History", content: "history.html", activate: generateHistoryReports},
+    {label: "Keyword Analytics", content: "keywordAnalytics.html", activate: generateKeywordReports},
 ];
 
 chrome.runtime.sendMessage({
@@ -22,24 +22,19 @@ chrome.runtime.sendMessage({
                 window.clearInterval(makeTabsInterval);
             }
         }, 100);
-
-        if (campaignAllowed) {
-            let genReportsInterval = window.setInterval(() => {
-                let adGroupIdInput = $('input[name=adGroupId]');
-                if (!adGroupIdInput.length)
-                    return;
-
-                let adGroupId = adGroupIdInput[0].value;
-                generateKeywordReports(adGroupId);
-                generateHistoryReports();
-                window.clearInterval(genReportsInterval);
-            }, 100);
-        }
     }
 });
 
 function generateKeywordReports(adGroupId) {
+    // Show all of the loading indicators
+    $('.loading-large').show();
+    $('.loading-small').show();
+
     getKeywordData(getEntityId(), adGroupId, (data) => {
+        // Hide all of the loading indicators
+        $('.loading-large').hide();
+        $('.loading-small').hide();
+
         // Render the bulk update control on the main keyword list
         const allTable = $('#keywordTableControls');
         if (allTable.find('#machete-bulk-all').length == 0) {
@@ -154,7 +149,11 @@ function generateKeywordReports(adGroupId) {
 }
 
 function generateHistoryReports() {
-    getCampaignHistory(getEntityId(), getCampaignId(), (data) => renderHistoryChart(data));
+    $('.loading-large').show();
+    getCampaignHistory(getEntityId(), getCampaignId(), (data) => {
+        $('.loading-large').hide();
+        renderHistoryChart(data);
+    });
 }
 
 function renderHistoryChart(data) {
@@ -276,6 +275,7 @@ function updateBid(keywordIdList, bid, cb) {
 
 function addCampaignTabs(tabs, campaignAllowed) {
     for (let tab of ourTabs) {
+        let adGroupId = null;
         let a = $(`<a href="#">${tab.label}</a>`);
         let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
         li.append(a);
@@ -291,6 +291,9 @@ function addCampaignTabs(tabs, campaignAllowed) {
             if (campaignAllowed) {
                 $('.machete-campaign-login-required').hide();
             }
+            if (tab.activate && adGroupId) {
+                tab.activate(adGroupId);
+            }
         });
         $(tabs.children()[0]).after(li);
 
@@ -299,6 +302,17 @@ function addCampaignTabs(tabs, campaignAllowed) {
             url: chrome.runtime.getURL('campaign/'+tab.content),
             success: (data) => container.append(data),
         });
+
+        // Get the ad group id from the HTML
+        if (campaignAllowed) {
+            let genReportsInterval = window.setInterval(() => {
+                let adGroupIdInput = $('input[name=adGroupId]');
+                if (!adGroupIdInput.length)
+                    return;
+                adGroupId = adGroupIdInput[0].value;
+                window.clearInterval(genReportsInterval);
+            }, 50);
+        }
     }
 }
 
@@ -398,7 +412,9 @@ function getKeywordData(entityId, adGroupId, cb) {
                 adGroupId: adGroupId,
             }, 
             (response) => {
-                cb(response.data);
+                if (response && response.data) {
+                    cb(response.data);
+                }
             });
         });
     });
