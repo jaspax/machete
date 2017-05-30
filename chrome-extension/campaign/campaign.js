@@ -63,13 +63,17 @@ function generateKeywordReports(entityId, adGroupId) {
         let totalImpressions = enabledKws.reduce((acc, val) => acc + val.impressions, 0);
         let minImpressions = totalImpressions / (enabledKws.length * 10);
 
-        let hasEnoughImpressions = x => x.clicks && x.impressions > minImpressions;
-        let clickRatio = x => x.clicks/x.impressions;
+        // Calculate these two derived metrics once, because we use them
+        // multiple times below
+        for (let kw of enabledKws) {
+            kw.hasEnoughImpressions = kw.clicks && kw.impressions > minImpressions;
+            kw.clickRatio = kw.clicks/kw.impressions;
+        }
 
         let salesTopQuartile = enabledKws.sort((a, b) => b.sales - a.sales)[Math.round(enabledKws.length / 4)];
-        let clickRatioSort = enabledKws.filter(hasEnoughImpressions).sort((a, b) => clickRatio(a) - clickRatio(b));
-        let clickRatioBottomQuartile = clickRatio(clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)]);
-        let clickRatioTopQuartile = clickRatio(clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)]);
+        let clickRatioSort = enabledKws.filter(x => x.hasEnoughImpressions).sort((a, b) => a.clickRatio - b.clickRatio);
+        let clickRatioBottomQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)].clickRatio;
+        let clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
 
         renderKeywordTable(enabledKws, { 
             selector: '#machete-acos',
@@ -83,8 +87,8 @@ function generateKeywordReports(entityId, adGroupId) {
             selector: '#machete-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
-            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) <= clickRatioBottomQuartile,
-            metricFn: clickRatio,
+            filterFn: (x) => x.hasEnoughImpressions && x.clickRatio <= clickRatioBottomQuartile,
+            metricFn: x => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(enabledKws, {
@@ -107,8 +111,8 @@ function generateKeywordReports(entityId, adGroupId) {
             selector: '#machete-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
-            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) >= clickRatioTopQuartile,
-            metricFn: clickRatio,
+            filterFn: (x) => x.hasEnoughImpressions && x.clickRatio >= clickRatioTopQuartile,
+            metricFn: (x) => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
         renderKeywordTable(enabledKws, { 
