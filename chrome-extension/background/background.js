@@ -24,6 +24,8 @@ chrome.runtime.onInstalled.addListener(details => {
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action == 'setSession')
         setSession(req, sendResponse);
+    else if (req.action == 'getUser')
+        getUser(sendResponse);
     else if (req.action == 'getAllowedCampaigns') 
         getAllowedCampaigns(req.entityId, sendResponse);
     else if (req.action == 'requestData')
@@ -70,6 +72,16 @@ function setSession(req, sendResponse) {
         }
     });
     sendResponse('ok');
+}
+
+function getUser(sendResponse) {
+    return $.ajax({
+        url: `${serviceUrl}/api/user`,
+        method: 'GET',
+        dataType: 'json',
+        success: (data) => sendResponse({data}),
+        error: (xhr, status, error) => sendResponse({error}),
+    });
 }
 
 function getAllowedCampaigns(entityId, sendResponse) {

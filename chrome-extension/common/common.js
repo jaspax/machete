@@ -64,6 +64,28 @@ if (window.location.href.includes('ams')) {
     });
 }
 
+// Add in the Machete link to the top bar
+chrome.runtime.sendMessage({
+    action: 'getUser', 
+}, (response) => {
+    if (response.error) {
+        console.error(response);
+        return;
+    }
+    const user = response.data;
+    const desc = user.activeSubscription.name;
+    let email = user.email;
+    let profileText = "Your Profile";
+    if (email == 'anon-user-email') {
+        email = '';
+        profileText = 'Login/Register';
+    }
+    let links = $('.userBarLinksRight')[0];
+    let chunks = links.innerHTML.split(' | ');
+    chunks.splice(-1, 0, `${desc} ${email} (<a href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
+    links.innerHTML = chunks.join(' | ');
+});
+
 // Convert a series of timestamped structs into an object with one or more
 // parallel arrays. The arrays which are built are based on opt.metric or
 // opt.metrics (if more than one), and you can get raw values, or the rate of
