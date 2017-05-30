@@ -155,9 +155,14 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
         },
         dataType: 'json',
         success: (data) => {
-            storeKeywordDataCloud(entityId, adGroupId, timestamp, data)
-                .then(() => sendResponse({data}))
-                .fail((error) => sendResponse({error}));
+            if (data.message) {
+                sendResponse({error: data.message});
+            }
+            else {
+                storeKeywordDataCloud(entityId, adGroupId, timestamp, data)
+                    .then(() => sendResponse({data}))
+                    .fail((error) => sendResponse({error}));
+            }
         },
         error: (xhr, textStatus, error) => sendResponse({error}),
     });

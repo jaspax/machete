@@ -25,12 +25,12 @@ chrome.runtime.sendMessage({
     }
 });
 
-function generateKeywordReports(adGroupId) {
+function generateKeywordReports(entityId, adGroupId) {
     // Show all of the loading indicators
     $('.loading-large').show();
     $('.loading-small').show();
 
-    getKeywordData(getEntityId(), adGroupId, (data) => {
+    getKeywordData(entityId, adGroupId, (data) => {
         // Hide all of the loading indicators
         $('.loading-large').hide();
         $('.loading-small').hide();
@@ -68,8 +68,8 @@ function generateKeywordReports(adGroupId) {
 
         let salesTopQuartile = enabledKws.sort((a, b) => b.sales - a.sales)[Math.round(enabledKws.length / 4)];
         let clickRatioSort = enabledKws.filter(hasEnoughImpressions).sort((a, b) => clickRatio(a) - clickRatio(b));
-        let clickRatioBottomQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.25)];
-        let clickRatioTopQuartile = clickRatioSort[Math.round(clickRatioSort.length * 0.75)];
+        let clickRatioBottomQuartile = clickRatio(clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)]);
+        let clickRatioTopQuartile = clickRatio(clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)]);
 
         renderKeywordTable(enabledKws, { 
             selector: '#machete-acos',
@@ -83,7 +83,7 @@ function generateKeywordReports(adGroupId) {
             selector: '#machete-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
-            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) <= clickRatio(clickRatioBottomQuartile),
+            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) <= clickRatioBottomQuartile,
             metricFn: clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
@@ -107,7 +107,7 @@ function generateKeywordReports(adGroupId) {
             selector: '#machete-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
-            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) >= clickRatio(clickRatioTopQuartile),
+            filterFn: (x) => hasEnoughImpressions(x) && clickRatio(x) >= clickRatioTopQuartile,
             metricFn: clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
@@ -148,9 +148,9 @@ function generateKeywordReports(adGroupId) {
     });
 }
 
-function generateHistoryReports() {
+function generateHistoryReports(entityId) {
     $('.loading-large').show();
-    getCampaignHistory(getEntityId(), getCampaignId(), (data) => {
+    getCampaignHistory(entityId, getCampaignId(), (data) => {
         $('.loading-large').hide();
         renderHistoryChart(data);
     });
@@ -292,7 +292,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
                 $('.machete-campaign-login-required').hide();
             }
             if (tab.activate && adGroupId) {
-                tab.activate(adGroupId);
+                tab.activate(getEntityId(), adGroupId);
             }
         });
         $(tabs.children()[0]).after(li);
@@ -467,7 +467,7 @@ function renderKeywordChart(kws) {
         hovermode: 'closest',
         showlegend: false,
     };
-    Plotly.plot(chartId, [chartData], layout, {showLink: false});
+    Plotly.newPlot(chartId, [chartData], layout, {showLink: false});
 }
 
 function renderKeywordTable(data, opts) {
