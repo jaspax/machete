@@ -408,7 +408,7 @@ function getKeywordData(entityId, adGroupId, cb) {
     },
     (response) => {
         if (response.error) {
-            merror(response.error)
+            merror(response.error);
         }
 
         // If we have data, return it immediately

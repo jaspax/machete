@@ -1,9 +1,11 @@
+/* eslint-disable no-unused-vars */
+
 const prefix = 'machete';
 const span = {
     second: 1000,
     minute: 1000 * 60,
-    hour:   1000 * 60 * 60,
-    day:    1000 * 60 * 60 * 24,
+    hour: 1000 * 60 * 60,
+    day: 1000 * 60 * 60 * 24,
 };
 
 function getEntityId() {
@@ -65,9 +67,7 @@ if (window.location.href.includes('ams')) {
 }
 
 // Add in the Machete link to the top bar
-chrome.runtime.sendMessage({
-    action: 'getUser', 
-}, (response) => {
+chrome.runtime.sendMessage({ action: 'getUser' }, (response) => {
     if (response.error) {
         merror(response.error);
         return;

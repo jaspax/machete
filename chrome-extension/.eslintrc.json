@@ -14,7 +14,11 @@
         "getCampaignId": true,
         "moneyFmt": true,
         "parallelizeHistoryData": true,
-        "chartPng": true
+        "chartPng": true,
+        "mga": true,
+        "mclick": true,
+        "merror": true,
+        "__ga": true
     },
     "extends": "eslint:recommended",
     "rules": {

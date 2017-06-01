@@ -131,7 +131,8 @@ function getDataHistory(entityId, campaignId, cb) {
 }
 
 function renderChart(data, name, opt) {
-    opt.config.startTimestamp = Date.now() - (8 * span.day);
+    const daysMs = 8 * span.day;
+    opt.config.startTimestamp = Date.now() - daysMs;
     data = parallelizeHistoryData(data, opt.config);
 
     const series = {

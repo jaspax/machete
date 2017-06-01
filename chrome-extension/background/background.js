@@ -60,7 +60,7 @@ function setSession(req, sendResponse) {
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
     if (!lastCampaignData || Date.now() - lastCampaignData >= span.hour) {
-        requestCampaignData(entityId, (response) => {
+        requestCampaignData(req.entityId, (response) => {
             response.error ? merror("requestCampaignData", response.error)
                            : console.log('requestCampaignData success');
         });
