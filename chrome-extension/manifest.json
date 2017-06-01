@@ -23,13 +23,14 @@
     "https://machete-app.com/*"
   ],
   "background": {
-      "scripts": ["extern/jquery.min.js", "common/common.js", "background/background.js"],
+      "scripts": ["extern/jquery.min.js", "common/common.js", "common/ga.js", "background/background.js"],
       "persistent": false
   },
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
-          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "common/common.js", "common/ga.js", "dashboard/dashboard.js"],
+          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", 
+                 "common/common.js", "common/ga.js", "dashboard/dashboard.js"],
           "css": ["inject.css"]
       },
       {
@@ -39,6 +40,7 @@
           "css": ["inject.css", "extern/jquery.dataTables.min.css"]
       }
   ],
+  "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
   "web_accessible_resources": [
       "images/**",
       "*/*.html"
