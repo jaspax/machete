@@ -34,10 +34,10 @@ window.onerror = function(errorMsg, url, lineNumber) {
     }, [errorMsg, url, lineNumber]);
 }
 
-function merror(msg) {
-    let error = new Error(msg);
+function merror(...msg) {
+    let error = new Error(msg.join(' '));
     mex(new Error(msg), false);
-    return error;
+    console.error(msg);
 }
 
 function mex(ex, fatal) {

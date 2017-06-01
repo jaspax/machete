@@ -16,6 +16,9 @@ chrome.runtime.sendMessage({
     entityId: getEntityId(),
 },
 (response) => {
+    if (response.error) {
+        merror(response.error);
+    }
     const allowedCampaigns = response.data || [];
     window.setInterval(() => {
         let tableRows = $('#campaignTable tbody tr');
@@ -118,7 +121,13 @@ function getDataHistory(entityId, campaignId, cb) {
         entityId: entityId,
         campaignId: campaignId,
     },
-    (response) => cb(response.data));
+    (response) => {
+        if (response.error) {
+            merror(response.error);
+            return;
+        }
+        cb(response.data);
+    });
 }
 
 function renderChart(data, name, opt) {

@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     else if (req.action == 'getKeywordData')
         getKeywordData(req.entityId, req.adGroupId, sendResponse);
     else 
-        sendResponse('unknown action');
+        sendResponse({error: 'unknown action'});
     return true;
 });
 
@@ -71,7 +71,7 @@ function setSession(req, sendResponse) {
             console.log('set alarm for', sessionKey);
         }
     });
-    sendResponse('ok');
+    sendResponse({data: 'ok'});
 }
 
 function getUser(sendResponse) {
@@ -122,8 +122,10 @@ function requestCampaignData(entityId, sendResponse) {
                 .fail((error) => sendResponse({error}));
         },
         error: (xhr, textStatus, error) => {
-            if (xhr.status == 401) // Unauthorized
+            if (xhr.status == 401) { // Unauthorized
                 notifyNeedCredentials(entityId);
+                return;
+            }
             sendResponse({error});
         },
     });

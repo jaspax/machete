@@ -69,7 +69,7 @@ chrome.runtime.sendMessage({
     action: 'getUser', 
 }, (response) => {
     if (response.error) {
-        console.error(response);
+        merror(response.error);
         return;
     }
     const user = response.data;

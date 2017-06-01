@@ -12,7 +12,11 @@ chrome.runtime.sendMessage({
     entityId: getEntityId(),
 },
 (response) => {
-    if (response && response.data) {
+    if (response.error) {
+        merror(response.error);
+        return;
+    }
+    if (response.data) {
         const campaignAllowed = response.data.includes(getCampaignId());
 
         let makeTabsInterval = window.setInterval(() => {
@@ -387,7 +391,13 @@ function getCampaignHistory(entityId, campaignId, cb) {
         entityId: entityId,
         campaignId: campaignId,
     },
-    (response) => cb(response.data));
+    (response) => {
+        if (response.error) {
+            merror(response.error);
+            return;
+        }
+        cb(response.data);
+    });
 }
 
 function getKeywordData(entityId, adGroupId, cb) {
@@ -397,8 +407,12 @@ function getKeywordData(entityId, adGroupId, cb) {
         adGroupId: adGroupId,
     },
     (response) => {
+        if (response.error) {
+            merror(response.error)
+        }
+
         // If we have data, return it immediately
-        if (response && response.data && response.data.length) {
+        if (response.data && response.data.length) {
             cb(response.data);
         }
 
@@ -417,7 +431,10 @@ function getKeywordData(entityId, adGroupId, cb) {
                 adGroupId: adGroupId,
             }, 
             (response) => {
-                if (response && response.data) {
+                if (response.error) {
+                    merror(response.error);
+                }
+                if (response.data) {
                     cb(response.data);
                 }
             });
@@ -523,7 +540,7 @@ $(document).on('click', '.machete-kwstatus', function() {
             renderKeywordStatus(keyword, $(this));
         }
         else {
-            console.error('problems updating status:', result);
+            merror('status update error:', result);
         }
         $(this).find('.a-button').show();
         $(this).find('.loading-small').hide();
@@ -543,7 +560,7 @@ $(document).on('click', '.machete-kwbid input[name=save]', function() {
             renderKeywordBid(keyword, cell);
         }
         else {
-            console.error('problems updating status:', result);
+            merror('bid update error:', result);
         }
         cell.children().show();
         cell.find('.loading-small').hide();
@@ -605,7 +622,7 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
             const errMsg = `There was an error applying the bulk update. 
                 Please refresh this page and try again. (Error was: ${result})`;
             container.find('.machete-kwupdate-error').text(errMsg);
-            console.error('problems updating status:', result);
+            merror('status bulk update error:', result);
         }
     });
 });
@@ -634,7 +651,7 @@ $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
             const errMsg = `There was an error applying the bulk update. 
                 Please refresh this page and try again. (Error was: ${result})`;
             container.find('.machete-kwupdate-error').text(errMsg);
-            console.error('problems updating status:', result);
+            merror('bid bulk update error:', result);
         }
     });
 });
