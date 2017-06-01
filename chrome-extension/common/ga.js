@@ -44,12 +44,14 @@ function mex(ex, fatal) {
     mga('exception', { exDescription: ex.stack, exFatal: fatal });
 }
 
-function mclick(category, label, fn) {
+function mclick(category, label) {
     mga('event', category, 'click', label);
 }
 
 $(document).on('click.machete.ga', '[data-mclick]', function() {
     const args = $(this).attr('data-mclick').split(' ');
-    mclick(args[0], args[1]);
-    return true; // continue as before
+    let category = args[0];
+    let label = args[1] || this.id;
+    mclick(category, label);
+    return true;
 });

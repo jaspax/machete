@@ -515,6 +515,7 @@ $(document).on('click', '.machete-kwstatus', function() {
     let keyword = JSON.parse($(this).attr('data-machete-keyword'));
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
+    mclick('kword-data-status-toggle', keyword.enabled ? 'disable' : 'enable');
     updateStatus([keyword.id], !keyword.enabled, (result) => {
         if (result.success) {
             keyword.enabled = !keyword.enabled;
@@ -534,6 +535,7 @@ $(document).on('click', '.machete-kwbid input[name=save]', function() {
     let input = cell.find('input[name=keyword-bid]');
     cell.children().hide();
     cell.find('.loading-small').show();
+    mclick('kword-data-bid-save', input.val());
     updateBid([keyword.id], input.val(), (result) => {
         if (result.success) {
             keyword.bid = result.bid;
@@ -587,6 +589,7 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
     let enabled = data[0].enabled;
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
+    mclick('kword-data-bulk-status-toggle', enabled ? 'disable' : 'enable');
     updateStatus(data.map(kw => kw.id), !enabled, (result) => {
         if (result.success) {
             data.forEach(x => x.enabled = !enabled);
@@ -615,6 +618,7 @@ $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
     let opts = container[0].opts;
     cell.children().hide();
     cell.find('.loading-small').show();
+    mclick('kword-data-bulk-bid-save', input.val());
     updateBid(data.map(kw => kw.id), input.val(), (result) => {
         if (result.success) {
             data.forEach(kw => kw.bid = result.bid);
@@ -638,6 +642,7 @@ function renderBulkUpdate(data, opts) {
     let bulk = cloneTemplate('machete-kwupdate-bulk');
     bulk[0].data = data;
     bulk[0].opts = opts;
+    bulk.attr('data-mclick', `kword-data-bulk ${opts.selector ? opts.selector.substring(1) : 'all'}`);
 
     renderKeywordStatus(data[0] || {}, bulk.find('.machete-kwstatus-bulk'));
     renderKeywordBid(data[0] || {}, bulk.find('.machete-kwbid-bulk'));
