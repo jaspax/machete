@@ -21,10 +21,10 @@ inpage(function () {
 	__ga('machete.send', 'pageview', location.pathname);
 });
 
-function ga() {
+function mga() {
     inpage(function() {
         __ga.apply(null, arguments);
-    }, Array.from(arguments));
+    }, ['machete.send'].concat(Array.from(arguments)));
 }
 
 // This is next to useless, but at least we'll get *something*
@@ -41,17 +41,15 @@ function merror(msg) {
 }
 
 function mex(ex, fatal) {
-    ga('machete.send', 'exception', { exDescription: ex.stack, exFatal: fatal });
+    mga('exception', { exDescription: ex.stack, exFatal: fatal });
 }
 
 function mclick(category, label, fn) {
-    ga('machete.send', 'event', category, 'click', label);
-    if (fn)
-        fn();
+    mga('event', category, 'click', label);
 }
 
-$(document).on('click', '[data-mclick]', function() {
-    const args = this.attr('data-mclick').split(' ');
+$(document).on('click.machete.ga', '[data-mclick]', function() {
+    const args = $(this).attr('data-mclick').split(' ');
     mclick(args[0], args[1]);
     return true; // continue as before
 });

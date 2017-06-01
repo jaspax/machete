@@ -51,11 +51,15 @@ function addChartButtons(rows, allowedCampaigns) {
 
             let btnClasses = chartClass;
             let allowed = allowedCampaigns.includes(campaignId);
+            let eventCategory = 'thumbnail-enabled';
             if (!allowed) {
                 btnClasses += ` ${chartClassDisabled}`;
+                eventCategory = 'thumbnail-disabled';
             }
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
             btn.click(function() {
+                mclick(eventCategory, chart.config.metric);
+
                 let newId = chartId+campaignId+chart.config.metric;
                 let popup = $('#'+newId);
                 if (!popup.length) {
@@ -88,10 +92,11 @@ function addChartButtons(rows, allowedCampaigns) {
                     $('body').scrollLeft(bodyLeft);
 
                     // Clicking anywhere outside the popup dismisses the chart
-                    $(document).on('click', function() {
+                    $(document).on('click.machete.thumbnail-dismiss', function() {
                         if (!$.contains(popup[0], this)) {
+                            mga('event', eventCategory, 'dismiss', chart.config.metric);
                             popup.hide();
-                            $(document).off('click');
+                            $(document).off('click.machete.thumbnail-dismiss');
                         }
                     });
                 });
