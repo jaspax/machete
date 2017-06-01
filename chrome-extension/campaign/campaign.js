@@ -288,6 +288,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
         tabs.parent().append(container);
 
         a.click(function() {
+            mga('event', 'kword-data-tab', 'activate', tab.label);
             li.addClass('a-active');
             li.siblings().removeClass('a-active');
             tabs.parent().children('div').addClass('a-hidden');
