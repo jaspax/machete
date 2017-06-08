@@ -64,31 +64,31 @@ if (window.location.href.includes('ams')) {
         entityId: getEntityId(), 
         cookies: document.cookie,
     });
-}
 
-// Add in the Machete link to the top bar
-chrome.runtime.sendMessage({ action: 'getUser' }, (response) => {
-    if (response.error) {
-        merror(response.error);
-        return;
-    }
-    const user = response.data;
-    const desc = user.activeSubscription.name;
-    let email = user.email;
-    let profileText = "Your Profile";
-    let label = 'view-profile';
-    if (email == 'anon-user-email') {
-        email = '';
-        profileText = 'Login/Register';
-        label = 'login';
-    }
-    let links = $('.userBarLinksRight')[0];
-    if (links) {
-        let chunks = links.innerHTML.split(' | ');
-        chunks.splice(-1, 0, `${desc} ${email} (<a data-mclick="machete-status ${label}" href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
-        links.innerHTML = chunks.join(' | ');
-    }
-});
+    // Add in the Machete link to the top bar
+    chrome.runtime.sendMessage({ action: 'getUser' }, (response) => {
+        if (response.error) {
+            merror(response.error);
+            return;
+        }
+        const user = response.data;
+        const desc = user.activeSubscription.name;
+        let email = user.email;
+        let profileText = "Your Profile";
+        let label = 'view-profile';
+        if (email == 'anon-user-email') {
+            email = '';
+            profileText = 'Login/Register';
+            label = 'login';
+        }
+        let links = $('.userBarLinksRight')[0];
+        if (links) {
+            let chunks = links.innerHTML.split(' | ');
+            chunks.splice(-1, 0, `${desc} ${email} (<a data-mclick="machete-status ${label}" href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
+            links.innerHTML = chunks.join(' | ');
+        }
+    });
+}
 
 // Convert a series of timestamped structs into an object with one or more
 // parallel arrays. The arrays which are built are based on opt.metric or

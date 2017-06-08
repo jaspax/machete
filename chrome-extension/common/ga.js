@@ -1,27 +1,34 @@
 /* eslint-disable no-unused-vars */
 
-// execute a function in the context of the hosting page
+// Execute a function in the context of the hosting page. For Chrome extension
+// scripts, we execute directly.
 function inpage(fn, args) {
-    var script = document.createElement('script');
-    var sargs = JSON.stringify(args);
-    var text = `(${fn.toString()}).apply(null, ${sargs});`;
-    script.textContent = text;
-    document.documentElement.appendChild(script);
-    document.documentElement.removeChild(script);
+    if (location.protocol == 'chrome-extension:') {
+        fn(args);
+    }
+    else {
+        var script = document.createElement('script');
+        var sargs = JSON.stringify(args);
+        var text = `(${fn.toString()}).apply(null, ${sargs});`;
+        script.textContent = text;
+        document.documentElement.appendChild(script);
+        document.documentElement.removeChild(script);
+    }
 }
 
-// add Universal Analytics to the page
+// Add Universal Analytics to the page. Only do this on http(s); not in the
+// chrome extension itself.
 /* eslint-disable */
 inpage(function () {
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o);
     a.async=1;a.src=g;document.documentElement.appendChild(a)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','__ga');
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','__ga');
 });
 
 inpage(function () {
-	__ga('create', 'UA-98724833-1', 'auto', 'machete');
-	__ga('machete.send', 'pageview', location.pathname);
+    __ga('create', 'UA-98724833-1', 'auto', 'machete');
+    __ga('machete.send', 'pageview', location.pathname);
 });
 /* eslint-enable */
 
