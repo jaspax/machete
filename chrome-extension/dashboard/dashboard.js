@@ -16,16 +16,16 @@ chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns', 
     entityId: getEntityId(),
 },
-(response) => {
+mcatch(response => {
     if (response.error) {
         merror(response.status, response.error);
     }
     const allowedCampaigns = response.data || [];
-    window.setInterval(() => {
+    window.setInterval(mcatch(() => {
         let tableRows = $('#campaignTable tbody tr');
         addChartButtons(tableRows, allowedCampaigns);
-    }, 100);
-});
+    }), 100);
+}));
 
 const templateUrl = chrome.runtime.getURL('dashboard/templates.html');
 $.ajax(templateUrl, {
@@ -61,7 +61,7 @@ function addChartButtons(rows, allowedCampaigns) {
                 eventCategory = 'thumbnail-disabled';
             }
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
-            btn.click(function() {
+            btn.click(mcatch(function() {
                 mclick(eventCategory, chart.config.metric);
 
                 let newId = chartId+campaignId+chart.config.metric;
@@ -100,13 +100,13 @@ function addChartButtons(rows, allowedCampaigns) {
                     $('body').scrollLeft(bodyLeft);
 
                     // Clicking anywhere outside the popup dismisses the chart
-                    $(document).on('click.machete.thumbnail-dismiss', function() {
+                    $(document).on('click.machete.thumbnail-dismiss', mcatch(function() {
                         if (!$.contains(popup[0], this)) {
                             mga('event', eventCategory, 'dismiss', chart.config.metric);
                             popup.hide();
                             $(document).off('click.machete.thumbnail-dismiss');
                         }
-                    });
+                    }));
                 });
 
                 if (allowed) {
@@ -114,7 +114,7 @@ function addChartButtons(rows, allowedCampaigns) {
                         renderChart(data, name, Object.assign({id: newId}, chart));
                     });
                 }
-            });
+            }));
             $(target).append(btn);
         }
     }
@@ -126,13 +126,13 @@ function getDataHistory(entityId, campaignId, cb) {
         entityId: entityId,
         campaignId: campaignId,
     },
-    (response) => {
+    mcatch(response => {
         if (response.error) {
             merror(response.status, response.error);
             return;
         }
         cb(response.data);
-    });
+    }));
 }
 
 function renderChart(data, name, opt) {

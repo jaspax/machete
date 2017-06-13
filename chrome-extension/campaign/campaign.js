@@ -11,7 +11,7 @@ chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns',
     entityId: getEntityId(),
 },
-(response) => {
+mcatch(response => {
     if (response.error) {
         merror(response.status, response.error);
         return;
@@ -19,15 +19,15 @@ chrome.runtime.sendMessage({
     if (response.data) {
         const campaignAllowed = response.data.includes(getCampaignId());
 
-        let makeTabsInterval = window.setInterval(() => {
+        let makeTabsInterval = window.setInterval(mcatch(() => {
             let campaignTabs = $('#campaign_detail_tab_set');
             if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
                 addCampaignTabs(campaignTabs, campaignAllowed);
                 window.clearInterval(makeTabsInterval);
             }
-        }, 100);
+        }), 100);
     }
-});
+}));
 
 function generateKeywordReports(entityId, adGroupId) {
     // Show all of the loading indicators
@@ -294,7 +294,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
         let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
         tabs.parent().append(container);
 
-        a.click(function() {
+        a.click(mcatch(function() {
             mga('event', 'kword-data-tab', 'activate', tab.label);
             li.addClass('a-active');
             li.siblings().removeClass('a-active');
@@ -312,7 +312,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
             if (tab.activate && adGroupId) {
                 tab.activate(getEntityId(), adGroupId);
             }
-        });
+        }));
         $(tabs.children()[0]).after(li);
 
         // Fetch the url we want in order to actually embed it in the page
@@ -400,13 +400,13 @@ function getCampaignHistory(entityId, campaignId, cb) {
         entityId: entityId,
         campaignId: campaignId,
     },
-    (response) => {
+    mcatch(response => {
         if (response.error) {
             merror(response.status, response.error);
             return;
         }
         cb(response.data);
-    });
+    }));
 }
 
 function getKeywordData(entityId, adGroupId, cb) {
@@ -415,7 +415,7 @@ function getKeywordData(entityId, adGroupId, cb) {
         entityId: entityId,
         adGroupId: adGroupId,
     },
-    (response) => {
+    mcatch(response => {
         if (response.error) {
             merror(response.status, response.error);
         }
@@ -431,24 +431,24 @@ function getKeywordData(entityId, adGroupId, cb) {
             entityId: entityId,
             adGroupId: adGroupId,
         }, 
-        () => {
+        mcatch(() => {
             // Try our servers again. This may fire the callback again and cause
             // us to redraw.
             chrome.runtime.sendMessage({
                 action: 'getKeywordData', // from our server
                 entityId: entityId,
                 adGroupId: adGroupId,
-            }, 
-            (response) => {
+            },
+            mcatch(response => {
                 if (response.error) {
                     merror(response.status, response.error);
                 }
                 if (response.data) {
                     cb(response.data);
                 }
-            });
-        });
-    });
+            }));
+        }));
+    }));
 }
 
 function transformKeywordData(data) {
@@ -538,7 +538,7 @@ function renderKeywordTable(data, opts) {
     table.width('100%'); // TODO: figure out why DataTables is setting this to 0
 }
 
-$(document).on('click', '.machete-kwstatus', function() {
+$(document).on('click.machete.kwstatus', '.machete-kwstatus', mcatch(function() {
     let keyword = JSON.parse($(this).attr('data-machete-keyword'));
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
@@ -554,9 +554,9 @@ $(document).on('click', '.machete-kwstatus', function() {
         $(this).find('.a-button').show();
         $(this).find('.loading-small').hide();
     });
-});
+}));
 
-$(document).on('click', '.machete-kwbid input[name=save]', function() {
+$(document).on('click.machete.kwbid', '.machete-kwbid input[name=save]', mcatch(function() {
     let cell = $(this).parents('.machete-kwbid');
     let keyword = JSON.parse(cell.attr('data-machete-keyword'));
     let input = cell.find('input[name=keyword-bid]');
@@ -574,7 +574,7 @@ $(document).on('click', '.machete-kwbid input[name=save]', function() {
         cell.children().show();
         cell.find('.loading-small').hide();
     });
-});
+}));
 
 function renderKeywordBid(keyword, cell) {
     cell = cell || cloneTemplate('machete-kwbid');
@@ -608,7 +608,7 @@ function renderKeywordStatus(keyword, cell) {
     return cell[0].outerHTML;
 }
 
-$(document).on('click', '.machete-kwstatus-bulk', function() {
+$(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', mcatch(function() {
     let container = $(this).parents('.machete-kwupdate-bulk');
     container.find('.machete-kwupdate-error').text('');
     let data = container[0].data;
@@ -634,9 +634,9 @@ $(document).on('click', '.machete-kwstatus-bulk', function() {
             merror('status bulk update error:', result);
         }
     });
-});
+}));
 
-$(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
+$(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]', mcatch(function() {
     let container = $(this).parents('.machete-kwupdate-bulk');
     container.find('.machete-kwupdate-error').text('');
     let cell = $(this).parents('.machete-kwbid-bulk');
@@ -663,7 +663,7 @@ $(document).on('click', '.machete-kwbid-bulk input[name=save]', function() {
             merror('bid bulk update error:', result);
         }
     });
-});
+}));
 
 function renderBulkUpdate(data, opts) {
     let bulk = cloneTemplate('machete-kwupdate-bulk');

@@ -48,16 +48,27 @@ window.onerror = function(errorMsg, url, lineNumber) {
 function merror(...msg) {
     let error = new Error(msg.join(' '));
     mex(new Error(msg), false);
-    console.error(msg);
     return error;
 }
 
 function mex(ex, fatal) {
     mga('exception', { exDescription: ex.stack, exFatal: fatal });
+    console.error(ex);
 }
 
 function mclick(category, label) {
     mga('event', category, 'click', label);
+}
+
+function mcatch(fn) {
+    return function(...args) {
+        try {
+            fn.apply(this, args);
+        }
+        catch (ex) {
+            mex(ex);
+        }
+    };
 }
 
 $(document).on('click.machete.ga', '[data-mclick]', function() {

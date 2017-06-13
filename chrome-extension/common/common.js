@@ -65,7 +65,7 @@ if (window.location.href.includes('ams')) {
     });
 
     // Add in the Machete link to the top bar
-    chrome.runtime.sendMessage({ action: 'getUser' }, (response) => {
+    chrome.runtime.sendMessage({ action: 'getUser' }, response => {
         if (response.error) {
             merror(response.error);
             return;
