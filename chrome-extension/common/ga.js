@@ -7,9 +7,9 @@ function inpage(fn, args) {
         fn(args);
     }
     else {
-        var script = document.createElement('script');
-        var sargs = JSON.stringify(args);
-        var text = `(${fn.toString()}).apply(null, ${sargs});`;
+        const script = document.createElement('script');
+        const sargs = JSON.stringify(args);
+        const text = `(${fn.toString()}).apply(null, ${sargs});`;
         script.textContent = text;
         document.documentElement.appendChild(script);
         document.documentElement.removeChild(script);

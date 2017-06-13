@@ -71,15 +71,13 @@ function addChartButtons(rows, allowedCampaigns) {
                         popup = $('#'+chartId).hide().clone();
                         popup.addClass(chartId);
                     }
+                    else if (window.user.isAnon) {
+                        popup = $('#'+chartLoginRequired).hide().clone();
+                        popup.addClass(chartLoginRequired);
+                    }
                     else {
-                        if (window.user.isAnon) {
-                            popup = $('#'+chartLoginRequired).hide().clone();
-                            popup.addClass(chartLoginRequired);
-                        }
-                        else {
-                            popup = $('#'+chartUpgradeRequired).hide().clone();
-                            popup.addClass(chartUpgradeRequired);
-                        }
+                        popup = $('#'+chartUpgradeRequired).hide().clone();
+                        popup.addClass(chartUpgradeRequired);
                     }
                     popup.attr('id', newId);
                     $(document.body).append(popup);
