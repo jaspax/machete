@@ -13,7 +13,7 @@ chrome.runtime.sendMessage({
 },
 (response) => {
     if (response.error) {
-        merror(response.error);
+        merror(response.status, response.error);
         return;
     }
     if (response.data) {
@@ -399,7 +399,7 @@ function getCampaignHistory(entityId, campaignId, cb) {
     },
     (response) => {
         if (response.error) {
-            merror(response.error);
+            merror(response.status, response.error);
             return;
         }
         cb(response.data);
@@ -414,7 +414,7 @@ function getKeywordData(entityId, adGroupId, cb) {
     },
     (response) => {
         if (response.error) {
-            merror(response.error);
+            merror(response.status, response.error);
         }
 
         // If we have data, return it immediately
@@ -438,7 +438,7 @@ function getKeywordData(entityId, adGroupId, cb) {
             }, 
             (response) => {
                 if (response.error) {
-                    merror(response.error);
+                    merror(response.status, response.error);
                 }
                 if (response.data) {
                     cb(response.data);

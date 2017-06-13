@@ -18,7 +18,7 @@ chrome.runtime.sendMessage({
 },
 (response) => {
     if (response.error) {
-        merror(response.error);
+        merror(response.status, response.error);
     }
     const allowedCampaigns = response.data || [];
     window.setInterval(() => {
@@ -130,7 +130,7 @@ function getDataHistory(entityId, campaignId, cb) {
     },
     (response) => {
         if (response.error) {
-            merror(response.error);
+            merror(response.status, response.error);
             return;
         }
         cb(response.data);
