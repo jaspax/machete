@@ -83,7 +83,7 @@ function getUser(sendResponse) {
         method: 'GET',
         dataType: 'json',
         success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({error}),
+        error: (xhr, status, error) => sendResponse({status, error}),
     });
 }
 
@@ -95,7 +95,7 @@ function getAllowedCampaigns(entityId, sendResponse) {
         method: 'GET',
         dataType: 'json',
         success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({error}),
+        error: (xhr, status, error) => sendResponse({status, error}),
     });
 }
 
@@ -122,14 +122,14 @@ function requestCampaignData(entityId, sendResponse) {
             }
             storeDataCloud(entityId, timestamp, data)
                 .then(() => sendResponse({data}))
-                .fail((error) => sendResponse({error}));
+                .fail((error) => sendResponse({status, error}));
         },
         error: (xhr, textStatus, error) => {
             if (xhr.status == 401) { // Unauthorized
                 notifyNeedCredentials(entityId);
                 return;
             }
-            sendResponse({error});
+            sendResponse({status, error});
         },
     });
 
@@ -173,7 +173,7 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
         dataType: 'json',
         success: (data) => {
             if (data.message) {
-                sendResponse({error: data.message});
+                sendResponse({status: 200, error: data.message});
             }
             else {
                 storeKeywordDataCloud(entityId, adGroupId, timestamp, data)
@@ -181,7 +181,7 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
                     .fail((error) => sendResponse({error}));
             }
         },
-        error: (xhr, textStatus, error) => sendResponse({error}),
+        error: (xhr, status, error) => sendResponse({status, error}),
     });
 }
 
@@ -229,7 +229,7 @@ function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date rang
             sendResponse({data});
         },
         error: (xhr, status, error) => {
-            sendResponse({error, status});
+            sendResponse({status, error});
         },
     });
 }
@@ -245,7 +245,7 @@ function getKeywordData(entityId, adGroupId, sendResponse) {
             sendResponse({data});
         },
         error: (xhr, status, error) => {
-            sendResponse({error, status});
+            sendResponse({status, error});
         },
     });
 }
