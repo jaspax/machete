@@ -83,7 +83,7 @@ function getUser(sendResponse) {
         method: 'GET',
         dataType: 'json',
         success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({status, error}),
+        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
 
@@ -95,7 +95,7 @@ function getAllowedCampaigns(entityId, sendResponse) {
         method: 'GET',
         dataType: 'json',
         success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({status, error}),
+        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
 
@@ -122,14 +122,14 @@ function requestCampaignData(entityId, sendResponse) {
             }
             storeDataCloud(entityId, timestamp, data)
                 .then(() => sendResponse({data}))
-                .fail((error) => sendResponse({status, error}));
+                .fail((error) => sendResponse({error}));
         },
-        error: (xhr, textStatus, error) => {
+        error: (xhr, status, error) => {
             if (xhr.status == 401) { // Unauthorized
                 notifyNeedCredentials(entityId);
                 return;
             }
-            sendResponse({status, error});
+            sendResponse({status: xhr.status, error});
         },
     });
 
@@ -181,7 +181,7 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
                     .fail((error) => sendResponse({error}));
             }
         },
-        error: (xhr, status, error) => sendResponse({status, error}),
+        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
 
@@ -229,7 +229,7 @@ function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date rang
             sendResponse({data});
         },
         error: (xhr, status, error) => {
-            sendResponse({status, error});
+            sendResponse({status: xhr.status, error});
         },
     });
 }
@@ -245,7 +245,7 @@ function getKeywordData(entityId, adGroupId, sendResponse) {
             sendResponse({data});
         },
         error: (xhr, status, error) => {
-            sendResponse({status, error});
+            sendResponse({status: xhr.status, error});
         },
     });
 }
