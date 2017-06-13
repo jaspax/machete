@@ -297,9 +297,15 @@ function addCampaignTabs(tabs, campaignAllowed) {
             li.siblings().removeClass('a-active');
             tabs.parent().children('div').addClass('a-hidden');
             container.removeClass('a-hidden');
-            if (campaignAllowed) {
-                $('.machete-campaign-login-required').hide();
+
+            if (window.user.isAnon) {
+                $('.machete-campaign-upgrade-required').hide();
             }
+            else if (campaignAllowed) {
+                $('.machete-campaign-login-required').hide();
+                $('.machete-campaign-upgrade-required').hide();
+            }
+
             if (tab.activate && adGroupId) {
                 tab.activate(getEntityId(), adGroupId);
             }

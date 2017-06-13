@@ -62,7 +62,6 @@ if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-        cookies: document.cookie,
     });
 
     // Add in the Machete link to the top bar
@@ -72,11 +71,13 @@ if (window.location.href.includes('ams')) {
             return;
         }
         const user = response.data;
-        const desc = user.activeSubscription.name;
         let email = user.email;
+        user.isAnon = email == 'anon-user-email';
+
+        const desc = user.activeSubscription.name;
         let profileText = "Your Profile";
         let label = 'view-profile';
-        if (email == 'anon-user-email') {
+        if (user.isAnon) {
             email = '';
             profileText = 'Login/Register';
             label = 'login';
@@ -84,9 +85,11 @@ if (window.location.href.includes('ams')) {
         let links = $('.userBarLinksRight')[0];
         if (links) {
             let chunks = links.innerHTML.split(' | ');
-            chunks.splice(-1, 0, `${desc} ${email} (<a data-mclick="machete-status ${label}" href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
+            chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
             links.innerHTML = chunks.join(' | ');
         }
+
+        window.user = user;
     });
 }
 

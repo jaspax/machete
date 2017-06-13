@@ -1,5 +1,6 @@
 const chartId = `${prefix}-chart`;
 const chartLoginRequired = `${prefix}-chart-login-required`;
+const chartUpgradeRequired = `${prefix}-chart-upgrade-required`;
 const chartClass = `${prefix}-chart-btn`;
 const chartClassDisabled = `${prefix}-chart-btn-disabled`;
 
@@ -71,8 +72,14 @@ function addChartButtons(rows, allowedCampaigns) {
                         popup.addClass(chartId);
                     }
                     else {
-                        popup = $('#'+chartLoginRequired).hide().clone();
-                        popup.addClass(chartLoginRequired);
+                        if (window.user.isAnon) {
+                            popup = $('#'+chartLoginRequired).hide().clone();
+                            popup.addClass(chartLoginRequired);
+                        }
+                        else {
+                            popup = $('#'+chartUpgradeRequired).hide().clone();
+                            popup.addClass(chartUpgradeRequired);
+                        }
                     }
                     popup.attr('id', newId);
                     $(document.body).append(popup);

@@ -1,4 +1,4 @@
-.machete-chart, .machete-chart-login-required {
+.machete-chart, .machete-chart-login-required, .machete-chart-upgrade-required {
     position: absolute;
     z-index: 100;
     top: 0px;
@@ -12,7 +12,8 @@
     box-shadow: 2px 2px 3px rgb(166, 166, 166);
 }
 
-.machete-chart-login-required, .machete-campaign-login-required {
+.machete-chart-login-required, .machete-campaign-login-required,
+.machete-chart-upgrade-required, .machete-campaign-login-required {
     font-size: 14pt;
     text-align: center;
     padding: 20px;
