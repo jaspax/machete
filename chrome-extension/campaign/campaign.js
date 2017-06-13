@@ -52,6 +52,9 @@ function generateKeywordReports(entityId, adGroupId) {
         }
 
         let enabledKws = data.filter(kw => kw.enabled);
+        if (enabledKws.length == 0) {
+            return;
+        }
 
         renderKeywordChart(transformKeywordData(enabledKws), {});
         /* TODO: excluding these until we decide if/when they're actually useful
