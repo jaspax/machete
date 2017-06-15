@@ -39,18 +39,6 @@ function generateKeywordReports(entityId, adGroupId) {
         $('.loading-large').hide();
         $('.loading-small').hide();
 
-        // Render the bulk update control on the main keyword list
-        const allTable = $('#keywordTableControls');
-        if (allTable.find('#machete-bulk-all').length == 0) {
-            const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
-            bulkAll.attr('id', 'machete-bulk-all');
-            // Hack ourselves into the Amazon layout
-            const first = $('#keywordTableControls').children().first();
-            first.removeClass('a-span8');
-            first.addClass('a-span4');
-            first.after(bulkAll);
-        }
-
         let enabledKws = data.filter(kw => kw.enabled);
         if (enabledKws.length == 0) {
             return;
@@ -329,6 +317,21 @@ function addCampaignTabs(tabs, campaignAllowed) {
                     return;
                 adGroupId = adGroupIdInput[0].value;
                 window.clearInterval(genReportsInterval);
+
+                getKeywordData(getEntityId(), adGroupId, (data) => {
+                    // Render the bulk update control on the main keyword list
+                    const allTable = $('#keywordTableControls');
+                    if (allTable.find('#machete-bulk-all').length == 0) {
+                        const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
+                        bulkAll.attr('id', 'machete-bulk-all');
+                        // Hack ourselves into the Amazon layout
+                        const first = $('#keywordTableControls').children().first();
+                        first.removeClass('a-span8');
+                        first.addClass('a-span4');
+                        first.after(bulkAll);
+                    }
+                });
+
             }, 50);
         }
     }
