@@ -67,8 +67,11 @@ function generateKeywordReports(entityId, adGroupId) {
 
         let salesTopQuartile = enabledKws.sort((a, b) => b.sales - a.sales)[Math.round(enabledKws.length / 4)];
         let clickRatioSort = enabledKws.filter(x => x.hasEnoughImpressions).sort((a, b) => a.clickRatio - b.clickRatio);
-        let clickRatioBottomQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)].clickRatio;
-        let clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
+        let clickRatioBottomQuartile = 0, clickRatioTopQuartile = 0;
+        if (clickRatioSort.length) {
+            clickRatioBottomQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)].clickRatio;
+            clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
+        }
 
         renderKeywordTable(enabledKws, { 
             selector: '#machete-acos',
