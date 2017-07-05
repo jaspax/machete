@@ -263,7 +263,7 @@ function setCampaignMetadata(entityId, campaignId, asin, sendResponse) {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        success: (data, status) => sendResponse({data}),
+        success: (data) => sendResponse({data}),
         error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
@@ -277,7 +277,7 @@ function setAdGroupMetadata(entityId, adGroupId, campaignId, sendResponse) {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        success: (data, status) => sendResponse({data}),
+        success: (data) => sendResponse({data}),
         error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }

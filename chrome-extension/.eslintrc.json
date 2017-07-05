@@ -18,6 +18,7 @@
         "mga": true,
         "mclick": true,
         "merror": true,
+        "mcatch": true,
         "__ga": true
     },
     "extends": "eslint:recommended",

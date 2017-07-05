@@ -49,10 +49,8 @@ let metadataInterval = window.setInterval(mcatch(() => {
         campaignId: getCampaignId(),
         asin: match[1],
     }, mcatch(response => {
-        if (response.error) {
+        if (response.error)
              merror(response.status, response.error);
-             return;
-        }
     }));
 
     window.clearInterval(metadataInterval);
@@ -96,7 +94,8 @@ function generateKeywordReports(entityId, adGroupId) {
 
         let salesTopQuartile = enabledKws.sort((a, b) => b.sales - a.sales)[Math.round(enabledKws.length / 4)];
         let clickRatioSort = enabledKws.filter(x => x.hasEnoughImpressions).sort((a, b) => a.clickRatio - b.clickRatio);
-        let clickRatioBottomQuartile = 0, clickRatioTopQuartile = 0;
+        let clickRatioBottomQuartile = 0;
+        let clickRatioTopQuartile = 0;
         if (clickRatioSort.length) {
             clickRatioBottomQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)].clickRatio;
             clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
@@ -356,10 +355,8 @@ function addCampaignTabs(tabs, campaignAllowed) {
                     campaignId: getCampaignId(),
                     adGroupId,
                 }, mcatch(response => {
-                    if (response.error) {
+                    if (response.error)
                          merror(response.status, response.error);
-                         return;
-                    }
                 }));
 
                 getKeywordData(getEntityId(), adGroupId, (data) => {
