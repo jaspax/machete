@@ -40,7 +40,7 @@ let metadataInterval = window.setInterval(mcatch(() => {
 
     let href = bookLink[0].href;
     let match = href.match(/product\/(\w+)/);
-    if (!match.length < 2)
+    if (match.length < 2)
         return;
 
     chrome.runtime.sendMessage({
