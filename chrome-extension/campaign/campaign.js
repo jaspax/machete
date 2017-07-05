@@ -29,6 +29,35 @@ mcatch(response => {
     }
 }));
 
+let metadataInterval = window.setInterval(mcatch(() => {
+    let campaignDataTab = $('#campaign_settings_tab_content');
+    if (campaignDataTab.length == 0)
+        return;
+
+    let bookLink = campaignDataTab.find('#advertisedBookRow').find('a');
+    if (bookLink.length == 0)
+        return;
+
+    let href = bookLink[0].href;
+    let match = href.match(/product\/(\w+)/);
+    if (!match.length < 2)
+        return;
+
+    chrome.runtime.sendMessage({
+        action: 'setCampaignMetadata',
+        entityId: getEntityId(),
+        campaignId: getCampaignId(),
+        asin: match[1],
+    }, mcatch(response => {
+        if (response.error) {
+             merror(response.status, response.error);
+             return;
+        }
+    }));
+
+    window.clearInterval(metadataInterval);
+}), 100);
+
 function generateKeywordReports(entityId, adGroupId) {
     // Show all of the loading indicators
     $('.loading-large').show();
@@ -73,7 +102,7 @@ function generateKeywordReports(entityId, adGroupId) {
             clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
         }
 
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-acos',
             columnTitle: 'ACOS',
             order: 'desc',
@@ -81,7 +110,7 @@ function generateKeywordReports(entityId, adGroupId) {
             metricFn: (x) => x.acos,
             formatFn: (x) => x ? `${x}%` : "(no sales)",
         });
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
@@ -97,7 +126,7 @@ function generateKeywordReports(entityId, adGroupId) {
             metricFn: (x) => x.spend,
             formatFn: moneyFmt,
         });
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-impressions',
             columnTitle: 'Impressions',
             order: 'asc',
@@ -105,7 +134,7 @@ function generateKeywordReports(entityId, adGroupId) {
             metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
         });
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
@@ -113,7 +142,7 @@ function generateKeywordReports(entityId, adGroupId) {
             metricFn: (x) => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         });
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-low-acos',
             columnTitle: 'ACOS',
             order: 'asc',
@@ -121,7 +150,7 @@ function generateKeywordReports(entityId, adGroupId) {
             metricFn: (x) => x.acos,
             formatFn: (x) => `${x}%`,
         });
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-high-profit',
             columnTitle: 'Profit (Sales - Spend)',
             order: 'desc',
@@ -129,7 +158,7 @@ function generateKeywordReports(entityId, adGroupId) {
             metricFn: (x) => x.sales - x.spend,
             formatFn: moneyFmt,
         });
-        renderKeywordTable(enabledKws, { 
+        renderKeywordTable(enabledKws, {
             selector: '#machete-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
@@ -139,7 +168,7 @@ function generateKeywordReports(entityId, adGroupId) {
         });
 
         // This is the only one that uses disabled keywords
-        renderKeywordTable(data, { 
+        renderKeywordTable(data, {
             selector: '#machete-paused',
             columnTitle: 'ACOS',
             order: 'desc',
@@ -216,7 +245,7 @@ function renderHistoryChart(data) {
         zeroline: true,
         showline: true,
         showticklabels: false,
-      }, 
+      },
       yaxis2: { // clicks
         range: [0, maxClicks * 1.5],
         showgrid: false,
@@ -224,7 +253,7 @@ function renderHistoryChart(data) {
         showline: true,
         showticklabels: false,
         overlaying: 'y',
-      }, 
+      },
       yaxis3: { // sales
         range: [0, maxSales * 2],
         showgrid: false,
@@ -232,7 +261,7 @@ function renderHistoryChart(data) {
         showline: true,
         showticklabels: false,
         overlaying: 'y',
-      }, 
+      },
     };
 
     let historyChartId = 'machete-campaign-history-chart';
@@ -241,7 +270,7 @@ function renderHistoryChart(data) {
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
     let entityId = getEntityId();
-    
+
     // TODO: the parameters to the Amazon API imply that you can pass more than
     // 1 keyword at a time, but testing this shows that doing so just generates
     // an error. So we do it the stupid way instead, with a loop.
@@ -320,6 +349,18 @@ function addCampaignTabs(tabs, campaignAllowed) {
                     return;
                 adGroupId = adGroupIdInput[0].value;
                 window.clearInterval(genReportsInterval);
+
+                chrome.runtime.sendMessage({
+                    action: 'setAdGroupMetadata',
+                    entityId: getEntityId(),
+                    campaignId: getCampaignId(),
+                    adGroupId,
+                }, mcatch(response => {
+                    if (response.error) {
+                         merror(response.status, response.error);
+                         return;
+                    }
+                }));
 
                 getKeywordData(getEntityId(), adGroupId, (data) => {
                     // Render the bulk update control on the main keyword list
@@ -436,7 +477,7 @@ function getKeywordData(entityId, adGroupId, cb) {
             action: 'requestKeywordData',
             entityId: entityId,
             adGroupId: adGroupId,
-        }, 
+        },
         mcatch(() => {
             // Try our servers again. This may fire the callback again and cause
             // us to redraw.
@@ -485,7 +526,7 @@ function renderKeywordChart(kws) {
         mode: 'markers',
         x: kws.avgCpc,
         y: kws.clicks,
-        text: kws.kw.map((kw, i) => 
+        text: kws.kw.map((kw, i) =>
             `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${kws.acos[i]}%`),
         hoverinfo: 'text',
         marker: {
@@ -513,7 +554,7 @@ function renderKeywordTable(data, opts) {
     container.empty();
 
     data = data.filter(opts.filterFn ? opts.filterFn : () => true);
-    
+
     // Render the bulk update button -- pass in a copy of the array since we're
     // going to modify it below.
     let bulk = renderBulkUpdate([].concat(data), opts);
@@ -524,8 +565,8 @@ function renderKeywordTable(data, opts) {
 
     let formatFn = opts.formatFn ? opts.formatFn : x => x;
     data = data.map(x => [
-        x.keyword, 
-        formatFn(opts.metricFn(x)), 
+        x.keyword,
+        formatFn(opts.metricFn(x)),
         renderKeywordStatus(x),
         renderKeywordBid(x),
     ]);
@@ -534,8 +575,8 @@ function renderKeywordTable(data, opts) {
         data: data,
         order: [[1, opts.order || 'asc']],
         columns: [
-            { title: "Keyword" }, 
-            { title: opts.columnTitle }, 
+            { title: "Keyword" },
+            { title: opts.columnTitle },
             { title: "Status" },
             { title: "Bid" },
         ],
@@ -634,7 +675,7 @@ $(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', mcatch(f
             }
         }
         else {
-            const errMsg = `There was an error applying the bulk update. 
+            const errMsg = `There was an error applying the bulk update.
                 Please refresh this page and try again. (Error was: ${result})`;
             container.find('.machete-kwupdate-error').text(errMsg);
             merror('status bulk update error:', result);
@@ -663,7 +704,7 @@ $(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]
             }
         }
         else {
-            const errMsg = `There was an error applying the bulk update. 
+            const errMsg = `There was an error applying the bulk update.
                 Please refresh this page and try again. (Error was: ${result})`;
             container.find('.machete-kwupdate-error').text(errMsg);
             merror('bid bulk update error:', result);

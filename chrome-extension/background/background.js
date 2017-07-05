@@ -36,6 +36,10 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         requestKeywordData(req.entityId, req.adGroupId, sendResponse);
     else if (req.action == 'getKeywordData')
         getKeywordData(req.entityId, req.adGroupId, sendResponse);
+    else if (req.action == 'setCampaignMetadata')
+        setCampaignMetadata(req.entityId, req.campaignId, req.asin, sendResponse);
+    else if (req.action == 'setAdGroupMetadata')
+        setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId, sendResponse);
     else 
         sendResponse({error: 'unknown action'});
     return true;
@@ -247,6 +251,34 @@ function getKeywordData(entityId, adGroupId, sendResponse) {
         error: (xhr, status, error) => {
             sendResponse({status: xhr.status, error});
         },
+    });
+}
+
+function setCampaignMetadata(entityId, campaignId, asin, sendResponse) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
+    let data = {asin};
+    $.ajax({
+        url: `${serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`,
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (data, status) => sendResponse({data}),
+        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
+    });
+}
+
+function setAdGroupMetadata(entityId, adGroupId, campaignId, sendResponse) {
+    if (!checkEntityId(entityId, sendResponse))
+        return;
+    let data = {campaignId};
+    $.ajax({
+        url: `${serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`,
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (data, status) => sendResponse({data}),
+        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
 
