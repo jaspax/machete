@@ -304,8 +304,8 @@ function updateBid(keywordIdList, bid, cb) {
 }
 
 function addCampaignTabs(tabs, campaignAllowed) {
+    let adGroupId = null;
     for (let tab of ourTabs) {
-        let adGroupId = null;
         let a = $(`<a href="#">${tab.label}</a>`);
         let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
         li.append(a);
@@ -339,42 +339,44 @@ function addCampaignTabs(tabs, campaignAllowed) {
             url: chrome.runtime.getURL('campaign/'+tab.content),
             success: (data) => container.append(data),
         });
+    }
 
-        // Get the ad group id from the HTML
-        if (campaignAllowed) {
-            let genReportsInterval = window.setInterval(() => {
-                let adGroupIdInput = $('input[name=adGroupId]');
-                if (!adGroupIdInput.length)
-                    return;
-                adGroupId = adGroupIdInput[0].value;
-                window.clearInterval(genReportsInterval);
+    // Get the ad group id from the HTML
+    if (campaignAllowed) {
+        let genReportsInterval = window.setInterval(() => {
+            console.log('in genReportsInterval');
+            let adGroupIdInput = $('input[name=adGroupId]');
+            if (!adGroupIdInput.length)
+                return;
+            adGroupId = adGroupIdInput[0].value;
+            window.clearInterval(genReportsInterval);
+            console.log('cleared genReportsInterval');
 
-                chrome.runtime.sendMessage({
-                    action: 'setAdGroupMetadata',
-                    entityId: getEntityId(),
-                    campaignId: getCampaignId(),
-                    adGroupId,
-                }, mcatch(response => {
-                    if (response.error)
-                         merror(response.status, response.error);
-                }));
+            chrome.runtime.sendMessage({
+                action: 'setAdGroupMetadata',
+                entityId: getEntityId(),
+                campaignId: getCampaignId(),
+                adGroupId,
+            }, mcatch(response => {
+                if (response.error)
+                     merror(response.status, response.error);
+            }));
 
-                getKeywordData(getEntityId(), adGroupId, (data) => {
-                    // Render the bulk update control on the main keyword list
-                    const allTable = $('#keywordTableControls');
-                    if (allTable.find('#machete-bulk-all').length == 0) {
-                        const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
-                        bulkAll.attr('id', 'machete-bulk-all');
-                        // Hack ourselves into the Amazon layout
-                        const first = $('#keywordTableControls').children().first();
-                        first.removeClass('a-span8');
-                        first.addClass('a-span4');
-                        first.after(bulkAll);
-                    }
-                });
+            getKeywordData(getEntityId(), adGroupId, (data) => {
+                // Render the bulk update control on the main keyword list
+                const allTable = $('#keywordTableControls');
+                if (allTable.find('#machete-bulk-all').length == 0) {
+                    const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
+                    bulkAll.attr('id', 'machete-bulk-all');
+                    // Hack ourselves into the Amazon layout
+                    const first = $('#keywordTableControls').children().first();
+                    first.removeClass('a-span8');
+                    first.addClass('a-span4');
+                    first.after(bulkAll);
+                }
+            });
 
-            }, 50);
-        }
+        }, 50);
     }
 }
 
