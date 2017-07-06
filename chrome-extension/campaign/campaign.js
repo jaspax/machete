@@ -3,8 +3,8 @@ const chartId = `${prefix}-kwchart`;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
-    {label: "Campaign History", content: "history.html", activate: generateHistoryReports},
-    {label: "Keyword Analytics", content: "keywordAnalytics.html", activate: generateKeywordReports},
+    {label: "Campaign History", content: "history.html", activate: generateHistoryReports, matching: /./ },
+    {label: "Keyword Analytics", content: "keywordAnalytics.html", activate: generateKeywordReports, matching: /ads\/campaign/ },
 ];
 
 chrome.runtime.sendMessage({
@@ -306,6 +306,10 @@ function updateBid(keywordIdList, bid, cb) {
 function addCampaignTabs(tabs, campaignAllowed) {
     let adGroupId = null;
     for (let tab of ourTabs) {
+        if (!location.toString().match(tab.matching)) {
+            continue;
+        }
+
         let a = $(`<a href="#">${tab.label}</a>`);
         let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
         li.append(a);
