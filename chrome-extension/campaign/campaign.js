@@ -188,8 +188,18 @@ function generateHistoryReports(entityId) {
         const end = dayEnd.getMoment().endOf('day').toDate().getTime();
         window.setTimeout(() => {
             const filtered = data.filter(x => x.timestamp >= start && x.timestamp <= end);
-            renderMetricRow(filtered[0], '#machete-history-start-row');
-            renderMetricRow(filtered[filtered.length - 1], '#machete-history-end-row');
+            const first = filtered[0];
+            const last = filtered[filtered.length - 1];
+            renderMetricRow(first, '#machete-history-start-row');
+            renderMetricRow(last, '#machete-history-end-row');
+            renderMetricRow({
+                impressions: last.impressions - first.impressions,
+                clicks: last.clicks - first.clicks,
+                avgCpc: (last.avgCpc + first.avgCpc) / 2,
+                spend: last.spend - first.spend,
+                salesValue: last.salesValue - first.salesValue,
+                acos: (last.acos + first.acos) / 2,
+            }, '#machete-history-diff-row');
             renderHistoryChart(filtered);
         }, 50);
     };
