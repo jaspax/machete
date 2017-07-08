@@ -107,7 +107,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'desc',
             filterFn: (x) => x.clicks && x.acos > 100,
             metricFn: (x) => x.acos,
-            formatFn: (x) => x ? `${x}%` : "(no sales)",
+            formatFn: (x) => x ? pctFmt(x) : "(no sales)",
         });
         renderKeywordTable(enabledKws, {
             selector: '#machete-click-ratio',
@@ -147,7 +147,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
-            formatFn: (x) => `${x}%`,
+            formatFn: (x) => pctFmt,
         });
         renderKeywordTable(enabledKws, {
             selector: '#machete-high-profit',
@@ -173,7 +173,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'desc',
             filterFn: (x) => !x.enabled,
             metricFn: (x) => x.acos,
-            formatFn: (x) => `${x}%`,
+            formatFn: (x) => pctFmt,
         });
     });
 }
@@ -188,6 +188,8 @@ function generateHistoryReports(entityId) {
         const end = dayEnd.getMoment().endOf('day').toDate().getTime();
         window.setTimeout(() => {
             const filtered = data.filter(x => x.timestamp >= start && x.timestamp <= end);
+            renderMetricRow(filtered[0], '#machete-history-start-row');
+            renderMetricRow(filtered[filtered.length - 1], '#machete-history-end-row');
             renderHistoryChart(filtered);
         }, 50);
     };
@@ -206,8 +208,26 @@ function generateHistoryReports(entityId) {
         data = historyData.sort((a, b) => a.timestamp - b.timestamp);
         dayStart.setDate(new Date(data[0].timestamp), true);
         dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
+        renderMetricRow(data[0], '#machete-history-start-row');
+        renderMetricRow(data[data.length - 1], '#machete-history-end-row');
         renderHistoryChart(data);
     });
+}
+
+function renderMetricRow(rowData, targetSelector) {
+    let row = cloneTemplate('machete-campaign-metrics');
+    row.find('.impressions .metricValue').text(rowData.impressions);
+    row.find('.clicks .metricValue').text(rowData.clicks);
+    row.find('.avgCpc .metricValue').text(moneyFmt(rowData.avgCpc));
+    row.find('.spend .metricValue').text(moneyFmt(rowData.spend));
+    row.find('.sales .metricValue').text(moneyFmt(rowData.salesValue));
+    row.find('.acos .metricValue').text(pctFmt(rowData.acos));
+
+    let target = $(targetSelector);
+    target.empty();
+    target.append(row);
+
+    return row;
 }
 
 function renderHistoryChart(data) {
@@ -554,7 +574,7 @@ function renderKeywordChart(kws) {
         x: kws.avgCpc,
         y: kws.clicks,
         text: kws.kw.map((kw, i) =>
-            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${kws.acos[i]}%`),
+            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${pctFmt(kws.acos[i])}`),
         hoverinfo: 'text',
         marker: {
             sizemode: 'diameter',

@@ -58,6 +58,13 @@ function moneyFmt(val) {
     return `$${(+val).toFixed(2)}`;
 }
 
+function pctFmt(val) {
+    if (Number.isNaN(+val)) {
+        return '--';
+    }
+    return `${(+val).toFixed(2)}%`;
+}
+
 if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
