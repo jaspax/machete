@@ -35,7 +35,8 @@
       },
       {
           "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
-          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "extern/jquery.dataTables.min.js", "extern/pikaday.js",
+          "js": ["extern/jquery.min.js", "extern/plotly-latest.min.js", "extern/jquery.dataTables.min.js", 
+                 "extern/moment.min.js", "extern/pikaday.js",
                  "common/common.js", "common/ga.js", "campaign/campaign.js"],
           "css": ["inject.css", "extern/jquery.dataTables.min.css", "extern/pikaday.css"]
       }
