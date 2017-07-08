@@ -180,8 +180,32 @@ function generateKeywordReports(entityId, adGroupId) {
 
 function generateHistoryReports(entityId) {
     $('.loading-large').show();
-    getCampaignHistory(entityId, getCampaignId(), (data) => {
+    let data, dayStart, dayEnd;
+    let selectHandler = () => {
+        if (!data)
+            return;
+        const start = dayStart.getDate().getTime();
+        const end = dayEnd.getMoment().endOf('day').toDate().getTime();
+        window.setTimeout(() => {
+            const filtered = data.filter(x => x.timestamp >= start && x.timestamp <= end);
+            renderHistoryChart(filtered);
+        }, 50);
+    };
+    dayStart = new Pikaday({ 
+        field: $('#campaign-start-date')[0],
+        format: 'ddd MMM DD YYYY',
+        onSelect: selectHandler,
+    });
+    dayEnd = new Pikaday({ 
+        field: $('#campaign-end-date')[0],
+        format: 'ddd MMM DD YYYY',
+        onSelect: selectHandler,
+    });
+    getCampaignHistory(entityId, getCampaignId(), (historyData) => {
         $('.loading-large').hide();
+        data = historyData.sort((a, b) => a.timestamp - b.timestamp);
+        dayStart.setDate(new Date(data[0].timestamp), true);
+        dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
         renderHistoryChart(data);
     });
 }
