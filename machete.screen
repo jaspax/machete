@@ -1,8 +1,8 @@
-sessionname machete
+sssionname machete
 
 chdir srv
 screen -t heroku        1 heroku local
-screen -t "grunt watch" 2 grunt watch
+screen -t "grunt watch" 2 ./grunt-watch
 screen -t "srv js"      3 vi js/api.js
 screen -t "srv bash"    4
 
