@@ -23,13 +23,50 @@
         </div>
 
         <h1>Campaign History</h1>
-        <p>Start date: <input type="text" id="campaign-start-date" /></p>
-        <p>End date: <input type="text" id="campaign-end-date" /></p>
-        <div id="machete-history-start-row"></div>
-        <div id="machete-history-end-row"></div>
-        <div id="machete-history-diff-row"></div>
+        <table class="machete-metrics-table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <th>Impressions</th>
+                    <th>Clicks</th>
+                    <th>Average CPC</th>
+                    <th>Spend</th>
+                    <th>Sales</th>
+                    <th>ACOS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="machete-history-start-row">
+                    <td><input type="text" class="machete-date-input-small" id="campaign-start-date" /></td>
+                    <td class="impressions"><span class="a-size-small metricValue"></span></td>
+                    <td class="clicks"><span class="a-size-small metricValue"></span></td>
+                    <td class="avgCpc"><span class="a-size-small metricValue"></span></td>
+                    <td class="spend"><span class="a-size-small metricValue"></span></td>
+                    <td class="sales"><span class="a-size-small metricValue"></span></td>
+                    <td class="acos"><span class="a-size-small metricValue"></span></td>
+                </tr>
+                <tr id="machete-history-end-row">
+                    <td><input type="text" class="machete-date-input-small" id="campaign-end-date" /></td>
+                    <td class="impressions"><span class="a-size-small metricValue"></span></td>
+                    <td class="clicks"><span class="a-size-small metricValue"></span></td>
+                    <td class="avgCpc"><span class="a-size-small metricValue"></span></td>
+                    <td class="spend"><span class="a-size-small metricValue"></span></td>
+                    <td class="sales"><span class="a-size-small metricValue"></span></td>
+                    <td class="acos"><span class="a-size-small metricValue"></span></td>
+                </tr>
+                <tr id="machete-history-diff-row">
+                    <td><b>Change</b></td>
+                    <td class="impressions"><span class="a-size-small metricValue"></span></td>
+                    <td class="clicks"><span class="a-size-small metricValue"></span></td>
+                    <td class="avgCpc"><span class="a-size-small metricValue"></span></td>
+                    <td class="spend"><span class="a-size-small metricValue"></span></td>
+                    <td class="sales"><span class="a-size-small metricValue"></span></td>
+                    <td class="acos"><span class="a-size-small metricValue"></span></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="loading-large"></div>
         <div data-mclick="campaign-history-chart" id="machete-campaign-history-chart">
-            <div class="loading-large"></div>
         </div>
         <div class="machete-explanation">
 
@@ -42,62 +79,6 @@
 
             <p><b>Drag</b> along the x-axis to select a date range.</p>
 
-        </div>
-    </div>
-</div>
-
-<div id="machete-campaign-metrics" style="display:none">
-    <div class="a-row a-spacing-none topMetrics row sponsoredProducts">
-        <div class="topMetrics impressions large col">
-            <span class="a-size-medium metricValue"></span><br>
-            <span class="a-declarative" data-action="a-tooltip" data-a-tooltip="{&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;Total Impressions&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative" tabindex="-1" aria-describedby="a-popover-2"><span class="a-size-mini">Impressions</span><i class="a-icon a-icon-popover"></i></a>
-            </span>
-            <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;<span>\r\n        <h4>Impressions<\/h4>\r\n        An impression is generated every time your ad is displayed.\r\n    <\/span>&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative help topMetricsTooltipIcon" tabindex="-1"><i class="a-icon a-icon-popover"></i></a>
-            </span>
-        </div>
-        <div class="topMetrics clicks col">
-            <span class="a-size-medium metricValue"></span><br>
-            <span class="a-declarative" data-action="a-tooltip" data-a-tooltip="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;Total Clicks&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative" tabindex="-1" aria-describedby="a-popover-1"><span class="a-size-mini">Clicks</span><i class="a-icon a-icon-popover"></i></a>
-            </span>
-            <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;<span>\r\n        <h4>Clicks<\/h4>\r\n        A click is generated when a user clicks or taps your ad.\r\n    <\/span>&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative help topMetricsTooltipIcon" tabindex="-1"><i class="a-icon a-icon-popover"></i></a>
-            </span>
-        </div>
-        <div class="topMetrics avgCpc col">
-            <span class="a-size-medium metricValue"></span><br>
-            <span class="a-declarative" data-action="a-tooltip" data-a-tooltip="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;Average Cost per Click&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative" tabindex="-1"><span class="a-size-mini">ACPC</span><i class="a-icon a-icon-popover"></i></a>
-            </span>
-            <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;<abs:localize id='AMS_RTA_Ads_Metrics_ACPC_Tooltip'>\n        Average Cost per Click is your total campaign spend divided by the total number of clicks the campaign generated.\n    <\/abs:localize>&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative help topMetricsTooltipIcon" tabindex="-1"><i class="a-icon a-icon-popover"></i></a>
-            </span>
-        </div>
-        <div class="topMetrics spend col">
-            <span class="a-size-medium metricValue"></span><br>
-            <span class="a-declarative" data-action="a-tooltip" data-a-tooltip="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;Total Spend&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative" tabindex="-1"><span class="a-size-mini">Spend</span><i class="a-icon a-icon-popover"></i></a>
-            </span>
-        </div>
-        <div class="topMetrics sales col">
-            <span class="a-size-medium metricValue"></span><br>
-            <span class="a-declarative" data-action="a-tooltip" data-a-tooltip="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;Total Sales&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative" tabindex="-1"><span class="a-size-mini">Total Sales</span><i class="a-icon a-icon-popover"></i></a>
-            </span>
-            <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;<span>\r\n        <h4>Estimated Total Sales<\/h4>\r\n        This shows you the total price of orders customers placed after clicking your ad. This raw number has not been adjusted for declined payments or returns. Your KDP sales reports will show you the final sales numbers, which may be different from the number you see here.\r\n    <\/span>&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative help topMetricsTooltipIcon" tabindex="-1"><i class="a-icon a-icon-popover"></i></a>
-            </span>
-        </div>
-        <div class="topMetrics acos col">
-            <span class="a-size-medium metricValue"></span><br>
-            <span class="a-declarative" data-action="a-tooltip" data-a-tooltip="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;ACoS&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative" tabindex="-1"><span class="a-size-mini">ACoS</span><i class="a-icon a-icon-popover"></i></a>
-            </span>
-            <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;&quot;,&quot;width&quot;:&quot;300&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;content&quot;:&quot;<abs:localize id='AMS_RTA_Ads_Metrics_ACOS_Tooltip'>\n        Average cost of sales is the amount you have spent on a campaign divided by total sales during the campaign run dates.\n    <\/abs:localize>&quot;}">
-                <a href="javascript:void(0)" class="a-popover-trigger a-declarative help topMetricsTooltipIcon" tabindex="-1"><i class="a-icon a-icon-popover"></i></a>
-            </span>
         </div>
     </div>
 </div>

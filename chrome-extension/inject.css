@@ -131,3 +131,26 @@
 .machete-features li {
     margin-top: 25px;
 }
+
+.machete-metrics-table th {
+    font-weight: bold;
+    text-align: center;
+}
+
+.machete-metrics-table tr {
+    height: 28px;
+}
+
+.machete-metrics-table tr td:first-child {
+    text-align: left;
+    width: 190px;
+}
+
+.machete-metrics-table {
+    text-align: center;
+}
+
+.machete-date-input-small {
+    height: 22px !important;
+    width: 140px !important;
+}

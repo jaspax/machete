@@ -180,7 +180,8 @@ function generateKeywordReports(entityId, adGroupId) {
 
 function generateHistoryReports(entityId) {
     $('.loading-large').show();
-    let data, dayStart, dayEnd;
+    let data = null;
+    let dayStart, dayEnd;
     let selectHandler = () => {
         if (!data)
             return;
@@ -188,19 +189,7 @@ function generateHistoryReports(entityId) {
         const end = dayEnd.getMoment().endOf('day').toDate().getTime();
         window.setTimeout(() => {
             const filtered = data.filter(x => x.timestamp >= start && x.timestamp <= end);
-            const first = filtered[0];
-            const last = filtered[filtered.length - 1];
-            renderMetricRow(first, '#machete-history-start-row');
-            renderMetricRow(last, '#machete-history-end-row');
-            renderMetricRow({
-                impressions: last.impressions - first.impressions,
-                clicks: last.clicks - first.clicks,
-                avgCpc: (last.avgCpc + first.avgCpc) / 2,
-                spend: last.spend - first.spend,
-                salesValue: last.salesValue - first.salesValue,
-                acos: (last.acos + first.acos) / 2,
-            }, '#machete-history-diff-row');
-            renderHistoryChart(filtered);
+            renderHistoryRange(filtered);
         }, 50);
     };
     dayStart = new Pikaday({ 
@@ -218,25 +207,34 @@ function generateHistoryReports(entityId) {
         data = historyData.sort((a, b) => a.timestamp - b.timestamp);
         dayStart.setDate(new Date(data[0].timestamp), true);
         dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
-        renderMetricRow(data[0], '#machete-history-start-row');
-        renderMetricRow(data[data.length - 1], '#machete-history-end-row');
-        renderHistoryChart(data);
+        renderHistoryRange(data);
     });
 }
 
+function renderHistoryRange(data) {
+    const first = data[0];
+    const last = data[data.length - 1];
+    renderMetricRow(first, '#machete-history-start-row');
+    renderMetricRow(last, '#machete-history-end-row');
+    renderMetricRow({
+        impressions: last.impressions - first.impressions,
+        clicks: last.clicks - first.clicks,
+        avgCpc: (last.avgCpc + first.avgCpc) / 2,
+        spend: last.spend - first.spend,
+        salesValue: last.salesValue - first.salesValue,
+        acos: (last.acos + first.acos) / 2,
+    }, '#machete-history-diff-row');
+    renderHistoryChart(data);
+}
+
 function renderMetricRow(rowData, targetSelector) {
-    let row = cloneTemplate('machete-campaign-metrics');
+    let row = $(targetSelector);
     row.find('.impressions .metricValue').text(rowData.impressions);
     row.find('.clicks .metricValue').text(rowData.clicks);
     row.find('.avgCpc .metricValue').text(moneyFmt(rowData.avgCpc));
     row.find('.spend .metricValue').text(moneyFmt(rowData.spend));
     row.find('.sales .metricValue').text(moneyFmt(rowData.salesValue));
     row.find('.acos .metricValue').text(pctFmt(rowData.acos));
-
-    let target = $(targetSelector);
-    target.empty();
-    target.append(row);
-
     return row;
 }
 
