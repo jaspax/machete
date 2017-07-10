@@ -384,8 +384,9 @@ function addCampaignTabs(tabs, campaignAllowed) {
                 $('.machete-campaign-upgrade-required').hide();
             }
 
-            if (tab.activate && adGroupId) {
+            if (tab.activate && adGroupId && !tab.hasActivated) {
                 tab.activate(getEntityId(), adGroupId);
+                tab.hasActivated = true;
             }
         }));
         $(tabs.children()[0]).after(li);
