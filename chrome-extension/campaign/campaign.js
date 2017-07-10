@@ -219,10 +219,10 @@ function renderHistoryRange(data) {
     renderMetricRow({
         impressions: last.impressions - first.impressions,
         clicks: last.clicks - first.clicks,
-        avgCpc: (last.avgCpc + first.avgCpc) / 2,
+        avgCpc: last.avgCpc - first.avgCpc,
         spend: last.spend - first.spend,
         salesValue: last.salesValue - first.salesValue,
-        acos: (last.acos + first.acos) / 2,
+        acos: last.acos - first.acos,
     }, '#machete-history-diff-row');
     renderHistoryChart(data);
 }
