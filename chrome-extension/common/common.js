@@ -89,11 +89,21 @@ if (window.location.href.includes('ams')) {
             profileText = 'Login/Register';
             label = 'login';
         }
-        let links = $('.userBarLinksRight')[0];
-        if (links) {
-            let chunks = links.innerHTML.split(' | ');
+        let links = $('.userBarLinksRight');
+        if (links[0]) {
+            let chunks = links[0].innerHTML.split(' | ');
             chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
-            links.innerHTML = chunks.join(' | ');
+            links[0].innerHTML = chunks.join(' | ');
+        }
+        let logout = links.find('a');
+        if (logout[1]) {
+            $(logout[1]).click(() => {
+                const result = confirm(
+                    `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
+                        
+                    Continue logging out?`);
+                return result;
+            });
         }
 
         window.user = user;
