@@ -1,4 +1,4 @@
-sssionname machete
+sessionname machete
 
 chdir srv
 screen -t heroku        1 heroku local
