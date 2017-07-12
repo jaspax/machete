@@ -154,3 +154,8 @@
     height: 22px !important;
     width: 140px !important;
 }
+
+#machete-campaign-history-download-container {
+    text-align: right;
+    margin-bottom: 12px;
+}

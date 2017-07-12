@@ -209,6 +209,7 @@ function generateHistoryReports(entityId) {
         dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
         renderHistoryRange(data);
     });
+    $('#machete-campaign-history-download')[0].href = `https://machete-app.com/api/data/${entityId}/${getCampaignId()}/csv`;
 }
 
 function renderHistoryRange(data) {
