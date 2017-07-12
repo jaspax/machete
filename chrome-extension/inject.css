@@ -146,6 +146,10 @@
     width: 190px;
 }
 
+.machete-metrics-table td {
+    border-right: 1px solid rgb(228, 228, 228);
+}
+
 .machete-metrics-table {
     text-align: center;
 }
