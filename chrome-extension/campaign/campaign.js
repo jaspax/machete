@@ -147,7 +147,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
-            formatFn: (x) => pctFmt,
+            formatFn: pctFmt,
         });
         renderKeywordTable(enabledKws, {
             selector: '#machete-high-profit',
@@ -173,7 +173,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'desc',
             filterFn: (x) => !x.enabled,
             metricFn: (x) => x.acos,
-            formatFn: (x) => pctFmt,
+            formatFn: pctFmt,
         });
     });
 }
@@ -426,6 +426,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
                 if (allTable.find('#machete-bulk-all').length == 0) {
                     const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
                     bulkAll.attr('id', 'machete-bulk-all');
+
                     // Hack ourselves into the Amazon layout
                     const first = $('#keywordTableControls').children().first();
                     first.removeClass('a-span8');
@@ -777,6 +778,7 @@ function renderBulkUpdate(data, opts) {
 
     renderKeywordStatus(data[0] || {}, bulk.find('.machete-kwstatus-bulk'));
     renderKeywordBid(data[0] || {}, bulk.find('.machete-kwbid-bulk'));
+    bulk.find('.machete-kwupdate-count').text(data.length);
 
     bulk.show();
 
