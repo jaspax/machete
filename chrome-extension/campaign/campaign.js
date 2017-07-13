@@ -582,24 +582,25 @@ function transformKeywordData(data) {
 function renderKeywordChart(kws) {
     let chartData = {
         mode: 'markers',
-        x: kws.avgCpc,
+        x: kws.impressions,
         y: kws.clicks,
         text: kws.kw.map((kw, i) =>
-            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />Avg COS: ${pctFmt(kws.acos[i])}`),
+            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />ACOS: ${pctFmt(kws.acos[i])}`),
         hoverinfo: 'text',
         marker: {
-            sizemode: 'diameter',
-            size: kws.impressions.map(x => (Math.log2(x)+1) * 2),
+            sizemode: 'area',
+            sizeref: Math.max.apply(null, kws.spend) / 2000,
+            size: kws.spend,
             color: kws.acos,
             colorscale: [[0, 'rgb(0, 255, 0)'], [0.5, 'rgb(255, 255, 0)'], [1, 'rgb(255, 0, 0)']],
         },
     };
     let layout = {
-        xaxis: {title: 'Average CPC'},
-        yaxis: {title: 'Number of clicks'},
-        margin: {t: 20},
+        xaxis: {title: 'Impressions'},
+        yaxis: {title: 'Clicks'},
+        margin: { l: 40, r: 20, b: 40, t: 20, pad: 4 },
         height: 600,
-        width: $('.a-box-inner').width(),
+        width: $('#'+chartId).width(),
         hovermode: 'closest',
         showlegend: false,
     };
