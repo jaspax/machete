@@ -13,12 +13,21 @@ function checkEntityId(entityId, sendResponse) {
 }
 
 chrome.runtime.onInstalled.addListener(details => {
+    const manifest = chrome.runtime.getManifest();
     if (details.reason == 'install') {
         chrome.tabs.create({ url: chrome.runtime.getURL('common/welcome.html') });
     }
     else if (details.reason == 'update') {
-        // chrome.tabs.create({ url: chrome.runtime.getURL('common/changelog.html') });
+        const lastVersion = localStorage.getItem('lastVersion');
+        const currentVersion = manifest.version;
+
+        // the following comparison implicitly ignores the C in A.B.C, due to
+        // the way that parseFloat works
+        if (!lastVersion || parseFloat(currentVersion) > parseFloat(lastVersion)) {
+            chrome.tabs.create({ url: chrome.runtime.getURL('common/changelog.html') });
+        }
     }
+    localStorage.setItem('lastVersion', manifest.version);
 });
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
