@@ -8,8 +8,8 @@ const span = {
     day: 1000 * 60 * 60 * 24,
 };
 
-function getEntityId() {
-    let entityId = getQueryArgs().entityId;
+function getEntityId(href) {
+    let entityId = getQueryArgs(href).entityId;
     if (entityId) {
         return entityId;
     }
@@ -24,8 +24,8 @@ function getEntityId() {
     throw merror('could not discover entityId');
 }
 
-function getCampaignId() {
-    let campaignId = getQueryArgs().campaignId;
+function getCampaignId(href) {
+    let campaignId = getQueryArgs(href).campaignId;
     if (campaignId) {
         return campaignId;
     }
@@ -41,7 +41,12 @@ function getCampaignId() {
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
 
 function getQueryArgs(str) {
-    let qstring = str || window.location.search.substring(1);
+    let qstring = str || window.location.toString();
+    qstring = qstring.split('?').pop();
+    if (qstring.includes('#')) {
+        qstring = qstring.substring(0, qstring.lastIndexOf('#'));
+    }
+
     let qs = qstring.split('&');
     let args = {};
     for (let q of qs) {

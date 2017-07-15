@@ -49,14 +49,13 @@ function addChartButtons(rows, allowedCampaigns) {
             if (!target || $(target).find(`.${chartClass}`).length > 0)
                 continue;
 
-            let select = $(cells[0]).find('select')[0];
-            let name = cells[1].innerText;
-            if (!select)
+            let link = $(cells[1]).find('a')[0];
+            if (!link)
                 continue;
 
-            let selectName = select.name;
-            let campaignId = selectName.split('_').pop();
-            campaignId = campaignId.substring(0, campaignId.length - 13); // timestamp is appended for some reason
+            let name = cells[1].innerText;
+            let href = link.href;
+            let campaignId = getCampaignId(href);
 
             let btnClasses = chartClass;
             let allowed = allowedCampaigns.includes(campaignId);
