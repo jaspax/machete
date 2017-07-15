@@ -101,72 +101,74 @@ function generateKeywordReports(entityId, adGroupId) {
             clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
         }
 
-        renderKeywordTable(enabledKws, {
+        const kwTables = [{
             selector: '#machete-acos',
             columnTitle: 'ACOS',
             order: 'desc',
             filterFn: (x) => x.clicks && x.acos > 100,
             metricFn: (x) => x.acos,
             formatFn: (x) => x ? pctFmt(x) : "(no sales)",
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
             filterFn: (x) => x.hasEnoughImpressions && x.clickRatio <= clickRatioBottomQuartile,
             metricFn: x => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-spend',
             columnTitle: 'Spend',
             order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
             metricFn: (x) => x.spend,
             formatFn: moneyFmt,
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-impressions',
             columnTitle: 'Impressions',
             order: 'asc',
             filterFn: (x) => x.impressions < minImpressions,
             metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-high-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
             filterFn: (x) => x.hasEnoughImpressions && x.clickRatio >= clickRatioTopQuartile,
             metricFn: (x) => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-low-acos',
             columnTitle: 'ACOS',
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
             formatFn: pctFmt,
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-high-profit',
             columnTitle: 'Profit (Sales - Spend)',
             order: 'desc',
             filterFn: (x) => x.sales && x.acos < 100,
             metricFn: (x) => x.sales - x.spend,
             formatFn: moneyFmt,
-        });
-        renderKeywordTable(enabledKws, {
+        }, {
             selector: '#machete-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
             metricFn: (x) => x.sales,
             formatFn: moneyFmt,
-        });
+        }];
 
-        // This is the only one that uses disabled keywords
+        const renderFn = () => {
+            let tableOpt = kwTables.shift();
+            if (tableOpt) {
+                renderKeywordTable(enabledKws, tableOpt);
+                window.setTimeout(renderFn, 25);
+            }
+        };
+        window.setTimeout(renderFn, 25);
+
+        // This is the only one that uses disabled keywords, do it synchronous
         renderKeywordTable(data, {
             selector: '#machete-paused',
             columnTitle: 'ACOS',
