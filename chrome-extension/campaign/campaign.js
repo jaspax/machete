@@ -361,52 +361,48 @@ function addCampaignTabs(tabs, campaignAllowed) {
             continue;
         }
 
-        let a = $(`<a href="#">${tab.label}</a>`);
-        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
-        li.append(a);
-
-        let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
-        tabs.parent().append(container);
-
-        a.click(mcatch(function() {
-            mga('event', 'kword-data-tab', 'activate', tab.label);
-            li.addClass('a-active');
-            li.siblings().removeClass('a-active');
-            tabs.parent().children('div').addClass('a-hidden');
-            container.removeClass('a-hidden');
-
-            if (window.user.isAnon) {
-                $('.machete-campaign-upgrade-required').hide();
-            }
-            else if (campaignAllowed) {
-                $('.machete-campaign-login-required').hide();
-                $('.machete-campaign-upgrade-required').hide();
-            }
-
-            if (tab.activate && adGroupId && !tab.hasActivated) {
-                tab.activate(getEntityId(), adGroupId);
-                tab.hasActivated = true;
-            }
-        }));
-        $(tabs.children()[0]).after(li);
-
         // Fetch the url we want in order to actually embed it in the page
-        $.ajax({
-            url: chrome.runtime.getURL('campaign/'+tab.content),
-            success: (data) => container.append(data),
+        $.ajax(chrome.runtime.getURL('campaign/'+tab.content)).then((data) => {
+            let a = $(`<a href="#">${tab.label}</a>`);
+            let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
+            li.append(a);
+
+            let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+            tabs.parent().append(container);
+            container.append(data);
+
+            a.click(mcatch(function() {
+                mga('event', 'kword-data-tab', 'activate', tab.label);
+                li.addClass('a-active');
+                li.siblings().removeClass('a-active');
+                tabs.parent().children('div').addClass('a-hidden');
+                container.removeClass('a-hidden');
+
+                if (window.user.isAnon) {
+                    $('.machete-campaign-upgrade-required').hide();
+                }
+                else if (campaignAllowed) {
+                    $('.machete-campaign-login-required').hide();
+                    $('.machete-campaign-upgrade-required').hide();
+                }
+
+                if (tab.activate && adGroupId && !tab.hasActivated) {
+                    tab.activate(getEntityId(), adGroupId);
+                    tab.hasActivated = true;
+                }
+            }));
+            $(tabs.children()[0]).after(li);
         });
     }
 
     // Get the ad group id from the HTML
     if (campaignAllowed) {
         let genReportsInterval = window.setInterval(() => {
-            console.log('in genReportsInterval');
             let adGroupIdInput = $('input[name=adGroupId]');
             if (!adGroupIdInput.length)
                 return;
             adGroupId = adGroupIdInput[0].value;
             window.clearInterval(genReportsInterval);
-            console.log('cleared genReportsInterval');
 
             chrome.runtime.sendMessage({
                 action: 'setAdGroupMetadata',
