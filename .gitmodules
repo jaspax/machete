@@ -1,3 +1,0 @@
-[submodule "srv"]
-	path = srv
-	url = git@gitlab.com:jaspax/ams-unlocked-srv.git
