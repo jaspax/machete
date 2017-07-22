@@ -14,19 +14,15 @@ chrome.runtime.sendMessage({
 mcatch(response => {
     if (response.error) {
         merror(response.status, response.error);
-        return;
     }
-    if (response.data) {
-        const campaignAllowed = response.data.includes(getCampaignId());
-
-        let makeTabsInterval = window.setInterval(mcatch(() => {
-            let campaignTabs = $('#campaign_detail_tab_set');
-            if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
-                addCampaignTabs(campaignTabs, campaignAllowed);
-                window.clearInterval(makeTabsInterval);
-            }
-        }), 100);
-    }
+    const campaignAllowed = response.data.includes(getCampaignId());
+    let makeTabsInterval = window.setInterval(mcatch(() => {
+        let campaignTabs = $('#campaign_detail_tab_set');
+        if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
+            addCampaignTabs(campaignTabs, campaignAllowed);
+            window.clearInterval(makeTabsInterval);
+        }
+    }), 100);
 }));
 
 let metadataInterval = window.setInterval(mcatch(() => {

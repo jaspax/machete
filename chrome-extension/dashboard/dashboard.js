@@ -18,14 +18,9 @@ chrome.runtime.sendMessage({
 },
 mcatch(response => {
     if (response.error) {
-        if (response.status == 401) {
-            mga('event', 'error-handled', 'entityid-unauthorized');
-        }
-        else {
-            merror(response.status, response.error);
-        }
+        merror(response.status, response.error);
     }
-    const allowedCampaigns = response.data || [];
+    const allowedCampaigns = response.data;
     window.setInterval(mcatch(() => {
         let tableRows = $('#campaignTable tbody tr');
         addChartButtons(tableRows, allowedCampaigns);

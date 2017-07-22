@@ -108,7 +108,16 @@ function getAllowedCampaigns(entityId, sendResponse) {
         method: 'GET',
         dataType: 'json',
         success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
+        error: (xhr, status, error) => {
+            if (xhr.status == 401) {
+                // this is basically expected, so don't propagate it as an error
+                mga('event', 'error-handled', 'entityid-unauthorized');
+                sendResponse({ data: [] });
+            }
+            else {
+                sendResponse({ status: xhr.status, error, data: [] });
+            }
+        },
     });
 }
 
