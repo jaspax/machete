@@ -15,7 +15,7 @@ function checkEntityId(entityId, sendResponse) {
 chrome.runtime.onInstalled.addListener(details => {
     const manifest = chrome.runtime.getManifest();
     if (details.reason == 'install') {
-        chrome.tabs.create({ url: chrome.runtime.getURL('common/welcome.html') });
+        chrome.tabs.create({ url: `${serviceUrl}/plugin/welcome` });
     }
     else if (details.reason == 'update') {
         const lastVersion = localStorage.getItem('lastVersion');
