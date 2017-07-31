@@ -4,7 +4,7 @@
   "name": "Machete - Your tool for cutting through AMS",
   "short_name": "Machete",
   "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "icons": { 
       "16": "images/machete-16.png",
       "48": "images/machete-48.png",
