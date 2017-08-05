@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+const $ = require('jquery');
 
 const prefix = 'machete';
 const span = {

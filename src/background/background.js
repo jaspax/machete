@@ -1,3 +1,5 @@
+const $ = require('jquery');
+
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');

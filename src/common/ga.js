@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+const $ = require('jquery');
 
 // Execute a function in the context of the hosting page. For Chrome extension
 // scripts, we execute directly.

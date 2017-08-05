@@ -30,8 +30,6 @@
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-run": "^0.7.0",
-    "ify-loader": "^1.0.4",
-    "zip-webpack-plugin": "^2.0.0"
+    "grunt-run": "^0.7.0"
   }
 }

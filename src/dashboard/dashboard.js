@@ -1,3 +1,6 @@
+const $ = require('jquery');
+const Plotly = require('plotly.js');
+
 const chartId = `${prefix}-chart`;
 const chartLoginRequired = `${prefix}-chart-login-required`;
 const chartUpgradeRequired = `${prefix}-chart-upgrade-required`;

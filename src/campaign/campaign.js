@@ -1,3 +1,8 @@
+const $ = require('jquery');
+const Plotly = require('plotly.js');
+const dt = require('datatables.net')(window, $);
+const Pikaday = require('pikaday');
+
 const tabClass = `${prefix}-tab`;
 const chartId = `${prefix}-kwchart`;
 
