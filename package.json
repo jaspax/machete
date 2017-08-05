@@ -1,0 +1,27 @@
+{
+  "name": "machete-chrome-ext",
+  "version": "1.2.1",
+  "description": "Your tool for cutting through Amazon Marketing Services",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/jaspax/ams-unlocked.git"
+  },
+  "author": "Machete Analytics",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/jaspax/ams-unlocked/issues"
+  },
+  "homepage": "https://gitlab.com/jaspax/ams-unlocked#README",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-run": "^0.7.0",
+    "webpack": "^3.4.1"
+  }
+}
