@@ -17,9 +17,13 @@
   },
   "homepage": "https://gitlab.com/jaspax/ams-unlocked#README",
   "dependencies": {
+    "datatables.net": "^1.10.15",
+    "datatables.net-dt": "^1.10.15",
     "jquery": "^3.2.1",
     "locale": "^0.1.0",
-    "moment": "^2.18.1"
+    "moment": "^2.18.1",
+    "pikaday": "^1.6.1",
+    "plotly": "^1.0.6"
   },
   "devDependencies": {
     "grunt": "^1.0.1",
