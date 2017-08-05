@@ -23,14 +23,15 @@
     "locale": "^0.1.0",
     "moment": "^2.18.1",
     "pikaday": "^1.6.1",
-    "plotly": "^1.0.6"
+    "plotly.js": "^1.29.3"
   },
   "devDependencies": {
+    "browserify": "^14.4.0",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-run": "^0.7.0",
-    "webpack": "^3.4.1",
+    "ify-loader": "^1.0.4",
     "zip-webpack-plugin": "^2.0.0"
   }
 }
