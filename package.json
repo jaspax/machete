@@ -16,12 +16,17 @@
     "url": "https://gitlab.com/jaspax/ams-unlocked/issues"
   },
   "homepage": "https://gitlab.com/jaspax/ams-unlocked#README",
-  "dependencies": {},
+  "dependencies": {
+    "jquery": "^3.2.1",
+    "locale": "^0.1.0",
+    "moment": "^2.18.1"
+  },
   "devDependencies": {
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-run": "^0.7.0",
-    "webpack": "^3.4.1"
+    "webpack": "^3.4.1",
+    "zip-webpack-plugin": "^2.0.0"
   }
 }
