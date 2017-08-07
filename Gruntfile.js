@@ -1,4 +1,8 @@
 module.exports = function(grunt) {
+    // Programatically find out what packages we include.
+    const pkg = require('./package.json');
+    const dependencies = Object.keys(pkg.dependencies);
+
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -7,7 +11,17 @@ module.exports = function(grunt) {
             target: ['src'],
         },
         browserify: {
-            options: {},
+            options: {
+                external: dependencies,
+            },
+            vendor: {
+                src: [],
+                dest: 'out/src/vendor.js',
+                options: {
+                    require: dependencies,
+                    external: null,
+                },
+            },
             background: {
                 src: ['src/background/background.js'],
                 dest: 'out/src/background.js',
@@ -28,9 +42,17 @@ module.exports = function(grunt) {
             html: { expand: true, src: 'html/**', dest: 'out/', },
         },
         watch: {
+            vendor: {
+                files: ['node_modules/**/*.js'],
+                tasks: ['browserify:vendor'],
+            },
             scripts: {
                 files: ['src/**/*.js'],
                 tasks: ['eslint', 'browserify-app']
+            },
+            copy: {
+                files: ['manifest.json', 'css/**', 'images/**', 'html/**'],
+                tasks: ['copy-all'],
             },
         },
     });
@@ -42,6 +64,6 @@ module.exports = function(grunt) {
 
     grunt.registerTask('copy-all', ['copy:manifest', 'copy:css', 'copy:img', 'copy:html']);
     grunt.registerTask('browserify-app', ['browserify:background', 'browserify:campaign', 'browserify:dashboard']);
-    grunt.registerTask('default', ['eslint', 'browserify-app', 'copy-all']);
+    grunt.registerTask('default', ['eslint', 'browserify:vendor', 'browserify-app', 'copy-all']);
 };
 
