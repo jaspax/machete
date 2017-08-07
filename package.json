@@ -31,6 +31,7 @@
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-watch": "^1.0.0",
+    "grunt-eslint": "^20.0.0",
     "grunt-run": "^0.7.0"
   }
 }
