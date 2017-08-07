@@ -371,7 +371,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
         }
 
         // Fetch the url we want in order to actually embed it in the page
-        $.ajax(chrome.runtime.getURL('campaign/'+tab.content)).then((data) => {
+        $.ajax(chrome.runtime.getURL('html/'+tab.content)).then((data) => {
             let a = $(`<a href="#">${tab.label}</a>`);
             let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
             li.append(a);

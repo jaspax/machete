@@ -28,7 +28,7 @@ chrome.runtime.onInstalled.addListener(details => {
         // the following comparison implicitly ignores the C in A.B.C, due to
         // the way that parseFloat works
         if (!lastVersion || parseFloat(currentVersion) > parseFloat(lastVersion)) {
-            chrome.tabs.create({ url: chrome.runtime.getURL('common/changelog.html') });
+            chrome.tabs.create({ url: chrome.runtime.getURL('html/changelog.html') });
         }
     }
     localStorage.setItem('lastVersion', manifest.version);

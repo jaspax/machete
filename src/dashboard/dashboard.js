@@ -34,7 +34,7 @@ ga.mcatch(response => {
     }), 100);
 }));
 
-const templateUrl = chrome.runtime.getURL('dashboard/templates.html');
+const templateUrl = chrome.runtime.getURL('html/templates.html');
 $.ajax(templateUrl, {
     method: 'GET',
     success: (data) => {
@@ -171,7 +171,7 @@ function renderChart(data, name, opt) {
     let container = $('#'+opt.id);
     if (data.timestamps.length < 3) {
         let a = container.find(`a.${common.prefix}-lodata`);
-        a[0].href = chrome.runtime.getURL('common/low-data.html');
+        a[0].href = chrome.runtime.getURL('html/low-data.html');
         a.show();
     }
 }

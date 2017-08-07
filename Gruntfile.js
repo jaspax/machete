@@ -21,25 +21,27 @@ module.exports = function(grunt) {
                 dest: 'out/src/dashboard.js',
             },
         }, 
+        copy: {
+            manifest: { src: 'manifest.json', dest: 'out/', },
+            css: { expand: true, src: 'css/**', dest: 'out/', },
+            img: { expand: true, src: 'images/**', dest: 'out/', },
+            html: { expand: true, src: 'html/**', dest: 'out/', },
+        },
         watch: {
             scripts: {
                 files: ['src/**/*.js'],
-                tasks: ['eslint', 'browserify-all']
+                tasks: ['eslint', 'browserify-app']
             },
-        },
-        run: {
-            'db-up': {
-                cmd: './db-migrate',
-                args: [ 'up' ],
-            }
         },
     });
 
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-browserify');
 
-    grunt.registerTask('browserify-all', ['browserify:background', 'browserify:campaign', 'browserify:dashboard']);
-    grunt.registerTask('default', ['eslint', 'browserify-all']);
+    grunt.registerTask('copy-all', ['copy:manifest', 'copy:css', 'copy:img', 'copy:html']);
+    grunt.registerTask('browserify-app', ['browserify:background', 'browserify:campaign', 'browserify:dashboard']);
+    grunt.registerTask('default', ['eslint', 'browserify-app', 'copy-all']);
 };
 
