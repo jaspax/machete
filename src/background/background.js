@@ -1,6 +1,6 @@
 const $ = require('jquery');
 const ga = require('../common/ga.js');
-const constants = require('../common/constants.js');
+const constants = require('../common/constants.gen.js');
 
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;

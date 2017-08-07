@@ -5,7 +5,7 @@ require('datatables.net')(window, $);
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
-const constants = require('../common/constants.js');
+const constants = require('../common/constants.gen.js');
 
 const tabClass = `machete-tab`;
 const chartId = `machete-kwchart`;

@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 const $ = require('jquery');
 const ga = require('./ga.js');
-const constants = require('./constants.js');
+const constants = require('./constants.gen.js');
 
 function getEntityId(href) {
     let entityId = getQueryArgs(href).entityId;
