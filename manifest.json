@@ -23,18 +23,18 @@
     "https://machete-app.com/*"
   ],
   "background": {
-      "scripts": ["src/background.js"],
+      "scripts": ["src/vendor.js", "src/background.js"],
       "persistent": false
   },
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
-          "js": ["src/dashboard.js"],
+          "js": ["src/vendor.js", "src/dashboard.js"],
           "css": ["css/inject.css"]
       },
       {
           "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
-          "js": ["src/campaign.js"],
+          "js": ["src/vendor.js", "src/campaign.js"],
           "css": ["css/inject.css", "css/jquery.dataTables.min.css", "css/pikaday.css"]
       }
   ],
