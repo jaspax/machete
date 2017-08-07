@@ -1,14 +1,7 @@
 /* eslint-disable no-unused-vars */
 const $ = require('jquery');
 const ga = require('./ga.js');
-
-const prefix = 'machete';
-const span = {
-    second: 1000,
-    minute: 1000 * 60,
-    hour: 1000 * 60 * 60,
-    day: 1000 * 60 * 60 * 24,
-};
+const constants = require('./constants.js');
 
 function getEntityId(href) {
     let entityId = getQueryArgs(href).entityId;
@@ -87,7 +80,7 @@ function parallelizeHistoryData(data, opt) {
 
         if (opt.chunk) {
             // Round off all time values to their nearest chunk
-            item.timestamp -= item.timestamp % span[opt.chunk];
+            item.timestamp -= item.timestamp % constants.timespan[opt.chunk];
 
             if (lastItem && !(item.timestamp - lastItem.timestamp))
                 continue;
@@ -123,7 +116,7 @@ function parallelizeHistoryData(data, opt) {
             }
 
             if (lastItem) {
-                let rateFactor = (item.timestamp - lastItem.timestamp)/span[opt.rate];
+                let rateFactor = (item.timestamp - lastItem.timestamp)/constants.timespan[opt.rate];
                 let normalized = (item[metric] - lastItem[metric])/rateFactor;
                 if (opt.round)
                     normalized = Math.round(normalized);
@@ -164,7 +157,7 @@ if (window.location.href.includes('ams')) {
         let links = $('.userBarLinksRight');
         if (links[0]) {
             let chunks = links[0].innerHTML.split(' | ');
-            chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://machete-app.com/profile" target="_blank">${profileText}</a>)`);
+            chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://${constants.hostname}/profile" target="_blank">${profileText}</a>)`);
             links[0].innerHTML = chunks.join(' | ');
         }
         let logout = links.find('a');
@@ -183,8 +176,6 @@ if (window.location.href.includes('ams')) {
 }
 
 module.exports = {
-    prefix,
-    span,
     getEntityId,
     getCampaignId,
     getQueryArgs,

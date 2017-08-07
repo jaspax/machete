@@ -1,11 +1,11 @@
 const $ = require('jquery');
-const common = require('../common/common.js');
 const ga = require('../common/ga.js');
+const constants = require('../common/constants.js');
 
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
-let serviceUrl = 'https://machete-app.com';
+let serviceUrl = `https://${constants.hostname}`;
 
 function checkEntityId(entityId, sendResponse) {
     const valid = entityId && entityId != 'undefined' && entityId != 'null';
@@ -76,7 +76,7 @@ function setSession(req, sendResponse) {
     
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
-    if (!lastCampaignData || Date.now() - lastCampaignData >= common.span.hour) {
+    if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.hour) {
         requestCampaignData(req.entityId, (response) => {
             response.error ? ga.merror("requestCampaignData", response.error)
                            : console.log('requestCampaignData success');
@@ -307,7 +307,7 @@ function setAdGroupMetadata(entityId, adGroupId, campaignId, sendResponse) {
 let notificationExists = false;
 function notifyNeedCredentials(entityId) {
     if (!notificationExists) {
-        let notificationId = `${common.prefix}-${entityId}-need-credentials`;
+        let notificationId = `machete-${entityId}-need-credentials`;
         chrome.notifications.create(notificationId, {
             type: "basic",
             iconUrl: "images/machete-128.png",

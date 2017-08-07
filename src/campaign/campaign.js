@@ -5,9 +5,10 @@ require('datatables.net')(window, $);
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
+const constants = require('../common/constants.js');
 
-const tabClass = `${common.prefix}-tab`;
-const chartId = `${common.prefix}-kwchart`;
+const tabClass = `machete-tab`;
+const chartId = `machete-kwchart`;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
@@ -216,7 +217,7 @@ function generateHistoryReports(entityId) {
         dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
         renderHistoryRange(data);
     });
-    $('#machete-campaign-history-download')[0].href = `https://machete-app.com/api/data/${entityId}/${common.getCampaignId()}/csv`;
+    $('#machete-campaign-history-download')[0].href = `https://${constants.hostname}/api/data/${entityId}/${common.getCampaignId()}/csv`;
 }
 
 function renderHistoryRange(data) {

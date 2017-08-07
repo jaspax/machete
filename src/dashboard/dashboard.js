@@ -5,11 +5,11 @@ const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
-const chartId = `${common.prefix}-chart`;
-const chartLoginRequired = `${common.prefix}-chart-login-required`;
-const chartUpgradeRequired = `${common.prefix}-chart-upgrade-required`;
-const chartClass = `${common.prefix}-chart-btn`;
-const chartClassDisabled = `${common.prefix}-chart-btn-disabled`;
+const chartId = `machete-chart`;
+const chartLoginRequired = `machete-chart-login-required`;
+const chartUpgradeRequired = `machete-chart-upgrade-required`;
+const chartClass = `machete-chart-btn`;
+const chartClassDisabled = `machete-chart-btn-disabled`;
 
 const charts = [
     { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true} },
@@ -170,7 +170,7 @@ function renderChart(data, name, opt) {
 
     let container = $('#'+opt.id);
     if (data.timestamps.length < 3) {
-        let a = container.find(`a.${common.prefix}-lodata`);
+        let a = container.find(`a.machete-lodata`);
         a[0].href = chrome.runtime.getURL('html/low-data.html');
         a.show();
     }
