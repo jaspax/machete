@@ -1,10 +1,13 @@
 const $ = require('jquery');
 const Plotly = require('plotly.js');
-const dt = require('datatables.net')(window, $);
 const Pikaday = require('pikaday');
+require('datatables.net')(window, $);
 
-const tabClass = `${prefix}-tab`;
-const chartId = `${prefix}-kwchart`;
+const common = require('../common/common.js');
+const ga = require('../common/ga.js');
+
+const tabClass = `${common.prefix}-tab`;
+const chartId = `${common.prefix}-kwchart`;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
@@ -14,14 +17,14 @@ const ourTabs = [
 
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns',
-    entityId: getEntityId(),
+    entityId: common.getEntityId(),
 },
-mcatch(response => {
+ga.mcatch(response => {
     if (response.error) {
-        merror(response.status, response.error);
+        ga.merror(response.status, response.error);
     }
-    const campaignAllowed = response.data.includes(getCampaignId());
-    let makeTabsInterval = window.setInterval(mcatch(() => {
+    const campaignAllowed = response.data.includes(common.getCampaignId());
+    let makeTabsInterval = window.setInterval(ga.mcatch(() => {
         let campaignTabs = $('#campaign_detail_tab_set');
         if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
             addCampaignTabs(campaignTabs, campaignAllowed);
@@ -30,7 +33,7 @@ mcatch(response => {
     }), 100);
 }));
 
-let metadataInterval = window.setInterval(mcatch(() => {
+let metadataInterval = window.setInterval(ga.mcatch(() => {
     let campaignDataTab = $('#campaign_settings_tab_content');
     if (campaignDataTab.length == 0)
         return;
@@ -46,12 +49,12 @@ let metadataInterval = window.setInterval(mcatch(() => {
 
     chrome.runtime.sendMessage({
         action: 'setCampaignMetadata',
-        entityId: getEntityId(),
-        campaignId: getCampaignId(),
+        entityId: common.getEntityId(),
+        campaignId: common.getCampaignId(),
         asin: match[1],
-    }, mcatch(response => {
+    }, ga.mcatch(response => {
         if (response.error)
-             merror(response.status, response.error);
+             ga.merror(response.status, response.error);
     }));
 
     window.clearInterval(metadataInterval);
@@ -108,7 +111,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'desc',
             filterFn: (x) => x.clicks && x.acos > 100,
             metricFn: (x) => x.acos,
-            formatFn: (x) => x ? pctFmt(x) : "(no sales)",
+            formatFn: (x) => x ? common.pctFmt(x) : "(no sales)",
         }, {
             selector: '#machete-click-ratio',
             columnTitle: 'Clicks per 10K impressions',
@@ -122,7 +125,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
             metricFn: (x) => x.spend,
-            formatFn: moneyFmt,
+            formatFn: common.moneyFmt,
         }, {
             selector: '#machete-impressions',
             columnTitle: 'Impressions',
@@ -143,21 +146,21 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
-            formatFn: pctFmt,
+            formatFn: common.pctFmt,
         }, {
             selector: '#machete-high-profit',
             columnTitle: 'Profit (Sales - Spend)',
             order: 'desc',
             filterFn: (x) => x.sales && x.acos < 100,
             metricFn: (x) => x.sales - x.spend,
-            formatFn: moneyFmt,
+            formatFn: common.moneyFmt,
         }, {
             selector: '#machete-high-sales',
             columnTitle: 'Sales',
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
             metricFn: (x) => x.sales,
-            formatFn: moneyFmt,
+            formatFn: common.moneyFmt,
         }];
 
         const renderFn = () => {
@@ -176,7 +179,7 @@ function generateKeywordReports(entityId, adGroupId) {
             order: 'desc',
             filterFn: (x) => !x.enabled,
             metricFn: (x) => x.acos,
-            formatFn: pctFmt,
+            formatFn: common.pctFmt,
         });
     });
 }
@@ -184,7 +187,8 @@ function generateKeywordReports(entityId, adGroupId) {
 function generateHistoryReports(entityId) {
     $('.loading-large').show();
     let data = null;
-    let dayStart, dayEnd;
+    let dayStart = null;
+    let dayEnd = null;
     let selectHandler = () => {
         if (!data)
             return;
@@ -205,14 +209,14 @@ function generateHistoryReports(entityId) {
         format: 'ddd MMM DD YYYY',
         onSelect: selectHandler,
     });
-    getCampaignHistory(entityId, getCampaignId(), (historyData) => {
+    getCampaignHistory(entityId, common.getCampaignId(), (historyData) => {
         $('.loading-large').hide();
         data = historyData.sort((a, b) => a.timestamp - b.timestamp);
         dayStart.setDate(new Date(data[0].timestamp), true);
         dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
         renderHistoryRange(data);
     });
-    $('#machete-campaign-history-download')[0].href = `https://machete-app.com/api/data/${entityId}/${getCampaignId()}/csv`;
+    $('#machete-campaign-history-download')[0].href = `https://machete-app.com/api/data/${entityId}/${common.getCampaignId()}/csv`;
 }
 
 function renderHistoryRange(data) {
@@ -235,21 +239,21 @@ function renderMetricRow(rowData, targetSelector) {
     let row = $(targetSelector);
     row.find('.impressions .metricValue').text(rowData.impressions);
     row.find('.clicks .metricValue').text(rowData.clicks);
-    row.find('.avgCpc .metricValue').text(moneyFmt(rowData.avgCpc));
-    row.find('.spend .metricValue').text(moneyFmt(rowData.spend));
-    row.find('.sales .metricValue').text(moneyFmt(rowData.salesValue));
-    row.find('.acos .metricValue').text(pctFmt(rowData.acos));
+    row.find('.avgCpc .metricValue').text(common.moneyFmt(rowData.avgCpc));
+    row.find('.spend .metricValue').text(common.moneyFmt(rowData.spend));
+    row.find('.sales .metricValue').text(common.moneyFmt(rowData.salesValue));
+    row.find('.acos .metricValue').text(common.pctFmt(rowData.acos));
     return row;
 }
 
 function renderHistoryChart(data) {
-    let impressionsData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions', round: true});
+    let impressionsData = common.parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions', round: true});
     let maxImpressions = Math.max.apply(null, impressionsData.impressions);
 
-    let clicksData = parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks', round: true});
+    let clicksData = common.parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks', round: true});
     let maxClicks = Math.max.apply(null, clicksData.clicks);
 
-    let salesCountData = parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
+    let salesCountData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
     let maxSales = Math.max.apply(null, salesCountData.salesCount);
 
     let series = [
@@ -324,7 +328,7 @@ function renderHistoryChart(data) {
 }
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
-    let entityId = getEntityId();
+    let entityId = common.getEntityId();
 
     // TODO: the parameters to the Amazon API imply that you can pass more than
     // 1 keyword at a time, but testing this shows that doing so just generates
@@ -376,8 +380,8 @@ function addCampaignTabs(tabs, campaignAllowed) {
             tabs.parent().append(container);
             container.append(data);
 
-            a.click(mcatch(function() {
-                mga('event', 'kword-data-tab', 'activate', tab.label);
+            a.click(ga.mcatch(function() {
+                ga.mga('event', 'kword-data-tab', 'activate', tab.label);
                 li.addClass('a-active');
                 li.siblings().removeClass('a-active');
                 tabs.parent().children('div').addClass('a-hidden');
@@ -392,7 +396,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
                 }
 
                 if (tab.activate && adGroupId && !tab.hasActivated) {
-                    tab.activate(getEntityId(), adGroupId);
+                    tab.activate(common.getEntityId(), adGroupId);
                     tab.hasActivated = true;
                 }
             }));
@@ -411,15 +415,15 @@ function addCampaignTabs(tabs, campaignAllowed) {
 
             chrome.runtime.sendMessage({
                 action: 'setAdGroupMetadata',
-                entityId: getEntityId(),
-                campaignId: getCampaignId(),
+                entityId: common.getEntityId(),
+                campaignId: common.getCampaignId(),
                 adGroupId,
-            }, mcatch(response => {
+            }, ga.mcatch(response => {
                 if (response.error)
-                     merror(response.status, response.error);
+                     ga.merror(response.status, response.error);
             }));
 
-            getKeywordData(getEntityId(), adGroupId, (data) => {
+            getKeywordData(common.getEntityId(), adGroupId, (data) => {
                 // Render the bulk update control on the main keyword list
                 const allTable = $('#keywordTableControls');
                 if (allTable.find('#machete-bulk-all').length == 0) {
@@ -504,9 +508,9 @@ function getCampaignHistory(entityId, campaignId, cb) {
         entityId: entityId,
         campaignId: campaignId,
     },
-    mcatch(response => {
+    ga.mcatch(response => {
         if (response.error) {
-            merror(response.status, response.error);
+            ga.merror(response.status, response.error);
             return;
         }
         cb(response.data);
@@ -519,9 +523,9 @@ function getKeywordData(entityId, adGroupId, cb) {
         entityId: entityId,
         adGroupId: adGroupId,
     },
-    mcatch(response => {
+    ga.mcatch(response => {
         if (response.error) {
-            merror(response.status, response.error);
+            ga.merror(response.status, response.error);
         }
 
         // If we have data, return it immediately
@@ -535,7 +539,7 @@ function getKeywordData(entityId, adGroupId, cb) {
             entityId: entityId,
             adGroupId: adGroupId,
         },
-        mcatch(() => {
+        ga.mcatch(() => {
             // Try our servers again. This may fire the callback again and cause
             // us to redraw.
             chrome.runtime.sendMessage({
@@ -543,9 +547,9 @@ function getKeywordData(entityId, adGroupId, cb) {
                 entityId: entityId,
                 adGroupId: adGroupId,
             },
-            mcatch(response => {
+            ga.mcatch(response => {
                 if (response.error) {
-                    merror(response.status, response.error);
+                    ga.merror(response.status, response.error);
                 }
                 if (response.data) {
                     cb(response.data);
@@ -584,7 +588,7 @@ function renderKeywordChart(kws) {
         x: kws.impressions,
         y: kws.clicks,
         text: kws.kw.map((kw, i) =>
-            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${moneyFmt(kws.avgCpc[i])}<br />ACOS: ${pctFmt(kws.acos[i])}`),
+            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${common.moneyFmt(kws.avgCpc[i])}<br />ACOS: ${common.pctFmt(kws.acos[i])}`),
         hoverinfo: 'text',
         marker: {
             sizemode: 'area',
@@ -643,38 +647,38 @@ function renderKeywordTable(data, opts) {
     table.width('100%'); // TODO: figure out why DataTables is setting this to 0
 }
 
-$(document).on('click.machete.kwstatus', '.machete-kwstatus', mcatch(function() {
+$(document).on('click.machete.kwstatus', '.machete-kwstatus', ga.mcatch(function() {
     let keyword = JSON.parse($(this).attr('data-machete-keyword'));
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
-    mclick('kword-data-status-toggle', keyword.enabled ? 'disable' : 'enable');
+    ga.mclick('kword-data-status-toggle', keyword.enabled ? 'disable' : 'enable');
     updateStatus([keyword.id], !keyword.enabled, (result) => {
         if (result.success) {
             keyword.enabled = !keyword.enabled;
             renderKeywordStatus(keyword, $(this));
         }
         else {
-            merror('status update error:', result);
+            ga.merror('status update error:', result);
         }
         $(this).find('.a-button').show();
         $(this).find('.loading-small').hide();
     });
 }));
 
-$(document).on('click.machete.kwbid', '.machete-kwbid input[name=save]', mcatch(function() {
+$(document).on('click.machete.kwbid', '.machete-kwbid input[name=save]', ga.mcatch(function() {
     let cell = $(this).parents('.machete-kwbid');
     let keyword = JSON.parse(cell.attr('data-machete-keyword'));
     let input = cell.find('input[name=keyword-bid]');
     cell.children().hide();
     cell.find('.loading-small').show();
-    mclick('kword-data-bid-save', input.val());
+    ga.mclick('kword-data-bid-save', input.val());
     updateBid([keyword.id], input.val(), (result) => {
         if (result.success) {
             keyword.bid = result.bid;
             renderKeywordBid(keyword, cell);
         }
         else {
-            merror('bid update error:', result);
+            ga.merror('bid update error:', result);
         }
         cell.children().show();
         cell.find('.loading-small').hide();
@@ -713,7 +717,7 @@ function renderKeywordStatus(keyword, cell) {
     return cell[0].outerHTML;
 }
 
-$(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', mcatch(function() {
+$(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', ga.mcatch(function() {
     let container = $(this).parents('.machete-kwupdate-bulk');
     container.find('.machete-kwupdate-error').text('');
     let data = container[0].data;
@@ -721,7 +725,7 @@ $(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', mcatch(f
     let enabled = data[0].enabled;
     $(this).find('.a-button').hide();
     $(this).find('.loading-small').show();
-    mclick('kword-data-bulk-status-toggle', enabled ? 'disable' : 'enable');
+    ga.mclick('kword-data-bulk-status-toggle', enabled ? 'disable' : 'enable');
     updateStatus(data.map(kw => kw.id), !enabled, (result) => {
         if (result.success) {
             data.forEach(x => x.enabled = !enabled);
@@ -736,12 +740,12 @@ $(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', mcatch(f
             const errMsg = `There was an error applying the bulk update.
                 Please refresh this page and try again. (Error was: ${result})`;
             container.find('.machete-kwupdate-error').text(errMsg);
-            merror('status bulk update error:', result);
+            ga.merror('status bulk update error:', result);
         }
     });
 }));
 
-$(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]', mcatch(function() {
+$(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]', ga.mcatch(function() {
     let container = $(this).parents('.machete-kwupdate-bulk');
     container.find('.machete-kwupdate-error').text('');
     let cell = $(this).parents('.machete-kwbid-bulk');
@@ -750,7 +754,7 @@ $(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]
     let opts = container[0].opts;
     cell.children().hide();
     cell.find('.loading-small').show();
-    mclick('kword-data-bulk-bid-save', input.val());
+    ga.mclick('kword-data-bulk-bid-save', input.val());
     updateBid(data.map(kw => kw.id), input.val(), (result) => {
         if (result.success) {
             data.forEach(kw => kw.bid = result.bid);
@@ -765,7 +769,7 @@ $(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]
             const errMsg = `There was an error applying the bulk update.
                 Please refresh this page and try again. (Error was: ${result})`;
             container.find('.machete-kwupdate-error').text(errMsg);
-            merror('bid bulk update error:', result);
+            ga.merror('bid bulk update error:', result);
         }
     });
 }));
@@ -774,7 +778,7 @@ function renderBulkUpdate(data, opts) {
     let bulk = cloneTemplate('machete-kwupdate-bulk');
     bulk[0].data = data;
     bulk[0].opts = opts;
-    bulk.attr('data-mclick', `kword-data-bulk ${opts.selector ? opts.selector.substring(1) : 'all'}`);
+    bulk.attr('data-ga.mclick', `kword-data-bulk ${opts.selector ? opts.selector.substring(1) : 'all'}`);
 
     renderKeywordStatus(data[0] || {}, bulk.find('.machete-kwstatus-bulk'));
     renderKeywordBid(data[0] || {}, bulk.find('.machete-kwbid-bulk'));

@@ -1,5 +1,7 @@
-/* eslint-disable no-unused-vars */
 const $ = require('jquery');
+
+/* eslint-disable no-unused-vars */
+/* global __ga:false */
 
 // Execute a function in the context of the hosting page. For Chrome extension
 // scripts, we execute directly.
@@ -27,17 +29,12 @@ inpage(function () {
     })(window,document,'script','https://www.google-analytics.com/analytics.js','__ga');
 });
 
+/* eslint-enable */
+
 inpage(function () {
     __ga('create', 'UA-98724833-1', 'auto', 'machete');
     __ga('machete.send', 'pageview', location.pathname);
 });
-/* eslint-enable */
-
-function mga(...args) {
-    inpage(function(...a) {
-        __ga.apply(null, a);
-    }, ['machete.send'].concat(args));
-}
 
 // This is next to useless, but at least we'll get *something*
 window.onerror = function(errorMsg, url, lineNumber) {
@@ -45,6 +42,20 @@ window.onerror = function(errorMsg, url, lineNumber) {
         __ga('machete.send', 'exception', { exDescription: `${_errorMsg}; ${_url}:${_lineNumber}`, exFatal: true });
     }, [errorMsg, url, lineNumber]);
 };
+
+$(document).on('click.machete.ga', '[data-mclick]', function() {
+    const args = $(this).attr('data-mclick').split(' ');
+    let category = args[0];
+    let label = args[1] || this.id;
+    mclick(category, label);
+    return true;
+});
+
+function mga(...args) {
+    inpage(function(...a) {
+        __ga.apply(null, a);
+    }, ['machete.send'].concat(args));
+}
 
 function merror(...msg) {
     let error = new Error(msg.join(' '));
@@ -72,10 +83,10 @@ function mcatch(fn) {
     };
 }
 
-$(document).on('click.machete.ga', '[data-mclick]', function() {
-    const args = $(this).attr('data-mclick').split(' ');
-    let category = args[0];
-    let label = args[1] || this.id;
-    mclick(category, label);
-    return true;
-});
+module.exports = {
+    mga,
+    merror,
+    mex,
+    mclick,
+    mcatch,
+};

@@ -1,27 +1,15 @@
 {
     "env": {
         "browser": true,
+        "commonjs": true,
         "es6": true
     },
     "globals": {
-        "chrome": true,
-        "$": true,
-        "jQuery": true,
-        "Plotly": true,
-        "span": true,
-        "prefix": true,
-        "getEntityId": true,
-        "getCampaignId": true,
-        "moneyFmt": true,
-        "parallelizeHistoryData": true,
-        "chartPng": true,
-        "mga": true,
-        "mclick": true,
-        "merror": true,
-        "mcatch": true,
-        "__ga": true
+        "chrome": true
     },
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended"
+    ],
     "rules": {
         "accessor-pairs": "error",
         "array-bracket-spacing": [
@@ -120,7 +108,6 @@
         "newline-after-var": "off",
         "newline-before-return": "off",
         "newline-per-chained-call": "off",
-        "no-alert": "error",
         "no-array-constructor": "error",
         "no-await-in-loop": "error",
         "no-bitwise": "error",

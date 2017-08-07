@@ -1,11 +1,15 @@
 const $ = require('jquery');
 const Plotly = require('plotly.js');
 
-const chartId = `${prefix}-chart`;
-const chartLoginRequired = `${prefix}-chart-login-required`;
-const chartUpgradeRequired = `${prefix}-chart-upgrade-required`;
-const chartClass = `${prefix}-chart-btn`;
-const chartClassDisabled = `${prefix}-chart-btn-disabled`;
+const common = require('../common/common.js');
+const ga = require('../common/ga.js');
+
+const chartPng = chrome.runtime.getURL('images/chart-16px.png');
+const chartId = `${common.prefix}-chart`;
+const chartLoginRequired = `${common.prefix}-chart-login-required`;
+const chartUpgradeRequired = `${common.prefix}-chart-upgrade-required`;
+const chartClass = `${common.prefix}-chart-btn`;
+const chartClassDisabled = `${common.prefix}-chart-btn-disabled`;
 
 const charts = [
     { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true} },
@@ -17,14 +21,14 @@ const charts = [
 
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns', 
-    entityId: getEntityId(),
+    entityId: common.getEntityId(),
 },
-mcatch(response => {
+ga.mcatch(response => {
     if (response.error) {
-        merror(response.status, response.error);
+        ga.merror(response.status, response.error);
     }
     const allowedCampaigns = response.data;
-    window.setInterval(mcatch(() => {
+    window.setInterval(ga.mcatch(() => {
         let tableRows = $('#campaignTable tbody tr');
         addChartButtons(tableRows, allowedCampaigns);
     }), 100);
@@ -53,7 +57,7 @@ function addChartButtons(rows, allowedCampaigns) {
 
             let name = cells[1].innerText;
             let href = link.href;
-            let campaignId = getCampaignId(href);
+            let campaignId = common.getCampaignId(href);
 
             let btnClasses = chartClass;
             let allowed = allowedCampaigns.includes(campaignId);
@@ -63,8 +67,8 @@ function addChartButtons(rows, allowedCampaigns) {
                 eventCategory = 'thumbnail-disabled';
             }
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
-            btn.click(mcatch(function() {
-                mclick(eventCategory, chart.config.metric);
+            btn.click(ga.mcatch(function() {
+                ga.mclick(eventCategory, chart.config.metric);
 
                 let newId = chartId+campaignId+chart.config.metric;
                 let popup = $('#'+newId);
@@ -102,9 +106,9 @@ function addChartButtons(rows, allowedCampaigns) {
                     $('body').scrollLeft(bodyLeft);
 
                     // Clicking anywhere outside the popup dismisses the chart
-                    $(document).on('click.machete.thumbnail-dismiss', mcatch(function() {
+                    $(document).on('click.machete.thumbnail-dismiss', ga.mcatch(function() {
                         if (!$.contains(popup[0], this)) {
-                            mga('event', eventCategory, 'dismiss', chart.config.metric);
+                            ga.mga('event', eventCategory, 'dismiss', chart.config.metric);
                             popup.hide();
                             $(document).off('click.machete.thumbnail-dismiss');
                         }
@@ -112,7 +116,7 @@ function addChartButtons(rows, allowedCampaigns) {
                 });
 
                 if (allowed) {
-                    getDataHistory(getEntityId(), campaignId, (data) => {
+                    getDataHistory(common.getEntityId(), campaignId, (data) => {
                         renderChart(data, name, Object.assign({id: newId}, chart));
                     });
                 }
@@ -128,9 +132,9 @@ function getDataHistory(entityId, campaignId, cb) {
         entityId: entityId,
         campaignId: campaignId,
     },
-    mcatch(response => {
+    ga.mcatch(response => {
         if (response.error) {
-            merror(response.status, response.error);
+            ga.merror(response.status, response.error);
             return;
         }
         cb(response.data);
@@ -138,9 +142,9 @@ function getDataHistory(entityId, campaignId, cb) {
 }
 
 function renderChart(data, name, opt) {
-    const daysMs = 10 * span.day;
+    const daysMs = 10 * common.span.day;
     opt.config.startTimestamp = Date.now() - daysMs;
-    data = parallelizeHistoryData(data, opt.config);
+    data = common.parallelizeHistoryData(data, opt.config);
 
     const series = {
       x: data.timestamps,
@@ -166,7 +170,7 @@ function renderChart(data, name, opt) {
 
     let container = $('#'+opt.id);
     if (data.timestamps.length < 3) {
-        let a = container.find(`a.${prefix}-lodata`);
+        let a = container.find(`a.${common.prefix}-lodata`);
         a[0].href = chrome.runtime.getURL('common/low-data.html');
         a.show();
     }

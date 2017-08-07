@@ -1,4 +1,6 @@
 const $ = require('jquery');
+const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
@@ -64,7 +66,7 @@ chrome.alarms.onAlarm.addListener((session) => {
     }
 
     requestCampaignData(entityId, (response) => {
-        response.error ? merror("requestCampaignData", response.error)
+        response.error ? ga.merror("requestCampaignData", response.error)
                        : console.log('request data success');
     });
 });
@@ -74,9 +76,9 @@ function setSession(req, sendResponse) {
     
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
-    if (!lastCampaignData || Date.now() - lastCampaignData >= span.hour) {
+    if (!lastCampaignData || Date.now() - lastCampaignData >= common.span.hour) {
         requestCampaignData(req.entityId, (response) => {
-            response.error ? merror("requestCampaignData", response.error)
+            response.error ? ga.merror("requestCampaignData", response.error)
                            : console.log('requestCampaignData success');
         });
     }
@@ -113,7 +115,7 @@ function getAllowedCampaigns(entityId, sendResponse) {
         error: (xhr, status, error) => {
             if (xhr.status == 401) {
                 // this is basically expected, so don't propagate it as an error
-                mga('event', 'error-handled', 'entityid-unauthorized');
+                ga.mga('event', 'error-handled', 'entityid-unauthorized');
                 sendResponse({ data: [] });
             }
             else {
@@ -171,7 +173,7 @@ function requestCampaignStatus(entityId, campaignIds, timestamp) {
         success: (data) => {
             storeStatusCloud(entityId, timestamp, data)
                 .then(() => console.log('stored campaign status data successfully'))
-                .fail((error) => merror('requestCampaignStatus error', error));
+                .fail((error) => ga.merror('requestCampaignStatus error', error));
         },
         error: (xhr, textStatus, error) => {
             console.log('error storing campaign status', error);
@@ -216,7 +218,7 @@ function storeDataCloud(entityId, timestamp, data) {
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: (data, status) => console.log('cloud storage', status), 
-        error: (xhr, status, error) => merror('storeDataCloud', status, error),
+        error: (xhr, status, error) => ga.merror('storeDataCloud', status, error),
     });
 }
 
@@ -227,7 +229,7 @@ function storeStatusCloud(entityId, timestamp, data) {
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: (data, status) => console.log('status storage', status), 
-        error: (xhr, status, error) => merror('storeStatusCloud', status, error),
+        error: (xhr, status, error) => ga.merror('storeStatusCloud', status, error),
     });
 }
 
@@ -238,7 +240,7 @@ function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: (data, status) => console.log('keyword storage', status), 
-        error: (xhr, status, error) => merror('storeKeywordDataCloud', status, error),
+        error: (xhr, status, error) => ga.merror('storeKeywordDataCloud', status, error),
     });
 }
 
@@ -305,7 +307,7 @@ function setAdGroupMetadata(entityId, adGroupId, campaignId, sendResponse) {
 let notificationExists = false;
 function notifyNeedCredentials(entityId) {
     if (!notificationExists) {
-        let notificationId = `${prefix}-${entityId}-need-credentials`;
+        let notificationId = `${common.prefix}-${entityId}-need-credentials`;
         chrome.notifications.create(notificationId, {
             type: "basic",
             iconUrl: "images/machete-128.png",
@@ -317,10 +319,10 @@ function notifyNeedCredentials(entityId) {
         });
 
         notificationExists = true;
-        mga('event', 'credential-popup', 'show');
+        ga.mga('event', 'credential-popup', 'show');
         chrome.notifications.onClicked.addListener((clickId) => {
             if (clickId == notificationId) {
-                mga('event', 'credential-popup', 'click');
+                ga.mga('event', 'credential-popup', 'click');
                 chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
                 chrome.notifications.clear(notificationId);
                 notificationExists = false;
@@ -328,7 +330,7 @@ function notifyNeedCredentials(entityId) {
         });
         chrome.notifications.onClosed.addListener(() => {
             notificationExists = false;
-            mga('event', 'credential-popup', 'dismiss');
+            ga.mga('event', 'credential-popup', 'dismiss');
         });
     }
 }
