@@ -3,6 +3,7 @@ const Plotly = require('plotly.js');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
+const constants = require('../common/constants.gen.js');
 
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
 const chartId = `machete-chart`;
@@ -142,7 +143,7 @@ function getDataHistory(entityId, campaignId, cb) {
 }
 
 function renderChart(data, name, opt) {
-    const daysMs = 10 * common.span.day;
+    const daysMs = 10 * constants.timespan.day;
     opt.config.startTimestamp = Date.now() - daysMs;
     data = common.parallelizeHistoryData(data, opt.config);
 
