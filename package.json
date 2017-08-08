@@ -34,6 +34,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-eslint": "^20.0.0",
     "grunt-run": "^0.7.0",
+    "grunt-zip": "^0.17.1",
     "mustache": "^2.3.0"
   }
 }

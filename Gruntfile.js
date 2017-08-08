@@ -7,9 +7,12 @@ module.exports = function(grunt) {
     const dependencies = Object.keys(pkg.dependencies);
 
     let targetJson = 'production.json';
+    let releaseTag = 'release';
     if (grunt.option('beta')) {
         targetJson = 'beta.json';
+        releaseTag = 'beta';
     }
+    const zipFile = `machete-${releaseTag}.zip`;
 
     const gruntConfig = {
         // Project configuration.
@@ -59,6 +62,9 @@ module.exports = function(grunt) {
             },
             /* Targets created programatically */
         },
+        zip: {
+            [zipFile]: ['out/**'],
+        },
     };
 
     // Handle JS source directories. For each such directory aside from
@@ -79,13 +85,14 @@ module.exports = function(grunt) {
     
     grunt.initConfig(gruntConfig);
 
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-run');
+    grunt.loadNpmTasks('grunt-zip');
 
     grunt.registerTask('browserify-app', dirs.map(x => `browserify:${x}`));
     grunt.registerTask('generate', ['run:genConst', 'run:genManifest']);
-    grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy']);
+    grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy', 'zip']);
 };
