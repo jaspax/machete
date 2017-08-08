@@ -1,12 +1,19 @@
 module.exports = function(grunt) {
-    // Programatically find out what packages we include.
+    // Programatically find out what packages we include. This is used to factor
+    // out our node packages from our actual code.
     const pkg = require('./package.json');
     const dependencies = Object.keys(pkg.dependencies);
+
     let targetJson = 'production.json';
+    if (grunt.option('beta')) {
+        targetJson = 'beta.json';
+    }
 
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        target: {
+        },
         eslint: {
             options: { ext: '.js' },
             target: ['src'],
@@ -60,9 +67,17 @@ module.exports = function(grunt) {
                 files: ['src/**/*.js'],
                 tasks: ['eslint', 'browserify-app']
             },
+            genConst: {
+                files: ['src/common/constants.js.mustache'],
+                tasks: ['run:genConst']
+            },
+            genManifest: {
+                files: ['manifest.json.mustache'],
+                tasks: ['run:genManifest'],
+            },
             copy: {
                 files: ['css/**', 'images/**', 'html/**'],
-                tasks: ['copy-all'],
+                tasks: ['copy'],
             },
         },
     });
@@ -73,9 +88,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-run');
 
-    grunt.registerTask('copy-all', ['copy:css', 'copy:img', 'copy:html']);
-    grunt.registerTask('browserify-app', ['generate', 'browserify:background', 'browserify:campaign', 'browserify:dashboard']);
+    grunt.registerTask('browserify-app', ['browserify:background', 'browserify:campaign', 'browserify:dashboard']);
     grunt.registerTask('generate', ['run:genConst', 'run:genManifest']);
-    grunt.registerTask('default', ['generate', 'eslint', 'browserify:vendor', 'browserify-app', 'copy-all']);
+    grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy']);
 };
 
