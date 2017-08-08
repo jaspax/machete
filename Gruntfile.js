@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 module.exports = function(grunt) {
     // Programatically find out what packages we include. This is used to factor
     // out our node packages from our actual code.
@@ -9,39 +11,19 @@ module.exports = function(grunt) {
         targetJson = 'beta.json';
     }
 
-    // Project configuration.
-    grunt.initConfig({
+    const gruntConfig = {
+        // Project configuration.
         pkg: grunt.file.readJSON('package.json'),
-        target: {
-        },
         eslint: {
             options: { ext: '.js' },
-            target: ['src'],
         },
         browserify: {
-            options: {
-                external: dependencies,
-            },
             vendor: {
                 src: [],
                 dest: 'out/src/vendor.js',
-                options: {
-                    require: dependencies,
-                    external: null,
-                },
+                options: { require: dependencies },
             },
-            background: {
-                src: ['src/background/background.js'],
-                dest: 'out/src/background.js',
-            },
-            campaign: {
-                src: ['src/campaign/campaign.js'],
-                dest: 'out/src/campaign.js',
-            },
-            dashboard: {
-                src: ['src/dashboard/dashboard.js'],
-                dest: 'out/src/dashboard.js',
-            },
+            /* Targets created programatically */
         }, 
         run: {
             genConst: {
@@ -63,10 +45,6 @@ module.exports = function(grunt) {
                 files: ['node_modules/**/*.js'],
                 tasks: ['browserify:vendor'],
             },
-            scripts: {
-                files: ['src/**/*.js'],
-                tasks: ['eslint', 'browserify-app']
-            },
             genConst: {
                 files: ['src/common/constants.js.mustache'],
                 tasks: ['run:genConst']
@@ -79,8 +57,27 @@ module.exports = function(grunt) {
                 files: ['css/**', 'images/**', 'html/**'],
                 tasks: ['copy'],
             },
+            /* Targets created programatically */
         },
-    });
+    };
+
+    // Handle JS source directories. For each such directory aside from
+    // 'common', create a watch, browserify, and eslint task
+    const dirs = fs.readdirSync('src').filter(x => x != 'common' && fs.lstatSync(`src/${x}`).isDirectory());
+    for (name of dirs) {
+        gruntConfig.eslint[name] = [`src/${name}`];
+        gruntConfig.browserify[name] = {
+            src: [`src/${name}/*.js`],
+            dest: `out/src/${name}.js`,
+            options: { external: dependencies },
+        };
+        gruntConfig.watch[name] = {
+            files: [`src/${name}/*.js`],
+            tasks: [`eslint:${name}`, `browserify:${name}`]
+        };
+    }
+    
+    grunt.initConfig(gruntConfig);
 
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-copy');
@@ -88,8 +85,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-run');
 
-    grunt.registerTask('browserify-app', ['browserify:background', 'browserify:campaign', 'browserify:dashboard']);
+    grunt.registerTask('browserify-app', dirs.map(x => `browserify:${x}`));
     grunt.registerTask('generate', ['run:genConst', 'run:genManifest']);
     grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy']);
 };
-
