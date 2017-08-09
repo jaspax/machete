@@ -29,6 +29,10 @@ module.exports = function(grunt) {
             /* Targets created programatically */
         }, 
         run: {
+            clean: {
+                cmd: 'rm',
+                args: ['-rf', 'out', 'machete-*.zip']
+            },
             genConst: {
                 cmd: './node_modules/.bin/mustache',
                 args: [targetJson, 'src/common/constants.js.mustache', 'src/common/constants.gen.js'],
