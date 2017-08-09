@@ -23,7 +23,8 @@
     "moment": "^2.18.1",
     "pikaday": "^1.6.1",
     "plotly.js": "^1.29.3",
-    "react": "^15.6.1"
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
   },
   "devDependencies": {
     "babel-preset-react": "^6.24.1",

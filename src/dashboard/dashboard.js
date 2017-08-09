@@ -1,14 +1,12 @@
 const $ = require('jquery');
-const Plotly = require('plotly.js');
+const React = require('react');
+const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
-const constants = require('../common/constants.gen.js');
+const HistoryChartPopup = require('../components/HistoryChartPopup.jsx');
 
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
-const chartId = `machete-chart`;
-const chartLoginRequired = `machete-chart-login-required`;
-const chartUpgradeRequired = `machete-chart-upgrade-required`;
 const chartClass = `machete-chart-btn`;
 const chartClassDisabled = `machete-chart-btn-disabled`;
 
@@ -68,59 +66,24 @@ function addChartButtons(rows, allowedCampaigns) {
                 eventCategory = 'thumbnail-disabled';
             }
             let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
+
             btn.click(ga.mcatch(function() {
                 ga.mclick(eventCategory, chart.config.metric);
-
-                let newId = chartId+campaignId+chart.config.metric;
-                let popup = $('#'+newId);
-                if (!popup.length) {
-                    if (allowed) {
-                        popup = $('#'+chartId).hide().clone();
-                        popup.addClass(chartId);
-                    }
-                    else if (window.user.isAnon) {
-                        popup = $('#'+chartLoginRequired).hide().clone();
-                        popup.addClass(chartLoginRequired);
-                    }
-                    else {
-                        popup = $('#'+chartUpgradeRequired).hide().clone();
-                        popup.addClass(chartUpgradeRequired);
-                    }
-                    popup.attr('id', newId);
-                    $(document.body).append(popup);
-                }
-                // hard-coded element width below b/c popup.width() doesn't
-                // work as required. must reposition every time we display in
-                // order to work correctly with scrolling.
-                let pos = btn.offset();
-                if (pos.left + 420 > $(document).width()) { 
-                    popup.css({top: pos.top + btn.height() + 6, left: pos.left + btn.width() - 414});
-                }
-                else {
-                    popup.css({top: pos.top + btn.height() + 6, left: pos.left});
-                }
-                const bodyTop = $('body').scrollTop();
-                const bodyLeft = $('body').scrollLeft();
-
-                popup.slideDown(200, function() {
-                    $('body').scrollTop(bodyTop);
-                    $('body').scrollLeft(bodyLeft);
-
-                    // Clicking anywhere outside the popup dismisses the chart
-                    $(document).on('click.machete.thumbnail-dismiss', ga.mcatch(function() {
-                        if (!$.contains(popup[0], this)) {
-                            ga.mga('event', eventCategory, 'dismiss', chart.config.metric);
-                            popup.hide();
-                            $(document).off('click.machete.thumbnail-dismiss');
-                        }
-                    }));
-                });
-
-                if (allowed) {
-                    getDataHistory(common.getEntityId(), campaignId, (data) => {
-                        renderChart(data, name, Object.assign({id: newId}, chart));
+                getDataHistory(common.getEntityId(), campaignId, (data) => {
+                    data = common.parallelizeHistoryData(data, chart.config);
+                    const historyChart = React.createElement(HistoryChartPopup, {
+                        allowed,
+                        anonymous: window.user.isAnon,
+                        anchor: btn[0],
+                        show: true,
+                        name,
+                        metric: chart.config.metric,
+                        label: chart.label,
+                        data: data[chart.config.metric],
+                        timestamps: data.timestamps,
                     });
-                }
+                    ReactDOM.render(historyChart, btn[0]);
+                });
             }));
             $(target).append(btn);
         }
@@ -140,39 +103,4 @@ function getDataHistory(entityId, campaignId, cb) {
         }
         cb(response.data);
     }));
-}
-
-function renderChart(data, name, opt) {
-    const daysMs = 10 * constants.timespan.day;
-    opt.config.startTimestamp = Date.now() - daysMs;
-    data = common.parallelizeHistoryData(data, opt.config);
-
-    const series = {
-      x: data.timestamps,
-      y: data[opt.config.metric],
-      mode: 'lines+markers',
-      name: opt.config.metric,
-      connectgaps: true
-    };
-
-    let height = 300;
-    if (data.timestamps.length < 3) {
-        height = 270; // leaving room for the lodata link
-    }
-
-    const layout = {
-      title: `${opt.label}<br />${name}`,
-      width: 400,
-      height,
-      margin: { l: 40, r: 20, b: 25, t: 60, pad: 4 },
-    };
-
-    Plotly.newPlot(opt.id, [series], layout, {displayModeBar: false});
-
-    let container = $('#'+opt.id);
-    if (data.timestamps.length < 3) {
-        let a = container.find(`a.machete-lodata`);
-        a[0].href = chrome.runtime.getURL('html/low-data.html');
-        a.show();
-    }
 }

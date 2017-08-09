@@ -83,7 +83,7 @@ module.exports = function(grunt) {
             },
         };
         gruntConfig.watch[name] = {
-            files: [`src/${name}/*.js`],
+            files: [`src/${name}/*.js`, 'src/components/*.jsx'],
             tasks: [`eslint:${name}`, `browserify:${name}`]
         };
     }
