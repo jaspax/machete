@@ -6,11 +6,11 @@ module.exports = function(grunt) {
     const pkg = require('./package.json');
     const dependencies = Object.keys(pkg.dependencies);
 
-    let targetJson = 'production.json';
-    let releaseTag = 'release';
-    if (grunt.option('beta')) {
-        targetJson = 'beta.json';
-        releaseTag = 'beta';
+    let targetJson = 'beta.json';
+    let releaseTag = 'beta';
+    if (grunt.option('release')) {
+        targetJson = 'production.json';
+        releaseTag = 'release';
     }
     const zipFile = `machete-${releaseTag}.zip`;
 
@@ -31,7 +31,7 @@ module.exports = function(grunt) {
         run: {
             clean: {
                 cmd: 'rm',
-                args: ['-rf', 'out', 'machete-*.zip']
+                args: ['-rf', 'out', zipFile]
             },
             genConst: {
                 cmd: './node_modules/.bin/mustache',
