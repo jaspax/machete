@@ -19,6 +19,7 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON('package.json'),
         eslint: {
             options: { ext: '.js' },
+            /* Targets created programatically */
         },
         browserify: {
             vendor: {
@@ -26,7 +27,7 @@ module.exports = function(grunt) {
                 dest: 'out/src/vendor.js',
                 options: { require: dependencies },
             },
-            /* Targets created programatically */
+            /* More targets created programatically */
         }, 
         run: {
             clean: {
@@ -73,13 +74,17 @@ module.exports = function(grunt) {
 
     // Handle JS source directories. For each such directory aside from
     // 'common', create a watch, browserify, and eslint task
-    const dirs = fs.readdirSync('src').filter(x => x != 'common' && fs.lstatSync(`src/${x}`).isDirectory());
+    const nobuild = ['common', 'components'];
+    const dirs = fs.readdirSync('src').filter(x => fs.lstatSync(`src/${x}`).isDirectory() && !nobuild.includes(x));
     for (name of dirs) {
         gruntConfig.eslint[name] = [`src/${name}`];
         gruntConfig.browserify[name] = {
             src: [`src/${name}/*.js`],
             dest: `out/src/${name}.js`,
-            options: { external: dependencies },
+            options: { 
+                external: dependencies,
+                transform: [['babelify', {presets: ['react']}]]
+            },
         };
         gruntConfig.watch[name] = {
             files: [`src/${name}/*.js`],
