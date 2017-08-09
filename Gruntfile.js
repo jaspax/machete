@@ -49,10 +49,6 @@ module.exports = function(grunt) {
             html: { expand: true, src: 'html/**', dest: 'out/', },
         },
         watch: {
-            vendor: {
-                files: ['node_modules/**/*.js'],
-                tasks: ['browserify:vendor'],
-            },
             genConst: {
                 files: ['src/common/constants.js.mustache'],
                 tasks: ['run:genConst']
