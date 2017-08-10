@@ -4,11 +4,18 @@
         "commonjs": true,
         "es6": true
     },
+    "plugins": [
+        "react"
+    ],
+    "parserOptions": {
+        "ecmaFeatures": { "jsx": true }
+    },
     "globals": {
         "chrome": true
     },
     "extends": [
-        "eslint:recommended"
+        "eslint:recommended",
+        "plugin:react/recommended"
     ],
     "rules": {
         "accessor-pairs": "error",

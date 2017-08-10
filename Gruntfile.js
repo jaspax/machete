@@ -18,8 +18,9 @@ module.exports = function(grunt) {
         // Project configuration.
         pkg: grunt.file.readJSON('package.json'),
         eslint: {
-            options: { ext: '.js' },
-            /* Targets created programatically */
+            options: { extensions: ['.js', '.jsx'] },
+            components: ['src/components'],
+            /* More targets created programatically */
         },
         browserify: {
             vendor: {
@@ -57,6 +58,10 @@ module.exports = function(grunt) {
                 files: ['manifest.json.mustache'],
                 tasks: ['run:genManifest'],
             },
+            components: {
+                files: ['src/components/*.jsx'],
+                tasks: ['eslint:components']
+            },
             copy: {
                 files: ['css/**', 'images/**', 'html/**'],
                 tasks: ['copy'],
@@ -77,13 +82,13 @@ module.exports = function(grunt) {
         gruntConfig.browserify[name] = {
             src: [`src/${name}/*.js`],
             dest: `out/src/${name}.js`,
-            options: { 
+            options: {
                 external: dependencies,
                 transform: [['babelify', {presets: ['react']}]]
             },
         };
         gruntConfig.watch[name] = {
-            files: [`src/${name}/*.js`, 'src/components/*.jsx'],
+            files: [`src/${name}/**`, 'src/components/**'],
             tasks: [`eslint:${name}`, `browserify:${name}`]
         };
     }
@@ -97,7 +102,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-run');
     grunt.loadNpmTasks('grunt-zip');
 
-    grunt.registerTask('browserify-app', dirs.map(x => `browserify:${x}`));
+    grunt.registerTask('app', dirs.map(x => `browserify:${x}`));
     grunt.registerTask('generate', ['run:genConst', 'run:genManifest']);
     grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy', 'zip']);
 };
