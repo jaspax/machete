@@ -41,8 +41,7 @@ class DashboardHistoryButton extends React.Component {
             name={this.props.name}
             metric={this.props.metric}
             label={this.props.label}
-            data={this.props.data}
-            timestamps={this.props.timestamps}
+            loadData={this.props.loadData}
         />;
 
         return <span>
@@ -58,10 +57,9 @@ DashboardHistoryButton.chartClass = chartClass;
 DashboardHistoryButton.propTypes = {
     allowed: PropTypes.bool.isRequired,
     metric: PropTypes.string.isRequired,
-    timestamps: PropTypes.array.isRequired,
-    data: PropTypes.array.isRequired,
     label: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
+    loadData: PropTypes.func.isRequired,
 };
 
 

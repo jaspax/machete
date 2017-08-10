@@ -5,20 +5,24 @@ const PropTypes = require('prop-types');
 const loDataHref = chrome.runtime.getURL('html/low-data.html');
 
 class ThumbnailChart extends React.Component {
-    constructor(props) {
-        super(props);
+    render() {
+        // Initial render we are blank. After initial render we request data.
+        if (!(this.state && this.state.timestamps))
+            return null;
+
+        const props = this.props;
         this.id = props.metric + Date.now();
 
         this.series = {
-          x: props.timestamps,
-          y: props.data,
+          x: this.state.timestamps,
+          y: this.state.data,
           mode: 'lines+markers',
           name: props.metric,
           connectgaps: true
         };
 
         let height = 300;
-        if (props.timestamps.length < 3) {
+        if (this.series.x.length < 4) {
             height = 270; // leaving room for the lodata link
         }
 
@@ -28,13 +32,7 @@ class ThumbnailChart extends React.Component {
           height,
           margin: { l: 40, r: 20, b: 25, t: 60, pad: 4 },
         };
-    }
 
-    componentDidMount() {
-        Plotly.newPlot(this.id, [this.series], this.layout, {displayModeBar: false});
-    }
-
-    render() {
         let lodata = null;
         if (this.series.x.length < 4) {
             lodata = <p>
@@ -43,14 +41,26 @@ class ThumbnailChart extends React.Component {
         }
         return <div id={this.id}>{lodata}</div>;
     }
+
+    componentDidMount() {
+        // On first render, request the data, then update state
+        this.props.loadData(data => {
+            this.setState({ timestamps: data.timestamps, data: data[this.props.metric] });
+        });
+    }
+
+    componentDidUpdate() {
+        // After the state update triggered from componentDidMount, we
+        // actually draw the graph
+        Plotly.newPlot(this.id, [this.series], this.layout, {displayModeBar: false});
+    }
 }
 
 ThumbnailChart.propTypes = {
     metric: PropTypes.string.isRequired,
-    timestamps: PropTypes.array.isRequired,
-    data: PropTypes.array.isRequired,
     label: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
+    loadData: PropTypes.func.isRequired,
 };
 
 module.exports = ThumbnailChart;

@@ -44,41 +44,55 @@ $.ajax(templateUrl, {
 
 function addChartButtons(rows, allowedCampaigns) {
     for (let row of rows) {
-        if ($(row).attr('data-machete-ready'))
-            continue;
+        if ($(row).find(`.${DashboardHistoryButton.chartClass}`).length)
+            continue; 
 
         let cells = $(row).children();
         let link = $(cells[1]).find('a')[0];
         if (!link)
             continue;
 
-        $(row).attr('data-machete-ready', true);
-
         let name = cells[1].innerText;
         let href = link.href;
         let campaignId = common.getCampaignId(href);
         let allowed = allowedCampaigns.includes(campaignId);
 
-        getDataHistory(common.getEntityId(), campaignId, (data) => {
-            for (let chart of charts) {
-                let target = cells[chart.column];
-                if (!target)
-                    continue;
+        const campaignData = null;
+        const campaignMetrics = {};
+        for (let chart of charts) {
+            let target = cells[chart.column];
+            if (!target)
+                continue;
 
-                let chartData = common.parallelizeHistoryData(data, chart.config);
-                let btn = React.createElement(DashboardHistoryButton, {
-                    allowed,
-                    metric: chart.config.metric,
-                    timestamps: chartData.timestamps,
-                    data: chartData[chart.config.metric],
-                    label: chart.label,
-                    name,
+            const loadData = onComplete => {
+                if (!allowed)
+                    return onComplete([]);
+                if (campaignMetrics[chart.config.metric])
+                    return onComplete(campaignMetrics[chart.config.metric]);
+                if (campaignData) {
+                    let chartData = common.parallelizeHistoryData(campaignData, chart.config);
+                    campaignMetrics[chart.config.metric] = chartData;
+                    return onComplete(chartData);
+                }
+
+                return getDataHistory(common.getEntityId(), campaignId, (data) => {
+                    let chartData = common.parallelizeHistoryData(data, chart.config);
+                    campaignMetrics[chart.config.metric] = chartData;
+                    onComplete(chartData);
                 });
-                const container = $('<span></span>');
-                $(target).append(container);
-                ReactDOM.render(btn, container[0]);
-            }
-        });
+            };
+
+            let btn = React.createElement(DashboardHistoryButton, {
+                allowed,
+                metric: chart.config.metric,
+                label: chart.label,
+                name,
+                loadData,
+            });
+            const container = $('<span></span>');
+            $(target).append(container);
+            ReactDOM.render(btn, container[0]);
+        }
     }
 }
 
