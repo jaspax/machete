@@ -4,11 +4,7 @@ const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
-const HistoryChartPopup = require('../components/HistoryChartPopup.jsx');
-
-const chartPng = chrome.runtime.getURL('images/chart-16px.png');
-const chartClass = `machete-chart-btn`;
-const chartClassDisabled = `machete-chart-btn-disabled`;
+const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 
 const charts = [
     { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true} },
@@ -19,7 +15,7 @@ const charts = [
 ];
 
 chrome.runtime.sendMessage({
-    action: 'getAllowedCampaigns', 
+    action: 'getAllowedCampaigns',
     entityId: common.getEntityId(),
 },
 ga.mcatch(response => {
@@ -44,49 +40,41 @@ $.ajax(templateUrl, {
 
 function addChartButtons(rows, allowedCampaigns) {
     for (let row of rows) {
-        for (let chart of charts) {
-            let cells = $(row).children();
-            let target = cells[chart.column];
-            if (!target || $(target).find(`.${chartClass}`).length > 0)
-                continue;
+        if ($(row).attr('data-machete-ready'))
+            continue;
 
-            let link = $(cells[1]).find('a')[0];
-            if (!link)
-                continue;
+        let cells = $(row).children();
+        let link = $(cells[1]).find('a')[0];
+        if (!link)
+            continue;
 
-            let name = cells[1].innerText;
-            let href = link.href;
-            let campaignId = common.getCampaignId(href);
+        $(row).attr('data-machete-ready', true);
 
-            let btnClasses = chartClass;
-            let allowed = allowedCampaigns.includes(campaignId);
-            let eventCategory = 'thumbnail-enabled';
-            if (!allowed) {
-                btnClasses += ` ${chartClassDisabled}`;
-                eventCategory = 'thumbnail-disabled';
-            }
-            let btn = $(`<a href="#" class="${btnClasses}"><img src="${chartPng}" /></a>`);
+        let name = cells[1].innerText;
+        let href = link.href;
+        let campaignId = common.getCampaignId(href);
+        let allowed = allowedCampaigns.includes(campaignId);
 
-            btn.click(ga.mcatch(function() {
-                ga.mclick(eventCategory, chart.config.metric);
-                getDataHistory(common.getEntityId(), campaignId, (data) => {
-                    data = common.parallelizeHistoryData(data, chart.config);
-                    const historyChart = React.createElement(HistoryChartPopup, {
-                        allowed,
-                        anonymous: window.user.isAnon,
-                        anchor: btn[0],
-                        show: true,
-                        name,
-                        metric: chart.config.metric,
-                        label: chart.label,
-                        data: data[chart.config.metric],
-                        timestamps: data.timestamps,
-                    });
-                    ReactDOM.render(historyChart, btn[0]);
+        getDataHistory(common.getEntityId(), campaignId, (data) => {
+            for (let chart of charts) {
+                let target = cells[chart.column];
+                if (!target)
+                    continue;
+
+                let chartData = common.parallelizeHistoryData(data, chart.config);
+                let btn = React.createElement(DashboardHistoryButton, {
+                    allowed,
+                    metric: chart.config.metric,
+                    timestamps: chartData.timestamps,
+                    data: chartData[chart.config.metric],
+                    label: chart.label,
+                    name,
                 });
-            }));
-            $(target).append(btn);
-        }
+                const container = $('<span></span>');
+                $(target).append(container);
+                ReactDOM.render(btn, container[0]);
+            }
+        });
     }
 }
 

@@ -1,5 +1,3 @@
-const _ = require('lodash');
-
 const React = require('react');
 const PropTypes = require('prop-types');
 const Popup = require('./Popup.jsx');
@@ -7,14 +5,9 @@ const ThumbnailChart = require('./ThumbnailChart.jsx');
 const DataNotAvailable = require('./DataNotAvailable.jsx');
 
 class HistoryChartPopup extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = _.pick(props, ['allowed', 'anonymous', 'show']);
-    }
-
     render() {
         let content = null;
-        if (this.state.allowed) {
+        if (this.props.allowed) {
             content = <ThumbnailChart 
                 metric={this.props.metric} 
                 timestamps={this.props.timestamps} 
@@ -23,22 +16,23 @@ class HistoryChartPopup extends React.Component {
                 name={this.props.name} />;
         }
         else {
-            content = <DataNotAvailable anonymous={this.state.anonymous} />;
+            content = <DataNotAvailable anonymous={this.props.anonymous} />;
         }
 
-        return (
-            <Popup show={this.state.show} anchor={this.props.anchor}>
-                {content}
-            </Popup>
-        );
+        this.popup = <Popup anchorId={this.props.anchorId} show={this.props.show} onDismiss={this.props.onDismiss}>
+            {content}
+        </Popup>;
+
+        return this.popup;
     }
 }
 
 HistoryChartPopup.propTypes = {
-    anchor: PropTypes.object.isRequired,
+    anchorId: PropTypes.string.isRequired,
+    show: PropTypes.bool,
+    onDismiss: PropTypes.func,
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
-    show: PropTypes.bool,
     metric: PropTypes.string.isRequired,
     timestamps: PropTypes.array.isRequired,
     data: PropTypes.array.isRequired,

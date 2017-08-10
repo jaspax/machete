@@ -10,31 +10,32 @@ const ga = require('../common/ga.js');
 
 const width = 420;
 const gutter = 6;
+const dismissEvent = 'click.machete.popup-dismiss';
 
 class Popup extends React.Component {
-    constructor(props) {
-        super(props);
-        this.anchor = $(props.anchor);
-        this.state = { show: props.show };
-    }
-
     render() {
-        if (!this.state.show)
+        if (!this.props.show) {
+            $(document).off(dismissEvent);
             return null;
-
-        let anchorPos = this.anchor.position();
-        let pos = {top: anchorPos.top + this.anchor.height() + gutter, left: anchorPos.left};
-        if (anchorPos.left + width > $(document).width()) { 
-            pos = {top: anchorPos.top + this.anchor.height() + gutter, left: anchorPos.left + this.anchor.width() - width + gutter};
         }
 
-        // Clicking anywhere outside the popup dismisses the chart
+        const anchor = $('#'+this.props.anchorId);
+        let anchorPos = anchor.position();
+        let pos = {top: anchorPos.top + anchor.height() + gutter, left: anchorPos.left};
+        if (anchorPos.left + width > $(document).width()) { 
+            pos = {top: anchorPos.top + anchor.height() + gutter, left: anchorPos.left + anchor.width() - width + gutter};
+        }
+
+        // Clicking anywhere outside the popup dismisses the chart. We bind the
+        // event here, and unbind it when we're actually re-rendered with
+        // show=false.
         const self = this;
-        $(document).on('click.machete.popup-dismiss', ga.mcatch(function() {
+        $(document).on(dismissEvent, ga.mcatch(function() {
             if (!$.contains(self.popup, this)) { // eslint-disable-line no-invalid-this
                 ga.mga('event', 'popup', 'dismiss');
-                self.hide();
-                $(document).off('click.machete.popup-dismiss');
+                if (self.props.onDismiss) {
+                    self.props.onDismiss();
+                }
             }
         }));
 
@@ -56,19 +57,12 @@ class Popup extends React.Component {
             </div>
         );
     }
-
-    show() {
-        this.setState({show: true});
-    }
-
-    hide() {
-        this.setState({show: false});
-    }
 }
 
 Popup.propTypes = {
-    anchor: PropTypes.object.isRequired,
+    anchorId: PropTypes.string.isRequired,
     show: PropTypes.bool,
+    onDismiss: PropTypes.func.isRequired,
     children: PropTypes.node,
 };
 
