@@ -1,9 +1,10 @@
 const React = require('react');
 const Plotly = require('plotly.js');
+const PropTypes = require('prop-types');
 
-const loDataHref = chrome.runtime.getURL('html/low-data.html')
+const loDataHref = chrome.runtime.getURL('html/low-data.html');
 
-module.exports = class ThumbnailChart extends React.Component {
+class ThumbnailChart extends React.Component {
     constructor(props) {
         super(props);
         this.id = props.metric + Date.now();
@@ -34,9 +35,22 @@ module.exports = class ThumbnailChart extends React.Component {
     }
 
     render() {
-        const lodata = (this.series.x.length < 4
-            ? <p><a data-mclick="thumbnail-lodata" className="machete-lodata" target="_blank" href={loDataHref}>Why don't I see any data?</a></p>
-            : null);
-        return <div id={this.id}>{lodata}</div>
+        let lodata = null;
+        if (this.series.x.length < 4) {
+            lodata = <p>
+                <a data-mclick="thumbnail-lodata" className="machete-lodata" target="_blank" href={loDataHref}>Why don&rsquo;t I see any data?</a>
+            </p>;
+        }
+        return <div id={this.id}>{lodata}</div>;
     }
+}
+
+ThumbnailChart.propTypes = {
+    metric: PropTypes.string.isRequired,
+    timestamps: PropTypes.array.isRequired,
+    data: PropTypes.array.isRequired,
+    label: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
 };
+
+module.exports = ThumbnailChart;

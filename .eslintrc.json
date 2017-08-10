@@ -61,7 +61,7 @@
             "never"
         ],
         "consistent-return": "error",
-        "consistent-this": "error",
+        "consistent-this": ["error", "self"], 
         "curly": "off",
         "default-case": "error",
         "dot-location": [
@@ -276,6 +276,7 @@
         "yoda": [
             "error",
             "never"
-        ]
+        ],
+        "react/jsx-no-target-blank": "off"
     }
 }

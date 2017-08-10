@@ -1,4 +1,5 @@
 const React = require('react');
+const PropTypes = require('prop-types');
 const $ = require('jquery');
 const ga = require('../common/ga.js');
 
@@ -8,10 +9,9 @@ const ga = require('../common/ga.js');
  */
 
 const width = 420;
-const height = 320;
 const gutter = 6;
 
-module.exports = class Popup extends React.Component {
+class Popup extends React.Component {
     constructor(props) {
         super(props);
         this.anchor = $(props.anchor);
@@ -31,7 +31,7 @@ module.exports = class Popup extends React.Component {
         // Clicking anywhere outside the popup dismisses the chart
         const self = this;
         $(document).on('click.machete.popup-dismiss', ga.mcatch(function() {
-            if (!$.contains(self.popup, this)) {
+            if (!$.contains(self.popup, this)) { // eslint-disable-line no-invalid-this
                 ga.mga('event', 'popup', 'dismiss');
                 self.hide();
                 $(document).off('click.machete.popup-dismiss');
@@ -50,7 +50,7 @@ module.exports = class Popup extends React.Component {
 
         return (
             <div className="machete-popup" 
-              ref={ (popup) => { this.popup = popup; } }
+              ref={ (popup) => this.popup = popup }
               style={{ top: pos.top, left: pos.left }}>
                 {this.props.children}
             </div>
@@ -64,4 +64,12 @@ module.exports = class Popup extends React.Component {
     hide() {
         this.setState({show: false});
     }
+}
+
+Popup.propTypes = {
+    anchor: PropTypes.object.isRequired,
+    show: PropTypes.bool,
+    children: PropTypes.node,
 };
+
+module.exports = Popup;

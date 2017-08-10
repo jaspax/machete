@@ -1,4 +1,7 @@
-module.exports = function DataNotAvailable(props) {
+const React = require('react');
+const PropTypes = require('prop-types');
+
+function DataNotAvailable(props) {
     if (props.anonymous) {
         return (
             <div id="machete-chart-login-required">
@@ -22,4 +25,8 @@ module.exports = function DataNotAvailable(props) {
             target="_blank">Upgrade your account here</a>, then refresh this page.</p>
         </div>
     );
-};
+}
+
+DataNotAvailable.propTypes = { anonymous: PropTypes.bool.isRequired };
+
+module.exports = DataNotAvailable;
