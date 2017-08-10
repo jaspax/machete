@@ -3,16 +3,20 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
+const constants = require('../common/constants.gen.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 
+const tenDays = 10 * constants.timespan.day;
+const startTimestamp = Date.now() - tenDays;
 const charts = [
-    { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true} },
-    { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day', chunk: 'day', round: true} },
-    { column: 9, label: "Spend / day", config: {metric: 'spend', rate: 'day', chunk: 'day', round: false} },
-    { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day', chunk: 'day', round: false} },
-    { column: 11, label: "ACOS", config: {metric: 'acos', chunk: 'day', round: false} },
+    { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true, startTimestamp} },
+    { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day', chunk: 'day', round: true, startTimestamp} },
+    { column: 9, label: "Spend / day", config: {metric: 'spend', rate: 'day', chunk: 'day', round: false, startTimestamp} },
+    { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day', chunk: 'day', round: false, startTimestamp} },
+    { column: 11, label: "ACOS", config: {metric: 'acos', chunk: 'day', round: false, startTimestamp} },
 ];
+
 
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns',
