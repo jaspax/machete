@@ -38,9 +38,7 @@ class DashboardHistoryButton extends React.Component {
             anchorId={this.btnId}
             allowed={this.props.allowed}
             anonymous={window.user.isAnon}
-            name={this.props.name}
-            metric={this.props.metric}
-            label={this.props.label}
+            title={this.props.title}
             loadData={this.props.loadData}
         />;
 
@@ -57,8 +55,7 @@ DashboardHistoryButton.chartClass = chartClass;
 DashboardHistoryButton.propTypes = {
     allowed: PropTypes.bool.isRequired,
     metric: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
     loadData: PropTypes.func.isRequired,
 };
 

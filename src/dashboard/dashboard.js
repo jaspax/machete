@@ -52,7 +52,6 @@ function addChartButtons(rows, allowedCampaigns) {
         if (!link)
             continue;
 
-        let name = cells[1].innerText;
         let href = link.href;
         let campaignId = common.getCampaignId(href);
         let allowed = allowedCampaigns.includes(campaignId);
@@ -71,22 +70,21 @@ function addChartButtons(rows, allowedCampaigns) {
                     return onComplete(campaignMetrics[chart.config.metric]);
                 if (campaignData) {
                     let chartData = common.parallelizeHistoryData(campaignData, chart.config);
-                    campaignMetrics[chart.config.metric] = chartData;
-                    return onComplete(chartData);
+                    campaignMetrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
+                    return onComplete(campaignMetrics[chart.config.metric]);
                 }
 
                 return common.getCampaignHistory(common.getEntityId(), campaignId, (data) => {
                     let chartData = common.parallelizeHistoryData(data, chart.config);
-                    campaignMetrics[chart.config.metric] = chartData;
-                    onComplete(chartData);
+                    campaignMetrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
+                    onComplete(campaignMetrics[chart.config.metric]);
                 });
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
                 allowed,
                 metric: chart.config.metric,
-                label: chart.label,
-                name,
+                title: chart.label,
                 loadData,
             });
             const container = $('<span></span>');
@@ -94,5 +92,13 @@ function addChartButtons(rows, allowedCampaigns) {
             ReactDOM.render(btn, container[0]);
         }
     }
+}
+
+function formatParallelData(data, name) {
+    return { 
+        timestamps: data.timestamps, 
+        data: data[name], 
+        name,
+    };
 }
 
