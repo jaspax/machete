@@ -16,13 +16,13 @@ class CampaignDateRangeTable extends React.Component {
             impressions: endMetrics.impressions - startMetrics.impressions,
             clicks: endMetrics.clicks - startMetrics.clicks,
             avgCpc: endMetrics.avgCpc - startMetrics.avgCpc,
-            spendMetrics: endMetrics.spendMetrics - startMetrics.spendMetrics,
-            salesValue: endMetrics.salesValue - startMetrics.salesValue,
+            spend: endMetrics.spend- startMetrics.spend,
+            salesCount: endMetrics.salesCount - startMetrics.salesCount,
             acos: endMetrics.acos - startMetrics.acos,
         };
 
         return (
-            <table>
+            <table className="machete-metrics-table">
                 <thead>
                     <tr>
                         <th></th>
@@ -37,7 +37,7 @@ class CampaignDateRangeTable extends React.Component {
                 <tbody>
                     <CampaignDateRow date={this.props.startDate} onDateChange={this.startDateChange} metrics={startMetrics} />
                     <CampaignDateRow date={this.props.endDate} onDateChange={this.endDateChange} metrics={endMetrics} />
-                    <CampaignDateRow showDatePicker={false} metrics={diffMetrics} />
+                    <CampaignDateRow showDatePicker={false} firstColumnText="Change between dates" metrics={diffMetrics} />
                 </tbody>
             </table>
         );

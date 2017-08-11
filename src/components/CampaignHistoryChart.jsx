@@ -54,8 +54,8 @@ class CampaignHistoryChart extends React.Component {
 
     loadData(cb) {
         this.props.loadData(data => {
-            const impressionsData = common.parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions', round: true});
-            const clicksData = common.parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks', round: true});
+            const impressionsData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'impressions', round: true});
+            const clicksData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'clicks', round: true});
             const salesCountData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
 
             let series = [
@@ -98,9 +98,7 @@ class CampaignHistoryChart extends React.Component {
     }
 }
 
-CampaignHistoryChart.propTypes = {
-    loadData: PropTypes.func.isRequired,
-};
+CampaignHistoryChart.propTypes = { loadData: PropTypes.func.isRequired };
 
 module.exports = CampaignHistoryChart;
 
