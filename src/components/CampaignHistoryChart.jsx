@@ -99,7 +99,6 @@ class CampaignHistoryChart extends React.Component {
 }
 
 CampaignHistoryChart.propTypes = {
-    title: PropTypes.string.isRequired,
     loadData: PropTypes.func.isRequired,
 };
 

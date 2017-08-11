@@ -2,15 +2,13 @@ const $ = require('jquery');
 const Plotly = require('plotly.js');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const moment = require('moment');
 require('datatables.net')(window, $);
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
 
-const CampaignDateRangeTable = require('../components/CampaignDateRangeTable.jsx');
-const CampaignHistoryChart = require('../components/CampaignHistoryChart.jsx');
+const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
 
 const tabClass = `machete-tab`;
 const chartId = `machete-kwchart`;
@@ -190,34 +188,15 @@ function generateKeywordReports(entityId, adGroupId) {
     });
 }
 
-function generateHistoryReports(entityId) {
-    common.getCampaignHistory(entityId, common.getCampaignId(), (historyData) => {
-        renderHistoryRange(historyData);
+function generateHistoryReports(allowed, entityId, adGroupId, container) {
+    const campaignId = common.getCampaignId();
+    const downloadHref = `https://${constants.hostname}/api/data/${entityId}/${campaignId}/csv`;
+    let tabContent = React.createElement(CampaignHistoryTab, {
+        allowed,
+        downloadHref,
+        loadData: cb => common.getCampaignHistory(entityId, campaignId, cb),
     });
-    $('#machete-campaign-history-download')[0].href = `https://${constants.hostname}/api/data/${entityId}/${common.getCampaignId()}/csv`;
-}
-
-function renderHistoryRange(data) {
-    const first = data[0];
-    const last = data[data.length - 1];
-    let rangeTable = React.createElement(CampaignDateRangeTable, {
-        startDate: moment(first.timestamp),
-        startMetrics: first,
-        endDate: moment(last.timestamp),
-        endMetrics: last,
-        onRangeChange: () => console.log('range change')
-    });
-    ReactDOM.render(rangeTable, $('#machete-metrics-table')[0]);
-
-    renderHistoryChart(data);
-}
-
-function renderHistoryChart() {
-    let historyChart = React.createElement(CampaignHistoryChart, {
-        title: '',
-        loadData: cb => common.getCampaignHistory(common.getEntityId(), common.getCampaignId(), cb),
-    });
-    ReactDOM.render(historyChart, $('#machete-campaign-history-chart')[0]);
+    ReactDOM.render(tabContent, container[0]);
 }
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
@@ -289,7 +268,7 @@ function addCampaignTabs(tabs, campaignAllowed) {
                 }
 
                 if (tab.activate && adGroupId && !tab.hasActivated) {
-                    tab.activate(common.getEntityId(), adGroupId);
+                    tab.activate(campaignAllowed, common.getEntityId(), adGroupId, container);
                     tab.hasActivated = true;
                 }
             }));

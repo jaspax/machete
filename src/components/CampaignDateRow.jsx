@@ -13,9 +13,17 @@ class CampaignDateRow extends React.Component {
             : null;
 
         const metrics = this.props.metrics;
+
+        /* the bullshit css on this thing is necessary to make the date picker
+         * position properly
+         */
         return (
             <tr>
-                <td data-mclick="campaign-start-date">{datePicker}</td>
+                <td data-mclick="campaign-start-date" style={{maxWidth: '120px'}}>
+                    <div style={{display: 'block', position: 'relative', width: '300px'}}>
+                        {datePicker}
+                    </div>
+                </td>
                 <td><span className="a-size-small metricValue">{metrics.impressions}</span></td>
                 <td><span className="a-size-small metricValue">{metrics.clicks}</span></td>
                 <td><span className="a-size-small metricValue">{metrics.avgCpc}</span></td>
