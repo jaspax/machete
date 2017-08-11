@@ -87,9 +87,13 @@ module.exports = function(grunt) {
                 transform: [['babelify', {presets: ['react']}]]
             },
         };
+        gruntConfig.watch[`${name}-eslint`] = {
+            files: [`src/${name}/**`],
+            tasks: [`eslint:${name}`]
+        };
         gruntConfig.watch[name] = {
             files: [`src/${name}/**`, 'src/components/**'],
-            tasks: [`eslint:${name}`, `browserify:${name}`]
+            tasks: [`browserify:${name}`]
         };
     }
     
