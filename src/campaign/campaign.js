@@ -210,7 +210,7 @@ function generateHistoryReports(entityId) {
         format: 'ddd MMM DD YYYY',
         onSelect: selectHandler,
     });
-    getCampaignHistory(entityId, common.getCampaignId(), (historyData) => {
+    common.getCampaignHistory(entityId, common.getCampaignId(), (historyData) => {
         $('.loading-large').hide();
         data = historyData.sort((a, b) => a.timestamp - b.timestamp);
         dayStart.setDate(new Date(data[0].timestamp), true);
@@ -502,21 +502,6 @@ function renderImpressionsHistogram(data) {
     Plotly.plot('machete-impressions-histo', [chartData], {height: 400, width: 400, showlegend: false});
 }
 */
-
-function getCampaignHistory(entityId, campaignId, cb) {
-    chrome.runtime.sendMessage({
-        action: 'getDataHistory',
-        entityId: entityId,
-        campaignId: campaignId,
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            return;
-        }
-        cb(response.data);
-    }));
-}
 
 function getKeywordData(entityId, adGroupId, cb) {
     chrome.runtime.sendMessage({

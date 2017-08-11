@@ -130,6 +130,21 @@ function parallelizeHistoryData(data, opt) {
     return c;
 }
 
+function getCampaignHistory(entityId, campaignId, cb) {
+    chrome.runtime.sendMessage({
+        action: 'getDataHistory',
+        entityId: entityId,
+        campaignId: campaignId,
+    },
+    ga.mcatch(response => {
+        if (response.error) {
+            ga.merror(response.status, response.error);
+            return;
+        }
+        cb(response.data);
+    }));
+}
+
 if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
@@ -181,5 +196,6 @@ module.exports = {
     getQueryArgs,
     moneyFmt,
     pctFmt,
+    getCampaignHistory,
     parallelizeHistoryData,
 };

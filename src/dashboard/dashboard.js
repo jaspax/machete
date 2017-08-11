@@ -75,7 +75,7 @@ function addChartButtons(rows, allowedCampaigns) {
                     return onComplete(chartData);
                 }
 
-                return getDataHistory(common.getEntityId(), campaignId, (data) => {
+                return common.getCampaignHistory(common.getEntityId(), campaignId, (data) => {
                     let chartData = common.parallelizeHistoryData(data, chart.config);
                     campaignMetrics[chart.config.metric] = chartData;
                     onComplete(chartData);
@@ -96,17 +96,3 @@ function addChartButtons(rows, allowedCampaigns) {
     }
 }
 
-function getDataHistory(entityId, campaignId, cb) {
-    chrome.runtime.sendMessage({
-        action: 'getDataHistory',
-        entityId: entityId,
-        campaignId: campaignId,
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            return;
-        }
-        cb(response.data);
-    }));
-}
