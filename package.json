@@ -21,10 +21,10 @@
     "jquery": "^3.2.1",
     "locale": "^0.1.0",
     "moment": "^2.18.1",
-    "pikaday": "^1.6.1",
     "plotly.js": "^1.29.3",
     "prop-types": "^15.5.10",
     "react": "^15.6.1",
+    "react-datepicker": "^0.52.0",
     "react-dom": "^15.6.1"
   },
   "devDependencies": {

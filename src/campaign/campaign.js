@@ -2,13 +2,14 @@ const $ = require('jquery');
 const Plotly = require('plotly.js');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const Pikaday = require('pikaday');
+const moment = require('moment');
 require('datatables.net')(window, $);
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
 
+const CampaignDateRangeTable = require('../components/CampaignDateRangeTable.jsx');
 const CampaignHistoryChart = require('../components/CampaignHistoryChart.jsx');
 
 const tabClass = `machete-tab`;
@@ -190,36 +191,8 @@ function generateKeywordReports(entityId, adGroupId) {
 }
 
 function generateHistoryReports(entityId) {
-    $('.loading-large').show();
-    let data = null;
-    let dayStart = null;
-    let dayEnd = null;
-    let selectHandler = () => {
-        if (!data)
-            return;
-        const start = dayStart.getDate().getTime();
-        const end = dayEnd.getMoment().endOf('day').toDate().getTime();
-        window.setTimeout(() => {
-            const filtered = data.filter(x => x.timestamp >= start && x.timestamp <= end);
-            renderHistoryRange(filtered);
-        }, 50);
-    };
-    dayStart = new Pikaday({ 
-        field: $('#campaign-start-date')[0],
-        format: 'ddd MMM DD YYYY',
-        onSelect: selectHandler,
-    });
-    dayEnd = new Pikaday({ 
-        field: $('#campaign-end-date')[0],
-        format: 'ddd MMM DD YYYY',
-        onSelect: selectHandler,
-    });
     common.getCampaignHistory(entityId, common.getCampaignId(), (historyData) => {
-        $('.loading-large').hide();
-        data = historyData.sort((a, b) => a.timestamp - b.timestamp);
-        dayStart.setDate(new Date(data[0].timestamp), true);
-        dayEnd.setDate(new Date(data[data.length - 1].timestamp), true);
-        renderHistoryRange(data);
+        renderHistoryRange(historyData);
     });
     $('#machete-campaign-history-download')[0].href = `https://${constants.hostname}/api/data/${entityId}/${common.getCampaignId()}/csv`;
 }
@@ -227,28 +200,16 @@ function generateHistoryReports(entityId) {
 function renderHistoryRange(data) {
     const first = data[0];
     const last = data[data.length - 1];
-    renderMetricRow(first, '#machete-history-start-row');
-    renderMetricRow(last, '#machete-history-end-row');
-    renderMetricRow({
-        impressions: last.impressions - first.impressions,
-        clicks: last.clicks - first.clicks,
-        avgCpc: last.avgCpc - first.avgCpc,
-        spend: last.spend - first.spend,
-        salesValue: last.salesValue - first.salesValue,
-        acos: last.acos - first.acos,
-    }, '#machete-history-diff-row');
-    renderHistoryChart(data);
-}
+    let rangeTable = React.createElement(CampaignDateRangeTable, {
+        startDate: moment(first.timestamp),
+        startMetrics: first,
+        endDate: moment(last.timestamp),
+        endMetrics: last,
+        onRangeChange: () => console.log('range change')
+    });
+    ReactDOM.render(rangeTable, $('#machete-metrics-table')[0]);
 
-function renderMetricRow(rowData, targetSelector) {
-    let row = $(targetSelector);
-    row.find('.impressions .metricValue').text(rowData.impressions);
-    row.find('.clicks .metricValue').text(rowData.clicks);
-    row.find('.avgCpc .metricValue').text(common.moneyFmt(rowData.avgCpc));
-    row.find('.spend .metricValue').text(common.moneyFmt(rowData.spend));
-    row.find('.sales .metricValue').text(common.moneyFmt(rowData.salesValue));
-    row.find('.acos .metricValue').text(common.pctFmt(rowData.acos));
-    return row;
+    renderHistoryChart(data);
 }
 
 function renderHistoryChart() {

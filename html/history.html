@@ -23,7 +23,6 @@
         </div>
 
         <h1>Campaign History</h1>
-        <div class="loading-large"></div>
         <div id="machete-campaign-history-download-container">
             <span class="a-button">
                 <span class="a-button-inner">
@@ -34,48 +33,8 @@
                 </span>
             </span>
         </div>
-        <table class="machete-metrics-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Impressions</th>
-                    <th>Clicks</th>
-                    <th>Average CPC</th>
-                    <th>Spend</th>
-                    <th>Sales</th>
-                    <th>ACOS</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr id="machete-history-start-row">
-                    <td><input data-mclick="campaign-start-date" type="text" class="machete-date-input-small" id="campaign-start-date" /></td>
-                    <td class="impressions"><span class="a-size-small metricValue"></span></td>
-                    <td class="clicks"><span class="a-size-small metricValue"></span></td>
-                    <td class="avgCpc"><span class="a-size-small metricValue"></span></td>
-                    <td class="spend"><span class="a-size-small metricValue"></span></td>
-                    <td class="sales"><span class="a-size-small metricValue"></span></td>
-                    <td class="acos"><span class="a-size-small metricValue"></span></td>
-                </tr>
-                <tr id="machete-history-end-row">
-                    <td><input data-mclick="campaign-start-date" type="text" class="machete-date-input-small" id="campaign-end-date" /></td>
-                    <td class="impressions"><span class="a-size-small metricValue"></span></td>
-                    <td class="clicks"><span class="a-size-small metricValue"></span></td>
-                    <td class="avgCpc"><span class="a-size-small metricValue"></span></td>
-                    <td class="spend"><span class="a-size-small metricValue"></span></td>
-                    <td class="sales"><span class="a-size-small metricValue"></span></td>
-                    <td class="acos"><span class="a-size-small metricValue"></span></td>
-                </tr>
-                <tr id="machete-history-diff-row">
-                    <td><b>Change</b></td>
-                    <td class="impressions"><span class="a-size-small metricValue"></span></td>
-                    <td class="clicks"><span class="a-size-small metricValue"></span></td>
-                    <td class="avgCpc"><span class="a-size-small metricValue"></span></td>
-                    <td class="spend"><span class="a-size-small metricValue"></span></td>
-                    <td class="sales"><span class="a-size-small metricValue"></span></td>
-                    <td class="acos"><span class="a-size-small metricValue"></span></td>
-                </tr>
-            </tbody>
-        </table>
+        <div id="machete-metrics-table">
+        </div>
         <div data-mclick="campaign-history-chart" id="machete-campaign-history-chart">
         </div>
         <div class="machete-explanation">
