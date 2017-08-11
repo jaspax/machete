@@ -1,11 +1,15 @@
 const $ = require('jquery');
 const Plotly = require('plotly.js');
+const React = require('react');
+const ReactDOM = require('react-dom');
 const Pikaday = require('pikaday');
 require('datatables.net')(window, $);
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
+
+const CampaignHistoryChart = require('../components/CampaignHistoryChart.jsx');
 
 const tabClass = `machete-tab`;
 const chartId = `machete-kwchart`;
@@ -247,85 +251,12 @@ function renderMetricRow(rowData, targetSelector) {
     return row;
 }
 
-function renderHistoryChart(data) {
-    let impressionsData = common.parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'impressions', round: true});
-    let maxImpressions = Math.max.apply(null, impressionsData.impressions);
-
-    let clicksData = common.parallelizeHistoryData(data, {rate: 'hour', chunk: 'hour', metric: 'clicks', round: true});
-    let maxClicks = Math.max.apply(null, clicksData.clicks);
-
-    let salesCountData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
-    let maxSales = Math.max.apply(null, salesCountData.salesCount);
-
-    let series = [
-        {
-          x: impressionsData.timestamps,
-          y: impressionsData.impressions,
-          mode: 'lines',
-          fill: 'tozeroy',
-          name: 'Impressions',
-          yaxis: 'y',
-          connectgaps: true,
-        },
-        {
-          x: clicksData.timestamps,
-          y: clicksData.clicks,
-          mode: 'lines',
-          line: { dash: 'dot', width: 2 },
-          name: 'Clicks',
-          yaxis: 'y2',
-          connectgaps: true,
-        },
-        {
-          x: salesCountData.timestamps,
-          y: salesCountData.salesCount,
-          mode: 'lines',
-          name: 'Sales',
-          yaxis: 'y3',
-          connectgaps: true,
-        },
-    ];
-
-    var layout = {
-      width: 800,
-      height: 600,
-      margin: { l: 20, b: 40, t: 20, r: 20 },
-      legend: {x: 0, y: 1},
-      xaxis: {
-          autorange: true,
-          showgrid: true,
-          zeroline: false,
-          showline: false,
-          autotick: true,
-          showticklabels: true
-      },
-      yaxis: { // impressions
-        range: [0, maxImpressions * 1.1],
-        showgrid: false,
-        zeroline: true,
-        showline: true,
-        showticklabels: false,
-      },
-      yaxis2: { // clicks
-        range: [0, maxClicks * 1.5],
-        showgrid: false,
-        zeroline: true,
-        showline: true,
-        showticklabels: false,
-        overlaying: 'y',
-      },
-      yaxis3: { // sales
-        range: [0, maxSales * 2],
-        showgrid: false,
-        zeroline: true,
-        showline: true,
-        showticklabels: false,
-        overlaying: 'y',
-      },
-    };
-
-    let historyChartId = 'machete-campaign-history-chart';
-    Plotly.newPlot(historyChartId, series, layout);
+function renderHistoryChart() {
+    let historyChart = React.createElement(CampaignHistoryChart, {
+        title: '',
+        loadData: cb => common.getCampaignHistory(common.getEntityId(), common.getCampaignId(), cb),
+    });
+    ReactDOM.render(historyChart, $('#machete-campaign-history-chart')[0]);
 }
 
 function updateKeyword(keywordIdList, operation, dataValues, cb) {

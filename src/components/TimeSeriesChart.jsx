@@ -39,20 +39,24 @@ class TimeSeriesChart extends React.Component {
             return <div id={this.id} style={containerStyle} className="loading-large"></div>;
         }
 
-        this.series = this.state.data.map(series => ({
-          x: series.timestamps,
-          y: series.data,
-          mode: 'lines+markers',
-          name: series.name,
-          connectgaps: true
-        }));
+        this.series = this.state.data.map(series => Object.assign(
+            {
+                x: series.timestamps,
+                y: series.data,
+                name: series.name,
+                mode: 'lines+markers',
+                connectgaps: true
+            }, 
+            series.options));
 
-        this.layout = {
-          title: this.props.title,
-          width: this.props.width,
-          height: this.props.height,
-          margin: { l: 40, r: 20, b: 20, t: 40, pad: 4 },
-        };
+        this.layout = Object.assign(
+            {
+                title: this.props.title,
+                width: this.props.width,
+                height: this.props.height,
+                margin: { l: 40, r: 20, b: 20, t: 40, pad: 4 },
+            },
+            this.props.layout);
 
         return <div id={this.id} style={containerStyle}></div>;
     }
@@ -77,11 +81,13 @@ TimeSeriesChart.propTypes = {
     loadData: PropTypes.func.isRequired,
     title: PropTypes.string,
     displayModeBar: PropTypes.bool,
+    layout: PropTypes.object,
 };
 
 TimeSeriesChart.defaultProps = {
     displayModeBar: true,
     title: '',
+    layout: {},
 };
 
 module.exports = TimeSeriesChart;
