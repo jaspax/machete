@@ -79,9 +79,9 @@ function parallelizeHistoryData(data, opt) {
         item = Object.assign({}, item);
 
         if (opt.chunk) {
-            // Round off all time values to their nearest chunk
+            // Round off all time values to their nearest chunk and skip values
+            // within the same chunk
             item.timestamp -= item.timestamp % constants.timespan[opt.chunk];
-
             if (lastItem && !(item.timestamp - lastItem.timestamp))
                 continue;
         }
@@ -95,11 +95,11 @@ function parallelizeHistoryData(data, opt) {
             continue;
         }
 
-        // Skip this data point unless one of our metrics actually increased.
+        // Skip this data point unless one of our metrics actually changed.
         // (It's possible for frequently-sampled data to occasionally go down,
         // even though logically that's impossible, due to weirdness in Amazon's
         // backend.)
-        if (lastItem && !metrics.some(metric => item[metric] > lastItem[metric])) {
+        if (lastItem && !metrics.some(metric => item[metric] != lastItem[metric])) {
             continue;
         }
 
