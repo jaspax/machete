@@ -48,6 +48,7 @@ module.exports = function(grunt) {
             css: { expand: true, src: 'css/**', dest: 'out/', },
             img: { expand: true, src: 'images/**', dest: 'out/', },
             html: { expand: true, src: 'html/**', dest: 'out/', },
+            datepicker: { src: 'node_modules/react-datepicker/dist/react-datepicker.css', dest: 'out/css/datepicker.css' },
         },
         watch: {
             genConst: {
