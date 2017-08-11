@@ -4,7 +4,7 @@ const PropTypes = require('prop-types');
 function DataNotAvailable(props) {
     if (props.anonymous) {
         return (
-            <div id="machete-chart-login-required">
+            <div className="machete-login-required">
                 <p>You are not logged in to Machete, and reports for this campaign are
                 not available to anonymous users.</p>
                 
@@ -17,7 +17,7 @@ function DataNotAvailable(props) {
         );
     }
     return (
-        <div id="machete-chart-upgrade-required">
+        <div className="machete-upgrade-required">
             <p>Reports for this campaign are not available under your current
             subscription.</p>
             
