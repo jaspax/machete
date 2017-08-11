@@ -36,9 +36,7 @@ class TimeSeriesChart extends React.Component {
 
         // Initial render we just show the spinner. After initial render we request data.
         if (!(this.state && this.state.data)) {
-            return <div id={this.id} style={containerStyle}>
-                <div className="loading-large"></div>
-            </div>;
+            return <div id={this.id} style={containerStyle} className="loading-large"></div>;
         }
 
         this.series = this.state.data.map(series => ({
