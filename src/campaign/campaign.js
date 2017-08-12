@@ -1,5 +1,4 @@
 const $ = require('jquery');
-const Plotly = require('plotly.js');
 const React = require('react');
 const ReactDOM = require('react-dom');
 require('datatables.net')(window, $);
@@ -9,9 +8,9 @@ const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
 
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
+const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
 
 const tabClass = `machete-tab`;
-const chartId = `machete-kwchart`;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
@@ -64,22 +63,27 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
     window.clearInterval(metadataInterval);
 }), 100);
 
-function generateKeywordReports(entityId, adGroupId) {
-    // Show all of the loading indicators
-    $('.loading-large').show();
-    $('.loading-small').show();
+function generateKeywordReports(allowed, entityId, adGroupId, container) {
+    const chart = React.createElement(KeywordAnalyticsTab, {
+        allowed,
+        loading: true,
+        keywordData: [],
+    });
+    ReactDOM.render(chart, container[0]);
 
     getKeywordData(entityId, adGroupId, (data) => {
-        // Hide all of the loading indicators
-        $('.loading-large').hide();
-        $('.loading-small').hide();
-
         let enabledKws = data.filter(kw => kw.enabled);
         if (enabledKws.length == 0) {
             return;
         }
 
-        renderKeywordChart(transformKeywordData(enabledKws), {});
+        const chart = React.createElement(KeywordAnalyticsTab, {
+            allowed,
+            loading: false,
+            keywordData: transformKeywordData(enabledKws),
+        });
+        ReactDOM.render(chart, container[0]);
+
         /* TODO: excluding these until we decide if/when they're actually useful
         renderSpendPieChart(enabledKws);
         renderClicksHistogram(enabledKws);
@@ -437,34 +441,6 @@ function transformKeywordData(data) {
     }
 
     return kws;
-}
-
-function renderKeywordChart(kws) {
-    let chartData = {
-        mode: 'markers',
-        x: kws.impressions,
-        y: kws.clicks,
-        text: kws.kw.map((kw, i) =>
-            `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${common.moneyFmt(kws.avgCpc[i])}<br />ACOS: ${common.pctFmt(kws.acos[i])}`),
-        hoverinfo: 'text',
-        marker: {
-            sizemode: 'area',
-            sizeref: Math.max.apply(null, kws.spend) / 2000,
-            size: kws.spend,
-            color: kws.acos,
-            colorscale: [[0, 'rgb(0, 255, 0)'], [0.5, 'rgb(255, 255, 0)'], [1, 'rgb(255, 0, 0)']],
-        },
-    };
-    let layout = {
-        xaxis: {title: 'Impressions'},
-        yaxis: {title: 'Clicks'},
-        margin: { l: 40, r: 20, b: 40, t: 20, pad: 4 },
-        height: 600,
-        width: $('#'+chartId).width(),
-        hovermode: 'closest',
-        showlegend: false,
-    };
-    Plotly.newPlot(chartId, [chartData], layout, {showLink: false});
 }
 
 function renderKeywordTable(data, opts) {
