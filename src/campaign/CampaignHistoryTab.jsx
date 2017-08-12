@@ -4,8 +4,8 @@ const moment = require('moment');
 
 const CampaignDateRangeTable = require('./CampaignDateRangeTable.jsx');
 const CampaignHistoryChart = require('./CampaignHistoryChart.jsx');
-const DataNotAvailable = require('./DataNotAvailable.jsx');
-const DownloadButton = require('./DownloadButton.jsx');
+const DataNotAvailable = require('../components/DataNotAvailable.jsx');
+const DownloadButton = require('../components/DownloadButton.jsx');
 
 class CampaignHistoryTab extends React.Component {
     constructor(props) {

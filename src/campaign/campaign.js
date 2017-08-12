@@ -7,8 +7,8 @@ const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
 
-const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
-const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
+const CampaignHistoryTab = require('./CampaignHistoryTab.jsx');
+const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');
 
 const tabClass = `machete-tab`;
 
@@ -64,11 +64,7 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
 }), 100);
 
 function generateKeywordReports(allowed, entityId, adGroupId, container) {
-    const chart = React.createElement(KeywordAnalyticsTab, {
-        allowed,
-        loading: true,
-        keywordData: [],
-    });
+    const chart = React.createElement(KeywordAnalyticsTab, { allowed, loading: true });
     ReactDOM.render(chart, container[0]);
 
     getKeywordData(entityId, adGroupId, (data) => {

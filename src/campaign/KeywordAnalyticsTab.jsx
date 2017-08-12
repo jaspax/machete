@@ -1,6 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const DataNotAvailable = require('./DataNotAvailable.jsx');
+const DataNotAvailable = require('../components/DataNotAvailable.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
 
 class KeywordAnalyticsTab extends React.Component {
@@ -44,7 +44,7 @@ class KeywordAnalyticsTab extends React.Component {
 KeywordAnalyticsTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
-    keywordData: PropTypes.array.isRequired,
+    keywordData: PropTypes.array,
 };
 
 module.exports = KeywordAnalyticsTab;

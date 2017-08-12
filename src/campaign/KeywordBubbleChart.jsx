@@ -71,7 +71,7 @@ KeywordBubbleChart.propTypes = {
     loading: PropTypes.bool.isRequired,
     width: PropTypes.number.isRequired,
     height: PropTypes.number.isRequired,
-    keywordData: PropTypes.array,
+    keywordData: PropTypes.object,
 };
 
 module.exports = KeywordBubbleChart;
