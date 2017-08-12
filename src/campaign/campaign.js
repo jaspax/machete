@@ -69,16 +69,6 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
 
     getKeywordData(entityId, adGroupId, (data) => {
         let enabledKws = data.filter(kw => kw.enabled);
-        if (enabledKws.length == 0) {
-            return;
-        }
-
-        const chart = React.createElement(KeywordAnalyticsTab, {
-            allowed,
-            loading: false,
-            keywordData: transformKeywordData(enabledKws),
-        });
-        ReactDOM.render(chart, container[0]);
 
         /* TODO: excluding these until we decide if/when they're actually useful
         renderSpendPieChart(enabledKws);
@@ -167,16 +157,16 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
             formatFn: common.moneyFmt,
         }];
 
-        const renderFn = () => {
-            let tableOpt = kwTables.shift();
-            if (tableOpt) {
-                renderKeywordTable(enabledKws, tableOpt);
-                window.setTimeout(renderFn, 25);
-            }
-        };
-        window.setTimeout(renderFn, 25);
+        const chart = React.createElement(KeywordAnalyticsTab, {
+            allowed,
+            loading: false,
+            keywordData: enabledKws,
+            keywordTables: kwTables,
+        });
+        ReactDOM.render(chart, container[0]);
 
         // This is the only one that uses disabled keywords, do it synchronous
+        /*
         renderKeywordTable(data, {
             selector: '#machete-paused',
             columnTitle: 'ACOS',
@@ -185,6 +175,7 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
             metricFn: (x) => x.acos,
             formatFn: common.pctFmt,
         });
+        */
     });
 }
 
@@ -414,29 +405,6 @@ function getKeywordData(entityId, adGroupId, cb) {
             }));
         }));
     }));
-}
-
-function transformKeywordData(data) {
-    let kws = {
-        kw: [],
-        impressions: [],
-        spend: [],
-        sales: [],
-        clicks: [],
-        acos: [],
-        avgCpc: [],
-    };
-    for (let k of data) {
-        kws.kw.push(k.keyword);
-        kws.impressions.push(k.impressions);
-        kws.clicks.push(k.clicks);
-        kws.spend.push(k.spend);
-        kws.sales.push(k.sales);
-        kws.acos.push(k.acos);
-        kws.avgCpc.push(k.avgCpc);
-    }
-
-    return kws;
 }
 
 function renderKeywordTable(data, opts) {

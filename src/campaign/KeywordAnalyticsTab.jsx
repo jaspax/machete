@@ -2,17 +2,27 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const DataNotAvailable = require('../components/DataNotAvailable.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
+const KeywordTable = require('./KeywordTable.jsx');
 
 class KeywordAnalyticsTab extends React.Component {
     render() {
         let body = null;
         if (this.props.allowed) {
+            const renderedTables = this.props.keywordTables.map(table => {
+                const tableData = this.props.keywordData.filter(table.filterFn ? table.filterFn : () => true);
+                const formatter = x => table.formatFn(table.metricFn(x));
+                return <KeywordTable
+                    key={table.selector}
+                    data={tableData}
+                    metric={formatter}
+                    title={table.columnTitle} />;
+            });
             body = <div className="a-box-inner">
                 <section>
                     <h1>Keyword Performance</h1>
                     <KeywordBubbleChart 
                         width={800} height={600}
-                        loading={this.props.loading} keywordData={this.props.keywordData} />
+                        loading={this.props.loading} keywordData={transformKeywordData(this.props.keywordData)} />
                     <div className="machete-explanation">
                         <h3 id="machete-explanation-title">Understanding this chart</h3>
                         <p><b>X-axis</b>: number of impressions</p>
@@ -23,7 +33,7 @@ class KeywordAnalyticsTab extends React.Component {
                     </div>
                 </section>
                 <section>
-                    Phat tables.
+                    {renderedTables}
                 </section>
             </div>;
         }
@@ -41,10 +51,40 @@ class KeywordAnalyticsTab extends React.Component {
     }
 }
 
+function transformKeywordData(data) {
+    let kws = {
+        kw: [],
+        impressions: [],
+        spend: [],
+        sales: [],
+        clicks: [],
+        acos: [],
+        avgCpc: [],
+    };
+    for (let k of data) {
+        kws.kw.push(k.keyword);
+        kws.impressions.push(k.impressions);
+        kws.clicks.push(k.clicks);
+        kws.spend.push(k.spend);
+        kws.sales.push(k.sales);
+        kws.acos.push(k.acos);
+        kws.avgCpc.push(k.avgCpc);
+    }
+
+    return kws;
+}
+
+
 KeywordAnalyticsTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
+    keywordTables: PropTypes.array,
+};
+
+KeywordAnalyticsTab.defaultProps = {
+    keywordData: [],
+    keywordTables: [],
 };
 
 module.exports = KeywordAnalyticsTab;
