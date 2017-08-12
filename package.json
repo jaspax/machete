@@ -25,7 +25,8 @@
     "prop-types": "^15.5.10",
     "react": "^15.6.1",
     "react-datepicker": "^0.52.0",
-    "react-dom": "^15.6.1"
+    "react-dom": "^15.6.1",
+    "react-table": "^6.5.3"
   },
   "devDependencies": {
     "babel-preset-react": "^6.24.1",
