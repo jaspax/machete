@@ -91,11 +91,7 @@ module.exports = function(grunt) {
         };
         gruntConfig.watch[`${name}-eslint`] = {
             files: [`src/${name}/**`],
-            tasks: [`eslint:${name}`]
-        };
-        gruntConfig.watch[name] = {
-            files: [`src/${name}/**`, 'src/components/**'],
-            tasks: [`browserify:${name}`]
+            tasks: [`eslint:${name}`, `browserify:${name}`]
         };
     }
     
