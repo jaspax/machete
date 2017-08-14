@@ -8,23 +8,25 @@ class KeywordAnalyticsTab extends React.Component {
     render() {
         let body = null;
         if (this.props.allowed) {
-            const renderedTables = this.props.keywordTables.map(table => {
+            const keywordMapper = table => {
                 const tableData = this.props.keywordData.filter(table.filterFn ? table.filterFn : () => true);
 
-                // TODO: separate title from column title
-
                 return <KeywordReport
-                    key={table.selector}
+                    key={table.title}
+                    title={table.title}
                     data={tableData}
                     sort={table.order}
                     metric={table.metricFn}
                     formatter={table.formatFn}
-                    title={table.columnTitle}
                     columnTitle={table.columnTitle}
                     onKeywordEnabledChange={this.props.onKeywordEnabledChange}
                     onKeywordBidChange={this.props.onKeywordBidChange}
                 />;
-            });
+            };
+
+            const bestTables = this.props.bestKeywordTables.map(keywordMapper);
+            const worstTables = this.props.worstKeywordTables.map(keywordMapper);
+
             body = <div className="a-box-inner">
                 <section>
                     <h1>Keyword Performance</h1>
@@ -41,7 +43,12 @@ class KeywordAnalyticsTab extends React.Component {
                     </div>
                 </section>
                 <section>
-                    {renderedTables}
+                    <h1>Underperforming keywords</h1>
+                    {worstTables}
+                </section>
+                <section>
+                    <h1>Overperforming keywords</h1>
+                    {bestTables}
                 </section>
             </div>;
         }
@@ -69,7 +76,7 @@ function transformKeywordData(data) {
         acos: [],
         avgCpc: [],
     };
-    for (let k of data) {
+    for (let k of data.filter(kw => kw.enabled)) {
         kws.kw.push(k.keyword);
         kws.impressions.push(k.impressions);
         kws.clicks.push(k.clicks);
@@ -87,14 +94,16 @@ KeywordAnalyticsTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
-    keywordTables: PropTypes.array,
+    bestKeywordTables: PropTypes.array,
+    worstKeywordTables: PropTypes.array,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
 };
 
 KeywordAnalyticsTab.defaultProps = {
     keywordData: [],
-    keywordTables: [],
+    bestKeywordTables: [],
+    worstKeywordTables: [],
 };
 
 module.exports = KeywordAnalyticsTab;

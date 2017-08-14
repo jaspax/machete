@@ -73,30 +73,28 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
     ReactDOM.render(chart, container[0]);
 
     getKeywordData(entityId, adGroupId, (data) => {
-        let enabledKws = data.filter(kw => kw.enabled);
-
         /* TODO: excluding these until we decide if/when they're actually useful
-        renderSpendPieChart(enabledKws);
-        renderClicksHistogram(enabledKws);
-        renderImpressionsHistogram(enabledKws);
+        renderSpendPieChart(data);
+        renderClicksHistogram(data);
+        renderImpressionsHistogram(data);
         */
 
         // We often don't want to display data for points with very low numbers
         // of impressions, so we set a "minimum meaningful impressions" value at
         // 10% of what would be the value if all keywords had the same number of
         // impressions.
-        let totalImpressions = enabledKws.reduce((acc, val) => acc + val.impressions, 0);
-        let minImpressions = totalImpressions / (enabledKws.length * 10);
+        let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
+        let minImpressions = totalImpressions / (data.length * 10);
 
         // Calculate these two derived metrics once, because we use them
         // multiple times below
-        for (let kw of enabledKws) {
+        for (let kw of data) {
             kw.hasEnoughImpressions = kw.clicks && kw.impressions > minImpressions;
             kw.clickRatio = kw.clicks/kw.impressions;
         }
 
-        let salesTopQuartile = enabledKws.sort((a, b) => b.sales - a.sales)[Math.round(enabledKws.length / 4)];
-        let clickRatioSort = enabledKws.filter(x => x.hasEnoughImpressions).sort((a, b) => a.clickRatio - b.clickRatio);
+        let salesTopQuartile = data.sort((a, b) => b.sales - a.sales)[Math.round(data.length / 4)];
+        let clickRatioSort = data.filter(x => x.hasEnoughImpressions).sort((a, b) => a.clickRatio - b.clickRatio);
         let clickRatioBottomQuartile = 0;
         let clickRatioTopQuartile = 0;
         if (clickRatioSort.length) {
@@ -104,62 +102,71 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
             clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
         }
 
-        const kwTables = [{
-            selector: '#machete-acos',
+        const worstKwTables = [{
+            title: 'Keywords with ACOS over 100%',
             columnTitle: 'ACOS',
             order: 'desc',
             filterFn: (x) => x.clicks && x.acos > 100,
             metricFn: (x) => x.acos,
             formatFn: (x) => x ? common.pctFmt(x) : "(no sales)",
         }, {
-            selector: '#machete-click-ratio',
+            title: 'Keywords with few clicks per impression',
             columnTitle: 'Clicks per 10K impressions',
             order: 'asc',
             filterFn: (x) => x.hasEnoughImpressions && x.clickRatio <= clickRatioBottomQuartile,
             metricFn: x => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         }, {
-            selector: '#machete-spend',
+            title: 'Keywords spending money without sales',
             columnTitle: 'Spend',
             order: 'desc',
             filterFn: (x) => x.clicks && !x.sales,
             metricFn: (x) => x.spend,
             formatFn: common.moneyFmt,
         }, {
-            selector: '#machete-impressions',
+            title: 'Keywords with few impressions',
             columnTitle: 'Impressions',
             order: 'asc',
             filterFn: (x) => x.impressions < minImpressions,
             metricFn: (x) => x.impressions,
             formatFn: (x) => x || 0,
-        }, {
-            selector: '#machete-high-click-ratio',
+        }];
+        
+        const bestKwTables = [{
+            title: 'Keywords with high clicks-to-impressions ratio',
             columnTitle: 'Clicks per 10K impressions',
             order: 'desc',
             filterFn: (x) => x.hasEnoughImpressions && x.clickRatio >= clickRatioTopQuartile,
             metricFn: (x) => x.clickRatio,
             formatFn: (x) => `${Math.round(x*10000)}`,
         }, {
-            selector: '#machete-low-acos',
+            title: 'Keywords with low ACOS',
             columnTitle: 'ACOS',
             order: 'asc',
             filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
             metricFn: (x) => x.acos,
             formatFn: common.pctFmt,
         }, {
-            selector: '#machete-high-profit',
+            title: 'Keywords with highest profit',
             columnTitle: 'Profit (Sales - Spend)',
             order: 'desc',
             filterFn: (x) => x.sales && x.acos < 100,
             metricFn: (x) => x.sales - x.spend,
             formatFn: common.moneyFmt,
         }, {
-            selector: '#machete-high-sales',
+            title: 'Keywords with highest gross sales',
             columnTitle: 'Sales',
             order: 'desc',
             filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
             metricFn: (x) => x.sales,
             formatFn: common.moneyFmt,
+        }, {
+            title: 'Disabled keywords',
+            columnTitle: 'ACOS',
+            order: 'desc',
+            filterFn: (x) => !x.enabled,
+            metricFn: (x) => x.acos,
+            formatFn: common.pctFmt,
         }];
 
         let chart = null;
@@ -168,8 +175,9 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
             chart = React.createElement(KeywordAnalyticsTab, {
                 allowed,
                 loading: false,
-                keywordData: enabledKws,
-                keywordTables: kwTables,
+                keywordData: data,
+                worstKeywordTables: worstKwTables,
+                bestKeywordTables: bestKwTables,
                 onKeywordEnabledChange: (enabled, keyword) => {
                     keywordModify(updateStatus, keyword, enabled, () => keyword.enabled = enabled);
                 },
@@ -193,18 +201,6 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
         };
 
         render();
-
-        // This is the only one that uses disabled keywords, do it synchronous
-        /*
-        renderKeywordTable(data, {
-            selector: '#machete-paused',
-            columnTitle: 'ACOS',
-            order: 'desc',
-            filterFn: (x) => !x.enabled,
-            metricFn: (x) => x.acos,
-            formatFn: common.pctFmt,
-        });
-        */
     });
 }
 
