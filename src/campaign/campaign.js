@@ -172,26 +172,33 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
         let chart = null;
 
         const render = () => {
+            try { 
+                throw new Error("render called");
+            }
+            catch (ex) { 
+                console.error(ex); 
+            }
+
             chart = React.createElement(KeywordAnalyticsTab, {
                 allowed,
                 loading: false,
                 keywordData: data,
                 worstKeywordTables: worstKwTables,
                 bestKeywordTables: bestKwTables,
-                onKeywordEnabledChange: (enabled, keyword) => {
-                    keywordModify(updateStatus, keyword, enabled, () => keyword.enabled = enabled);
+                onKeywordEnabledChange: (enabled, keywords) => {
+                    keywordModify(updateStatus, keywords, enabled, kw => kw.enabled = enabled);
                 },
-                onKeywordBidChange: (bid, keyword) => {
-                    keywordModify(updateBid, keyword, bid, () => keyword.bid = bid);
+                onKeywordBidChange: (bid, keywords) => {
+                    keywordModify(updateBid, keywords, bid, kw => kw.bid = bid);
                 },
             });
             ReactDOM.render(chart, container[0]);
         };
 
-        const keywordModify = (modifier, keyword, value, onSuccess) => {
-            modifier([keyword.id], value, (result) => {
+        const keywordModify = (modifier, keywords, value, onSuccess) => {
+            modifier(keywords.map(kw => kw.id), value, (result) => {
                 if (result.success) {
-                    onSuccess();
+                    keywords.forEach(onSuccess);
                 }
                 else {
                     ga.merror('enabled update error:', result);
@@ -312,18 +319,19 @@ function addCampaignTabs(tabs, campaignAllowed) {
                      ga.merror(response.status, response.error);
             }));
 
-            getKeywordData(common.getEntityId(), adGroupId, (data) => {
+            getKeywordData(common.getEntityId(), adGroupId, () => {
                 // Render the bulk update control on the main keyword list
                 const allTable = $('#keywordTableControls');
                 if (allTable.find('#machete-bulk-all').length == 0) {
-                    const bulkAll = renderBulkUpdate([].concat(data), {skipTable: true, reloadOnUpdate: true});
-                    bulkAll.attr('id', 'machete-bulk-all');
+                    // TODO: render bulkupdate
 
                     // Hack ourselves into the Amazon layout
                     const first = $('#keywordTableControls').children().first();
                     first.removeClass('a-span8');
+                    /*
                     first.addClass('a-span4');
                     first.after(bulkAll);
+                    */
                 }
             });
 
@@ -431,153 +439,4 @@ function getKeywordData(entityId, adGroupId, cb) {
             }));
         }));
     }));
-}
-
-function renderKeywordTable(data, opts) {
-    opts = opts || {};
-    let container = $(opts.selector);
-    container.empty();
-
-    data = data.filter(opts.filterFn ? opts.filterFn : () => true);
-
-    // Render the bulk update button -- pass in a copy of the array since we're
-    // going to modify it below.
-    let bulk = renderBulkUpdate([].concat(data), opts);
-    container.append(bulk);
-
-    let table = cloneTemplate("machete-kwtable");
-    container.append(table);
-
-    let formatFn = opts.formatFn ? opts.formatFn : x => x;
-    data = data.map(x => [
-        x.keyword,
-        formatFn(opts.metricFn(x)),
-        renderKeywordStatus(x),
-        renderKeywordBid(x),
-    ]);
-
-    table.DataTable({
-        data: data,
-        order: [[1, opts.order || 'asc']],
-        columns: [
-            { title: "Keyword" },
-            { title: opts.columnTitle },
-            { title: "Status" },
-            { title: "Bid" },
-        ],
-    });
-
-    table.width('100%'); // TODO: figure out why DataTables is setting this to 0
-}
-
-function renderKeywordBid(keyword, cell) {
-    cell = cell || cloneTemplate('machete-kwbid');
-    cell.show();
-    cell.attr('data-machete-keyword', JSON.stringify(keyword));
-
-    cell.find('input[name=keyword-bid]')
-        .attr('value', keyword.bid);
-
-    return cell[0].outerHTML;
-}
-
-function renderKeywordStatus(keyword, cell) {
-    cell = cell || cloneTemplate('machete-kwstatus');
-    cell.show();
-    cell.attr('data-machete-keyword', JSON.stringify(keyword));
-
-    let statusImg = cell.find('.ams-dropdown-status');
-    let statusTxt = cell.find('.machete-kwstatus-current');
-    if (keyword.enabled) {
-        statusImg.addClass('ams-status-active');
-        statusImg.removeClass('ams-status-paused');
-        statusTxt.text('Enabled');
-    }
-    else {
-        statusImg.removeClass('ams-status-active');
-        statusImg.addClass('ams-status-paused');
-        statusTxt.text('Paused');
-    }
-
-    return cell[0].outerHTML;
-}
-
-$(document).on('click.machete.kwstatus-bulk', '.machete-kwstatus-bulk', ga.mcatch(function() {
-    let container = $(this).parents('.machete-kwupdate-bulk');
-    container.find('.machete-kwupdate-error').text('');
-    let data = container[0].data;
-    let opts = container[0].opts;
-    let enabled = data[0].enabled;
-    $(this).find('.a-button').hide();
-    $(this).find('.loading-small').show();
-    ga.mclick('kword-data-bulk-status-toggle', enabled ? 'disable' : 'enable');
-    updateStatus(data.map(kw => kw.id), !enabled, (result) => {
-        if (result.success) {
-            data.forEach(x => x.enabled = !enabled);
-            if (!opts.skipTable) {
-                renderKeywordTable(data, container[0].opts);
-            }
-            if (opts.reloadOnUpdate) {
-                window.location.reload(true);
-            }
-        }
-        else {
-            const errMsg = `There was an error applying the bulk update.
-                Please refresh this page and try again. (Error was: ${result})`;
-            container.find('.machete-kwupdate-error').text(errMsg);
-            ga.merror('status bulk update error:', result);
-        }
-    });
-}));
-
-$(document).on('click.machete.kwbid-bulk', '.machete-kwbid-bulk input[name=save]', ga.mcatch(function() {
-    let container = $(this).parents('.machete-kwupdate-bulk');
-    container.find('.machete-kwupdate-error').text('');
-    let cell = $(this).parents('.machete-kwbid-bulk');
-    let input = cell.find('input[name=keyword-bid]');
-    let data = container[0].data;
-    let opts = container[0].opts;
-    cell.children().hide();
-    cell.find('.loading-small').show();
-    ga.mclick('kword-data-bulk-bid-save', input.val());
-    updateBid(data.map(kw => kw.id), input.val(), (result) => {
-        if (result.success) {
-            data.forEach(kw => kw.bid = result.bid);
-            if (!opts.skipTable) {
-                renderKeywordTable(data, container[0].opts);
-            }
-            if (opts.reloadOnUpdate) {
-                window.location.reload(true);
-            }
-        }
-        else {
-            const errMsg = `There was an error applying the bulk update.
-                Please refresh this page and try again. (Error was: ${result})`;
-            container.find('.machete-kwupdate-error').text(errMsg);
-            ga.merror('bid bulk update error:', result);
-        }
-    });
-}));
-
-function renderBulkUpdate(data, opts) {
-    let bulk = cloneTemplate('machete-kwupdate-bulk');
-    bulk[0].data = data;
-    bulk[0].opts = opts;
-    bulk.attr('data-ga.mclick', `kword-data-bulk ${opts.selector ? opts.selector.substring(1) : 'all'}`);
-
-    renderKeywordStatus(data[0] || {}, bulk.find('.machete-kwstatus-bulk'));
-    renderKeywordBid(data[0] || {}, bulk.find('.machete-kwbid-bulk'));
-    bulk.find('.machete-kwupdate-count').text(data.length);
-
-    bulk.show();
-
-    return bulk;
-}
-
-function cloneTemplate(id) {
-    let elem = $('#'+id).clone();
-    elem.removeAttr('id');
-    elem.show();
-    elem.removeClass('a-hidden'); // Amazon adds this to our elements for some reason
-    return elem;
 }

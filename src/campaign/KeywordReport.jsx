@@ -1,24 +1,36 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const KeywordTable = require('./KeywordTable.jsx');
+const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
 
 class KeywordReport extends React.Component {
     render() {
         return (
             <section>
                 <h3>{this.props.title}</h3>
-                <KeywordTable
+                <KeywordBulkUpdate
                     data={this.props.data}
-                    metric={this.props.metric}
-                    formatter={this.props.formatter}
-                    sort={this.props.sort}
-                    columnTitle={this.props.columnTitle} 
-                    onKeywordEnabledChange={this.props.onKeywordEnabledChange}
-                    onKeywordBidChange={this.props.onKeywordBidChange}
+                    onEnabledChange={this.props.onKeywordEnabledChange}
+                    onBidChange={this.props.onKeywordBidChange}
                 />
+                <div style={{clear: 'both'}}>
+                    <KeywordTable
+                        data={this.props.data}
+                        metric={this.props.metric}
+                        formatter={this.props.formatter}
+                        sort={this.props.sort}
+                        columnTitle={this.props.columnTitle} 
+                        onKeywordEnabledChange={singleKeywordChange(this.props.onKeywordEnabledChange)}
+                        onKeywordBidChange={singleKeywordChange(this.props.onKeywordBidChange)}
+                    />
+                </div>
             </section>
         );
     }
+}
+
+function singleKeywordChange(callback) {
+    return (value, item) => callback(value, [item]);
 }
 
 KeywordReport.propTypes = {
