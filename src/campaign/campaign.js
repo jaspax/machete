@@ -64,7 +64,12 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
 }), 100);
 
 function generateKeywordReports(allowed, entityId, adGroupId, container) {
-    const chart = React.createElement(KeywordAnalyticsTab, { allowed, loading: true });
+    const chart = React.createElement(KeywordAnalyticsTab, { 
+        allowed, 
+        loading: true,
+        onKeywordEnabledChange: () => console.warn("shouldn't update keywords while still loading"),
+        onKeywordBidChange: () => console.warn("shouldn't update keywords while still loading"),
+    });
     ReactDOM.render(chart, container[0]);
 
     getKeywordData(entityId, adGroupId, (data) => {
@@ -157,13 +162,37 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
             formatFn: common.moneyFmt,
         }];
 
-        const chart = React.createElement(KeywordAnalyticsTab, {
-            allowed,
-            loading: false,
-            keywordData: enabledKws,
-            keywordTables: kwTables,
-        });
-        ReactDOM.render(chart, container[0]);
+        let chart = null;
+
+        const render = () => {
+            chart = React.createElement(KeywordAnalyticsTab, {
+                allowed,
+                loading: false,
+                keywordData: enabledKws,
+                keywordTables: kwTables,
+                onKeywordEnabledChange: (enabled, keyword) => {
+                    keywordModify(updateStatus, keyword, enabled, () => keyword.enabled = enabled);
+                },
+                onKeywordBidChange: (bid, keyword) => {
+                    keywordModify(updateBid, keyword, bid, () => keyword.bid = bid);
+                },
+            });
+            ReactDOM.render(chart, container[0]);
+        };
+
+        const keywordModify = (modifier, keyword, value, onSuccess) => {
+            modifier([keyword.id], value, (result) => {
+                if (result.success) {
+                    onSuccess();
+                }
+                else {
+                    ga.merror('enabled update error:', result);
+                }
+                render();
+            });
+        };
+
+        render();
 
         // This is the only one that uses disabled keywords, do it synchronous
         /*
@@ -223,6 +252,7 @@ function updateStatus(keywordIdList, enable, cb) {
 }
 
 function updateBid(keywordIdList, bid, cb) {
+    bid = parseFloat(bid).toFixed(2).toString();
     return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
 }
 
@@ -443,44 +473,6 @@ function renderKeywordTable(data, opts) {
 
     table.width('100%'); // TODO: figure out why DataTables is setting this to 0
 }
-
-$(document).on('click.machete.kwstatus', '.machete-kwstatus', ga.mcatch(function() {
-    let keyword = JSON.parse($(this).attr('data-machete-keyword'));
-    $(this).find('.a-button').hide();
-    $(this).find('.loading-small').show();
-    ga.mclick('kword-data-status-toggle', keyword.enabled ? 'disable' : 'enable');
-    updateStatus([keyword.id], !keyword.enabled, (result) => {
-        if (result.success) {
-            keyword.enabled = !keyword.enabled;
-            renderKeywordStatus(keyword, $(this));
-        }
-        else {
-            ga.merror('status update error:', result);
-        }
-        $(this).find('.a-button').show();
-        $(this).find('.loading-small').hide();
-    });
-}));
-
-$(document).on('click.machete.kwbid', '.machete-kwbid input[name=save]', ga.mcatch(function() {
-    let cell = $(this).parents('.machete-kwbid');
-    let keyword = JSON.parse(cell.attr('data-machete-keyword'));
-    let input = cell.find('input[name=keyword-bid]');
-    cell.children().hide();
-    cell.find('.loading-small').show();
-    ga.mclick('kword-data-bid-save', input.val());
-    updateBid([keyword.id], input.val(), (result) => {
-        if (result.success) {
-            keyword.bid = result.bid;
-            renderKeywordBid(keyword, cell);
-        }
-        else {
-            ga.merror('bid update error:', result);
-        }
-        cell.children().show();
-        cell.find('.loading-small').hide();
-    });
-}));
 
 function renderKeywordBid(keyword, cell) {
     cell = cell || cloneTemplate('machete-kwbid');

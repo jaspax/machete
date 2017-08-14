@@ -2,7 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const DataNotAvailable = require('../components/DataNotAvailable.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
-const KeywordTable = require('./KeywordTable.jsx');
+const KeywordReport = require('./KeywordReport.jsx');
 
 class KeywordAnalyticsTab extends React.Component {
     render() {
@@ -11,11 +11,18 @@ class KeywordAnalyticsTab extends React.Component {
             const renderedTables = this.props.keywordTables.map(table => {
                 const tableData = this.props.keywordData.filter(table.filterFn ? table.filterFn : () => true);
                 const formatter = x => table.formatFn(table.metricFn(x));
-                return <KeywordTable
+
+                // TODO: separate title from column title
+
+                return <KeywordReport
                     key={table.selector}
                     data={tableData}
-                    metric={formatter}
-                    title={table.columnTitle} />;
+                    formatter={formatter}
+                    title={table.columnTitle}
+                    columnTitle={table.columnTitle}
+                    onKeywordEnabledChange={this.props.onKeywordEnabledChange}
+                    onKeywordBidChange={this.props.onKeywordBidChange}
+                />;
             });
             body = <div className="a-box-inner">
                 <section>
@@ -49,6 +56,10 @@ class KeywordAnalyticsTab extends React.Component {
             </div>
         );
     }
+
+    componentWillReceiveProps() {
+        console.log(this.constructor.name, "will receieve props");
+    }
 }
 
 function transformKeywordData(data) {
@@ -80,6 +91,8 @@ KeywordAnalyticsTab.propTypes = {
     loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
     keywordTables: PropTypes.array,
+    onKeywordEnabledChange: PropTypes.func.isRequired,
+    onKeywordBidChange: PropTypes.func.isRequired,
 };
 
 KeywordAnalyticsTab.defaultProps = {

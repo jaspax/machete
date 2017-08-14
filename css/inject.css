@@ -60,6 +60,22 @@
     display: none;
 }
 
+.machete-kwbid {
+    width: 124px;
+}
+
+.machete-kwstatus {
+    width: 64px;
+}
+
+.machete-kwbid, .machete-kwstatus {
+    display: inline-block;
+}
+
+.machete-kwbid .loading-small, .machete-kwstatus .loading-small {
+    margin: auto;
+}
+
 .machete-kwupdate-bulk {
     display: block;
     float: right;
