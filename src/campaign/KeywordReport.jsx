@@ -9,7 +9,9 @@ class KeywordReport extends React.Component {
                 <h3>{this.props.title}</h3>
                 <KeywordTable
                     data={this.props.data}
-                    metric={this.props.formatter}
+                    metric={this.props.metric}
+                    formatter={this.props.formatter}
+                    sort={this.props.sort}
                     columnTitle={this.props.columnTitle} 
                     onKeywordEnabledChange={this.props.onKeywordEnabledChange}
                     onKeywordBidChange={this.props.onKeywordBidChange}
@@ -17,16 +19,14 @@ class KeywordReport extends React.Component {
             </section>
         );
     }
-
-    componentWillReceiveProps() {
-        console.log(this.constructor.name, "will receieve props");
-    }
 }
 
 KeywordReport.propTypes = {
     data: PropTypes.array.isRequired,
+    metric: PropTypes.func.isRequired,
     formatter: PropTypes.func.isRequired,
     title: PropTypes.string.isRequired,
+    sort: PropTypes.string,
     columnTitle: PropTypes.string.isRequired,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,

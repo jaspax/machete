@@ -15,8 +15,9 @@ class KeywordTable extends React.Component {
             },
             { 
                 Header: this.props.columnTitle, 
+                Cell: row => <span>{this.props.formatter(row.value)}</span>,
                 accessor: this.props.metric, 
-                id: this.props.columnTitle
+                id: 'keyColumn'
             },
             { 
                 Header: 'Update', 
@@ -28,11 +29,13 @@ class KeywordTable extends React.Component {
             }
         ];
 
-        return <ReactTable data={this.props.data} columns={columns} />;
-    }
-
-    componentWillReceiveProps() {
-        console.log(this.constructor.name, "will receieve props");
+        return <ReactTable 
+            data={this.props.data} 
+            columns={columns} 
+            defaultSorted={[{ id: 'keyColumn', desc: this.props.sort == 'desc' }]}
+            defaultPageSize={10}
+            minRows={0}
+        />;
     }
 }
 
@@ -42,8 +45,10 @@ function bindKeywordChange(item, callback) {
 
 KeywordTable.propTypes = {
     data: PropTypes.array.isRequired,
+    sort: PropTypes.string,
     columnTitle: PropTypes.string.isRequired,
     metric: PropTypes.func.isRequired,
+    formatter: PropTypes.func.isRequired,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
 };

@@ -10,14 +10,15 @@ class KeywordAnalyticsTab extends React.Component {
         if (this.props.allowed) {
             const renderedTables = this.props.keywordTables.map(table => {
                 const tableData = this.props.keywordData.filter(table.filterFn ? table.filterFn : () => true);
-                const formatter = x => table.formatFn(table.metricFn(x));
 
                 // TODO: separate title from column title
 
                 return <KeywordReport
                     key={table.selector}
                     data={tableData}
-                    formatter={formatter}
+                    sort={table.order}
+                    metric={table.metricFn}
+                    formatter={table.formatFn}
                     title={table.columnTitle}
                     columnTitle={table.columnTitle}
                     onKeywordEnabledChange={this.props.onKeywordEnabledChange}
@@ -55,10 +56,6 @@ class KeywordAnalyticsTab extends React.Component {
                 {body}
             </div>
         );
-    }
-
-    componentWillReceiveProps() {
-        console.log(this.constructor.name, "will receieve props");
     }
 }
 
