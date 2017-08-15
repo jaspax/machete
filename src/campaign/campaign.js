@@ -243,11 +243,12 @@ function generateKeywordReports(entityId, container) {
 
         let chart = null;
 
-        const render = () => {
+        const render = (modified) => {
             chart = React.createElement(KeywordAnalyticsTab, {
                 allowed,
                 loading: false,
                 keywordData: data,
+                modifiedData: modified,
                 worstKeywordTables: worstKwTables,
                 bestKeywordTables: bestKwTables,
                 onKeywordEnabledChange: (enabled, keywords) => {
@@ -268,7 +269,7 @@ function generateKeywordReports(entityId, container) {
                 else {
                     ga.merror('enabled update error:', result);
                 }
-                render();
+                render(keywords);
             });
         };
 

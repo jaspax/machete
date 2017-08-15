@@ -27,6 +27,18 @@ class KeywordReport extends React.Component {
             </section>
         );
     }
+
+    shouldComponentUpdate(nextProps) {
+        if (!nextProps.modifiedData) {
+            return true;
+        }
+        for (let item of nextProps.modifiedData) {
+            if (this.props.data.includes(item) || nextProps.data.includes(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 function singleKeywordChange(callback) {
@@ -35,6 +47,7 @@ function singleKeywordChange(callback) {
 
 KeywordReport.propTypes = {
     data: PropTypes.array.isRequired,
+    modifiedData: PropTypes.array,
     metric: PropTypes.func.isRequired,
     formatter: PropTypes.func.isRequired,
     title: PropTypes.string.isRequired,

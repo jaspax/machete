@@ -9,12 +9,14 @@ class KeywordAnalyticsTab extends React.Component {
         let body = null;
         if (this.props.allowed) {
             const keywordMapper = table => {
-                const tableData = this.props.keywordData.filter(table.filterFn ? table.filterFn : () => true);
+                const filterFn = table.filterFn ? table.filterFn : () => true;
+                const tableData = this.props.keywordData.filter(filterFn);
 
                 return <KeywordReport
                     key={table.title}
                     title={table.title}
                     data={tableData}
+                    modifiedData={this.props.modifiedData}
                     sort={table.order}
                     metric={table.metricFn}
                     formatter={table.formatFn}
@@ -92,6 +94,7 @@ KeywordAnalyticsTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
+    modifiedData: PropTypes.array,
     bestKeywordTables: PropTypes.array,
     worstKeywordTables: PropTypes.array,
     onKeywordEnabledChange: PropTypes.func.isRequired,
