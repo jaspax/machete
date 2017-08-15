@@ -340,66 +340,6 @@ function updateBid(keywordIdList, bid, cb) {
     return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
 }
 
-/* TODO: commenting out until we decide we want to do something with them
-function renderSpendPieChart(data) {
-    let target = 100;
-    let sumSpend = (acc, x) => acc + x.spend;
-    let spendOverTarget = data.filter(x => x.sales && x.acos > target).reduce(sumSpend, 0);
-    let spendUnderTarget = data.filter(x => x.sales && x.acos <= target).reduce(sumSpend, 0);
-    let spendNoSales = data.filter(x => !x.sales).reduce(sumSpend, 0);
-
-    let chartData = {
-        values: [spendOverTarget, spendUnderTarget, spendNoSales],
-        labels: ['Keywords with ACOS over 100%', 'Keywords with ACOS under 100%', 'Keywords without sales'],
-        type: 'pie',
-    };
-
-    Plotly.plot('machete-spend-pie', [chartData], {height: 400, width: 400, showlegend: false});
-}
-
-function bucketize(data, binKey, valueKey) {
-    let bins = {};
-    for (let item of data) {
-        let key = +item[binKey];
-        let value = +item[valueKey];
-        if (Number.isNaN(key) || Number.isNaN(value))
-            continue;
-        if (!bins[key])
-            bins[key] = 0;
-        bins[key] += value;
-    }
-
-    let binData = Object.keys(bins).map(x => parseFloat(x));
-    let binValues = binData.map(x => bins[x]);
-
-    return {x: binData, y: binValues};
-}
-
-function renderClicksHistogram(data) {
-    let clickBins = bucketize(data, 'avgCpc', 'clicks');
-    let chartData = {
-        x: clickBins.x,
-        y: clickBins.y,
-        type: 'bar',
-        marker: { color: 'lightblue' },
-    };
-
-    Plotly.plot('machete-clicks-histo', [chartData], {height: 400, width: 400, showlegend: false});
-}
-
-function renderImpressionsHistogram(data) {
-    let clickBins = bucketize(data.filter(x => x.avgCpc), 'avgCpc', 'impressions');
-    let chartData = {
-        x: clickBins.x,
-        y: clickBins.y,
-        type: 'bar',
-        marker: { color: 'lightblue' },
-    };
-
-    Plotly.plot('machete-impressions-histo', [chartData], {height: 400, width: 400, showlegend: false});
-}
-*/
-
 function getKeywordData(entityId, adGroupId, resolve, reject) {
     chrome.runtime.sendMessage({
         action: 'requestKeywordData', // from Amazon's servers
