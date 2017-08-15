@@ -26,6 +26,14 @@ class KeywordBubbleChart extends React.Component {
         return <div id={this.id}></div>;
     }
 
+    shouldComponentUpdate() {
+        // Only render when transitioning from no data => data, otherwise treat
+        // the chart as static.
+        if (this.props.keywordData && this.props.keywordData.impressions.length)
+            return false;
+        return true;
+    }
+
     componentDidMount() {
         this.renderChart();
     }
