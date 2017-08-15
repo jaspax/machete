@@ -27,7 +27,7 @@ class KeywordAnalyticsTab extends React.Component {
             const bestTables = this.props.bestKeywordTables.map(keywordMapper);
             const worstTables = this.props.worstKeywordTables.map(keywordMapper);
 
-            body = <div className="a-box-inner">
+            body = <div>
                 <section>
                     <h1>Keyword Performance</h1>
                     <KeywordBubbleChart 
@@ -53,13 +53,11 @@ class KeywordAnalyticsTab extends React.Component {
             </div>;
         }
         else {
-            body = <div className="a-box-inner">
-                <DataNotAvailable allowed={false} anonymous={window.user.isAnon} />
-            </div>;
+            body = <DataNotAvailable allowed={false} anonymous={window.user.isAnon} />;
         }
 
         return (
-            <div id="machete-keyword-analysis">
+            <div id="machete-keyword-analysis" className="a-box-inner">
                 {body}
             </div>
         );

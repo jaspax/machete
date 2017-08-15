@@ -109,7 +109,7 @@ function addCampaignTabs(tabs) {
         let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
         li.append(a);
 
-        let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+        let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden"></div>`);
         tabs.parent().append(container);
 
         a.click(ga.mcatch(function() {
