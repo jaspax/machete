@@ -85,9 +85,13 @@
     float: right;
     position: relative;
     top: -25px;
-    border: 1px solid rgb(166, 166, 166);
-    padding: 8px;
-    border-radius: 4px;
+}
+
+#machete-bulk-all {
+    display: block;
+    float: right;
+    position: relative;
+    top: 6px;
 }
 
 .machete-kwupdate-error {

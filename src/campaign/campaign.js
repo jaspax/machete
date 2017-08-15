@@ -1,7 +1,6 @@
 const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
-require('datatables.net')(window, $);
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
@@ -9,13 +8,14 @@ const constants = require('../common/constants.gen.js');
 
 const CampaignHistoryTab = require('./CampaignHistoryTab.jsx');
 const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');
+const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
 
 const tabClass = `machete-tab`;
 
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
-    {label: "Campaign History", content: "history.html", activate: generateHistoryReports, matching: /./ },
-    {label: "Keyword Analytics", content: "keywordAnalytics.html", activate: generateKeywordReports, matching: /ads\/campaign/ },
+    {label: "Campaign History", activate: generateHistoryReports, matching: /./ },
+    {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
 ];
 
 chrome.runtime.sendMessage({
@@ -62,6 +62,74 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
 
     window.clearInterval(metadataInterval);
 }), 100);
+
+function addCampaignTabs(tabs, campaignAllowed) {
+    let adGroupId = null;
+    for (let tab of ourTabs) {
+        if (!location.toString().match(tab.matching)) {
+            continue;
+        }
+
+        // Create the actual Tab control and embed it into the 
+        let a = $(`<a href="#">${tab.label}</a>`);
+        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
+        li.append(a);
+
+        let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+        tabs.parent().append(container);
+
+        a.click(ga.mcatch(function() {
+            ga.mga('event', 'kword-data-tab', 'activate', tab.label);
+            li.addClass('a-active');
+            li.siblings().removeClass('a-active');
+            tabs.parent().children('div').addClass('a-hidden');
+            container.removeClass('a-hidden');
+
+            if (tab.activate && adGroupId && !tab.hasActivated) {
+                tab.activate(campaignAllowed, common.getEntityId(), adGroupId, container);
+                tab.hasActivated = true;
+            }
+        }));
+        $(tabs.children()[0]).after(li);
+    }
+
+    // Get the ad group id from the HTML
+    if (campaignAllowed) {
+        let genReportsInterval = window.setInterval(() => {
+            let adGroupIdInput = $('input[name=adGroupId]');
+            if (!adGroupIdInput.length)
+                return;
+            adGroupId = adGroupIdInput[0].value;
+            window.clearInterval(genReportsInterval);
+
+            chrome.runtime.sendMessage({
+                action: 'setAdGroupMetadata',
+                entityId: common.getEntityId(),
+                campaignId: common.getCampaignId(),
+                adGroupId,
+            }, ga.mcatch(response => {
+                if (response.error)
+                     ga.merror(response.status, response.error);
+            }));
+
+            getKeywordData(common.getEntityId(), adGroupId, (data) => {
+                // Render the bulk update control on the main keyword list
+                const allTable = $('#keywordTableControls');
+                if (allTable.find('#machete-bulk-all').length == 0) {
+                    // Hack ourselves into the Amazon layout
+                    const bulkContainer = $('<div class="a-span4 machete-kwupdate-all" id="machete-bulk-all"></div>');
+                    const first = $('#keywordTableControls').children().first();
+                    first.removeClass('a-span8');
+                    first.addClass('a-span4');
+                    first.after(bulkContainer);
+
+                    generateBulkUpdate(bulkContainer, data);
+                }
+            });
+
+        }, 50);
+    }
+}
 
 function generateKeywordReports(allowed, entityId, adGroupId, container) {
     const chart = React.createElement(KeywordAnalyticsTab, { 
@@ -215,6 +283,19 @@ function generateHistoryReports(allowed, entityId, adGroupId, container) {
     ReactDOM.render(tabContent, container[0]);
 }
 
+function generateBulkUpdate(container, data) {
+    const bulkUpdate = React.createElement(KeywordBulkUpdate, {
+        data,
+        onEnabledChange: (enabled, keywords) => {
+            updateStatus(keywords.map(kw => kw.id), enabled, () => window.location.reload());
+        },
+        onBidChange: (bid, keywords) => {
+            updateBid(keywords.map(kw => kw.id), bid, () => window.location.reload());
+        },
+    });
+    ReactDOM.render(bulkUpdate, container[0]);
+}
+
 function updateKeyword(keywordIdList, operation, dataValues, cb) {
     let entityId = common.getEntityId();
 
@@ -250,86 +331,6 @@ function updateStatus(keywordIdList, enable, cb) {
 function updateBid(keywordIdList, bid, cb) {
     bid = parseFloat(bid).toFixed(2).toString();
     return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
-}
-
-function addCampaignTabs(tabs, campaignAllowed) {
-    let adGroupId = null;
-    for (let tab of ourTabs) {
-        if (!location.toString().match(tab.matching)) {
-            continue;
-        }
-
-        // Fetch the url we want in order to actually embed it in the page
-        $.ajax(chrome.runtime.getURL('html/'+tab.content)).then((data) => {
-            let a = $(`<a href="#">${tab.label}</a>`);
-            let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
-            li.append(a);
-
-            let container = $(`<div id="machete-${tab.content}" class="a-box a-box-tab a-tab-content a-hidden"></div>`);
-            tabs.parent().append(container);
-            container.append(data);
-
-            a.click(ga.mcatch(function() {
-                ga.mga('event', 'kword-data-tab', 'activate', tab.label);
-                li.addClass('a-active');
-                li.siblings().removeClass('a-active');
-                tabs.parent().children('div').addClass('a-hidden');
-                container.removeClass('a-hidden');
-
-                if (window.user.isAnon) {
-                    $('.machete-campaign-upgrade-required').hide();
-                }
-                else if (campaignAllowed) {
-                    $('.machete-campaign-login-required').hide();
-                    $('.machete-campaign-upgrade-required').hide();
-                }
-
-                if (tab.activate && adGroupId && !tab.hasActivated) {
-                    tab.activate(campaignAllowed, common.getEntityId(), adGroupId, container);
-                    tab.hasActivated = true;
-                }
-            }));
-            $(tabs.children()[0]).after(li);
-        });
-    }
-
-    // Get the ad group id from the HTML
-    if (campaignAllowed) {
-        let genReportsInterval = window.setInterval(() => {
-            let adGroupIdInput = $('input[name=adGroupId]');
-            if (!adGroupIdInput.length)
-                return;
-            adGroupId = adGroupIdInput[0].value;
-            window.clearInterval(genReportsInterval);
-
-            chrome.runtime.sendMessage({
-                action: 'setAdGroupMetadata',
-                entityId: common.getEntityId(),
-                campaignId: common.getCampaignId(),
-                adGroupId,
-            }, ga.mcatch(response => {
-                if (response.error)
-                     ga.merror(response.status, response.error);
-            }));
-
-            getKeywordData(common.getEntityId(), adGroupId, () => {
-                // Render the bulk update control on the main keyword list
-                const allTable = $('#keywordTableControls');
-                if (allTable.find('#machete-bulk-all').length == 0) {
-                    // TODO: render bulkupdate
-
-                    // Hack ourselves into the Amazon layout
-                    const first = $('#keywordTableControls').children().first();
-                    first.removeClass('a-span8');
-                    /*
-                    first.addClass('a-span4');
-                    first.after(bulkAll);
-                    */
-                }
-            });
-
-        }, 50);
-    }
 }
 
 /* TODO: commenting out until we decide we want to do something with them
