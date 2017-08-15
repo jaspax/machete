@@ -18,23 +18,58 @@ const ourTabs = [
     {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
 ];
 
-chrome.runtime.sendMessage({
-    action: 'getAllowedCampaigns',
-    entityId: common.getEntityId(),
-},
-ga.mcatch(response => {
-    if (response.error) {
-        ga.merror(response.status, response.error);
-    }
-    const campaignAllowed = response.data.includes(common.getCampaignId());
-    let makeTabsInterval = window.setInterval(ga.mcatch(() => {
-        let campaignTabs = $('#campaign_detail_tab_set');
-        if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
-            addCampaignTabs(campaignTabs, campaignAllowed);
-            window.clearInterval(makeTabsInterval);
+let allowedPromise = new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({
+        action: 'getAllowedCampaigns',
+        entityId: common.getEntityId(),
+    },
+    ga.mcatch(response => {
+        if (response.error) {
+            ga.merror(response.status, response.error);
+            reject(response.error);
         }
-    }), 100);
+        resolve(response.data.includes(common.getCampaignId()));
+    }));
+});
+
+let adGroupPromise = new Promise(resolve => {
+    let adGroupInterval = window.setInterval(() => {
+        let adGroupIdInput = $('input[name=adGroupId]');
+        if (!adGroupIdInput.length)
+            return;
+
+        let adGroupId = adGroupIdInput[0].value;
+        window.clearInterval(adGroupInterval);
+
+        chrome.runtime.sendMessage({
+            action: 'setAdGroupMetadata',
+            entityId: common.getEntityId(),
+            campaignId: common.getCampaignId(),
+            adGroupId,
+        }, ga.mcatch(response => {
+            if (response.error)
+                 ga.merror(response.status, response.error);
+        }));
+        resolve(adGroupId);
+    }, 100);
+});
+
+let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])
+.then(results => new Promise((resolve, reject) => {
+    let [allowed, adGroupId] = results;
+    if (!allowed) {
+        resolve([]);
+    }
+    getKeywordData(common.getEntityId(), adGroupId, resolve, reject);
 }));
+
+let makeTabsInterval = window.setInterval(ga.mcatch(() => {
+    let campaignTabs = $('#campaign_detail_tab_set');
+    if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
+        addCampaignTabs(campaignTabs);
+        window.clearInterval(makeTabsInterval);
+    }
+}), 100);
 
 let metadataInterval = window.setInterval(ga.mcatch(() => {
     let campaignDataTab = $('#campaign_settings_tab_content');
@@ -63,8 +98,7 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
     window.clearInterval(metadataInterval);
 }), 100);
 
-function addCampaignTabs(tabs, campaignAllowed) {
-    let adGroupId = null;
+function addCampaignTabs(tabs) {
     for (let tab of ourTabs) {
         if (!location.toString().match(tab.matching)) {
             continue;
@@ -85,72 +119,42 @@ function addCampaignTabs(tabs, campaignAllowed) {
             tabs.parent().children('div').addClass('a-hidden');
             container.removeClass('a-hidden');
 
-            if (tab.activate && adGroupId && !tab.hasActivated) {
-                tab.activate(campaignAllowed, common.getEntityId(), adGroupId, container);
+            if (tab.activate && !tab.hasActivated) {
+                tab.activate(common.getEntityId(), container);
                 tab.hasActivated = true;
             }
         }));
         $(tabs.children()[0]).after(li);
     }
 
-    // Get the ad group id from the HTML
-    if (campaignAllowed) {
-        let genReportsInterval = window.setInterval(() => {
-            let adGroupIdInput = $('input[name=adGroupId]');
-            if (!adGroupIdInput.length)
-                return;
-            adGroupId = adGroupIdInput[0].value;
-            window.clearInterval(genReportsInterval);
-
-            chrome.runtime.sendMessage({
-                action: 'setAdGroupMetadata',
-                entityId: common.getEntityId(),
-                campaignId: common.getCampaignId(),
-                adGroupId,
-            }, ga.mcatch(response => {
-                if (response.error)
-                     ga.merror(response.status, response.error);
-            }));
-
-            getKeywordData(common.getEntityId(), adGroupId, (data) => {
-                // Render the bulk update control on the main keyword list
-                const allTable = $('#keywordTableControls');
-                if (allTable.find('#machete-bulk-all').length == 0) {
-                    // Hack ourselves into the Amazon layout
-                    const bulkContainer = $('<div class="a-span4 machete-kwupdate-all" id="machete-bulk-all"></div>');
-                    const first = $('#keywordTableControls').children().first();
-                    first.removeClass('a-span8');
-                    first.addClass('a-span4');
-                    first.after(bulkContainer);
-
-                    generateBulkUpdate(bulkContainer, data);
-                }
-            });
-
-        }, 50);
-    }
+    allowedPromise.then(allowed => {
+        if (allowed) {
+            // Render the bulk update control on the main keyword list
+            const allTable = $('#keywordTableControls');
+            if (allTable.find('#machete-bulk-all').length == 0) {
+                // Hack ourselves into the Amazon layout
+                const bulkContainer = $('<div class="a-span4 machete-kwupdate-all" id="machete-bulk-all"></div>');
+                const first = $('#keywordTableControls').children().first();
+                first.removeClass('a-span8');
+                first.addClass('a-span4');
+                first.after(bulkContainer);
+                keywordDataPromise.then(data => generateBulkUpdate(bulkContainer, data));
+            }
+        }
+    });
 }
 
-function generateKeywordReports(allowed, entityId, adGroupId, container) {
+function generateKeywordReports(entityId, container) {
     const chart = React.createElement(KeywordAnalyticsTab, { 
-        allowed, 
+        allowed: true, // assume true until we know otherwise
         loading: true,
         onKeywordEnabledChange: () => console.warn("shouldn't update keywords while still loading"),
         onKeywordBidChange: () => console.warn("shouldn't update keywords while still loading"),
     });
     ReactDOM.render(chart, container[0]);
 
-    getKeywordData(entityId, adGroupId, (data) => {
-        /* TODO: excluding these until we decide if/when they're actually useful
-        renderSpendPieChart(data);
-        renderClicksHistogram(data);
-        renderImpressionsHistogram(data);
-        */
-
-        // We often don't want to display data for points with very low numbers
-        // of impressions, so we set a "minimum meaningful impressions" value at
-        // 10% of what would be the value if all keywords had the same number of
-        // impressions.
+    Promise.all([allowedPromise, keywordDataPromise]).then(results => {
+        let [allowed, data] = results;
         let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
         let minImpressions = totalImpressions / (data.length * 10);
 
@@ -272,15 +276,18 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
     });
 }
 
-function generateHistoryReports(allowed, entityId, adGroupId, container) {
+function generateHistoryReports(entityId, container) {
     const campaignId = common.getCampaignId();
     const downloadHref = `https://${constants.hostname}/api/data/${entityId}/${campaignId}/csv`;
-    let tabContent = React.createElement(CampaignHistoryTab, {
-        allowed,
-        downloadHref,
-        loadData: cb => common.getCampaignHistory(entityId, campaignId, cb),
+
+    allowedPromise.then(allowed => {
+        let tabContent = React.createElement(CampaignHistoryTab, {
+            allowed,
+            downloadHref,
+            loadData: cb => common.getCampaignHistory(entityId, campaignId, cb),
+        });
+        ReactDOM.render(tabContent, container[0]);
     });
-    ReactDOM.render(tabContent, container[0]);
 }
 
 function generateBulkUpdate(container, data) {
@@ -393,44 +400,24 @@ function renderImpressionsHistogram(data) {
 }
 */
 
-function getKeywordData(entityId, adGroupId, cb) {
+function getKeywordData(entityId, adGroupId, resolve, reject) {
     chrome.runtime.sendMessage({
-        action: 'getKeywordData', // from our server
+        action: 'requestKeywordData', // from Amazon's servers
         entityId: entityId,
         adGroupId: adGroupId,
     },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-        }
-
-        // If we have data, return it immediately
-        if (response.data && response.data.length) {
-            cb(response.data);
-        }
-
-        // After querying our own (fast) servers, query Amazon.
+    ga.mcatch(() => {
         chrome.runtime.sendMessage({
-            action: 'requestKeywordData',
+            action: 'getKeywordData', // from our server
             entityId: entityId,
             adGroupId: adGroupId,
         },
-        ga.mcatch(() => {
-            // Try our servers again. This may fire the callback again and cause
-            // us to redraw.
-            chrome.runtime.sendMessage({
-                action: 'getKeywordData', // from our server
-                entityId: entityId,
-                adGroupId: adGroupId,
-            },
-            ga.mcatch(response => {
-                if (response.error) {
-                    ga.merror(response.status, response.error);
-                }
-                if (response.data) {
-                    cb(response.data);
-                }
-            }));
+        ga.mcatch(response => {
+            if (response.error) {
+                ga.merror(response.status, response.error);
+                return reject(response.error);
+            }
+            return resolve(response.data || []);
         }));
     }));
 }
