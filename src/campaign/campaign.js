@@ -172,13 +172,6 @@ function generateKeywordReports(allowed, entityId, adGroupId, container) {
         let chart = null;
 
         const render = () => {
-            try { 
-                throw new Error("render called");
-            }
-            catch (ex) { 
-                console.error(ex); 
-            }
-
             chart = React.createElement(KeywordAnalyticsTab, {
                 allowed,
                 loading: false,
