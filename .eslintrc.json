@@ -84,7 +84,7 @@
                 "allowArrowFunctions": true
             }
         ],
-        "generator-star-spacing": "error",
+        "generator-star-spacing": "off",
         "global-require": "error",
         "guard-for-in": "error",
         "handle-callback-err": "error",
