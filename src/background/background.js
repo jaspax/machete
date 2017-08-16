@@ -8,6 +8,8 @@ const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 const serviceUrl = `https://${constants.hostname}`;
 
+const alarmPeriodMinutes = 240;
+
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
         throw new Error(`invalid entityId={${entityId}}`);
@@ -74,22 +76,41 @@ chrome.alarms.onAlarm.addListener((session) => {
     }
     catch (ex) {
         chrome.alarms.clear(session.name, cleared => console.log("cleared useless alarm", cleared));
-        throw ex;
+        return;
     }
 
     co(function*() { 
-        yield* requestCampaignData(entityId); 
+        yield* alarmHandler(entityId);
     });
 });
 
+function* alarmHandler(entityId) {
+    console.log('Alarm handler start at', new Date());
+
+    // This will throw if we can't get through, effectively calling the whole
+    // thing off.
+    yield* requestCampaignData(entityId);
+
+    const adGroups = yield* getAdGroups(entityId);
+    for (const item of adGroups) {
+        try {
+            yield* requestKeywordData(entityId, item.adGroupId);
+        }
+        catch (ex) {
+            ga.mex(ex);
+        }
+    }
+    console.log('Alarm handler finish at', new Date());
+}
+
 function* setSession(req) {
+    console.log('page session startup for', req);
     let sessionKey = getSessionKey(req.entityId);
     
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
-    if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.hour) {
-        yield* requestCampaignData(req.entityId);
-        console.log('requested campaign data for', req.entityId, 'at startup'); 
+    if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
+        yield* alarmHandler(req.entityId);
     }
 
     yield new Promise(resolve => {
@@ -97,7 +118,7 @@ function* setSession(req) {
             if (!alarm) {
                 chrome.alarms.create(sessionKey, {
                     when: Date.now() + 500,
-                    periodInMinutes: 60,
+                    periodInMinutes: alarmPeriodMinutes,
                 });
                 console.log('set alarm for', sessionKey);
                 resolve(true);
@@ -192,7 +213,8 @@ function* requestKeywordData(entityId, adGroupId) {
 
     let timestamp = Date.now();
     console.log('requesting keyword data for', entityId, adGroupId);
-    const data = yield $.post('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
+    const data = yield $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
+        method: 'POST',
         data: {
             entityId, adGroupId,
             /* TODO: use these once Amazon actually supports them
@@ -267,6 +289,14 @@ function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
         method: 'PUT',
         data: JSON.stringify({ campaignId }),
         contentType: 'application/json',
+    });
+}
+
+function* getAdGroups(entityId) {
+    checkEntityId(entityId);
+    return yield $.ajax(`${serviceUrl}/api/adGroups/${entityId}`, {
+        method: 'GET',
+        dataType: 'json',
     });
 }
 
