@@ -1,19 +1,17 @@
 const $ = require('jquery');
+const co = require('co');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
 
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
-let serviceUrl = `https://${constants.hostname}`;
+const serviceUrl = `https://${constants.hostname}`;
 
-function checkEntityId(entityId, sendResponse) {
-    const valid = entityId && entityId != 'undefined' && entityId != 'null';
-    if (valid)
-        return valid;
-    if (sendResponse)
-        sendResponse({error: 'invalid entityId: ' + entityId});
-    return false;
+function checkEntityId(entityId) {
+    if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
+        throw new Error(`invalid entityId={${entityId}}`);
+    }
 }
 
 chrome.runtime.onInstalled.addListener(details => {
@@ -35,159 +33,166 @@ chrome.runtime.onInstalled.addListener(details => {
 });
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    if (req.action == 'setSession')
-        setSession(req, sendResponse);
-    else if (req.action == 'getUser')
-        getUser(sendResponse);
-    else if (req.action == 'getAllowedCampaigns') 
-        getAllowedCampaigns(req.entityId, sendResponse);
-    else if (req.action == 'requestData')
-        requestCampaignData(req.entityId, sendResponse);
-    else if (req.action == 'getDataHistory')
-        getDataHistory(req.entityId, req.campaignId, sendResponse);
-    else if (req.action == 'requestKeywordData')
-        requestKeywordData(req.entityId, req.adGroupId, sendResponse);
-    else if (req.action == 'getKeywordData')
-        getKeywordData(req.entityId, req.adGroupId, sendResponse);
-    else if (req.action == 'setCampaignMetadata')
-        setCampaignMetadata(req.entityId, req.campaignId, req.asin, sendResponse);
-    else if (req.action == 'setAdGroupMetadata')
-        setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId, sendResponse);
-    else 
-        sendResponse({error: 'unknown action'});
+    console.log('Handling message:', req);
+    co(function*() {
+        if (req.action == 'setSession')
+            return yield* setSession(req);
+        else if (req.action == 'getUser')
+            return yield* getUser();
+        else if (req.action == 'getAllowedCampaigns') 
+            return yield* getAllowedCampaigns(req.entityId);
+        else if (req.action == 'requestData')
+            return yield* requestCampaignData(req.entityId);
+        else if (req.action == 'getDataHistory')
+            return yield* getDataHistory(req.entityId, req.campaignId);
+        else if (req.action == 'requestKeywordData')
+            return yield* requestKeywordData(req.entityId, req.adGroupId);
+        else if (req.action == 'getKeywordData')
+            return yield* getKeywordData(req.entityId, req.adGroupId);
+        else if (req.action == 'setCampaignMetadata')
+            return yield* setCampaignMetadata(req.entityId, req.campaignId, req.asin);
+        else if (req.action == 'setAdGroupMetadata')
+            return yield* setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
+        throw new Error('unknown action');
+    })
+    .then(data => {
+        console.log('Success handling message:', req);
+        sendResponse({ data });
+    })
+    .catch(error => {
+        console.log('Error handling message:', req, 'error:', error);
+        sendResponse({ status: error.status, error });
+    });
+
     return true;
 });
 
 chrome.alarms.onAlarm.addListener((session) => {
     let entityId = getEntityIdFromSession(session.name);
-    if (!checkEntityId(entityId)) {
+    try {
+        checkEntityId(entityId);
+    }
+    catch (ex) {
         chrome.alarms.clear(session.name, cleared => console.log("cleared useless alarm", cleared));
-        return;
+        throw ex;
     }
 
-    requestCampaignData(entityId, (response) => {
-        response.error ? ga.merror("requestCampaignData", response.error)
-                       : console.log('request data success');
+    co(function*() { 
+        yield* requestCampaignData(entityId); 
     });
 });
 
-function setSession(req, sendResponse) {
+function* setSession(req) {
     let sessionKey = getSessionKey(req.entityId);
     
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.hour) {
-        requestCampaignData(req.entityId, (response) => {
-            response.error ? ga.merror("requestCampaignData", response.error)
-                           : console.log('requestCampaignData success');
+        yield* requestCampaignData(req.entityId);
+        console.log('requested campaign data for', req.entityId, 'at startup'); 
+    }
+
+    yield new Promise(resolve => {
+        chrome.alarms.get(sessionKey, alarm => {
+            if (!alarm) {
+                chrome.alarms.create(sessionKey, {
+                    when: Date.now() + 500,
+                    periodInMinutes: 60,
+                });
+                console.log('set alarm for', sessionKey);
+                resolve(true);
+            }
+            resolve(false);
+        });
+    });
+}
+
+function* getUser() {
+    return yield $.ajax(`${serviceUrl}/api/user`, { 
+        method: 'GET',
+        dataType: 'json' 
+    });
+}
+
+function* getAllowedCampaigns(entityId) {
+    checkEntityId(entityId);
+
+    try {
+        return yield $.ajax(`${serviceUrl}/api/data/${entityId}/allowed`, { 
+            method: 'GET',
+            dataType: 'json'
         });
     }
-    chrome.alarms.get(sessionKey, (alarm) => {
-        if (!alarm) {
-            chrome.alarms.create(sessionKey, {
-                when: Date.now() + 500,
-                periodInMinutes: 60,
-            });
-            console.log('set alarm for', sessionKey);
+    catch (ex) {
+        if (ex.status == 401) {
+            // this is basically expected, so don't propagate it as an error
+            ga.mga('event', 'error-handled', 'entityid-unauthorized');
+            return yield [];
         }
-    });
-    sendResponse({data: 'ok'});
+        throw ex;
+    }
 }
 
-function getUser(sendResponse) {
-    return $.ajax({
-        url: `${serviceUrl}/api/user`,
-        method: 'GET',
-        dataType: 'json',
-        success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
-    });
-}
+function* requestCampaignData(entityId) {
+    checkEntityId(entityId);
 
-function getAllowedCampaigns(entityId, sendResponse) {
-    if (!checkEntityId(entityId, sendResponse))
-        return Promise.resolve([]);
-    return $.ajax({
-        url: `${serviceUrl}/api/data/${entityId}/allowed`,
-        method: 'GET',
-        dataType: 'json',
-        success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => {
-            if (xhr.status == 401) {
-                // this is basically expected, so don't propagate it as an error
-                ga.mga('event', 'error-handled', 'entityid-unauthorized');
-                sendResponse({ data: [] });
-            }
-            else {
-                sendResponse({ status: xhr.status, error, data: [] });
-            }
-        },
-    });
-}
-
-function requestCampaignData(entityId, sendResponse) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
     let timestamp = Date.now();
-    console.log('requesting campaign data for', entityId);
-    $.ajax('https://ams.amazon.com/api/rta/campaigns', {
-        method: 'GET',
-        data: {
-            entityId,
-            /* TODO: use these once Amazon actually supports them
-            status: null,
-            startDate: null,
-            endDate: null,
-            */
-        },
-        dataType: 'json',
-        success: (data) => {
-            if (data && data.aaData && data.aaData.length) {
-                let campaignIds = data.aaData.map(x => x.campaignId);
-                requestCampaignStatus(entityId, campaignIds, timestamp);
-            }
-            storeDataCloud(entityId, timestamp, data)
-                .then(() => sendResponse({data}))
-                .fail((error) => sendResponse({error}));
-        },
-        error: (xhr, status, error) => {
-            if (xhr.status == 401) { // Unauthorized
-                notifyNeedCredentials(entityId);
-                return;
-            }
-            sendResponse({status: xhr.status, error});
-        },
-    });
+    let data = null;
+    try {
+        console.log('requesting campaign data for', entityId);
+        data = yield $.ajax('https://ams.amazon.com/api/rta/campaigns', {
+            method: 'GET',
+            data: {
+                entityId,
+                /* TODO: use these once Amazon actually supports them
+                status: null,
+                startDate: null,
+                endDate: null,
+                */
+            },
+            dataType: 'json',
+        });
+    }
+    catch (ex) {
+        if (ex.status == 401) { // Unauthorized
+            notifyNeedCredentials(entityId);
+        }
+        throw ex;
+    }
 
+    if (data && data.aaData && data.aaData.length) {
+        let campaignIds = data.aaData.map(x => x.campaignId);
+        yield* requestCampaignStatus(entityId, campaignIds, timestamp);
+    }
+
+    yield* storeDataCloud(entityId, timestamp, data);
     localStorage.setItem(getCampaignDataKey(entityId), timestamp);
+
+    return data;
 }
 
-function requestCampaignStatus(entityId, campaignIds, timestamp) {
-    $.ajax('https://ams.amazon.com/api/rta/campaign-status', {
+function* requestCampaignStatus(entityId, campaignIds, timestamp) {
+    checkEntityId(entityId); 
+
+    const data = yield $.ajax('https://ams.amazon.com/api/rta/campaign-status', {
         method: 'GET',
         data: { 
             entityId, 
             campaignIds: campaignIds.join(','),
         },
         dataType: 'json',
-        success: (data) => {
-            storeStatusCloud(entityId, timestamp, data)
-                .then(() => console.log('stored campaign status data successfully'))
-                .fail((error) => ga.merror('requestCampaignStatus error', error));
-        },
-        error: (xhr, textStatus, error) => {
-            console.log('error storing campaign status', error);
-        },
     });
+
+    yield* storeStatusCloud(entityId, timestamp, data);
+    return data;
 }
 
-function requestKeywordData(entityId, adGroupId, sendResponse) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
+function* requestKeywordData(entityId, adGroupId) {
+    checkEntityId(entityId);
+
     let timestamp = Date.now();
     console.log('requesting keyword data for', entityId, adGroupId);
-    $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
-        method: 'POST',
+    const data = yield $.post('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
         data: {
             entityId, adGroupId,
             /* TODO: use these once Amazon actually supports them
@@ -197,110 +202,71 @@ function requestKeywordData(entityId, adGroupId, sendResponse) {
             */
         },
         dataType: 'json',
-        success: (data) => {
-            if (data.message) {
-                sendResponse({status: 200, error: data.message});
-            }
-            else {
-                storeKeywordDataCloud(entityId, adGroupId, timestamp, data)
-                    .then(() => sendResponse({data}))
-                    .fail((error) => sendResponse({error}));
-            }
-        },
-        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
+
+    if (data.message) {
+        throw new Error(data.message);
+    }
+
+    yield* storeKeywordDataCloud(entityId, adGroupId, timestamp, data);
+    return data;
 }
 
-function storeDataCloud(entityId, timestamp, data) {
-    return $.ajax({
-        url: `${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`,
+function* storeDataCloud(entityId, timestamp, data) {
+    return yield $.ajax(`${serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        success: (data, status) => console.log('cloud storage', status), 
-        error: (xhr, status, error) => ga.merror('storeDataCloud', status, error),
     });
 }
 
-function storeStatusCloud(entityId, timestamp, data) {
-    return $.ajax({
-        url: `${serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`,
+function* storeStatusCloud(entityId, timestamp, data) {
+    return yield $.ajax(`${serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        success: (data, status) => console.log('status storage', status), 
-        error: (xhr, status, error) => ga.merror('storeStatusCloud', status, error),
     });
 }
 
-function storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
-    return $.ajax({
-        url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`,
+function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
+    return yield $.ajax(`${serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        success: (data, status) => console.log('keyword storage', status), 
-        error: (xhr, status, error) => ga.merror('storeKeywordDataCloud', status, error),
     });
 }
 
-function getDataHistory(entityId, campaignId, sendResponse) { // TODO: date ranges, etc.
-    if (!checkEntityId(entityId, sendResponse))
-        return;
-    $.ajax({
-        url: `${serviceUrl}/api/data/${entityId}/${campaignId}`,
+function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
+    checkEntityId(entityId);
+    return yield $.ajax(`${serviceUrl}/api/data/${entityId}/${campaignId}`, { 
+        method: 'GET',
+        dataType: 'json'
+    });
+}
+
+function* getKeywordData(entityId, adGroupId) {
+    checkEntityId(entityId);
+    return yield $.ajax(`${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`, {
         method: 'GET',
         dataType: 'json',
-        success: (data) => {
-            sendResponse({data});
-        },
-        error: (xhr, status, error) => {
-            sendResponse({status: xhr.status, error});
-        },
     });
 }
 
-function getKeywordData(entityId, adGroupId, sendResponse) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
-    $.ajax({
-        url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
-        method: 'GET',
-        dataType: 'json',
-        success: (data) => {
-            sendResponse({data});
-        },
-        error: (xhr, status, error) => {
-            sendResponse({status: xhr.status, error});
-        },
-    });
-}
-
-function setCampaignMetadata(entityId, campaignId, asin, sendResponse) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
-    let data = {asin};
-    $.ajax({
-        url: `${serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`,
+function* setCampaignMetadata(entityId, campaignId, asin) {
+    checkEntityId(entityId);
+    return yield $.ajax(`${serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
-        data: JSON.stringify(data),
+        data: JSON.stringify({ asin }),
         contentType: 'application/json',
-        success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
 
-function setAdGroupMetadata(entityId, adGroupId, campaignId, sendResponse) {
-    if (!checkEntityId(entityId, sendResponse))
-        return;
-    let data = {campaignId};
-    $.ajax({
-        url: `${serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`,
+function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
+    checkEntityId(entityId);
+    return yield $.ajax(`${serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
-        data: JSON.stringify(data),
+        data: JSON.stringify({ campaignId }),
         contentType: 'application/json',
-        success: (data) => sendResponse({data}),
-        error: (xhr, status, error) => sendResponse({status: xhr.status, error}),
     });
 }
 

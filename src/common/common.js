@@ -149,7 +149,7 @@ if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    });
+    }, response => {});
 
     // Add in the Machete link to the top bar
     chrome.runtime.sendMessage({ action: 'getUser' }, response => {
