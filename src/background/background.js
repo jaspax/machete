@@ -268,10 +268,23 @@ function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
 
 function* getKeywordData(entityId, adGroupId) {
     checkEntityId(entityId);
-    return yield $.ajax(`${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`, {
+
+    const ajaxOptions = {
+        url: `${serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
         method: 'GET',
         dataType: 'json',
-    });
+    };
+    let data = yield $.ajax(ajaxOptions);
+
+    if (!data || data.length == 0) {
+        // Possibly this is the first time we've ever seen this campaign. If so,
+        // let's query Amazon and populate our own servers, and then come back.
+        // This is very slow but should usually only happen once.
+        yield* requestKeywordData(entityId, adGroupId);
+        data = yield $.ajax(ajaxOptions);
+    }
+
+    return data;
 }
 
 function* setCampaignMetadata(entityId, campaignId, asin) {

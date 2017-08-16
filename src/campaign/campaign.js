@@ -343,22 +343,15 @@ function updateBid(keywordIdList, bid, cb) {
 
 function getKeywordData(entityId, adGroupId, resolve, reject) {
     chrome.runtime.sendMessage({
-        action: 'requestKeywordData', // from Amazon's servers
+        action: 'getKeywordData', // from our server
         entityId: entityId,
         adGroupId: adGroupId,
     },
-    ga.mcatch(() => {
-        chrome.runtime.sendMessage({
-            action: 'getKeywordData', // from our server
-            entityId: entityId,
-            adGroupId: adGroupId,
-        },
-        ga.mcatch(response => {
-            if (response.error) {
-                ga.merror(response.status, response.error);
-                return reject(response.error);
-            }
-            return resolve(response.data || []);
-        }));
+    ga.mcatch(response => {
+        if (response.error) {
+            ga.merror(response.status, response.error);
+            return reject(response.error);
+        }
+        return resolve(response.data || []);
     }));
 }
