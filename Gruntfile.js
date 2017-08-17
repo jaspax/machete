@@ -6,6 +6,16 @@ module.exports = function(grunt) {
     const pkg = require('./package.json');
     const dependencies = Object.keys(pkg.dependencies);
 
+    let product = grunt.option('product') || process.env.MACHETE_PRODUCT;
+    if (!['seller', 'selfpub'].includes(product)) {
+        throw new Error('unknown product: ' + product);
+    }
+
+    let sourceDirs = {
+        selfpub: ['background', 'campaign', 'dashboard'],
+        seller: ['seller-background', 'seller-dashboard'],
+    };
+
     let targetJson = 'beta.json';
     let releaseTag = 'beta';
     let nodeEnv = 'debug';
@@ -17,7 +27,7 @@ module.exports = function(grunt) {
     if (grunt.option('noDebug')) {
         nodeEnv = 'production';
     }
-    const zipFile = `machete-${releaseTag}.zip`;
+    const zipFile = `machete-${product}-${releaseTag}.zip`;
 
     const gruntConfig = {
         // Project configuration.
@@ -30,7 +40,7 @@ module.exports = function(grunt) {
         browserify: {
             vendor: {
                 src: [],
-                dest: 'out/src/vendor.js',
+                dest: `out/${product}/src/vendor.js`,
                 options: { 
                     require: dependencies,
                     transform: [
@@ -53,15 +63,15 @@ module.exports = function(grunt) {
             },
             genManifest: {
                 cmd: './node_modules/.bin/mustache',
-                args: [targetJson, 'manifest.json.mustache', 'out/manifest.json'],
+                args: [targetJson, `${product}-manifest.json.mustache`, `out/${product}/manifest.json`],
             },
         },
         copy: {
-            css: { expand: true, src: 'css/**', dest: 'out/', },
-            img: { expand: true, src: 'images/**', dest: 'out/', },
-            html: { expand: true, src: 'html/**', dest: 'out/', },
-            datepickerCss: { src: 'node_modules/react-datepicker/dist/react-datepicker.css', dest: 'out/css/react-datepicker.css' },
-            tableCss: { src: 'node_modules/react-table/react-table.css', dest: 'out/css/react-table.css' },
+            css: { expand: true, src: 'css/**', dest: `out/${product}`, },
+            img: { expand: true, src: 'images/**', dest: `out/${product}`, },
+            html: { expand: true, src: 'html/**', dest: `out/${product}`, },
+            datepickerCss: { src: 'node_modules/react-datepicker/dist/react-datepicker.css', dest: `out/${product}/css/react-datepicker.css` },
+            tableCss: { src: 'node_modules/react-table/react-table.css', dest: `out/${product}/css/react-table.css` },
         },
         watch: {
             genConst: {
@@ -69,7 +79,7 @@ module.exports = function(grunt) {
                 tasks: ['run:genConst']
             },
             genManifest: {
-                files: ['manifest.json.mustache'],
+                files: [`${product}-manifest.json.mustache`],
                 tasks: ['run:genManifest'],
             },
             components: {
@@ -83,19 +93,18 @@ module.exports = function(grunt) {
             /* Targets created programatically */
         },
         zip: {
-            [zipFile]: ['out/**'],
+            [zipFile]: [`out/${product}/**`],
         },
     };
 
     // Handle JS source directories. For each such directory aside from
     // 'common', create a watch, browserify, and eslint task
     const nobuild = ['common', 'components'];
-    const dirs = fs.readdirSync('src').filter(x => fs.lstatSync(`src/${x}`).isDirectory() && !nobuild.includes(x));
-    for (name of dirs) {
+    for (name of sourceDirs[product]) {
         gruntConfig.eslint[name] = [`src/${name}`];
         gruntConfig.browserify[name] = {
             src: [`src/${name}/*.js`],
-            dest: `out/src/${name}.js`,
+            dest: `out/${product}/src/${name}.js`,
             options: {
                 external: dependencies,
                 transform: [['babelify', {presets: ['react']}]]
@@ -116,7 +125,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-run');
     grunt.loadNpmTasks('grunt-zip');
 
-    grunt.registerTask('app', dirs.map(x => `browserify:${x}`));
+    grunt.registerTask('app', sourceDirs[product].map(x => `browserify:${x}`));
     grunt.registerTask('generate', ['run:genConst', 'run:genManifest']);
     grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy', 'zip']);
 };
