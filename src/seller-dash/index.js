@@ -1,5 +1,1 @@
-const $ = require('jquery');
-const React = require('react');
-const ReactDOM = require('react-dom');
-
-
+chrome.runtime.sendMessage({ action: 'setSession', }, response => console.log(response));

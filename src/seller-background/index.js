@@ -1,6 +1,5 @@
 const $ = require('jquery');
 const co = require('co');
-const ga = require('../common/ga.js');
 const constants = require('../common/constants.gen.js');
 
 const lastUpdateKey = 'machete-last-update';
@@ -48,7 +47,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     return true;
 });
 
-chrome.alarms.onAlarm.addListener((session) => {
+chrome.alarms.onAlarm.addListener(() => {
     co(function*() { 
         yield* alarmHandler();
     });
@@ -79,7 +78,7 @@ function* alarmHandler() {
     }
 }
 
-function* setSession(req) {
+function* setSession() {
     console.log('seller session startup');
     
     // Always request data on login, then set the alarm
@@ -93,7 +92,7 @@ function* setSession(req) {
     yield new Promise(resolve => {
         chrome.alarms.get(dataAlarmName, alarm => {
             if (!alarm) {
-                chrome.alarms.create(sessionKey, {
+                chrome.alarms.create(dataAlarmName, {
                     when: Date.now() + 500,
                     periodInMinutes: alarmPeriodMinutes,
                 });
@@ -106,11 +105,11 @@ function* setSession(req) {
 }
 
 function* requestCampaignData() {
-    let timestamp = Date.now();
+    // let timestamp = Date.now(); // WILL BE NEEDED LATER
     let data = null;
     try {
         console.log('requesting campaign data');
-        data = yield $.ajax('https://ams.amazon.com/api/rta/campaigns', {
+        data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/campaign/fetch', {
             method: 'GET',
             data: {
                 sEcho: 1,
@@ -130,9 +129,10 @@ function* requestCampaignData() {
         });
     }
     catch (ex) {
+        /* TURN THIS BACK ON SHORTLY
         if (ex.status == 401) { // Unauthorized
             notifyNeedCredentials();
-        }
+        } */
         throw ex;
     }
 

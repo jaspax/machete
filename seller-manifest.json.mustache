@@ -12,7 +12,7 @@
   },
 
   "page_action": {
-    "default_name": "Machete",
+    "default_name": "Machete for Amazon Sellers",
     "default_icon": "images/machete-128.png"
   },
   "permissions": [
@@ -23,19 +23,14 @@
     "https://{{hostname}}/*"
   ],
   "background": {
-      "scripts": ["src/vendor.js", "src/background.js"],
+      "scripts": ["src/vendor.js", "src/seller-background.js"],
       "persistent": false
   },
   "content_scripts": [
       {
-          "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
-          "js": ["src/vendor.js", "src/dashboard.js"],
+          "matches": ["https://sellercentral.amazon.com/hz/cm/*"],
+          "js": ["src/vendor.js", "src/seller-dash.js"],
           "css": ["css/inject.css"]
-      },
-      {
-          "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
-          "js": ["src/vendor.js", "src/campaign.js"],
-          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css"]
       }
   ],
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",

@@ -13,7 +13,7 @@ module.exports = function(grunt) {
 
     let sourceDirs = {
         selfpub: ['background', 'campaign', 'dashboard'],
-        seller: ['seller-background', 'seller-dashboard'],
+        seller: ['seller-background', 'seller-dash'],
     };
 
     let targetJson = `${product}-beta.json`;
@@ -30,7 +30,6 @@ module.exports = function(grunt) {
     const zipFile = `machete-${product}-${releaseTag}.zip`;
 
     const gruntConfig = {
-        // Project configuration.
         pkg,
         eslint: {
             options: { extensions: ['.js', '.jsx'] },
