@@ -3,7 +3,7 @@ const fs = require('fs');
 module.exports = function(grunt) {
     // Programatically find out what packages we include. This is used to factor
     // out our node packages from our actual code.
-    const pkg = require('./package.json');
+    const pkg = grunt.file.readJSON('./package.json');
     const dependencies = Object.keys(pkg.dependencies);
 
     let product = grunt.option('product') || process.env.MACHETE_PRODUCT;
@@ -16,11 +16,11 @@ module.exports = function(grunt) {
         seller: ['seller-background', 'seller-dashboard'],
     };
 
-    let targetJson = 'beta.json';
+    let targetJson = `${product}-beta.json`;
     let releaseTag = 'beta';
     let nodeEnv = 'debug';
     if (grunt.option('release')) {
-        targetJson = 'production.json';
+        targetJson = `${product}-production.json`;
         releaseTag = 'release';
         nodeEnv = 'production';
     }
@@ -31,7 +31,7 @@ module.exports = function(grunt) {
 
     const gruntConfig = {
         // Project configuration.
-        pkg: grunt.file.readJSON('package.json'),
+        pkg,
         eslint: {
             options: { extensions: ['.js', '.jsx'] },
             components: ['src/components'],
