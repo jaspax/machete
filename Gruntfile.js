@@ -8,9 +8,14 @@ module.exports = function(grunt) {
 
     let targetJson = 'beta.json';
     let releaseTag = 'beta';
+    let nodeEnv = 'debug';
     if (grunt.option('release')) {
         targetJson = 'production.json';
         releaseTag = 'release';
+        nodeEnv = 'production';
+    }
+    if (grunt.option('noDebug')) {
+        nodeEnv = 'production';
     }
     const zipFile = `machete-${releaseTag}.zip`;
 
@@ -26,7 +31,14 @@ module.exports = function(grunt) {
             vendor: {
                 src: [],
                 dest: 'out/src/vendor.js',
-                options: { require: dependencies },
+                options: { 
+                    require: dependencies,
+                    transform: [
+                        ['envify', { global: true, NODE_ENV: nodeEnv } ],
+                        ['uglifyify', { global: true }],
+                        ['babelify', { presets: ['react'] }]
+                    ]
+                },
             },
             /* More targets created programatically */
         }, 
