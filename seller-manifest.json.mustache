@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+
+  "name": "{{name}}",
+  "short_name": "Machete for Amazon Sellers",
+  "description": "Upgrade your advertising campaign analytics for Amazon Sellers",
+  "version": "0.1.0",
+  "icons": { 
+      "16": "images/machete-16.png",
+      "48": "images/machete-48.png",
+      "128": "images/machete-128.png" 
+  },
+
+  "page_action": {
+    "default_name": "Machete",
+    "default_icon": "images/machete-128.png"
+  },
+  "permissions": [
+    "alarms",
+    "background", 
+    "notifications",
+    "https://ams.amazon.com/*",
+    "https://{{hostname}}/*"
+  ],
+  "background": {
+      "scripts": ["src/vendor.js", "src/background.js"],
+      "persistent": false
+  },
+  "content_scripts": [
+      {
+          "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
+          "js": ["src/vendor.js", "src/dashboard.js"],
+          "css": ["css/inject.css"]
+      },
+      {
+          "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
+          "js": ["src/vendor.js", "src/campaign.js"],
+          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css"]
+      }
+  ],
+  "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
+  "web_accessible_resources": [
+      "images/**",
+      "*/*.html"
+  ]
+}
