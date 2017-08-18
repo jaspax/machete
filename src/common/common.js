@@ -33,6 +33,13 @@ function getCampaignId(href) {
     throw ga.merror('could not discover entityId');
 }
 
+function getSellerCampaignId(href) {
+    let path = href.split('?')[0];
+    let parts = path.split('/');
+    let campaignIdx = parts.indexOf("campaign");
+    return parts[campaignIdx + 1];
+}
+
 function getQueryArgs(str) {
     let qstring = str || window.location.toString();
     qstring = qstring.split('?').pop();
@@ -160,6 +167,7 @@ if (window.location.href.includes('ams')) {
         const user = response.data;
         let email = user.email;
         user.isAnon = email == 'anon-user-email';
+        window.user = user;
 
         const desc = user.activeSubscription.name;
         let profileText = "Your Profile";
@@ -186,6 +194,21 @@ if (window.location.href.includes('ams')) {
             });
         }
 
+    });
+}
+
+if (window.location.href.includes('sellercentral')) {
+    chrome.runtime.sendMessage({ action: 'setSession', }, response => {});
+
+    // Add in the Machete link to the top bar
+    chrome.runtime.sendMessage({ action: 'getUser' }, response => {
+        if (response.error) {
+            ga.merror(response.error);
+            return;
+        }
+        const user = response.data;
+        let email = user.email;
+        user.isAnon = email == 'anon-user-email';
         window.user = user;
     });
 }
@@ -193,6 +216,7 @@ if (window.location.href.includes('ams')) {
 module.exports = {
     getEntityId,
     getCampaignId,
+    getSellerCampaignId,
     getQueryArgs,
     moneyFmt,
     pctFmt,

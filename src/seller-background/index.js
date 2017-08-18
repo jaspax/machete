@@ -1,47 +1,15 @@
 const $ = require('jquery');
-const co = require('co');
 const constants = require('../common/constants.gen.js');
+const bg = require('../common/common-background.js');
 
-const lastUpdateKey = 'machete-last-update';
-const lastVersionKey = 'machete-last-version';
-const serviceUrl = `https://${constants.hostname}`;
-
-chrome.runtime.onInstalled.addListener(details => {
-    const manifest = chrome.runtime.getManifest();
-    if (details.reason == 'install') {
-        chrome.tabs.create({ url: `${serviceUrl}/plugin/welcome` });
-    }
-    else if (details.reason == 'update') {
-        const lastVersion = localStorage.getItem(lastVersionKey);
-        const currentVersion = manifest.version;
-
-        // the following comparison implicitly ignores the C in A.B.C, due to
-        // the way that parseFloat works
-        if (!lastVersion || parseFloat(currentVersion) > parseFloat(lastVersion)) {
-            chrome.tabs.create({ url: chrome.runtime.getURL('html/seller-changelog.html') });
-        }
-    }
-    localStorage.setItem(lastVersionKey, manifest.version);
-});
-
-
-chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    console.log('Handling message:', req);
-    co(function*() {
-        if (req.action == 'setSession')
-            return yield* setSession(req);
-        throw new Error('unknown action');
-    })
-    .then(data => {
-        console.log('Success handling message:', req);
-        sendResponse({ data });
-    })
-    .catch(error => {
-        console.log('Error handling message:', req, 'error:', error);
-        sendResponse({ status: error.status, error });
-    });
-
-    return true;
+bg.messageListener(function*(req) {
+    if (req.action == 'setSession')
+        return yield* setSession(req);
+    if (req.action == 'getUser')
+        return yield* bg.getUser();
+    if (req.action == 'getCampaignDataRange')
+        return yield* getCampaignDataRange(req.campaignId, req.startTimestamp, req.endTimestamp);
+    throw new Error('unknown action');
 });
 
 function* synchronizeCampaignData() {
@@ -49,7 +17,6 @@ function* synchronizeCampaignData() {
 
     try {
         const ranges = yield* getMissingRanges();
-
         for (const range of ranges) {
             yield* requestCampaignDataRange(range.start, range.end);
         }
@@ -117,5 +84,12 @@ function* storeCampaignDataRange(data, startDate, endDate) {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
+    });
+}
+
+function* getCampaignDataRange(campaignId, startTimestamp, endTimestamp) {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/campaignData/${campaignId}/${startTimestamp}-${endTimestamp}`, {
+        method: 'GET',
+        dataType: 'json'
     });
 }

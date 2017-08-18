@@ -16,39 +16,26 @@ function checkEntityId(entityId) {
     }
 }
 
-chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    console.log('Handling message:', req);
-    co(function*() {
-        if (req.action == 'setSession')
-            return yield* setSession(req);
-        else if (req.action == 'getUser')
-            return yield* bg.getUser();
-        else if (req.action == 'getAllowedCampaigns') 
-            return yield* getAllowedCampaigns(req.entityId);
-        else if (req.action == 'requestData')
-            return yield* requestCampaignData(req.entityId);
-        else if (req.action == 'getDataHistory')
-            return yield* getDataHistory(req.entityId, req.campaignId);
-        else if (req.action == 'requestKeywordData')
-            return yield* requestKeywordData(req.entityId, req.adGroupId);
-        else if (req.action == 'getKeywordData')
-            return yield* getKeywordData(req.entityId, req.adGroupId);
-        else if (req.action == 'setCampaignMetadata')
-            return yield* setCampaignMetadata(req.entityId, req.campaignId, req.asin);
-        else if (req.action == 'setAdGroupMetadata')
-            return yield* setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
-        throw new Error('unknown action');
-    })
-    .then(data => {
-        console.log('Success handling message:', req);
-        sendResponse({ data });
-    })
-    .catch(error => {
-        console.log('Error handling message:', req, 'error:', error);
-        sendResponse({ status: error.status, error });
-    });
-
-    return true;
+bg.messageListener(function*(req) {
+    if (req.action == 'setSession')
+        return yield* setSession(req);
+    else if (req.action == 'getUser')
+        return yield* bg.getUser();
+    else if (req.action == 'getAllowedCampaigns') 
+        return yield* getAllowedCampaigns(req.entityId);
+    else if (req.action == 'requestData')
+        return yield* requestCampaignData(req.entityId);
+    else if (req.action == 'getDataHistory')
+        return yield* getDataHistory(req.entityId, req.campaignId);
+    else if (req.action == 'requestKeywordData')
+        return yield* requestKeywordData(req.entityId, req.adGroupId);
+    else if (req.action == 'getKeywordData')
+        return yield* getKeywordData(req.entityId, req.adGroupId);
+    else if (req.action == 'setCampaignMetadata')
+        return yield* setCampaignMetadata(req.entityId, req.campaignId, req.asin);
+    else if (req.action == 'setAdGroupMetadata')
+        return yield* setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
+    throw new Error('unknown action');
 });
 
 chrome.alarms.onAlarm.addListener((session) => {

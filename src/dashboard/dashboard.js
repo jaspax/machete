@@ -17,7 +17,6 @@ const charts = [
     { column: 11, label: "ACOS", config: {metric: 'acos', chunk: 'day', round: false, startTimestamp} },
 ];
 
-
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns',
     entityId: common.getEntityId(),
