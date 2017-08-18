@@ -4,10 +4,7 @@ const constants = require('../common/constants.gen.js');
 
 const lastUpdateKey = 'machete-last-update';
 const lastVersionKey = 'machete-last-version';
-const dataAlarmName = 'machete-data-alarm';
 const serviceUrl = `https://${constants.hostname}`;
-
-const alarmPeriodMinutes = 240;
 
 chrome.runtime.onInstalled.addListener(details => {
     const manifest = chrome.runtime.getManifest();
@@ -47,86 +44,55 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     return true;
 });
 
-chrome.alarms.onAlarm.addListener(() => {
-    co(function*() { 
-        yield* alarmHandler();
-    });
-});
-
-function* alarmHandler() {
-    console.log('Alarm handler start at', new Date());
+function* synchronizeCampaignData() {
+    console.log('synchronizeCampaignData start at', new Date());
 
     try {
-        // This will throw if we can't get through, effectively calling the whole
-        // thing off.
-        yield* requestCampaignData();
+        const ranges = yield* getMissingRanges();
 
-        /*
-        const adGroups = yield* getAdGroups();
-        for (const item of adGroups) {
-            try {
-                yield* requestKeywordData(item.adGroupId);
-            }
-            catch (ex) {
-                ga.mex(ex);
-            }
+        for (const range of ranges) {
+            yield* requestCampaignDataRange(range.start, range.end);
         }
-        */
     }
     finally {
-        console.log('Alarm handler finish at', new Date());
+        console.log('synchronizeCampaignData finish at', new Date());
     }
 }
 
 function* setSession() {
-    console.log('seller session startup');
-    
-    // Always request data on login, then set the alarm
-    let lastCampaignData = parseFloat(localStorage.getItem(lastUpdateKey));
-    if (!lastCampaignData || 
-        isNaN(lastCampaignData) || 
-        Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
-            yield* alarmHandler();
-    }
-
-    yield new Promise(resolve => {
-        chrome.alarms.get(dataAlarmName, alarm => {
-            if (!alarm) {
-                chrome.alarms.create(dataAlarmName, {
-                    when: Date.now() + 500,
-                    periodInMinutes: alarmPeriodMinutes,
-                });
-                console.log('set alarm for', dataAlarmName);
-                resolve(true);
-            }
-            resolve(false);
-        });
-    });
+    yield* synchronizeCampaignData();
 }
 
-function* requestCampaignData() {
-    // let timestamp = Date.now(); // WILL BE NEEDED LATER
+function* requestCampaignDataRange(startDate, endDate) {
     let data = null;
     try {
-        console.log('requesting campaign data');
-        data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/campaign/fetch', {
-            method: 'GET',
-            data: {
-                sEcho: 1,
-                parentCreationDate: 0,
-                iDisplayStart: 0,
-                iDisplayLength: 50,
-                statisticsPeriod: 'MONTH_TO_DATE',
-                aggregates: false,
-                statusFilter: 'ENABLED'
-                /* TODO: figure out how to use these maybe
-                status: null,
-                startDate: null,
-                endDate: null,
-                */
-            },
-            dataType: 'json',
-        });
+        console.log('requesting campaign data in range', startDate, endDate);
+        const pageSize = 50;
+        let currentPage = 0;
+        let totalRecords = 0;
+        do {
+            data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/campaign/fetch', {
+                method: 'GET',
+                data: {
+                    sEcho: 1,
+                    parentCreationDate: 0,
+                    iDisplayStart: currentPage,
+                    iDisplayLength: pageSize,
+                    statisticsPeriod: 'CUSTOMIZED',
+                    startDate,
+                    endDate,
+                    aggregates: false,
+                    statusFilter: 'ENABLED'
+                },
+                dataType: 'json',
+            });
+
+            totalRecords = data.iTotalRecords;
+            currentPage++;
+
+            yield* storeCampaignDataRange(data, startDate, endDate);
+        }
+        while (currentPage * pageSize < totalRecords);
     }
     catch (ex) {
         /* TURN THIS BACK ON SHORTLY
@@ -136,18 +102,20 @@ function* requestCampaignData() {
         throw ex;
     }
 
-    console.log('got campaign data', data);
-
-    /*
-    if (data && data.aaData && data.aaData.length) {
-        let campaignIds = data.aaData.map(x => x.campaignId);
-        yield* requestCampaignStatus(campaignIds, timestamp);
-    }
-
-    yield* storeDataCloud(timestamp, data);
-    localStorage.setItem(getCampaignDataKey(), timestamp);
-    */
-
     return data;
 }
 
+function* getMissingRanges() {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/campaignData/missingRanges`, {
+        method: 'GET',
+        dataType: 'json',
+    });
+}
+
+function* storeCampaignDataRange(data, startDate, endDate) {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/campaignData/${startDate}-${endDate}`, {
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+    });
+}
