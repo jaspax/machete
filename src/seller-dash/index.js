@@ -10,14 +10,14 @@ const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx
 
 // Map column names to data metrics
 const endTimestamp = Date.now();
-const tenDays = 10 * constants.timespan.day;
+const tenDays = 15 * constants.timespan.day;
 const startTimestamp = endTimestamp - tenDays;
 
 const charts = [
-    { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', rate: 'day', chunk: 'day', round: true, startTimestamp} },
-    { column: "Clicks", label: "Clicks / day", config: {metric: 'clicks', rate: 'day', chunk: 'day', round: true, startTimestamp} },
-    { column: "Spend", label: "Spend / day", config: {metric: 'spend', rate: 'day', chunk: 'day', round: false, startTimestamp} },
-    { column: "Orders", label: "Sales / day", config: {metric: 'salesCount', rate: 'day', chunk: 'day', round: true, startTimestamp} },
+    { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', chunk: 'day', round: true, startTimestamp} },
+    { column: "Clicks", label: "Clicks / day", config: {metric: 'clicks', chunk: 'day', round: true, startTimestamp} },
+    { column: "Spend", label: "Spend / day", config: {metric: 'spend', chunk: 'day', round: false, startTimestamp} },
+    { column: "Orders", label: "Sales / day", config: {metric: 'salesCount', chunk: 'day', round: true, startTimestamp} },
     { column: "ACoS", label: "ACoS", config: {metric: 'acos', chunk: 'day', round: false, startTimestamp} },
     { column: "CTR", label: "CTR", config: {metric: 'ctr', chunk: 'day', round: false, startTimestamp} },
     { column: "CPC", label: "Cost per click", config: {metric: 'cpc', chunk: 'day', round: false, startTimestamp} },
