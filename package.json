@@ -26,6 +26,7 @@
     "react": "^15.6.1",
     "react-datepicker": "^0.52.0",
     "react-dom": "^15.6.1",
+    "react-element-portal": "^1.1.1",
     "react-table": "^6.5.3"
   },
   "devDependencies": {
