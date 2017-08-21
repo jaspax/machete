@@ -8,20 +8,20 @@ const ga = require('../common/ga.js');
 
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 
-// Map column names to data metrics
 const endTimestamp = Date.now();
 const tenDays = 15 * constants.timespan.day;
 const startTimestamp = endTimestamp - tenDays;
 
+// Map column names to data metrics
 const charts = [
     { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', chunk: 'day', round: true, startTimestamp} },
     { column: "Clicks", label: "Clicks / day", config: {metric: 'clicks', chunk: 'day', round: true, startTimestamp} },
     { column: "Spend", label: "Spend / day", config: {metric: 'spend', chunk: 'day', round: false, startTimestamp} },
-    { column: "Orders", label: "Sales / day", config: {metric: 'salesCount', chunk: 'day', round: true, startTimestamp} },
+    { column: "Orders", label: "Orders / day", config: {metric: 'salesCount', chunk: 'day', round: true, startTimestamp} },
     { column: "ACoS", label: "ACoS", config: {metric: 'acos', chunk: 'day', round: false, startTimestamp} },
     { column: "CTR", label: "CTR", config: {metric: 'ctr', chunk: 'day', round: false, startTimestamp} },
     { column: "CPC", label: "Cost per click", config: {metric: 'cpc', chunk: 'day', round: false, startTimestamp} },
-    { column: "Sales", label: "Sales", config: {metric: 'salesValue', chunk: 'day', round: false, startTimestamp} },
+    { column: "Sales", label: "Sales ($) / day", config: {metric: 'salesValue', chunk: 'day', round: false, startTimestamp} },
 ];
 
 window.setInterval(ga.mcatch(() => {
@@ -52,10 +52,10 @@ function addChartButtons(columns, rows) {
             continue;
 
         let href = link.href;
-        let campaignId = common.getSellerCampaignId(href);
+        let { campaignId, adGroupId } = common.getSellerCampaignId(href);
 
         const campaignData = null;
-        const campaignMetrics = {};
+        const metrics = {};
         for (let chart of charts) {
             let target = cells[columns.indexOf(chart.column)];
             if (!target)
@@ -65,19 +65,22 @@ function addChartButtons(columns, rows) {
                 continue;
 
             const loadData = onComplete => {
-                if (campaignMetrics[chart.config.metric])
-                    return onComplete(campaignMetrics[chart.config.metric]);
-                if (campaignData) {
-                    let chartData = common.parallelizeHistoryData(campaignData, chart.config);
-                    campaignMetrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
-                    return onComplete(campaignMetrics[chart.config.metric]);
-                }
+                if (metrics[chart.config.metric])
+                    return onComplete(metrics[chart.config.metric]);
 
-                return getSellerCampaignHistory(campaignId, data => {
+                const callback = data => {
                     let chartData = common.parallelizeHistoryData(data, chart.config);
-                    campaignMetrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
-                    onComplete(campaignMetrics[chart.config.metric]);
-                });
+                    metrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
+                    return onComplete(metrics[chart.config.metric]);
+                };
+
+                if (campaignData) {
+                    return callback(campaignData);
+                }
+                if (campaignId && adGroupId) {
+                    return getSellerAdGroupHistory(campaignId, adGroupId, callback);
+                }
+                return getSellerCampaignHistory(campaignId, callback);
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
@@ -97,6 +100,23 @@ function getSellerCampaignHistory(campaignId, cb) {
     chrome.runtime.sendMessage({
         action: 'getCampaignDataRange',
         campaignId,
+        startTimestamp,
+        endTimestamp,
+    },
+    ga.mcatch(response => {
+        if (response.error) {
+            ga.merror(response.status, response.error);
+            return;
+        }
+        cb(response.data);
+    }));
+}
+
+function getSellerAdGroupHistory(campaignId, adGroupId, cb) {
+    chrome.runtime.sendMessage({
+        action: 'getAdGroupDataRange',
+        campaignId,
+        adGroupId,
         startTimestamp,
         endTimestamp,
     },

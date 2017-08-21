@@ -36,8 +36,12 @@ function getCampaignId(href) {
 function getSellerCampaignId(href) {
     let path = href.split('?')[0];
     let parts = path.split('/');
-    let campaignIdx = parts.indexOf("campaign");
-    return parts[campaignIdx + 1];
+    let campaignIdx = parts.indexOf('campaign');
+    let adGroupIdx = parts.indexOf('ad_group');
+    return { 
+        campaignId: campaignIdx >= 0 ? parts[campaignIdx + 1] : undefined,
+        adGroupId: adGroupIdx >= 0 ? parts[adGroupIdx + 1] : undefined,
+    };
 }
 
 function getQueryArgs(str) {
