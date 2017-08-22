@@ -29,7 +29,7 @@ const charts = [
 // Tabs that we want to add to the regular tab places
 const ourTabs = [
     // note: these wind up appended in the reverse order they're listed here
-    {label: "Campaign History", activate: generateHistoryReports, matching: /./ },
+    // {label: "Campaign History", activate: generateHistoryReports, matching: /./ },
     {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
 ];
 
@@ -79,7 +79,7 @@ function addCampaignTabs(tabs) {
             ga.mga('event', 'kword-data-tab', 'activate', tab.label);
             li.addClass('a-active');
             li.siblings().removeClass('a-active');
-            tabs.parent().children('div').addClass('a-hidden');
+            tabs.parent().siblings('div').addClass('a-hidden');
             container.removeClass('a-hidden');
 
             if (tab.activate && !tab.hasActivated) {
