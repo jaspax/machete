@@ -249,6 +249,7 @@ module.exports = {
     getCampaignId,
     getSellerCampaignId,
     getQueryArgs,
+    getAsin,
     moneyFmt,
     pctFmt,
     getCampaignHistory,
