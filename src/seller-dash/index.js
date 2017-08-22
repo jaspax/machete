@@ -12,6 +12,8 @@ const endTimestamp = Date.now();
 const tenDays = 15 * constants.timespan.day;
 const startTimestamp = endTimestamp - tenDays;
 
+const tabClass = `machete-tab`;
+
 // Map column names to data metrics
 const charts = [
     { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', chunk: 'day', round: true, startTimestamp} },
@@ -22,6 +24,13 @@ const charts = [
     { column: "CTR", label: "CTR", config: {metric: 'ctr', chunk: 'day', round: false, startTimestamp} },
     { column: "CPC", label: "Cost per click", config: {metric: 'cpc', chunk: 'day', round: false, startTimestamp} },
     { column: "Sales", label: "Sales ($) / day", config: {metric: 'salesValue', chunk: 'day', round: false, startTimestamp} },
+];
+
+// Tabs that we want to add to the regular tab places
+const ourTabs = [
+    // note: these wind up appended in the reverse order they're listed here
+    {label: "Campaign History", activate: generateHistoryReports, matching: /./ },
+    {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
 ];
 
 window.setInterval(ga.mcatch(() => {
@@ -40,6 +49,48 @@ window.setInterval(ga.mcatch(() => {
     
     addChartButtons(columns, rows);
 }), 100);
+
+let makeTabsInterval = window.setInterval(ga.mcatch(() => {
+    let campaignTabs = $('.a-tab-heading');
+    if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
+        addCampaignTabs(campaignTabs);
+        window.clearInterval(makeTabsInterval);
+    }
+}), 100);
+
+function addCampaignTabs(tabs) {
+    for (let tab of ourTabs) {
+        /* Probably not going to keep doing this?
+        if (!location.toString().match(tab.matching)) {
+            continue;
+        }
+        */
+
+        // Create the actual Tab control and embed it into the 
+        let a = $(`<a href="javascript:void(0);">${tab.label}</a>`);
+        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
+        li.append(a);
+
+        let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+        tabs.parent().after(container);
+
+        a.click(ga.mcatch(function(evt) {
+            evt.preventDefault();
+            ga.mga('event', 'kword-data-tab', 'activate', tab.label);
+            li.addClass('a-active');
+            li.siblings().removeClass('a-active');
+            tabs.parent().children('div').addClass('a-hidden');
+            container.removeClass('a-hidden');
+
+            if (tab.activate && !tab.hasActivated) {
+                tab.activate(container);
+                tab.hasActivated = true;
+            }
+        }));
+
+        tabs.parent().append(li);
+    }
+}
 
 function addChartButtons(columns, rows) {
     for (let row of rows) {
@@ -131,4 +182,12 @@ function calcFetchDataFunction(locationHref, linkHref) {
             callback(response.data);
         }));
     };
+}
+
+function generateHistoryReports() {
+    // TODO
+}
+
+function generateKeywordReports() {
+    // TODO
 }
