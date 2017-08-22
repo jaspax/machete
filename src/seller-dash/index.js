@@ -51,8 +51,7 @@ function addChartButtons(columns, rows) {
         if (!link)
             continue;
 
-        let href = link.href;
-        let { campaignId, adGroupId } = common.getSellerCampaignId(href);
+        let fetchData = calcFetchDataFunction(window.location.href, link.href);
 
         const campaignData = null;
         const metrics = {};
@@ -68,19 +67,16 @@ function addChartButtons(columns, rows) {
                 if (metrics[chart.config.metric])
                     return onComplete(metrics[chart.config.metric]);
 
-                const callback = data => {
+                const processData = data => {
                     let chartData = common.parallelizeHistoryData(data, chart.config);
                     metrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
                     return onComplete(metrics[chart.config.metric]);
                 };
 
                 if (campaignData) {
-                    return callback(campaignData);
+                    return processData(campaignData);
                 }
-                if (campaignId && adGroupId) {
-                    return getSellerAdGroupHistory(campaignId, adGroupId, callback);
-                }
-                return getSellerCampaignHistory(campaignId, callback);
+                return fetchData(processData);
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
@@ -96,43 +92,43 @@ function addChartButtons(columns, rows) {
     }
 }
 
-function getSellerCampaignHistory(campaignId, cb) {
-    chrome.runtime.sendMessage({
-        action: 'getCampaignDataRange',
-        campaignId,
-        startTimestamp,
-        endTimestamp,
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            return;
-        }
-        cb(response.data);
-    }));
-}
-
-function getSellerAdGroupHistory(campaignId, adGroupId, cb) {
-    chrome.runtime.sendMessage({
-        action: 'getAdGroupDataRange',
-        campaignId,
-        adGroupId,
-        startTimestamp,
-        endTimestamp,
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            return;
-        }
-        cb(response.data);
-    }));
-}
-
 function formatParallelData(data, name) {
     return { 
         timestamps: data.timestamps, 
         data: data[name], 
         name,
+    };
+}
+
+function calcFetchDataFunction(locationHref, linkHref) {
+    let { campaignId, adGroupId } = common.getSellerCampaignId(linkHref);
+    let args = { startTimestamp, endTimestamp };
+
+    if (adGroupId && campaignId) {
+        // We're on the campaign detail page looking at a link to a particular
+        // ad group.
+        args = Object.assign(args, { action: 'getAdGroupDataRange', campaignId, adGroupId });
+    }
+    else if (campaignId) {
+        // We're on the overall campaign page, looking at a link to a campaign
+        // detail page.
+        args = Object.assign(args, { action: 'getCampaignDataRange', campaignId });
+    }
+    else {
+        // We're on the adGroup page, looking at a link to the product. The
+        // current location has the campaignId and the adGroupId.
+        ({ campaignId, adGroupId } = common.getSellerCampaignId(locationHref));
+        const asin = common.getAsin(linkHref);
+        args = Object.assign(args, { action: 'getAdDataRangeByAsin', campaignId, adGroupId, asin });
+    }
+
+    return callback => {
+        chrome.runtime.sendMessage(args, ga.mcatch(response => {
+            if (response.error) {
+                ga.merror(response.status, response.error);
+                return;
+            }
+            callback(response.data);
+        }));
     };
 }

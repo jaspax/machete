@@ -11,6 +11,8 @@ bg.messageListener(function*(req) {
         return yield* getCampaignDataRange(req.campaignId, req.startTimestamp, req.endTimestamp);
     if (req.action == 'getAdGroupDataRange')
         return yield* getAdGroupDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
+    if (req.action == 'getAdDataRangeByAsin')
+        return yield* getAdDataRangeByAsin(req.campaignId, req.adGroupId, req.asin, req.startTimestamp, req.endTimestamp);
     throw new Error('unknown action');
 });
 
@@ -21,8 +23,11 @@ function* synchronizeCampaignData() {
         const ranges = yield* getMissingRanges();
         for (const range of ranges) {
             const campaignIds = yield* requestCampaignDataRange(range.start, range.end);
-            for (const id of campaignIds) {
-                yield* requestAdGroupDataRange(id, range.start, range.end);
+            for (const campaignId of campaignIds) {
+                const adGroupIds = yield* requestAdGroupDataRange(campaignId, range.start, range.end);
+                for (const adGroupId of adGroupIds) {
+                    yield* requestAdDataRange(campaignId, adGroupId, range.start, range.end);
+                }
             }
         }
     }
@@ -59,7 +64,7 @@ function* requestAllPages(getCurrentPage) {
 }
 
 function* requestCampaignDataRange(startDate, endDate) {
-    let campaignIds = [];
+    const campaignIds = new Set();
     yield* requestAllPages(function*(pageSize, currentRecord) {
         console.log('requesting campaign data in range', startDate, endDate, 'record', currentRecord);
         const data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/campaign/fetch', {
@@ -81,7 +86,7 @@ function* requestCampaignDataRange(startDate, endDate) {
 
         // Gather the IDs of the campaigns discovered in this data range
         const idIndex = data.columnNames.indexOf('id');
-        campaignIds = campaignIds.concat(data.aaData.map(x => x[idIndex]).filter(x => x));
+        data.aaData.forEach(x => x[idIndex] && campaignIds.add(x[idIndex]));
 
         return data;
     });
@@ -90,7 +95,8 @@ function* requestCampaignDataRange(startDate, endDate) {
 }
 
 function* requestAdGroupDataRange(campaignId, startDate, endDate) {
-    return yield* requestAllPages(function*(pageSize, currentRecord) {
+    const adGroupIds = new Set();
+    yield* requestAllPages(function*(pageSize, currentRecord) {
         console.log('requesting adGroupData data in range', startDate, endDate, 'record', currentRecord);
         const data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/adgroup/fetch', {
             method: 'GET',
@@ -109,6 +115,37 @@ function* requestAdGroupDataRange(campaignId, startDate, endDate) {
             dataType: 'json',
         });
         yield* storeAdGroupDataRange(data, startDate, endDate);
+
+        // Gather the adGroupIds of the ad groups discovered in this data range
+        const idIndex = data.columnNames.indexOf('id');
+        data.aaData.forEach(x => x[idIndex] && adGroupIds.add(x[idIndex]));
+
+        return data;
+    });
+
+    return adGroupIds;
+}
+
+function* requestAdDataRange(campaignId, adGroupId, startDate, endDate) {
+    return yield* requestAllPages(function*(pageSize, currentRecord) {
+        console.log('requesting ad data in range', startDate, endDate, 'record', currentRecord);
+        const data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/ad/fetch', {
+            method: 'GET',
+            data: {
+                sEcho: 1,
+                parentCreationDate: 0,
+                iDisplayStart: currentRecord,
+                iDisplayLength: pageSize,
+                statisticsPeriod: 'CUSTOMIZED',
+                startDate,
+                endDate,
+                aggregates: false,
+                statusFilter: 'ENABLED',
+                filters: JSON.stringify({campaign: { id: { eq: [campaignId] } }, adGroup: { id: { ed: [adGroupId] } } }),
+            },
+            dataType: 'json',
+        });
+        yield* storeAdDataRange(data, startDate, endDate);
         return data;
     });
 }
@@ -120,12 +157,16 @@ function* getMissingRanges() {
     });
 }
 
-function* storeCampaignDataRange(data, startDate, endDate) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/campaignData/${startDate}-${endDate}`, {
+function* storeSellerDataRange(subRoute, data, startDate, endDate) {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startDate}-${endDate}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
     });
+}
+
+function* storeCampaignDataRange(data, startDate, endDate) {
+    return yield* storeSellerDataRange('campaignData', data, startDate, endDate);
 }
 
 function* getCampaignDataRange(campaignId, startTimestamp, endTimestamp) {
@@ -136,15 +177,22 @@ function* getCampaignDataRange(campaignId, startTimestamp, endTimestamp) {
 }
 
 function* storeAdGroupDataRange(data, startDate, endDate) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/adGroupData/${startDate}-${endDate}`, {
-        method: 'PUT',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-    });
+    return yield* storeSellerDataRange('adGroupData', data, startDate, endDate);
 }
 
 function* getAdGroupDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
     return yield $.ajax(`https://${constants.hostname}/api/seller/adGroupData/${campaignId}/${adGroupId}/${startTimestamp}-${endTimestamp}`, {
+        method: 'GET',
+        dataType: 'json'
+    });
+}
+
+function* storeAdDataRange(data, startDate, endDate) {
+    return yield* storeSellerDataRange('adData', data, startDate, endDate);
+}
+
+function* getAdDataRangeByAsin(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/adData/${campaignId}/${adGroupId}/asin=${asin}/${startTimestamp}-${endTimestamp}`, {
         method: 'GET',
         dataType: 'json'
     });

@@ -44,6 +44,33 @@ function getSellerCampaignId(href) {
     };
 }
 
+function getAsin(url) {
+    let path = url.split('?')[0];
+    let parts = path.split('/');
+
+    // ASIN is 10 characters beginning with B. If there's only one of those,
+    // return it immediately.
+    let asinLookalikes = parts.filter(x => x.length == 10 && x[0] == 'B');
+    if (!asinLookalikes.length)
+        return undefined;
+    if (asinLookalikes.length == 1)
+        return asinLookalikes[0];
+
+    // Look for url patterns like product/${ASIN}
+    let productIdx = parts.indexOf('product');
+    if (productIdx >= 0 && asinLookalikes.includes(parts[productIdx + 1]))
+        return parts[productIdx + 1];
+
+    // Look for url patterns like dp/${ASIN}
+    let dpIdx = parts.indexOf('dp');
+    if (dpIdx >= 0 && asinLookalikes.includes(parts[dpIdx + 1]))
+        return parts[dpIdx + 1];
+
+    // Just return the first ASIN-like thing and hope for the best. This returns
+    // undefined if there were *no* ASINs found.
+    return asinLookalikes[0];
+}
+
 function getQueryArgs(str) {
     let qstring = str || window.location.toString();
     qstring = qstring.split('?').pop();
