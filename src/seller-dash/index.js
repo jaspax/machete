@@ -86,7 +86,7 @@ function addChartButtons(columns, rows) {
                 loadData,
             });
             const container = $('<span></span>');
-            $(target).append(container);
+            $(target).children().first().append(container);
             ReactDOM.render(btn, container[0]);
         }
     }
