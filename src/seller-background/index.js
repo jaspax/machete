@@ -63,10 +63,10 @@ function* requestAllPages(getCurrentPage) {
     return data;
 }
 
-function* requestCampaignDataRange(startDate, endDate) {
+function* requestCampaignDataRange(startTimestamp, endTimestamp) {
     const campaignIds = new Set();
     yield* requestAllPages(function*(pageSize, currentRecord) {
-        console.log('requesting campaign data in range', startDate, endDate, 'record', currentRecord);
+        console.log('requesting campaign data in range', startTimestamp, endTimestamp, 'record', currentRecord);
         const data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/campaign/fetch', {
             method: 'GET',
             data: {
@@ -75,14 +75,14 @@ function* requestCampaignDataRange(startDate, endDate) {
                 iDisplayStart: currentRecord,
                 iDisplayLength: pageSize,
                 statisticsPeriod: 'CUSTOMIZED',
-                startDate,
-                endDate,
+                startTimestamp,
+                endTimestamp,
                 aggregates: false,
                 statusFilter: 'ENABLED'
             },
             dataType: 'json',
         });
-        yield* storeCampaignDataRange(data, startDate, endDate);
+        yield* storeCampaignDataRange(data, startTimestamp, endTimestamp);
 
         // Gather the IDs of the campaigns discovered in this data range
         const idIndex = data.columnNames.indexOf('id');
@@ -94,10 +94,10 @@ function* requestCampaignDataRange(startDate, endDate) {
     return campaignIds;
 }
 
-function* requestAdGroupDataRange(campaignId, startDate, endDate) {
+function* requestAdGroupDataRange(campaignId, startTimestamp, endTimestamp) {
     const adGroupIds = new Set();
     yield* requestAllPages(function*(pageSize, currentRecord) {
-        console.log('requesting adGroupData data in range', startDate, endDate, 'record', currentRecord);
+        console.log('requesting adGroupData data in range', startTimestamp, endTimestamp, 'record', currentRecord);
         const data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/adgroup/fetch', {
             method: 'GET',
             data: {
@@ -106,15 +106,15 @@ function* requestAdGroupDataRange(campaignId, startDate, endDate) {
                 iDisplayStart: currentRecord,
                 iDisplayLength: pageSize,
                 statisticsPeriod: 'CUSTOMIZED',
-                startDate,
-                endDate,
+                startTimestamp,
+                endTimestamp,
                 aggregates: false,
                 statusFilter: 'ENABLED',
                 filters: JSON.stringify({campaign: { id: { eq: [campaignId] } } }),
             },
             dataType: 'json',
         });
-        yield* storeAdGroupDataRange(data, startDate, endDate);
+        yield* storeAdGroupDataRange(data, startTimestamp, endTimestamp);
 
         // Gather the adGroupIds of the ad groups discovered in this data range
         const idIndex = data.columnNames.indexOf('id');
@@ -126,9 +126,9 @@ function* requestAdGroupDataRange(campaignId, startDate, endDate) {
     return adGroupIds;
 }
 
-function* requestAdDataRange(campaignId, adGroupId, startDate, endDate) {
+function* requestAdDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
     return yield* requestAllPages(function*(pageSize, currentRecord) {
-        console.log('requesting ad data in range', startDate, endDate, 'record', currentRecord);
+        console.log('requesting ad data in range', startTimestamp, endTimestamp, 'record', currentRecord);
         const data = yield $.ajax('https://sellercentral.amazon.com/hz/cm/ad/fetch', {
             method: 'GET',
             data: {
@@ -137,15 +137,15 @@ function* requestAdDataRange(campaignId, adGroupId, startDate, endDate) {
                 iDisplayStart: currentRecord,
                 iDisplayLength: pageSize,
                 statisticsPeriod: 'CUSTOMIZED',
-                startDate,
-                endDate,
+                startTimestamp,
+                endTimestamp,
                 aggregates: false,
                 statusFilter: 'ENABLED',
                 filters: JSON.stringify({campaign: { id: { eq: [campaignId] } }, adGroup: { id: { ed: [adGroupId] } } }),
             },
             dataType: 'json',
         });
-        yield* storeAdDataRange(data, startDate, endDate);
+        yield* storeAdDataRange(data, startTimestamp, endTimestamp);
         return data;
     });
 }
@@ -157,43 +157,41 @@ function* getMissingRanges() {
     });
 }
 
-function* storeSellerDataRange(subRoute, data, startDate, endDate) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startDate}-${endDate}`, {
+function* storeSellerDataRange(subRoute, data, startTimestamp, endTimestamp) {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
     });
 }
 
-function* storeCampaignDataRange(data, startDate, endDate) {
-    return yield* storeSellerDataRange('campaignData', data, startDate, endDate);
+function* getSellerDataRange(subRoute, startTimestamp, endTimestamp) {
+    return yield $.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
+        method: 'GET',
+        dataType: 'json'
+    });
+}
+
+function* storeCampaignDataRange(data, startTimestamp, endTimestamp) {
+    return yield* storeSellerDataRange('campaignData', data, startTimestamp, endTimestamp);
 }
 
 function* getCampaignDataRange(campaignId, startTimestamp, endTimestamp) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/campaignData/${campaignId}/${startTimestamp}-${endTimestamp}`, {
-        method: 'GET',
-        dataType: 'json'
-    });
+    return yield* getSellerDataRange(`campaignData/${campaignId}`, startTimestamp, endTimestamp);
 }
 
-function* storeAdGroupDataRange(data, startDate, endDate) {
-    return yield* storeSellerDataRange('adGroupData', data, startDate, endDate);
+function* storeAdGroupDataRange(data, startTimestamp, endTimestamp) {
+    return yield* storeSellerDataRange('adGroupData', data, startTimestamp, endTimestamp);
 }
 
 function* getAdGroupDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/adGroupData/${campaignId}/${adGroupId}/${startTimestamp}-${endTimestamp}`, {
-        method: 'GET',
-        dataType: 'json'
-    });
+    return yield* getSellerDataRange(`adGroupData/${campaignId}/${adGroupId}`, startTimestamp, endTimestamp);
 }
 
-function* storeAdDataRange(data, startDate, endDate) {
-    return yield* storeSellerDataRange('adData', data, startDate, endDate);
+function* storeAdDataRange(data, startTimestamp, endTimestamp) {
+    return yield* storeSellerDataRange('adData', data, startTimestamp, endTimestamp);
 }
 
 function* getAdDataRangeByAsin(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/adData/${campaignId}/${adGroupId}/asin=${asin}/${startTimestamp}-${endTimestamp}`, {
-        method: 'GET',
-        dataType: 'json'
-    });
+    return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/asin=${asin}`, startTimestamp, endTimestamp);
 }
