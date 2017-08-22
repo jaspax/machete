@@ -25,9 +25,15 @@ function* synchronizeCampaignData() {
         const ranges = yield* getMissingRanges();
         for (const range of ranges) {
             const campaignIds = yield* requestCampaignDataRange(range.start, range.end);
-            const adGroupIds = yield* requestAdGroupDataRange(campaignIds, range.start, range.end);
-            yield* requestAdDataRange(campaignIds, adGroupIds, range.start, range.end);
-            yield* requestKeywordDataRange(campaignIds, adGroupIds, range.start, range.end);
+
+            for (const campaignId of campaignIds) {
+                const adGroupIds = yield* requestAdGroupDataRange(campaignId, range.start, range.end);
+
+                for (const adGroupId of adGroupIds) {
+                    yield* requestAdDataRange(campaignId, adGroupId, range.start, range.end);
+                    yield* requestKeywordDataRange(campaignId, adGroupId, range.start, range.end);
+                }
+            }
         }
     }
     catch (ex) {
@@ -70,10 +76,10 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             iDisplayStart: currentRecord,
             iDisplayLength: pageSize,
             statisticsPeriod: 'CUSTOMIZED',
-            startTimestamp,
-            endTimestamp,
             aggregates: false,
-            statusFilter: 'ENABLED'
+            startDate: startTimestamp,
+            endDate: endTimestamp,
+            statusFilter: 'ENABLED',
         };
         if (filters) {
             requestParams.filters = JSON.stringify(filters);
@@ -105,11 +111,11 @@ function* requestCampaignDataRange(startTimestamp, endTimestamp) {
     return Array.from(campaignIds);
 }
 
-function* requestAdGroupDataRange(campaignIds, startTimestamp, endTimestamp) {
+function* requestAdGroupDataRange(campaignId, startTimestamp, endTimestamp) {
     const adGroupIds = new Set();
-    console.log('requesting adGroupData data in range', startTimestamp, endTimestamp, 'campaignIds', campaignIds);
+    console.log('requesting adGroupData data in range', startTimestamp, endTimestamp, 'campaignId', campaignId);
 
-    const filters = {campaign: { id: { eq: campaignIds } } };
+    const filters = {campaign: { id: { eq: [campaignId] } } };
     yield* requestSellerDataRange('adgroup', filters, startTimestamp, endTimestamp, function*(data) {
         yield* storeAdGroupDataRange(data, startTimestamp, endTimestamp);
 
@@ -121,17 +127,17 @@ function* requestAdGroupDataRange(campaignIds, startTimestamp, endTimestamp) {
     return Array.from(adGroupIds);
 }
 
-function* requestAdDataRange(campaignIds, adGroupIds, startTimestamp, endTimestamp) {
-    console.log('requesting ad data in range', startTimestamp, endTimestamp, 'campaignIds', campaignIds, 'adGroupIds', adGroupIds);
-    const filters = {campaign: { id: { eq: campaignIds } }, adGroup: { id: { eq: adGroupIds } } };
+function* requestAdDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
+    console.log('requesting ad data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
+    const filters = {campaign: { id: { eq: [campaignId] } }, adGroup: { id: { eq: [adGroupId] } } };
     return yield* requestSellerDataRange('ad', filters, startTimestamp, endTimestamp, function*(data) { 
         yield* storeAdDataRange(data, startTimestamp, endTimestamp); 
     });
 }
 
-function* requestKeywordDataRange(campaignIds, adGroupIds, startTimestamp, endTimestamp) {
-    console.log('requesting keyword data in range', startTimestamp, endTimestamp, 'campaignIds', campaignIds, 'adGroupIds', adGroupIds);
-    const filters = { matchType: { eq: ["broad", "phrase", "exact"] }, campaign: { id: { eq: campaignIds } }, adGroup: { id: { eq: adGroupIds } } };
+function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
+    console.log('requesting keyword data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
+    const filters = { matchType: { eq: ["broad", "phrase", "exact"] }, campaign: { id: { eq: [campaignId] } }, adGroup: { id: { eq: [adGroupId] } } };
     return yield* requestSellerDataRange('keyword', filters, startTimestamp, endTimestamp, function*(data) {
         yield* storeKeywordDataRange(data, startTimestamp, endTimestamp);
     });
@@ -184,7 +190,7 @@ function* getAdDataRangeByAsin(campaignId, adGroupId, asin, startTimestamp, endT
 }
 
 function* storeKeywordDataRange(data, startTimestamp, endTimestamp) {
-    return yield* storeSellerDataRange('keyword', data, startTimestamp, endTimestamp);
+    return yield* storeSellerDataRange('keywordData', data, startTimestamp, endTimestamp);
 }
 
 function* getKeywordDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
