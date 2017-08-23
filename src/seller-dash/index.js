@@ -127,7 +127,7 @@ function addChartButtons(columns, rows) {
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
-                allowed: true,
+                allowed: window.user && !window.user.isAnon,
                 metric: chart.config.metric,
                 title: chart.label,
                 loadData,
@@ -223,7 +223,7 @@ function generateCampaignHistory(container) {
 
 function generateKeywordReports(container) {
     const chart = React.createElement(KeywordAnalysis, { 
-        allowed: true, // assume true until we know otherwise
+        allowed: window.user && !window.user.isAnon, // assume true until we know otherwise
         loading: true,
         keywordData: [],
         updateStatus: () => console.warn("shouldn't update keywords while still loading"),
@@ -233,7 +233,7 @@ function generateKeywordReports(container) {
 
     getKeywordDataAggregate(data => {
         const chart = React.createElement(KeywordAnalysis, { 
-            allowed: true, // assume true until we know otherwise
+            allowed: window.user && !window.user.isAnon,
             loading: false,
             keywordData: data,
             updateStatus,
