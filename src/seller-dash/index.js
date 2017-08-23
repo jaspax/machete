@@ -239,9 +239,32 @@ function generateKeywordReports(container) {
             allowed: true, // assume true until we know otherwise
             loading: false,
             keywordData: data,
-            updateStatus: () => console.warn("TODO: updated status"),
-            updateBid: () => console.warn("TODO: update bid"),
+            updateStatus,
+            updateBid,
         });
         ReactDOM.render(chart, container[0]);
     });
+}
+
+function updateKeyword(data, cb) {
+    $.ajax({
+        url: 'https://sellercentral.amazon.com/hz/cm/keyword/update',
+        method: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
+    })
+    .then(() => cb({success: true}))
+    .catch(error => cb({error}));
+}
+
+function updateStatus(keywordIds, enabled, cb) {
+    const status = enabled ? 'ENABLED' : 'PAUSED';
+    const postData = { entities: keywordIds.map(id => ({ id, status })) };
+    updateKeyword(postData, cb);
+}
+
+function updateBid(keywordIds, bid, cb) {
+    const postData = { entities: keywordIds.map(id => ({ id, bid })) };
+    updateKeyword(postData, cb);
 }
