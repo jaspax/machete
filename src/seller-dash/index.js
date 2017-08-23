@@ -30,13 +30,6 @@ const charts = [
     { column: "Sales", label: "Sales ($) / day", config: {metric: 'salesValue', chunk: 'day', round: false} },
 ];
 
-// Tabs that we want to add to the regular tab places
-const ourTabs = [
-    // note: these wind up appended in the reverse order they're listed here
-    // {label: "Campaign History", activate: generateHistoryReports, matching: /./ },
-    {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
-];
-
 window.setInterval(ga.mcatch(() => {
     let rows = $('.public_fixedDataTableRow_main');
     let header = rows.first();
@@ -54,46 +47,45 @@ window.setInterval(ga.mcatch(() => {
     addChartButtons(columns, rows);
 }), 100);
 
-let makeTabsInterval = window.setInterval(ga.mcatch(() => {
-    let campaignTabs = $('.a-tab-heading');
-    if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
-        addCampaignTabs(campaignTabs);
-        window.clearInterval(makeTabsInterval);
+window.setInterval(ga.mcatch(() => {
+    let tabs = $('.a-tab-heading');
+    if (tabs.parent().find(`.${tabClass}`).length)
+        return;
+
+    if (window.location.href.match(/ad_group\/A\w+\//)) {
+        // On the ad group page. Add the keyword analytics page
+        injectTab(tabs, "KeywordAnalytics", generateKeywordReports);
+    }
+    else if (window.location.href.match(/ad_groups\//)) {
+        injectTab(tabs, "Campaign History", generateCampaignHistory);
     }
 }), 100);
 
-function addCampaignTabs(tabs) {
-    for (let tab of ourTabs) {
-        /* Probably not going to keep doing this?
-        if (!location.toString().match(tab.matching)) {
-            continue;
+function injectTab(tabs, label, activate) {
+    // Create the actual Tab control and embed it into the existing tab list
+    let a = $(`<a href="javascript:void(0);">${label}</a>`);
+    let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
+    li.append(a);
+
+    let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+    tabs.parent().after(container);
+
+    let hasActivated = false;
+    a.click(ga.mcatch(function(evt) {
+        evt.preventDefault();
+        ga.mga('event', 'kword-data-tab', 'activate', label);
+        li.addClass('a-active');
+        li.siblings().removeClass('a-active');
+        tabs.parent().siblings('div').addClass('a-hidden');
+        container.removeClass('a-hidden');
+
+        if (activate && !hasActivated) {
+            activate(container);
+            hasActivated = true;
         }
-        */
+    }));
 
-        // Create the actual Tab control and embed it into the 
-        let a = $(`<a href="javascript:void(0);">${tab.label}</a>`);
-        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
-        li.append(a);
-
-        let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden"></div>`);
-        tabs.parent().after(container);
-
-        a.click(ga.mcatch(function(evt) {
-            evt.preventDefault();
-            ga.mga('event', 'kword-data-tab', 'activate', tab.label);
-            li.addClass('a-active');
-            li.siblings().removeClass('a-active');
-            tabs.parent().siblings('div').addClass('a-hidden');
-            container.removeClass('a-hidden');
-
-            if (tab.activate && !tab.hasActivated) {
-                tab.activate(container);
-                tab.hasActivated = true;
-            }
-        }));
-
-        tabs.parent().append(li);
-    }
+    tabs.parent().append(li);
 }
 
 function addChartButtons(columns, rows) {
@@ -222,6 +214,11 @@ function getKeywordDataAggregate(onComplete) {
 
         onComplete(_.values(keywords));
     }));
+}
+
+function generateCampaignHistory(container) {
+    // TODO
+    console.log(container);
 }
 
 function generateKeywordReports(container) {
