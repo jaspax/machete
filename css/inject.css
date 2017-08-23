@@ -66,6 +66,11 @@
     margin-right: 2px;
 }
 
+.machete-kwbid input {
+    width: 90px;
+    margin: 2px 4px;
+}
+
 .machete-kwstatus {
     width: 64px;
     margin-left: 2px;

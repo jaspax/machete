@@ -10,22 +10,24 @@ const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
 
-const endTimestamp = Date.now();
-const tenDays = 15 * constants.timespan.day;
-const startTimestamp = endTimestamp - tenDays;
+const now = Date.now();
+const twoWeeks = 15 * constants.timespan.day;
+const ninetyDays = 91 * constants.timespan.day;
+const twoWeeksAgo = now - twoWeeks;
+const ninetyDaysAgo = now - ninetyDays;
 
 const tabClass = `machete-tab`;
 
 // Map column names to data metrics
 const charts = [
-    { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', chunk: 'day', round: true, startTimestamp} },
-    { column: "Clicks", label: "Clicks / day", config: {metric: 'clicks', chunk: 'day', round: true, startTimestamp} },
-    { column: "Spend", label: "Spend / day", config: {metric: 'spend', chunk: 'day', round: false, startTimestamp} },
-    { column: "Orders", label: "Orders / day", config: {metric: 'salesCount', chunk: 'day', round: true, startTimestamp} },
-    { column: "ACoS", label: "ACoS", config: {metric: 'acos', chunk: 'day', round: false, startTimestamp} },
-    { column: "CTR", label: "CTR", config: {metric: 'ctr', chunk: 'day', round: false, startTimestamp} },
-    { column: "CPC", label: "Cost per click", config: {metric: 'cpc', chunk: 'day', round: false, startTimestamp} },
-    { column: "Sales", label: "Sales ($) / day", config: {metric: 'salesValue', chunk: 'day', round: false, startTimestamp} },
+    { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', chunk: 'day', round: true} },
+    { column: "Clicks", label: "Clicks / day", config: {metric: 'clicks', chunk: 'day', round: true} },
+    { column: "Spend", label: "Spend / day", config: {metric: 'spend', chunk: 'day', round: false} },
+    { column: "Orders", label: "Orders / day", config: {metric: 'salesCount', chunk: 'day', round: true} },
+    { column: "ACoS", label: "ACoS", config: {metric: 'acos', chunk: 'day', round: false} },
+    { column: "CTR", label: "CTR", config: {metric: 'ctr', chunk: 'day', round: false} },
+    { column: "CPC", label: "Cost per click", config: {metric: 'cpc', chunk: 'day', round: false} },
+    { column: "Sales", label: "Sales ($) / day", config: {metric: 'salesValue', chunk: 'day', round: false} },
 ];
 
 // Tabs that we want to add to the regular tab places
@@ -155,7 +157,7 @@ function formatParallelData(data, name) {
 
 function calcFetchDataFunction(locationHref, linkHref) {
     let { campaignId, adGroupId } = common.getSellerCampaignId(linkHref);
-    let args = { startTimestamp, endTimestamp };
+    let args = { startTimestamp: twoWeeksAgo, endTimestamp: now };
 
     if (adGroupId && campaignId) {
         // We're on the campaign detail page looking at a link to a particular
@@ -193,8 +195,8 @@ function getKeywordDataAggregate(onComplete) {
         action: 'getKeywordDataRange',
         campaignId,
         adGroupId,
-        startTimestamp,
-        endTimestamp,
+        startTimestamp: ninetyDaysAgo,
+        endTimestamp: now,
     }, ga.mcatch(response => {
         if (response.error) {
             ga.merror(response.status, response.error);
