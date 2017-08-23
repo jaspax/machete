@@ -12,11 +12,13 @@ class KeywordBulkUpdate extends React.Component {
     }
 
     render() {
+        const enabled = this.props.data.length ? this.props.data[0].enabled : false;
+        const bid = this.props.data.length ? this.props.data[0].bid : 0;
         return (
             <div className="machete-kwupdate-bulk">
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
-                <KeywordEnableToggle enabled={this.props.data[0].enabled} onChange={this.handleEnabledChange} />
-                <KeywordBidUpdate bid={this.props.data[0].bid} onChange={this.handleBidChange} />
+                <KeywordEnableToggle enabled={enabled} onChange={this.handleEnabledChange} />
+                <KeywordBidUpdate bid={bid} onChange={this.handleBidChange} />
             </div>
         );
     }

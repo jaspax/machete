@@ -1,4 +1,5 @@
 const $ = require('jquery');
+const _ = require('lodash');
 const React = require('react');
 const ReactDOM = require('react-dom');
 
@@ -7,6 +8,7 @@ const constants = require('../common/constants.gen.js');
 const ga = require('../common/ga.js');
 
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
+const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
 
 const endTimestamp = Date.now();
 const tenDays = 15 * constants.timespan.day;
@@ -184,10 +186,60 @@ function calcFetchDataFunction(locationHref, linkHref) {
     };
 }
 
-function generateHistoryReports() {
-    // TODO
+function getKeywordDataAggregate(onComplete) {
+    let { campaignId, adGroupId } = common.getSellerCampaignId(window.location.href);
+
+    chrome.runtime.sendMessage({
+        action: 'getKeywordDataRange',
+        campaignId,
+        adGroupId,
+        startTimestamp,
+        endTimestamp,
+    }, ga.mcatch(response => {
+        if (response.error) {
+            ga.merror(response.status, response.error);
+            return;
+        }
+
+        const keywords = {};
+        for (const record of response.data) {
+            const kw = record.keyword;
+            if (!keywords[kw])
+                keywords[kw] = {};
+            _.each(_.keys(record), key => {
+                if (['impressions', 'clicks', 'sales', 'spend'].includes(key)) {
+                    if (isNaN(keywords[kw][key]))
+                        keywords[kw][key] = 0;
+                    keywords[kw][key] += record[key];
+                }
+                else {
+                    keywords[kw][key] = record[key];
+                }
+            });
+        }
+
+        onComplete(_.values(keywords));
+    }));
 }
 
-function generateKeywordReports() {
-    // TODO
+function generateKeywordReports(container) {
+    const chart = React.createElement(KeywordAnalysis, { 
+        allowed: true, // assume true until we know otherwise
+        loading: true,
+        keywordData: [],
+        updateStatus: () => console.warn("shouldn't update keywords while still loading"),
+        updateBid: () => console.warn("shouldn't update keywords while still loading"),
+    });
+    ReactDOM.render(chart, container[0]);
+
+    getKeywordDataAggregate(data => {
+        const chart = React.createElement(KeywordAnalysis, { 
+            allowed: true, // assume true until we know otherwise
+            loading: false,
+            keywordData: data,
+            updateStatus: () => console.warn("TODO: updated status"),
+            updateBid: () => console.warn("TODO: update bid"),
+        });
+        ReactDOM.render(chart, container[0]);
+    });
 }

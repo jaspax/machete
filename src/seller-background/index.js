@@ -29,10 +29,16 @@ function* synchronizeCampaignData() {
             for (const campaignId of campaignIds) {
                 const adGroupIds = yield* requestAdGroupDataRange(campaignId, range.start, range.end);
 
+                // This innermost loop we can parallelize for speed without
+                // blowing things up too much, hopefully
+                const promises = [];
+
                 for (const adGroupId of adGroupIds) {
-                    yield* requestAdDataRange(campaignId, adGroupId, range.start, range.end);
-                    yield* requestKeywordDataRange(campaignId, adGroupId, range.start, range.end);
+                    promises.push(requestAdDataRange(campaignId, adGroupId, range.start, range.end));
+                    promises.push(requestKeywordDataRange(campaignId, adGroupId, range.start, range.end));
                 }
+
+                yield Promise.all(promises);
             }
         }
     }
