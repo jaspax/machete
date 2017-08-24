@@ -191,7 +191,7 @@ function getKeywordDataAggregate(onComplete) {
         }
 
         const keywords = {};
-        for (const record of response.data) {
+        for (const record of response.data.sort((a, b) => a.timestamp - b.timestamp)) {
             const kw = record.keyword;
             if (!keywords[kw])
                 keywords[kw] = {};
@@ -207,7 +207,14 @@ function getKeywordDataAggregate(onComplete) {
             });
         }
 
-        onComplete(_.values(keywords));
+        const values = _.values(keywords);
+        for (const kw of values) {
+            kw.acos = kw.sales ? 100 * kw.spend/kw.sales : null;
+            kw.ctr = kw.impressions ? 100* kw.clicks/kw.impressions : null;
+            kw.avgCpc = kw.clicks ? kw.spend/kw.clicks : null;
+        }
+
+        onComplete(values);
     }));
 }
 
