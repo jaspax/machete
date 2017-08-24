@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
 const $ = require('jquery');
+const _ = require('lodash');
+const qw = require('qw');
 const ga = require('./ga.js');
 const constants = require('./constants.gen.js');
 
@@ -101,14 +103,48 @@ function pctFmt(val) {
     return `${(+val).toFixed(2)}%`;
 }
 
-// Convert a series of timestamped structs into an object with one or more
-// parallel arrays. The arrays which are built are based on opt.metric or
-// opt.metrics (if more than one), and you can get raw values, or the rate of
-// change from the previous value if opt.rate is set.
-function parallelizeHistoryData(data, opt) {
-    let metrics = opt.metrics || [opt.metric];
-    let c = { timestamps: [] };
-    metrics.forEach(metric => c[metric] = []);
+const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
+const aggregateMetrics = qw`ctr acos avgCpc`;
+
+// Convert a series of objects into a single object with a number of parallel
+// arrays. All objects in the series should have the same keys; in any case,
+// only the keys from the first object in the series are respected.
+function parallelizeSeries(data) {
+    let c = { timestamp: [] };
+    if (!data || !data.length)
+        return c;
+
+    _.keys(data[0]).forEach(key => c[key] = []);
+
+    for (let item of data) {
+        for (let key of _.keys(c)) {
+            if (key == 'timestamp')
+                c[key].push(new Date(item[key]));
+            else
+                c[key].push(item[key]);
+        }
+    }
+
+    return c;
+}
+
+// Convert a series of timestamped snapshots into a series of objects in which
+// each key has the difference from the previous snapshot, ie. the rate of
+// change between snapshots. Only the metrics found in `cumulativeMetrics` are
+// converted into rates. The opt object has the following relevant keys:
+//      chunk: round timestamps off to the nearest hour/day/etc. and only
+//          compare values that cross a chunk boundary.
+//      rate: the timespn over which to calculate rates. Should generally be the
+//          same as chunk, when present.
+//      startTimestamp: earliest timestamp to examine. Items outside of this
+//          range are discarded.
+//      endTimestamp: latest timestamp to examine. Items outside of this range
+//          are discarded.
+//      round: if true, then fractional values are rounded to the nearest whole
+//          value
+function convertSnapshotsToDeltas(data, opt) {
+    let c = [];
+    opt = opt || {};
 
     let lastItem = null;
     data = data.sort((a, b) => a.timestamp - b.timestamp);
@@ -128,38 +164,24 @@ function parallelizeHistoryData(data, opt) {
         if (opt.startTimestamp && item.timestamp < opt.startTimestamp) {
             continue;
         }
-
         if (opt.endTimestamp && item.timestamp > opt.endTimestamp) {
             continue;
         }
 
         // Skip this data point unless one of our metrics actually changed.
-        // (It's possible for frequently-sampled data to occasionally go down,
-        // even though logically that's impossible, due to weirdness in Amazon's
-        // backend.)
-        if (lastItem && !metrics.some(metric => item[metric] != lastItem[metric])) {
+        if (lastItem && !cumulativeMetrics.some(metric => item[metric] != lastItem[metric])) {
             continue;
         }
 
-        // When using opt.rate, the first entry doesn't generate a data point,
-        // so no timestamp or else our arrays get off
-        if (!opt.rate || lastItem) {
-            c.timestamps.push(new Date(item.timestamp).toISOString());
-        }
-
-        for (let metric of metrics) {
-            if (!opt.rate) {
-                c[metric].push(item[metric]);
-                continue;
-            }
-
-            if (lastItem) {
+        if (lastItem) {
+            for (let metric of cumulativeMetrics) {
                 let rateFactor = (item.timestamp - lastItem.timestamp)/constants.timespan[opt.rate];
                 let normalized = (item[metric] - lastItem[metric])/rateFactor;
                 if (opt.round)
                     normalized = Math.round(normalized);
-                c[metric].push(normalized);
+                item[metric] = normalized;
             }
+            c.push(item);
         }
 
         lastItem = item;
@@ -253,5 +275,6 @@ module.exports = {
     moneyFmt,
     pctFmt,
     getCampaignHistory,
-    parallelizeHistoryData,
+    parallelizeSeries,
+    convertSnapshotsToDeltas,
 };

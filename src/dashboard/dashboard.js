@@ -55,8 +55,7 @@ function addChartButtons(rows, allowedCampaigns) {
         let campaignId = common.getCampaignId(href);
         let allowed = allowedCampaigns.includes(campaignId);
 
-        const campaignData = null;
-        const campaignMetrics = {};
+        const campaignData = {};
         for (let chart of charts) {
             let target = cells[chart.column];
             if (!target)
@@ -64,19 +63,14 @@ function addChartButtons(rows, allowedCampaigns) {
 
             const loadData = onComplete => {
                 if (!allowed)
-                    return onComplete([]);
-                if (campaignMetrics[chart.config.metric])
-                    return onComplete(campaignMetrics[chart.config.metric]);
-                if (campaignData) {
-                    let chartData = common.parallelizeHistoryData(campaignData, chart.config);
-                    campaignMetrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
-                    return onComplete(campaignMetrics[chart.config.metric]);
-                }
+                    return onComplete(formatParallelData({}, chart.config.metric));
+                if (campaignData)
+                    return onComplete(formatParallelData(campaignData, chart.config.metric));
 
-                return common.getCampaignHistory(common.getEntityId(), campaignId, (data) => {
-                    let chartData = common.parallelizeHistoryData(data, chart.config);
-                    campaignMetrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
-                    onComplete(campaignMetrics[chart.config.metric]);
+                return common.getCampaignHistory(common.getEntityId(), campaignId, data => {
+                    const deltas = common.convertSnapshotsToDeltas(data, chart.config);
+                    campaignData = common.parallelizeSeries(deltas);
+                    onComplete(formatParallelData(campaignData, chart.config.metric));
                 });
             };
 
@@ -95,8 +89,8 @@ function addChartButtons(rows, allowedCampaigns) {
 
 function formatParallelData(data, name) {
     return { 
-        timestamps: data.timestamps, 
-        data: data[name], 
+        timestamp: data.timestamp || [],
+        data: data[name] || [], 
         name,
     };
 }

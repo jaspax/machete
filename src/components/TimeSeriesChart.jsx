@@ -13,7 +13,7 @@ let chartCounter = 0;
  * Argument to the loadData callback argument is an array of objects, each
  * representing one time series. Each object looks like this:
  * {
- *   timestamps: array of timestamps
+ *   timestamp: array of timestamps
  *   data: array of data values
  *   name: name of this series
  * }
@@ -41,7 +41,7 @@ class TimeSeriesChart extends React.Component {
 
         this.series = this.state.data.map(series => Object.assign(
             {
-                x: series.timestamps,
+                x: series.timestamp,
                 y: series.data,
                 name: series.name,
                 mode: 'lines+markers',

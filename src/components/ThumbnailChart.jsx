@@ -29,7 +29,7 @@ class ThumbnailChart extends React.Component {
 
     loadData(cb) {
         this.props.loadData(data => {
-            if (data.timestamps.length < 4) {
+            if (data.timestamp.length < 4) {
                 this.setState({ lodata: true });
             }
             cb([data]);

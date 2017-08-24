@@ -54,14 +54,12 @@ class CampaignHistoryChart extends React.Component {
 
     loadData(cb) {
         this.props.loadData(data => {
-            const impressionsData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'impressions', round: true});
-            const clicksData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'clicks', round: true});
-            const salesCountData = common.parallelizeHistoryData(data, {rate: 'day', chunk: 'day', metric: 'salesCount'});
+            const parallel = common.parallelizeSeries(data);
 
             let series = [
                 {
-                    data: impressionsData.impressions,
-                    timestamps: impressionsData.timestamps,
+                    data: parallel.impressions,
+                    timestamp: parallel.timestamp,
                     name: 'Impressions',
                     options: {
                         mode: 'lines',
@@ -71,8 +69,8 @@ class CampaignHistoryChart extends React.Component {
                     }
                 },
                 {
-                    data: clicksData.clicks,
-                    timestamps: clicksData.timestamps,
+                    data: parallel.clicks,
+                    timestamp: parallel.timestamp,
                     name: 'Clicks',
                     options: {
                         mode: 'lines',
@@ -82,8 +80,8 @@ class CampaignHistoryChart extends React.Component {
                     },
                 },
                 {
-                    data: salesCountData.salesCount,
-                    timestamps: salesCountData.timestamps,
+                    data: parallel.salesValue,
+                    timestamp: parallel.timestamp,
                     name: 'Sales',
                     options: {
                         mode: 'lines',

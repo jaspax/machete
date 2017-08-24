@@ -9,6 +9,7 @@ const ga = require('../common/ga.js');
 
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
+const CampaignHistoryTab = require('../campaign/CampaignHistoryTab.jsx');
 
 const now = Date.now();
 const twoWeeks = 15 * constants.timespan.day;
@@ -20,14 +21,14 @@ const tabClass = `machete-tab`;
 
 // Map column names to data metrics
 const charts = [
-    { column: "Impr", label: "Impressions / day", config: {metric: 'impressions', chunk: 'day', round: true} },
-    { column: "Clicks", label: "Clicks / day", config: {metric: 'clicks', chunk: 'day', round: true} },
-    { column: "Spend", label: "Spend / day", config: {metric: 'spend', chunk: 'day', round: false} },
-    { column: "Orders", label: "Orders / day", config: {metric: 'salesCount', chunk: 'day', round: true} },
-    { column: "ACoS", label: "ACoS", config: {metric: 'acos', chunk: 'day', round: false} },
-    { column: "CTR", label: "CTR", config: {metric: 'ctr', chunk: 'day', round: false} },
-    { column: "CPC", label: "Cost per click", config: {metric: 'cpc', chunk: 'day', round: false} },
-    { column: "Sales", label: "Sales ($) / day", config: {metric: 'salesValue', chunk: 'day', round: false} },
+    { column: "Impr", label: "Impressions / day", metric: 'impressions' },
+    { column: "Clicks", label: "Clicks / day", metric: 'clicks' },
+    { column: "Spend", label: "Spend / day", metric: 'spend', },
+    { column: "Orders", label: "Orders / day", metric: 'salesCount', },
+    { column: "ACoS", label: "ACoS", metric: 'acos' },
+    { column: "CTR", label: "CTR", metric: 'ctr' },
+    { column: "CPC", label: "Cost per click ($)", metric: 'cpc' },
+    { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
 
 window.setInterval(ga.mcatch(() => {
@@ -57,6 +58,7 @@ window.setInterval(ga.mcatch(() => {
         injectTab(tabs, "KeywordAnalytics", generateKeywordReports);
     }
     else if (window.location.href.match(/ad_groups\//)) {
+        // On a history page, add that tab in
         injectTab(tabs, "Campaign History", generateCampaignHistory);
     }
 }), 100);
@@ -100,8 +102,7 @@ function addChartButtons(columns, rows) {
 
         let fetchData = calcFetchDataFunction(window.location.href, link.href);
 
-        const campaignData = null;
-        const metrics = {};
+        let campaignData = null;
         for (let chart of charts) {
             let target = cells[columns.indexOf(chart.column)];
             if (!target)
@@ -111,24 +112,18 @@ function addChartButtons(columns, rows) {
                 continue;
 
             const loadData = onComplete => {
-                if (metrics[chart.config.metric])
-                    return onComplete(metrics[chart.config.metric]);
+                if (campaignData)
+                    return onComplete(formatParallelData(campaignData, chart.metric));
 
-                const processData = data => {
-                    let chartData = common.parallelizeHistoryData(data, chart.config);
-                    metrics[chart.config.metric] = formatParallelData(chartData, chart.config.metric);
-                    return onComplete(metrics[chart.config.metric]);
-                };
-
-                if (campaignData) {
-                    return processData(campaignData);
-                }
-                return fetchData(processData);
+                return fetchData(data => {
+                    campaignData = common.parallelizeSeries(data);
+                    return onComplete(formatParallelData(campaignData, chart.metric));
+                });
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
                 allowed: window.user && !window.user.isAnon,
-                metric: chart.config.metric,
+                metric: chart.metric,
                 title: chart.label,
                 loadData,
             });
@@ -141,15 +136,15 @@ function addChartButtons(columns, rows) {
 
 function formatParallelData(data, name) {
     return { 
-        timestamps: data.timestamps, 
+        timestamp: data.timestamp, 
         data: data[name], 
         name,
     };
 }
 
-function calcFetchDataFunction(locationHref, linkHref) {
+function calcFetchDataFunction(locationHref, linkHref, startTimestamp, endTimestamp) {
     let { campaignId, adGroupId } = common.getSellerCampaignId(linkHref);
-    let args = { startTimestamp: twoWeeksAgo, endTimestamp: now };
+    let args = { startTimestamp: startTimestamp || twoWeeksAgo, endTimestamp: endTimestamp || now };
 
     if (adGroupId && campaignId) {
         // We're on the campaign detail page looking at a link to a particular
@@ -217,29 +212,33 @@ function getKeywordDataAggregate(onComplete) {
 }
 
 function generateCampaignHistory(container) {
-    // TODO
-    console.log(container);
+    const content = React.createElement(CampaignHistoryTab, {
+        allowed: window.user && !window.user.isAnon,
+        downloadHref: '',
+        loadData: calcFetchDataFunction(window.location.href, window.location.href, 1),
+    });
+    ReactDOM.render(content, container[0]);
 }
 
 function generateKeywordReports(container) {
-    const chart = React.createElement(KeywordAnalysis, { 
+    let content = React.createElement(KeywordAnalysis, { 
         allowed: window.user && !window.user.isAnon, // assume true until we know otherwise
         loading: true,
         keywordData: [],
         updateStatus: () => console.warn("shouldn't update keywords while still loading"),
         updateBid: () => console.warn("shouldn't update keywords while still loading"),
     });
-    ReactDOM.render(chart, container[0]);
+    ReactDOM.render(content, container[0]);
 
     getKeywordDataAggregate(data => {
-        const chart = React.createElement(KeywordAnalysis, { 
+        content = React.createElement(KeywordAnalysis, { 
             allowed: window.user && !window.user.isAnon,
             loading: false,
             keywordData: data,
             updateStatus,
             updateBid,
         });
-        ReactDOM.render(chart, container[0]);
+        ReactDOM.render(content, container[0]);
     });
 }
 

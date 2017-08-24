@@ -175,7 +175,9 @@ function generateHistoryReports(entityId, container) {
         let tabContent = React.createElement(CampaignHistoryTab, {
             allowed,
             downloadHref,
-            loadData: cb => common.getCampaignHistory(entityId, campaignId, cb),
+            loadData: cb => common.getCampaignHistory(entityId, campaignId, data => {
+                cb(common.convertSnapshotsToDeltas(data));
+            }),
         });
         ReactDOM.render(tabContent, container[0]);
     });
