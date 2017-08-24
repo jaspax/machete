@@ -209,3 +209,9 @@
     margin: 4px;
     padding: 2px 8px 2px 0px;
 }
+
+.machete-loading-notice {
+    float: right;
+    margin: 6px;
+    padding: 10px;
+}

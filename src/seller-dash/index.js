@@ -7,6 +7,7 @@ const common = require('../common/common.js');
 const constants = require('../common/constants.gen.js');
 const ga = require('../common/ga.js');
 
+const LoadingNotice = require('./LoadingNotice.jsx');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
 const CampaignHistoryTab = require('../campaign/CampaignHistoryTab.jsx');
@@ -30,6 +31,43 @@ const charts = [
     { column: "CPC", label: "Cost per click ($)", metric: 'cpc' },
     { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
+
+const setSessionPromise = new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ action: 'setSession', }, (response) => {
+        if (response.error)
+            return reject(response.error);
+        return resolve();
+    });
+});
+
+let loadingInterval = window.setInterval(() => {
+    const navbar = $('.sspa-navigation-bar');
+    if (!navbar.length)
+        return;
+
+    let container = navbar.find(LoadingNotice.className).parent();
+    if (!container.length) {
+        container = $('<div style="position: absolute; width: 100%"></div>');
+        navbar.prepend(container);
+    }
+
+    const loading = React.createElement(LoadingNotice, {});
+    ReactDOM.render(loading, container[0]);
+
+    setSessionPromise.then(() => container.remove());
+    window.clearInterval(loadingInterval);
+}, 100);
+
+// Add in the Machete link to the top bar
+let user = null;
+chrome.runtime.sendMessage({ action: 'getUser' }, response => {
+    if (response.error) {
+        ga.merror(response.error);
+        return;
+    }
+    user = response.data;
+    user.isAnon = user.email == 'anon-user-email';
+});
 
 window.setInterval(ga.mcatch(() => {
     let rows = $('.public_fixedDataTableRow_main');
@@ -122,7 +160,7 @@ function addChartButtons(columns, rows) {
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
-                allowed: window.user && !window.user.isAnon,
+                allowed: user && !user.isAnon,
                 metric: chart.metric,
                 title: chart.label,
                 loadData,
@@ -220,7 +258,7 @@ function getKeywordDataAggregate(onComplete) {
 
 function generateCampaignHistory(container) {
     const content = React.createElement(CampaignHistoryTab, {
-        allowed: window.user && !window.user.isAnon,
+        allowed: user && !user.isAnon,
         downloadHref: '',
         loadData: calcFetchDataFunction(window.location.href, window.location.href, 1),
     });
@@ -229,7 +267,7 @@ function generateCampaignHistory(container) {
 
 function generateKeywordReports(container) {
     let content = React.createElement(KeywordAnalysis, { 
-        allowed: window.user && !window.user.isAnon, // assume true until we know otherwise
+        allowed: user && !user.isAnon, // assume true until we know otherwise
         loading: true,
         keywordData: [],
         updateStatus: () => console.warn("shouldn't update keywords while still loading"),
@@ -239,7 +277,7 @@ function generateKeywordReports(container) {
 
     getKeywordDataAggregate(data => {
         content = React.createElement(KeywordAnalysis, { 
-            allowed: window.user && !window.user.isAnon,
+            allowed: user && !user.isAnon,
             loading: false,
             keywordData: data,
             updateStatus,
