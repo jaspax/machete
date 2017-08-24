@@ -44,10 +44,6 @@
     display: inline-block;
 }
 
-#machete-kwmodify {
-    display: none;
-}
-
 .machete-kwmodify {
     text-align: right;
 }
@@ -67,7 +63,7 @@
 }
 
 .machete-kwbid input {
-    width: 90px;
+    width: 60px;
     margin: 2px 4px;
 }
 
