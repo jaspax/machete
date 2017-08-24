@@ -277,6 +277,4 @@ module.exports = {
     getCampaignHistory,
     parallelizeSeries,
     convertSnapshotsToDeltas,
-    cumulativeMetrics,
-    aggregateMetrics,
 };

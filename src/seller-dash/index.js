@@ -10,7 +10,6 @@ const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
 const CampaignHistoryTab = require('../campaign/CampaignHistoryTab.jsx');
-const KeywordBulkUpdate = require('../campaign/KeywordBulkUpdate.jsx');
 
 const now = Date.now();
 const twoWeeks = 15 * constants.timespan.day;
@@ -62,13 +61,6 @@ window.setInterval(ga.mcatch(() => {
         // On a history page, add that tab in
         injectTab(tabs, "Campaign History", generateCampaignHistory);
     }
-
-}), 100);
-
-window.setInterval(ga.mcatch(() => {
-    if (window.location.href.match(/keywords/)) {
-        injectBulkEditControl();
-    }
 }), 100);
 
 function injectTab(tabs, label, activate) {
@@ -96,33 +88,6 @@ function injectTab(tabs, label, activate) {
     }));
 
     tabs.parent().append(li);
-}
-
-function injectBulkEditControl() {
-    const controls = $('.sspa-table-controls');
-    if (!controls.length)
-        return;
-
-    const className = "machete-kwupdate-bulk";
-    if (controls.find(`.${className}`).length)
-        return;
-
-    const container = $(`<div class="a-span4 ${className}"></div>`);
-    controls.width('720px');
-    controls.append(container);
-
-    getKeywordDataAggregate(data => {
-        const bulkUpdate = React.createElement(KeywordBulkUpdate, {
-            data,
-            onEnabledChange: (enabled, keywords) => {
-                updateStatus(keywords.map(kw => kw.id), enabled, () => window.location.reload());
-            },
-            onBidChange: (bid, keywords) => {
-                updateBid(keywords.map(kw => kw.id), bid, () => window.location.reload());
-            },
-        });
-        ReactDOM.render(bulkUpdate, container[0]);
-    });
 }
 
 function addChartButtons(columns, rows) {
@@ -226,7 +191,7 @@ function getKeywordDataAggregate(onComplete) {
         }
 
         const keywords = {};
-        for (const record of response.data.sort((a, b) => a.timestamp - b.timestamp)) {
+        for (const record of response.data) {
             const kw = record.keyword;
             if (!keywords[kw])
                 keywords[kw] = {};

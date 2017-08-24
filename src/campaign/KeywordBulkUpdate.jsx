@@ -15,7 +15,7 @@ class KeywordBulkUpdate extends React.Component {
         const enabled = this.props.data.length ? this.props.data[0].enabled : false;
         const bid = this.props.data.length ? this.props.data[0].bid : 0;
         return (
-            <div className={KeywordBulkUpdate.className}>
+            <div className="machete-kwupdate-bulk">
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
                 <KeywordEnableToggle enabled={enabled} onChange={this.handleEnabledChange} />
                 <KeywordBidUpdate bid={bid} onChange={this.handleBidChange} />
@@ -37,7 +37,5 @@ KeywordBulkUpdate.propTypes = {
     onEnabledChange: PropTypes.func.isRequired,
     onBidChange: PropTypes.func.isRequired,
 };
-
-KeywordBulkUpdate.className = "machete-kwupdate-bulk";
 
 module.exports = KeywordBulkUpdate;
