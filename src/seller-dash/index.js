@@ -55,7 +55,7 @@ window.setInterval(ga.mcatch(() => {
 
     if (window.location.href.match(/ad_group\/A\w+\//)) {
         // On the ad group page. Add the keyword analytics page
-        injectTab(tabs, "KeywordAnalytics", generateKeywordReports);
+        injectTab(tabs, "Keyword Analytics", generateKeywordReports);
     }
     else if (window.location.href.match(/ad_groups\//)) {
         // On a history page, add that tab in
