@@ -1,4 +1,6 @@
 const $ = require('jquery');
+const co = require('co');
+
 const constants = require('../common/constants.gen.js');
 const bg = require('../common/common-background.js');
 
@@ -34,8 +36,8 @@ function* synchronizeCampaignData() {
                 const promises = [];
 
                 for (const adGroupId of adGroupIds) {
-                    promises.push(requestAdDataRange(campaignId, adGroupId, range.start, range.end));
-                    promises.push(requestKeywordDataRange(campaignId, adGroupId, range.start, range.end));
+                    promises.push(co(requestAdDataRange(campaignId, adGroupId, range.start, range.end)));
+                    promises.push(co(requestKeywordDataRange(campaignId, adGroupId, range.start, range.end)));
                 }
 
                 yield Promise.all(promises);
@@ -88,6 +90,10 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             statusFilter: 'ENABLED',
         };
         if (filters) {
+            if (filters.statusFilter) {
+                requestParams.statusFilter = filters.statusFilter;
+                delete filters.statusFilter;
+            }
             requestParams.filters = JSON.stringify(filters);
         }
 
@@ -143,7 +149,12 @@ function* requestAdDataRange(campaignId, adGroupId, startTimestamp, endTimestamp
 
 function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
     console.log('requesting keyword data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
-    const filters = { matchType: { eq: ["broad", "phrase", "exact"] }, campaign: { id: { eq: [campaignId] } }, adGroup: { id: { eq: [adGroupId] } } };
+    const filters = { 
+        statusFilter: 'ENABLED|PAUSED',
+        matchType: { eq: ["broad", "phrase", "exact"] }, 
+        campaign: { id: { eq: [campaignId] } }, 
+        adGroup: { id: { eq: [adGroupId] } } 
+    };
     return yield* requestSellerDataRange('keyword', filters, startTimestamp, endTimestamp, function*(data) {
         yield* storeKeywordDataRange(data, startTimestamp, endTimestamp);
     });
