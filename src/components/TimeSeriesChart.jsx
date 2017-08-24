@@ -76,7 +76,7 @@ class TimeSeriesChart extends React.Component {
 }
 
 TimeSeriesChart.propTypes = {
-    height: PropTypes.number.isRequired,
+    height: PropTypes.number,
     width: PropTypes.number.isRequired,
     loadData: PropTypes.func.isRequired,
     title: PropTypes.string,

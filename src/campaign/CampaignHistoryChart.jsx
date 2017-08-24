@@ -18,14 +18,12 @@ class CampaignHistoryChart extends React.Component {
               showticklabels: true
           },
           yaxis: { // impressions
-              // range: [0, maxImpressions * 1.1],
             showgrid: false,
             zeroline: true,
             showline: true,
             showticklabels: false,
           },
           yaxis2: { // clicks
-              // range: [0, maxClicks * 1.5],
             showgrid: false,
             zeroline: true,
             showline: true,
@@ -33,7 +31,6 @@ class CampaignHistoryChart extends React.Component {
             overlaying: 'y',
           },
           yaxis3: { // sales
-              // range: [0, maxSales * 2],
             showgrid: false,
             zeroline: true,
             showline: true,
@@ -42,14 +39,20 @@ class CampaignHistoryChart extends React.Component {
           },
         };
 
+        const width = this.state ? this.state.width : 800;
+
         return (
-            <div>
-                <TimeSeriesChart 
-                    width={800} height={600}
+            <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
+                <TimeSeriesChart
+                    width={width} height={600}
                     layout={layout}
                     loadData={this.loadData.bind(this)} />
             </div>
         );
+    }
+
+    componentDidMount() {
+        this.setState({ width: this.containerDiv.offsetWidth });
     }
 
     loadData(cb) {
