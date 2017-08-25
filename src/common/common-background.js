@@ -1,7 +1,7 @@
 const $ = require('jquery');
 const co = require('co');
 
-const constants = require('../common/constants.gen.js');
+const constants = require('../common/constants.js');
 
 const lastVersionKey = 'machete-last-version';
 const serviceUrl = `https://${constants.hostname}`;

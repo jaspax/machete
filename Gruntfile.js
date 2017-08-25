@@ -18,19 +18,29 @@ module.exports = function(grunt) {
 
     let targetJson = `${product}-beta.json`;
     let releaseTag = 'beta';
-    let nodeEnv = 'debug';
     if (grunt.option('release')) {
         targetJson = `${product}-production.json`;
         releaseTag = 'release';
-        nodeEnv = 'production';
     }
+    const env = grunt.file.readJSON(targetJson);
+
     if (grunt.option('noDebug')) {
-        nodeEnv = 'production';
+        env.NODE_ENV = 'production';
     }
     const zipFile = `machete-${product}-${releaseTag}.zip`;
 
     const gruntConfig = {
         pkg,
+        execute: {
+            manifest: {
+                call: (grunt, options) => {
+                    const manifest = grunt.file.readJSON(`${product}-manifest.json`);
+                    manifest.name = env.NAME;
+                    manifest.permissions.push(`https://${env.HOSTNAME}/*`);
+                    grunt.file.write(`out/${product}/manifest.json`, JSON.stringify(manifest));
+                },
+            }
+        },
         eslint: {
             options: { extensions: ['.js', '.jsx'] },
             components: ['src/components'],
@@ -43,28 +53,21 @@ module.exports = function(grunt) {
                 options: { 
                     require: dependencies,
                     transform: [
-                        ['envify', { global: true, NODE_ENV: nodeEnv } ],
+                        ['envify', Object.assign({ global: true }, env)],
                         ['uglifyify', { global: true }],
                         ['babelify', { presets: ['react'] }]
                     ]
                 },
             },
+            manifest: {
+                src: `${product}-manifest.json`,
+                dest: `out/${product}/manifest.json`,
+                options: { 
+                    transform: [ ['envify', env] ]
+                },
+            }
             /* More targets created programatically */
         }, 
-        run: {
-            clean: {
-                cmd: 'rm',
-                args: ['-rf', 'out', zipFile]
-            },
-            genConst: {
-                cmd: './node_modules/.bin/mustache',
-                args: [targetJson, 'src/common/constants.js.mustache', 'src/common/constants.gen.js'],
-            },
-            genManifest: {
-                cmd: './node_modules/.bin/mustache',
-                args: [targetJson, `${product}-manifest.json.mustache`, `out/${product}/manifest.json`],
-            },
-        },
         copy: {
             css: { expand: true, src: 'css/**', dest: `out/${product}`, },
             img: { expand: true, src: 'images/**', dest: `out/${product}`, },
@@ -73,14 +76,6 @@ module.exports = function(grunt) {
             tableCss: { src: 'node_modules/react-table/react-table.css', dest: `out/${product}/css/react-table.css` },
         },
         watch: {
-            genConst: {
-                files: ['src/common/constants.js.mustache'],
-                tasks: ['run:genConst']
-            },
-            genManifest: {
-                files: [`${product}-manifest.json.mustache`],
-                tasks: ['run:genManifest'],
-            },
             components: {
                 files: ['src/components/*.jsx'],
                 tasks: ['eslint:components']
@@ -88,6 +83,10 @@ module.exports = function(grunt) {
             copy: {
                 files: ['css/**', 'images/**', 'html/**'],
                 tasks: ['copy'],
+            },
+            manifest: {
+                files: [`${product}-manifest.json`],
+                tasks: ['execute:manifest']
             },
             /* Targets created programatically */
         },
@@ -106,7 +105,10 @@ module.exports = function(grunt) {
             dest: `out/${product}/src/${name}.js`,
             options: {
                 external: dependencies,
-                transform: [['babelify', {presets: ['react']}]]
+                transform: [
+                    ['envify', env],
+                    ['babelify', {presets: ['react']}]
+                ]
             },
         };
         gruntConfig.watch[`${name}-eslint`] = {
@@ -121,10 +123,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-eslint');
-    grunt.loadNpmTasks('grunt-run');
     grunt.loadNpmTasks('grunt-zip');
+    grunt.loadNpmTasks('grunt-execute');
 
     grunt.registerTask('app', sourceDirs[product].map(x => `browserify:${x}`));
-    grunt.registerTask('generate', ['run:genConst', 'run:genManifest']);
-    grunt.registerTask('default', ['generate', 'eslint', 'browserify', 'copy', 'zip']);
+    grunt.registerTask('default', ['execute', 'eslint', 'browserify', 'copy', 'zip']);
 };

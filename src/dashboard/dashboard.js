@@ -3,7 +3,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
-const constants = require('../common/constants.gen.js');
+const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 

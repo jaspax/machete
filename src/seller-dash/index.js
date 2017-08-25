@@ -4,7 +4,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
-const constants = require('../common/constants.gen.js');
+const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 
 const LoadingNotice = require('./LoadingNotice.jsx');
@@ -67,6 +67,7 @@ chrome.runtime.sendMessage({ action: 'getUser' }, response => {
     }
     user = response.data;
     user.isAnon = user.email == 'anon-user-email';
+    window.user = user;
 });
 
 window.setInterval(ga.mcatch(() => {

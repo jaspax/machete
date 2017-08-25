@@ -1,4 +1,5 @@
 {
-    "name": "Machete - Your tool for cutting through AMS",
-    "hostname": "machete-app.com"
+    "NAME": "Machete - Your tool for cutting through AMS",
+    "NODE_ENV": "production",
+    "HOSTNAME": "machete-app.com"
 }

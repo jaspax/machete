@@ -7,7 +7,7 @@ function LoadingNotice() {
         width: '14px',
         height: '15px',
         display: 'inline-block',
-        margin-right: '8px',
+        marginRight: '8px',
     };
     return <div className={className}>
         <div className="loading-small" style={spinnerStyle}></div>

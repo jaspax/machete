@@ -4,7 +4,7 @@ const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
-const constants = require('../common/constants.gen.js');
+const constants = require('../common/constants.js');
 
 const CampaignHistoryTab = require('./CampaignHistoryTab.jsx');
 const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');

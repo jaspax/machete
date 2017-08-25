@@ -1,4 +1,5 @@
 {
-    "name": "Machete Beta",
-    "hostname": "beta.machete-app.com"
+    "NAME": "Machete Beta",
+    "NODE_ENV": "debug",
+    "HOSTNAME": "beta.machete-app.com"
 }

@@ -1,4 +1,5 @@
 {
-    "name": "Machete - Upgrade your Amazon Seller Advertising",
-    "hostname": "machete-app.com"
+    "NAME": "Machete - Upgrade your Amazon Seller Advertising",
+    "NODE_ENV": "production",
+    "HOSTNAME": "machete-app.com"
 }

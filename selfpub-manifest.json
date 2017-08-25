@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "{{name}}",
+  "name": "!! PLACEHOLDER NAME !!",
   "short_name": "Machete",
   "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
   "version": "1.2.6",
@@ -19,8 +19,7 @@
     "alarms",
     "background", 
     "notifications",
-    "https://ams.amazon.com/*",
-    "https://{{hostname}}/*"
+    "https://ams.amazon.com/*"
   ],
   "background": {
       "scripts": ["src/vendor.js", "src/background.js"],

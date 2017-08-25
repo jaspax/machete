@@ -3,7 +3,7 @@ const $ = require('jquery');
 const _ = require('lodash');
 const qw = require('qw');
 const ga = require('./ga.js');
-const constants = require('./constants.gen.js');
+const constants = require('./constants.js');
 
 function getEntityId(href) {
     let entityId = getQueryArgs(href).entityId;
@@ -252,18 +252,6 @@ if (window.location.href.includes('ams')) {
 
 if (window.location.href.includes('sellercentral')) {
     chrome.runtime.sendMessage({ action: 'setSession', }, response => {});
-
-    // Add in the Machete link to the top bar
-    chrome.runtime.sendMessage({ action: 'getUser' }, response => {
-        if (response.error) {
-            ga.merror(response.error);
-            return;
-        }
-        const user = response.data;
-        let email = user.email;
-        user.isAnon = email == 'anon-user-email';
-        window.user = user;
-    });
 }
 
 module.exports = {

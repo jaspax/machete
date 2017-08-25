@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "{{name}}",
+  "name": "!! PLACEHOLDER NAME !!",
   "short_name": "Machete for Amazon Sellers",
   "description": "Upgrade your advertising campaign analytics for Amazon Sellers",
   "version": "0.1.0",
@@ -19,8 +19,7 @@
     "alarms",
     "background", 
     "notifications",
-    "https://ams.amazon.com/*",
-    "https://{{hostname}}/*"
+    "https://sellercentral.amazon.com/*"
   ],
   "background": {
       "scripts": ["src/vendor.js", "src/seller-background.js"],

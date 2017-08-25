@@ -1,4 +1,5 @@
 {
-    "name": "Machete for Amazon Sellers Beta",
-    "hostname": "beta.machete-app.com"
+    "NAME": "Machete for Amazon Sellers Beta",
+    "NODE_ENV": "debug",
+    "HOSTNAME": "beta.machete-app.com"
 }

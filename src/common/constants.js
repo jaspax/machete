@@ -1,5 +1,5 @@
 module.exports = {
-    hostname: "{{hostname}}",
+    hostname: process.env.HOSTNAME,
     timespan: {
         second: 1000,
         minute: 1000 * 60,
