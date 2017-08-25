@@ -53,13 +53,6 @@ module.exports = function(grunt) {
                     ]
                 },
             },
-            manifest: {
-                src: `${product}-manifest.json`,
-                dest: `out/${product}/manifest.json`,
-                options: { 
-                    transform: [ ['envify', env] ]
-                },
-            }
             /* More targets created programatically */
         }, 
         copy: {
