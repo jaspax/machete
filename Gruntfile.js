@@ -16,18 +16,12 @@ module.exports = function(grunt) {
         seller: ['seller-background', 'seller-dash'],
     };
 
-    let targetJson = `${product}-beta.json`;
-    let releaseTag = 'beta';
-    if (grunt.option('release')) {
-        targetJson = `${product}-production.json`;
-        releaseTag = 'release';
-    }
+    const releaseTag = grunt.option('release') ? 'release' : 'beta';
+    const targetJson = `config/${product}-${releaseTag}.json`;
     const env = grunt.file.readJSON(targetJson);
-
     if (grunt.option('noDebug')) {
         env.NODE_ENV = 'production';
     }
-    const zipFile = `machete-${product}-${releaseTag}.zip`;
 
     const gruntConfig = {
         pkg,
@@ -91,7 +85,7 @@ module.exports = function(grunt) {
             /* Targets created programatically */
         },
         zip: {
-            [zipFile]: [`out/${product}/**`],
+            [`machete-${product}-${releaseTag}.zip`]: [`out/${product}/**`],
         },
     };
 
