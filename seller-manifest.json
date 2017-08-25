@@ -16,9 +16,6 @@
     "default_icon": "images/machete-128.png"
   },
   "permissions": [
-    "alarms",
-    "background", 
-    "notifications",
     "https://sellercentral.amazon.com/*"
   ],
   "background": {
