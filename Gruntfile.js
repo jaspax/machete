@@ -100,8 +100,8 @@ module.exports = function(grunt) {
             options: {
                 external: dependencies,
                 transform: [
+                    ['babelify', {presets: ['react']}],
                     ['envify', env],
-                    ['babelify', {presets: ['react']}]
                 ]
             },
         };
