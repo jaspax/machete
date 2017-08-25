@@ -65,7 +65,7 @@ module.exports = function(grunt) {
         copy: {
             css: { expand: true, src: 'css/**', dest: `out/${product}`, },
             img: { expand: true, src: 'images/**', dest: `out/${product}`, },
-            html: { expand: true, src: 'html/**', dest: `out/${product}`, },
+            html: { expand: true, flatten: true, src: `html/${product}/**`, dest: `out/${product}/html`, },
             datepickerCss: { src: 'node_modules/react-datepicker/dist/react-datepicker.css', dest: `out/${product}/css/react-datepicker.css` },
             tableCss: { src: 'node_modules/react-table/react-table.css', dest: `out/${product}/css/react-table.css` },
         },
