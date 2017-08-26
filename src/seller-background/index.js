@@ -84,7 +84,7 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             iDisplayStart: currentRecord,
             iDisplayLength: pageSize,
             statisticsPeriod: 'CUSTOMIZED',
-            aggregates: false,
+            aggregates: true,
             startDate: startTimestamp,
             endDate: endTimestamp,
             statusFilter: 'ENABLED',
@@ -108,16 +108,28 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
     });
 }
 
+function dataIdsWithImpressions(data) {
+    const idIndex = data.columnNames.indexOf('id');
+    const impressionsIndex = data.columnNames.indexOf('impressions');
+    return data.aaData.filter(x => x[idIndex] && x[impressionsIndex]).map(x => x[idIndex]);
+}
+
 function* requestCampaignDataRange(startTimestamp, endTimestamp) {
     const campaignIds = new Set();
     console.log('requesting campaign data in range', startTimestamp, endTimestamp);
 
     yield* requestSellerDataRange('campaign', null, startTimestamp, endTimestamp, function*(data) {
+        // We always store campaign data ranges, because that acts as a signal
+        // that we've synced data for this range.
         yield* storeCampaignDataRange(data, startTimestamp, endTimestamp);
 
-        // Gather the IDs of the campaigns discovered in this data range
-        const idIndex = data.columnNames.indexOf('id');
-        data.aaData.forEach(x => x[idIndex] && campaignIds.add(x[idIndex]));
+        // Don't bother doing anything else if nothing happened in this range
+        if (!data.aggrStatData.impressions)
+            return;
+
+        // Gather the IDs of the campaigns discovered in this data range which
+        // have non-zero impressions
+        dataIdsWithImpressions(data).forEach(x => campaignIds.add(x));
     });
 
     return Array.from(campaignIds);
@@ -129,11 +141,14 @@ function* requestAdGroupDataRange(campaignId, startTimestamp, endTimestamp) {
 
     const filters = {campaign: { id: { eq: [campaignId] } } };
     yield* requestSellerDataRange('adgroup', filters, startTimestamp, endTimestamp, function*(data) {
+        // Don't bother storing if nothing happened in this range
+        if (!data.aggrStatData.impressions)
+            return;
+
         yield* storeAdGroupDataRange(data, startTimestamp, endTimestamp);
 
         // Gather the adGroupIds of the ad groups discovered in this data range
-        const idIndex = data.columnNames.indexOf('id');
-        data.aaData.forEach(x => x[idIndex] && adGroupIds.add(x[idIndex]));
+        dataIdsWithImpressions(data).forEach(x => adGroupIds.add(x));
     });
 
     return Array.from(adGroupIds);
@@ -143,6 +158,10 @@ function* requestAdDataRange(campaignId, adGroupId, startTimestamp, endTimestamp
     console.log('requesting ad data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
     const filters = {campaign: { id: { eq: [campaignId] } }, adGroup: { id: { eq: [adGroupId] } } };
     return yield* requestSellerDataRange('ad', filters, startTimestamp, endTimestamp, function*(data) { 
+        // Don't bother storing if nothing happened in this range
+        if (!data.aggrStatData.impressions)
+            return;
+
         yield* storeAdDataRange(data, startTimestamp, endTimestamp); 
     });
 }
@@ -156,6 +175,10 @@ function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTime
         adGroup: { id: { eq: [adGroupId] } } 
     };
     return yield* requestSellerDataRange('keyword', filters, startTimestamp, endTimestamp, function*(data) {
+        // Don't bother storing if nothing happened in this range
+        if (!data.aggrStatData.impressions)
+            return;
+
         yield* storeKeywordDataRange(data, startTimestamp, endTimestamp);
     });
 }

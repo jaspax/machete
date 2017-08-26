@@ -250,10 +250,6 @@ if (window.location.href.includes('ams')) {
     });
 }
 
-if (window.location.href.includes('sellercentral')) {
-    chrome.runtime.sendMessage({ action: 'setSession', }, response => {});
-}
-
 module.exports = {
     getEntityId,
     getCampaignId,
