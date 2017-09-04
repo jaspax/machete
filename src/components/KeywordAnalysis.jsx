@@ -30,82 +30,81 @@ class KeywordAnalysis extends React.Component {
         // multiple times below
         for (let kw of data) {
             kw.hasEnoughImpressions = kw.clicks && kw.impressions > minImpressions;
-            kw.clickRatio = kw.clicks/kw.impressions;
         }
 
         let salesTopQuartile = data.sort((a, b) => b.sales - a.sales)[Math.round(data.length / 4)];
-        let clickRatioSort = data.filter(x => x.hasEnoughImpressions).sort((a, b) => a.clickRatio - b.clickRatio);
-        let clickRatioBottomQuartile = 0;
-        let clickRatioTopQuartile = 0;
-        if (clickRatioSort.length) {
-            clickRatioBottomQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.25)].clickRatio;
-            clickRatioTopQuartile = clickRatioSort[Math.round((clickRatioSort.length - 1) * 0.75)].clickRatio;
+        let ctrSort = data.filter(x => x.hasEnoughImpressions).sort((a, b) => a.ctr - b.ctr);
+        let ctrBottomQuartile = 0;
+        let ctrTopQuartile = 0;
+        if (ctrSort.length) {
+            ctrBottomQuartile = ctrSort[Math.round((ctrSort.length - 1) * 0.25)].ctr;
+            ctrTopQuartile = ctrSort[Math.round((ctrSort.length - 1) * 0.75)].ctr;
         }
 
         const worstKwTables = [{
             title: 'Keywords with ACOS over 100%',
             columnTitle: 'ACOS',
             order: 'desc',
-            filterFn: (x) => x.clicks && x.acos > 100,
-            metricFn: (x) => x.acos,
-            formatFn: (x) => x ? common.pctFmt(x) : "(no sales)",
+            filterFn: x => x.clicks && x.acos > 100,
+            metricFn: x => x.acos,
+            formatFn: x => x ? common.pctFmtx : "(no sales)",
         }, {
-            title: 'Keywords with few clicks per impression',
-            columnTitle: 'Clicks per 10K impressions',
+            title: 'Keywords with low click-through rate (CTR)',
+            columnTitle: 'CTR',
             order: 'asc',
-            filterFn: (x) => x.hasEnoughImpressions && x.clickRatio <= clickRatioBottomQuartile,
-            metricFn: x => x.clickRatio,
-            formatFn: (x) => `${Math.round(x*10000)}`,
+            filterFn: x => x.hasEnoughImpressions && x.ctr <= ctrBottomQuartile,
+            metricFn: x => x.ctr,
+            formatFn: common.pctFmt,
         }, {
             title: 'Keywords spending money without sales',
             columnTitle: 'Spend',
             order: 'desc',
-            filterFn: (x) => x.clicks && !x.sales,
-            metricFn: (x) => x.spend,
+            filterFn: x => x.clicks && !x.sales,
+            metricFn: x => x.spend,
             formatFn: common.moneyFmt,
         }, {
             title: 'Keywords with few impressions',
             columnTitle: 'Impressions',
             order: 'asc',
-            filterFn: (x) => x.impressions < minImpressions,
-            metricFn: (x) => x.impressions,
-            formatFn: (x) => x || 0,
+            filterFn: x => x.impressions < minImpressions,
+            metricFn: x => x.impressions,
+            formatFn: x => x || 0,
         }];
         
         const bestKwTables = [{
-            title: 'Keywords with high clicks-to-impressions ratio',
-            columnTitle: 'Clicks per 10K impressions',
+            title: 'Keywords with high click-through rate (CTR)',
+            columnTitle: 'CTR',
             order: 'desc',
-            filterFn: (x) => x.hasEnoughImpressions && x.clickRatio >= clickRatioTopQuartile,
-            metricFn: (x) => x.clickRatio,
-            formatFn: (x) => `${Math.round(x*10000)}`,
+            filterFn: x => x.hasEnoughImpressions && x.ctr >= ctrTopQuartile,
+            metricFn: x => x.ctr,
+            formatFn: common.pctFmt,
         }, {
             title: 'Keywords with low ACOS',
             columnTitle: 'ACOS',
             order: 'asc',
-            filterFn: (x) => x.sales && x.acos < 100 && x.acos > 0,
-            metricFn: (x) => x.acos,
+            filterFn: x => x.sales && x.acos < 100 && x.acos > 0,
+            metricFn: x => x.acos,
             formatFn: common.pctFmt,
         }, {
-            title: 'Keywords with highest profit',
-            columnTitle: 'Profit (Sales - Spend)',
+            title: 'Keywords with highest profit (sales - spend)',
+            columnTitle: 'Profit',
             order: 'desc',
-            filterFn: (x) => x.sales && x.acos < 100,
-            metricFn: (x) => x.sales - x.spend,
+            filterFn: x => x.sales && x.acos < 100,
+            metricFn: x => x.sales - x.spend,
             formatFn: common.moneyFmt,
         }, {
             title: 'Keywords with highest gross sales',
             columnTitle: 'Sales',
             order: 'desc',
-            filterFn: (x) => x.sales && x.sales >= salesTopQuartile.sales,
-            metricFn: (x) => x.sales,
+            filterFn: x => x.sales && x.sales >= salesTopQuartile.sales,
+            metricFn: x => x.sales,
             formatFn: common.moneyFmt,
         }, {
             title: 'Disabled keywords',
             columnTitle: 'ACOS',
             order: 'desc',
-            filterFn: (x) => !x.enabled,
-            metricFn: (x) => x.acos,
+            filterFn: x => !x.enabled,
+            metricFn: x => x.acos,
             formatFn: common.pctFmt,
         }];
 
