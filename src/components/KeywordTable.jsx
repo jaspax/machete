@@ -7,32 +7,38 @@ const KeywordBidUpdate = require('./KeywordBidUpdate.jsx');
 
 class KeywordTable extends React.Component {
     render() {
+        const columns = [{
+            Header: 'Keyword', 
+            accessor: 'keyword' 
+        }];
 
-        const columns = [
-            { 
-                Header: 'Keyword', 
-                accessor: 'keyword' 
-            },
-            { 
-                Header: this.props.columnTitle, 
-                Cell: row => <span>{this.props.formatter(row.value)}</span>,
-                accessor: this.props.metric, 
-                id: 'keyColumn'
-            },
-            { 
-                Header: 'Update', 
-                Cell: row =>
-                    <div>
-                        <KeywordEnableToggle enabled={row.original.enabled} onChange={bindKeywordChange(row.original, this.props.onKeywordEnabledChange)} />
-                        <KeywordBidUpdate bid={parseFloat(row.original.bid)} onChange={bindKeywordChange(row.original, this.props.onKeywordBidChange)} />
-                    </div>,
-            }
-        ];
+        for (const col of this.props.columns) {
+            columns.push({
+                Header: col.title,
+                Cell: row => <span>{col.format(row.value)}</span>,
+                accessor: col.metric,
+                id: col.title.toLowerCase()
+            });
+        }
+
+        columns.push({
+            Header: 'Update', 
+            Cell: row =>
+                <div>
+                    <KeywordEnableToggle enabled={row.original.enabled} onChange={bindKeywordChange(row.original, this.props.onKeywordEnabledChange)} />
+                    <KeywordBidUpdate bid={parseFloat(row.original.bid)} onChange={bindKeywordChange(row.original, this.props.onKeywordBidChange)} />
+                </div>,
+        });
+
+        const sortColumn = this.props.columns.filter(col => col.sort).map(col => ({
+            id: col.title.toLowerCase(),
+            desc: col.sort == 'desc',
+        }));
 
         return <ReactTable 
             data={this.props.data} 
             columns={columns} 
-            defaultSorted={[{ id: 'keyColumn', desc: this.props.sort == 'desc' }]}
+            defaultSorted={sortColumn}
             defaultPageSize={10}
             minRows={0}
         />;
@@ -45,10 +51,7 @@ function bindKeywordChange(item, callback) {
 
 KeywordTable.propTypes = {
     data: PropTypes.array.isRequired,
-    sort: PropTypes.string,
-    columnTitle: PropTypes.string.isRequired,
-    metric: PropTypes.func.isRequired,
-    formatter: PropTypes.func.isRequired,
+    columns: PropTypes.array.isRequired,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
 };

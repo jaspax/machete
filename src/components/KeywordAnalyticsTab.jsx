@@ -17,10 +17,7 @@ class KeywordAnalyticsTab extends React.Component {
                     title={table.title}
                     data={tableData}
                     modifiedData={this.props.modifiedData}
-                    sort={table.order}
-                    metric={table.metricFn}
-                    formatter={table.formatFn}
-                    columnTitle={table.columnTitle}
+                    columns={table.columns}
                     onKeywordEnabledChange={this.props.onKeywordEnabledChange}
                     onKeywordBidChange={this.props.onKeywordBidChange}
                 />;

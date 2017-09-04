@@ -16,10 +16,7 @@ class KeywordReport extends React.Component {
                 <div style={{clear: 'both'}}>
                     <KeywordTable
                         data={this.props.data}
-                        metric={this.props.metric}
-                        formatter={this.props.formatter}
-                        sort={this.props.sort}
-                        columnTitle={this.props.columnTitle} 
+                        columns={this.props.columns}
                         onKeywordEnabledChange={singleKeywordChange(this.props.onKeywordEnabledChange)}
                         onKeywordBidChange={singleKeywordChange(this.props.onKeywordBidChange)}
                     />
@@ -46,13 +43,10 @@ function singleKeywordChange(handler) {
 }
 
 KeywordReport.propTypes = {
+    title: PropTypes.string.isRequired,
     data: PropTypes.array.isRequired,
     modifiedData: PropTypes.array,
-    metric: PropTypes.func.isRequired,
-    formatter: PropTypes.func.isRequired,
-    title: PropTypes.string.isRequired,
-    sort: PropTypes.string,
-    columnTitle: PropTypes.string.isRequired,
+    columns: PropTypes.array.isRequired,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
 };

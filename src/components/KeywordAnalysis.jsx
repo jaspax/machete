@@ -43,69 +43,87 @@ class KeywordAnalysis extends React.Component {
 
         const worstKwTables = [{
             title: 'Keywords with ACOS over 100%',
-            columnTitle: 'ACOS',
-            order: 'desc',
             filterFn: x => x.clicks && x.acos > 100,
-            metricFn: x => x.acos,
-            formatFn: common.pctFmt,
+            columns: [{
+                title: 'ACOS',
+                sort: 'desc',
+                metric: x => x.acos,
+                format: common.pctFmt,
+            }]
         }, {
             title: 'Keywords with low click-through rate (CTR)',
-            columnTitle: 'CTR',
-            order: 'asc',
             filterFn: x => x.hasEnoughImpressions && x.ctr <= ctrBottomQuartile,
-            metricFn: x => x.ctr,
-            formatFn: common.pctFmt,
+            columns: [{
+                title: 'CTR',
+                sort: 'asc',
+                metric: x => x.ctr,
+                format: common.pctFmt,
+            }]
         }, {
             title: 'Keywords spending money without sales',
-            columnTitle: 'Spend',
-            order: 'desc',
             filterFn: x => x.clicks && !x.sales,
-            metricFn: x => x.spend,
-            formatFn: common.moneyFmt,
+            columns: [{
+                title: 'Spend',
+                sort: 'desc',
+                metric: x => x.spend,
+                format: common.moneyFmt,
+            }]
         }, {
             title: 'Keywords with few impressions',
-            columnTitle: 'Impressions',
-            order: 'asc',
             filterFn: x => x.impressions < minImpressions,
-            metricFn: x => x.impressions,
-            formatFn: x => x || 0,
+            columns: [{
+                title: 'Impressions',
+                sort: 'asc',
+                metric: x => x.impressions,
+                format: x => x || 0,
+            }]
         }];
         
         const bestKwTables = [{
             title: 'Keywords with high click-through rate (CTR)',
-            columnTitle: 'CTR',
-            order: 'desc',
             filterFn: x => x.hasEnoughImpressions && x.ctr >= ctrTopQuartile,
-            metricFn: x => x.ctr,
-            formatFn: common.pctFmt,
+            columns: [{
+                title: 'CTR',
+                sort: 'desc',
+                metric: x => x.ctr,
+                format: common.pctFmt,
+            }]
         }, {
             title: 'Keywords with low ACOS',
-            columnTitle: 'ACOS',
-            order: 'asc',
             filterFn: x => x.sales && x.acos < 100 && x.acos > 0,
-            metricFn: x => x.acos,
-            formatFn: common.pctFmt,
+            columns: [{
+                title: 'ACOS',
+                sort: 'asc',
+                metric: x => x.acos,
+                format: common.pctFmt,
+            }]
         }, {
             title: 'Keywords with highest profit (sales - spend)',
-            columnTitle: 'Profit',
-            order: 'desc',
             filterFn: x => x.sales && x.acos < 100,
-            metricFn: x => x.sales - x.spend,
-            formatFn: common.moneyFmt,
+            columns: [{
+                title: 'Profit',
+                sort: 'desc',
+                metric: x => x.sales - x.spend,
+                format: common.moneyFmt,
+            }]
         }, {
             title: 'Keywords with highest gross sales',
-            columnTitle: 'Sales',
-            order: 'desc',
             filterFn: x => x.sales && x.sales >= salesTopQuartile.sales,
-            metricFn: x => x.sales,
-            formatFn: common.moneyFmt,
+            columns: [{
+                title: 'Sales',
+                sort: 'desc',
+                metric: x => x.sales,
+                format: common.moneyFmt,
+            }]
         }, {
             title: 'Disabled keywords',
-            columnTitle: 'ACOS',
-            order: 'desc',
             filterFn: x => !x.enabled,
-            metricFn: x => x.acos,
-            formatFn: common.pctFmt,
+            columns: [{
+                title: 'ACOS',
+                sort: 'desc',
+                metric: x => x.acos,
+                format: common.pctFmt,
+            }]
         }];
 
         return <KeywordAnalyticsTab 
