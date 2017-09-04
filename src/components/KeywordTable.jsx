@@ -29,6 +29,7 @@ class KeywordTable extends React.Component {
                     <KeywordEnableToggle enabled={row.original.enabled} onChange={bindKeywordChange(row.original, this.props.onKeywordEnabledChange)} />
                     <KeywordBidUpdate bid={parseFloat(row.original.bid)} onChange={bindKeywordChange(row.original, this.props.onKeywordBidChange)} />
                 </div>,
+            minWidth: 190,
         });
 
         const sortColumn = this.props.columns.filter(col => col.sort).map(col => ({
