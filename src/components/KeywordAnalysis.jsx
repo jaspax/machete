@@ -49,6 +49,14 @@ class KeywordAnalysis extends React.Component {
                 sort: 'desc',
                 metric: x => x.acos,
                 format: common.pctFmt,
+            }, {
+                title: 'Spend',
+                metric: x => x.spend,
+                format: common.moneyFmt,
+            }, {
+                title: 'Sales',
+                metric: x => x.sales,
+                format: common.moneyFmt,
             }]
         }, {
             title: 'Keywords with low click-through rate (CTR)',
@@ -58,6 +66,12 @@ class KeywordAnalysis extends React.Component {
                 sort: 'asc',
                 metric: x => x.ctr,
                 format: common.pctFmt,
+            }, {
+                title: 'Impressions',
+                metric: x => x.impressions,
+            }, {
+                title: 'Clicks',
+                metric: x => x.clicks
             }]
         }, {
             title: 'Keywords spending money without sales',
@@ -67,6 +81,12 @@ class KeywordAnalysis extends React.Component {
                 sort: 'desc',
                 metric: x => x.spend,
                 format: common.moneyFmt,
+            }, {
+                title: 'Clicks',
+                metric: x => x.clicks,
+            }, {
+                title: 'Avg CPC',
+                metric: x => x.avgCpc
             }]
         }, {
             title: 'Keywords with few impressions',
