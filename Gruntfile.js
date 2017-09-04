@@ -23,6 +23,21 @@ module.exports = function(grunt) {
         env.NODE_ENV = 'production';
     }
 
+    let vendorTransforms = [];
+    if (releaseTag == 'release') {
+        vendorTransforms = [
+            ['envify', Object.assign({ global: true }, env)],
+            ['uglifyify', { global: true }],
+            ['babelify', { presets: ['react'] }]
+        ];
+    }
+    else {
+        vendorTransforms = [
+            ['envify', Object.assign({ global: true }, env)],
+            ['babelify', { presets: ['react'] }]
+        ];
+    }
+
     const gruntConfig = {
         pkg,
         execute: {
@@ -46,11 +61,7 @@ module.exports = function(grunt) {
                 dest: `out/${product}/src/vendor.js`,
                 options: { 
                     require: dependencies,
-                    transform: [
-                        ['envify', Object.assign({ global: true }, env)],
-                        ['uglifyify', { global: true }],
-                        ['babelify', { presets: ['react'] }]
-                    ]
+                    transform: vendorTransforms,
                 },
             },
             /* More targets created programatically */
