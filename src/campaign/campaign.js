@@ -176,7 +176,7 @@ function generateHistoryReports(entityId, container) {
             allowed,
             downloadHref,
             loadData: cb => common.getCampaignHistory(entityId, campaignId, data => {
-                cb(common.convertSnapshotsToDeltas(data));
+                cb(common.convertSnapshotsToDeltas(data, { rate: 'day', chunk: 'day', round: false }));
             }),
         });
         ReactDOM.render(tabContent, container[0]);
