@@ -149,9 +149,6 @@ function convertSnapshotsToDeltas(data, opt) {
     let lastItem = null;
     data = data.sort((a, b) => a.timestamp - b.timestamp);
     for (let item of data) {
-        // Don't modify the original items in the data array!
-        item = Object.assign({}, item);
-
         if (opt.chunk) {
             // Round off all time values to their nearest chunk and skip values
             // within the same chunk
@@ -174,14 +171,15 @@ function convertSnapshotsToDeltas(data, opt) {
         }
 
         if (lastItem) {
+            const delta = Object.assign({}, item);
             for (let metric of cumulativeMetrics) {
                 let rateFactor = (item.timestamp - lastItem.timestamp)/constants.timespan[opt.rate];
                 let normalized = (item[metric] - lastItem[metric])/rateFactor;
                 if (opt.round)
                     normalized = Math.round(normalized);
-                item[metric] = normalized;
+                delta[metric] = normalized;
             }
-            c.push(item);
+            c.push(delta);
         }
 
         lastItem = item;

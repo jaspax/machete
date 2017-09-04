@@ -7,15 +7,17 @@ const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 
-const tenDays = 10 * constants.timespan.day;
-const startTimestamp = Date.now() - tenDays;
+const twoWeeks = 15 * constants.timespan.day;
+const startTimestamp = Date.now() - twoWeeks;
 const charts = [
-    { column: 6, label: "Impressions / hour", config: {metric: 'impressions', rate: 'hour', chunk: 'hour', round: true, startTimestamp} },
-    { column: 7, label: "Clicks / day", config: {metric: 'clicks', rate: 'day', chunk: 'day', round: true, startTimestamp} },
-    { column: 9, label: "Spend / day", config: {metric: 'spend', rate: 'day', chunk: 'day', round: false, startTimestamp} },
-    { column: 10, label: "Sales / day", config: {metric: 'salesCount', rate: 'day', chunk: 'day', round: false, startTimestamp} },
-    { column: 11, label: "ACOS", config: {metric: 'acos', chunk: 'day', round: false, startTimestamp} },
+    { column: 6, label: "Impressions / day", metric: 'impressions' },
+    { column: 7, label: "Clicks / day", metric: 'clicks' },
+    { column: 8, label: "Avg CPC", metric: 'avgCpc' },
+    { column: 9, label: "Spend / day", metric: 'spend' },
+    { column: 10, label: "Sales / day", metric: 'salesCount' },
+    { column: 11, label: "ACOS", metric: 'acos' },
 ];
+const deltaConfig = { rate: 'day', chunk: 'day', round: false, startTimestamp };
 
 chrome.runtime.sendMessage({
     action: 'getAllowedCampaigns',
@@ -32,15 +34,6 @@ ga.mcatch(response => {
     }), 100);
 }));
 
-const templateUrl = chrome.runtime.getURL('html/templates.html');
-$.ajax(templateUrl, {
-    method: 'GET',
-    success: (data) => {
-        let dashboard = $('#campaignDashboard');
-        dashboard.append(data);
-    },
-});
-
 function addChartButtons(rows, allowedCampaigns) {
     for (let row of rows) {
         if ($(row).find(`.${DashboardHistoryButton.chartClass}`).length)
@@ -55,7 +48,7 @@ function addChartButtons(rows, allowedCampaigns) {
         let campaignId = common.getCampaignId(href);
         let allowed = allowedCampaigns.includes(campaignId);
 
-        const campaignData = {};
+        let campaignData = null;
         for (let chart of charts) {
             let target = cells[chart.column];
             if (!target)
@@ -63,20 +56,20 @@ function addChartButtons(rows, allowedCampaigns) {
 
             const loadData = onComplete => {
                 if (!allowed)
-                    return onComplete(formatParallelData({}, chart.config.metric));
+                    return onComplete(formatParallelData({}, chart.metric));
                 if (campaignData)
-                    return onComplete(formatParallelData(campaignData, chart.config.metric));
+                    return onComplete(formatParallelData(campaignData, chart.metric));
 
                 return common.getCampaignHistory(common.getEntityId(), campaignId, data => {
-                    const deltas = common.convertSnapshotsToDeltas(data, chart.config);
+                    const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
                     campaignData = common.parallelizeSeries(deltas);
-                    onComplete(formatParallelData(campaignData, chart.config.metric));
+                    onComplete(formatParallelData(campaignData, chart.metric));
                 });
             };
 
             let btn = React.createElement(DashboardHistoryButton, {
                 allowed,
-                metric: chart.config.metric,
+                metric: chart.metric,
                 title: chart.label,
                 loadData,
             });
