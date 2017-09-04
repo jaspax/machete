@@ -7,7 +7,7 @@ const ga = require('../common/ga.js');
 const constants = require('../common/constants.js');
 
 const CampaignHistoryTab = require('./CampaignHistoryTab.jsx');
-const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');
+const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
 const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
 
 const tabClass = `machete-tab`;
@@ -145,18 +145,18 @@ function addCampaignTabs(tabs) {
 }
 
 function generateKeywordReports(entityId, container) {
-    const chart = React.createElement(KeywordAnalyticsTab, { 
+    const chart = React.createElement(KeywordAnalysis, { 
         allowed: true, // assume true until we know otherwise
         loading: true,
-        onKeywordEnabledChange: () => console.warn("shouldn't update keywords while still loading"),
-        onKeywordBidChange: () => console.warn("shouldn't update keywords while still loading"),
+        updateStatus: () => console.warn("shouldn't update keywords while still loading"),
+        updateBid: () => console.warn("shouldn't update keywords while still loading"),
         keywordData: [],
     });
     ReactDOM.render(chart, container[0]);
 
     Promise.all([allowedPromise, keywordDataPromise]).then(results => {
         let [allowed, data] = results;
-        const chart = React.createElement(KeywordAnalyticsTab, {
+        const chart = React.createElement(KeywordAnalysis, {
             allowed,
             loading: false,
             keywordData: data,

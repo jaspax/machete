@@ -41,8 +41,8 @@ class KeywordReport extends React.Component {
     }
 }
 
-function singleKeywordChange(callback) {
-    return (value, item) => callback(value, [item]);
+function singleKeywordChange(handler) {
+    return (value, item) => handler(value, [item]);
 }
 
 KeywordReport.propTypes = {
