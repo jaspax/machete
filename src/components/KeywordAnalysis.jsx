@@ -47,7 +47,7 @@ class KeywordAnalysis extends React.Component {
             order: 'desc',
             filterFn: x => x.clicks && x.acos > 100,
             metricFn: x => x.acos,
-            formatFn: x => x ? common.pctFmtx : "(no sales)",
+            formatFn: common.pctFmt,
         }, {
             title: 'Keywords with low click-through rate (CTR)',
             columnTitle: 'CTR',
