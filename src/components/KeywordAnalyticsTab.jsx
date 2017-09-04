@@ -1,6 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const DataNotAvailable = require('../components/DataNotAvailable.jsx');
+const DataNotAvailable = require('./DataNotAvailable.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
 const KeywordReport = require('./KeywordReport.jsx');
 

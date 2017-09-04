@@ -1,6 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const TimeSeriesChart = require('../components/TimeSeriesChart.jsx');
+const TimeSeriesChart = require('./TimeSeriesChart.jsx');
 
 const common = require('../common/common.js');
 

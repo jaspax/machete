@@ -10,7 +10,7 @@ const ga = require('../common/ga.js');
 const LoadingNotice = require('./LoadingNotice.jsx');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
-const CampaignHistoryTab = require('../campaign/CampaignHistoryTab.jsx');
+const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
 
 const now = Date.now();
 const twoWeeks = 15 * constants.timespan.day;

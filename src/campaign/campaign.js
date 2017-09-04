@@ -6,9 +6,9 @@ const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.js');
 
-const CampaignHistoryTab = require('./CampaignHistoryTab.jsx');
+const CampaignHistoryTab = require('./../components/CampaignHistoryTab.jsx');
 const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
-const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
+const KeywordBulkUpdate = require('../components/KeywordBulkUpdate.jsx');
 
 const tabClass = `machete-tab`;
 

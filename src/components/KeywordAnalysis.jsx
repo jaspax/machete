@@ -1,6 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const KeywordAnalyticsTab = require('../campaign/KeywordAnalyticsTab.jsx');
+const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
