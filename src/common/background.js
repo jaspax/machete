@@ -3,7 +3,7 @@ const co = require('co');
 
 const constants = require('../common/constants.js');
 
-const lastVersionKey = 'machete-last-version';
+const lastVersionKey = 'lastVersion';
 const serviceUrl = `https://${constants.hostname}`;
 
 chrome.runtime.onInstalled.addListener(details => {
