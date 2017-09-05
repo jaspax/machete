@@ -54,7 +54,8 @@ class TimeSeriesChart extends React.Component {
                 title: this.props.title,
                 width: this.props.width,
                 height: this.props.height,
-                margin: { l: 40, r: 20, b: 20, t: 40, pad: 4 },
+                margin: { l: 40, r: 20, b: 28, t: 40, pad: 4 },
+                xaxis: { showticklabels: false }
             },
             this.props.layout);
 

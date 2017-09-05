@@ -4,6 +4,7 @@ const _ = require('lodash');
 const qw = require('qw');
 const ga = require('./ga.js');
 const constants = require('./constants.js');
+const moment = require('moment');
 
 function getEntityId(href) {
     let entityId = getQueryArgs(href).entityId;
@@ -150,11 +151,10 @@ function convertSnapshotsToDeltas(data, opt) {
     data = data.sort((a, b) => a.timestamp - b.timestamp);
     for (let item of data) {
         if (opt.chunk) {
-            // Round off all time values to their nearest chunk and skip values
-            // within the same chunk
-            item.timestamp -= item.timestamp % constants.timespan[opt.chunk];
-            if (lastItem && !(item.timestamp - lastItem.timestamp))
+            if (lastItem && moment(item.timestamp).isSame(moment(lastItem.timestamp), opt.chunk)) {
                 continue;
+            }
+            item.timestamp = moment(item.timestamp).startOf(opt.chunk);
         }
 
         // Filter out things by date range
