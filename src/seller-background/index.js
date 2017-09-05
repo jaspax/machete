@@ -2,7 +2,7 @@ const $ = require('jquery');
 const co = require('co');
 
 const constants = require('../common/constants.js');
-const bg = require('../common/common-background.js');
+const bg = require('../common/background.js');
 
 bg.messageListener(function*(req) {
     if (req.action == 'setSession')
