@@ -118,6 +118,7 @@ function* getAllowedCampaigns(entityId) {
 
 function* requestCampaignData(entityId) {
     checkEntityId(entityId);
+    const lastRequestSucceeded = JSON.parse(localStorage.getItem('lastRequestSucceeded'));
 
     let timestamp = Date.now();
     let data = null;
@@ -137,11 +138,13 @@ function* requestCampaignData(entityId) {
         });
     }
     catch (ex) {
-        if (ex.status == 401) { // Unauthorized
+        if (ex.status == 401 && lastRequestSucceeded) { // Unauthorized
+            localStorage.setItem('lastRequestSucceeded', false);
             notifyNeedCredentials(entityId);
         }
         throw ex;
     }
+    localStorage.setItem('lastRequestSucceeded', true);
 
     if (data && data.aaData && data.aaData.length) {
         let campaignIds = data.aaData.map(x => x.campaignId);
