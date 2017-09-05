@@ -28,7 +28,7 @@ const charts = [
     { column: "Orders", label: "Orders / day", metric: 'salesCount', },
     { column: "ACoS", label: "ACoS", metric: 'acos' },
     { column: "CTR", label: "CTR", metric: 'ctr' },
-    { column: "CPC", label: "Cost per click ($)", metric: 'cpc' },
+    { column: "CPC", label: "Cost per click ($)", metric: 'avgCpc' },
     { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
 
