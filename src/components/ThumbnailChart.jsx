@@ -12,7 +12,7 @@ class ThumbnailChart extends React.Component {
 
         if (this.state && this.state.lodata) {
             height = 270; // leaving room for the lodata link
-            if (process.env.PRODUCT == 'selfpub') {
+            if (process.env.PRODUCT == 'sp') {
                 lodata = <p>
                     <a data-mclick="thumbnail-lodata" className="machete-lodata" target="_blank" href={loDataHref}>Why don&rsquo;t I see any data?</a>
                 </p>;

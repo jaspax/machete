@@ -7,12 +7,12 @@ module.exports = function(grunt) {
     const dependencies = Object.keys(pkg.dependencies);
 
     let product = grunt.option('product') || process.env.MACHETE_PRODUCT;
-    if (!['seller', 'selfpub'].includes(product)) {
+    if (!['seller', 'sp'].includes(product)) {
         throw new Error('unknown product: ' + product);
     }
 
     let sourceDirs = {
-        selfpub: ['background', 'campaign', 'dashboard'],
+        sp: ['background', 'campaign', 'dashboard'],
         seller: ['seller-background', 'seller-dash'],
     };
 

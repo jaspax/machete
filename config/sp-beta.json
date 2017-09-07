@@ -1,6 +1,6 @@
 {
     "NAME": "Machete Beta",
-    "PRODUCT": "selfpub",
+    "PRODUCT": "sp",
     "NODE_ENV": "debug",
     "HOSTNAME": "beta.machete-app.com"
 }

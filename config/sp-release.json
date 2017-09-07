@@ -1,6 +1,6 @@
 {
     "NAME": "Machete - Your tool for cutting through AMS",
-    "PRODUCT": "selfpub",
+    "PRODUCT": "sp",
     "NODE_ENV": "production",
     "HOSTNAME": "machete-app.com"
 }
