@@ -18,19 +18,7 @@ const ourTabs = [
     {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
 ];
 
-let allowedPromise = new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({
-        action: 'getAllowedCampaigns',
-        entityId: common.getEntityId(),
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            reject(response.error);
-        }
-        resolve(response.data.includes(common.getCampaignId()));
-    }));
-});
+let allowedPromise = common.getCampaignAllowed(common.getEntityId(), common.getCampaignId());
 
 let adGroupPromise = new Promise(resolve => {
     let adGroupInterval = window.setInterval(() => {

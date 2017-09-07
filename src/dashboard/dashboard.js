@@ -19,22 +19,12 @@ const charts = [
 ];
 const deltaConfig = { rate: 'day', chunk: 'day', round: false, startTimestamp };
 
-chrome.runtime.sendMessage({
-    action: 'getAllowedCampaigns',
-    entityId: common.getEntityId(),
-},
-ga.mcatch(response => {
-    if (response.error) {
-        ga.merror(response.status, response.error);
-    }
-    const allowedCampaigns = response.data;
-    window.setInterval(ga.mcatch(() => {
-        let tableRows = $('#campaignTable tbody tr');
-        addChartButtons(tableRows, allowedCampaigns);
-    }), 100);
-}));
+window.setInterval(ga.mcatch(() => {
+    let tableRows = $('#campaignTable tbody tr');
+    addChartButtons(tableRows);
+}), 100);
 
-function addChartButtons(rows, allowedCampaigns) {
+function addChartButtons(rows) {
     for (let row of rows) {
         if ($(row).find(`.${DashboardHistoryButton.chartClass}`).length)
             continue; 
@@ -46,37 +36,37 @@ function addChartButtons(rows, allowedCampaigns) {
 
         let href = link.href;
         let campaignId = common.getCampaignId(href);
-        let allowed = allowedCampaigns.includes(campaignId);
+        common.getCampaignAllowed(common.getEntityId(), campaignId).then(allowed => {
+            let campaignData = null;
+            for (let chart of charts) {
+                let target = cells[chart.column];
+                if (!target)
+                    continue;
 
-        let campaignData = null;
-        for (let chart of charts) {
-            let target = cells[chart.column];
-            if (!target)
-                continue;
+                const loadData = onComplete => {
+                    if (!allowed)
+                        return onComplete(formatParallelData({}, chart.metric));
+                    if (campaignData)
+                        return onComplete(formatParallelData(campaignData, chart.metric));
 
-            const loadData = onComplete => {
-                if (!allowed)
-                    return onComplete(formatParallelData({}, chart.metric));
-                if (campaignData)
-                    return onComplete(formatParallelData(campaignData, chart.metric));
+                    return common.getCampaignHistory(common.getEntityId(), campaignId, data => {
+                        const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
+                        campaignData = common.parallelizeSeries(deltas);
+                        onComplete(formatParallelData(campaignData, chart.metric));
+                    });
+                };
 
-                return common.getCampaignHistory(common.getEntityId(), campaignId, data => {
-                    const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
-                    campaignData = common.parallelizeSeries(deltas);
-                    onComplete(formatParallelData(campaignData, chart.metric));
+                let btn = React.createElement(DashboardHistoryButton, {
+                    allowed,
+                    metric: chart.metric,
+                    title: chart.label,
+                    loadData,
                 });
-            };
-
-            let btn = React.createElement(DashboardHistoryButton, {
-                allowed,
-                metric: chart.metric,
-                title: chart.label,
-                loadData,
-            });
-            const container = $('<span></span>');
-            $(target).append(container);
-            ReactDOM.render(btn, container[0]);
-        }
+                const container = $('<span></span>');
+                $(target).append(container);
+                ReactDOM.render(btn, container[0]);
+            }
+        });
     }
 }
 

@@ -203,6 +203,34 @@ function getCampaignHistory(entityId, campaignId, cb) {
     }));
 }
 
+let allowedPromise = null;
+function getAllowedCampaigns(entityId) {
+    if (!allowedPromise) {
+        allowedPromise = new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+                action: 'getAllowedCampaigns', 
+                entityId
+            }, response => {
+                if (response.error) {
+                    return reject(response.error);
+                }
+                resolve(allowedCampaigns);
+            });
+        });
+    }
+
+    return allowedPromise;
+}
+
+function getCampaignAllowed(entityId, campaignId) {
+    return getAllowedCampaigns(entityId).then(allowed => {
+        if (allowed[0] == '*') {
+            return true;
+        }
+        return allowed.includes(campaignId);
+    });
+}
+
 if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
@@ -254,6 +282,7 @@ module.exports = {
     getSellerCampaignId,
     getQueryArgs,
     getAsin,
+    getCampaignAllowed,
     moneyFmt,
     pctFmt,
     getCampaignHistory,
