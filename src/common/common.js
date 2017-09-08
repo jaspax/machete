@@ -42,8 +42,8 @@ function getSellerCampaignId(href) {
     let campaignIdx = parts.indexOf('campaign');
     let adGroupIdx = parts.indexOf('ad_group');
     return { 
-        campaignId: campaignIdx >= 0 ? parts[campaignIdx + 1] : undefined,
-        adGroupId: adGroupIdx >= 0 ? parts[adGroupIdx + 1] : undefined,
+        campaignId: campaignIdx >= 0 ? parts[campaignIdx + 1] : null,
+        adGroupId: adGroupIdx >= 0 ? parts[adGroupIdx + 1] : null,
     };
 }
 
@@ -55,7 +55,7 @@ function getAsin(url) {
     // return it immediately.
     let asinLookalikes = parts.filter(x => x.length == 10 && x[0] == 'B');
     if (!asinLookalikes.length)
-        return undefined;
+        return null;
     if (asinLookalikes.length == 1)
         return asinLookalikes[0];
 
@@ -214,7 +214,7 @@ function getAllowedCampaigns(entityId) {
                 if (response.error) {
                     return reject(response.error);
                 }
-                resolve(response.data);
+                return resolve(response.data);
             });
         });
     }
@@ -235,7 +235,9 @@ if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    }, response => {});
+    }, response => {
+        console.log('setSession success');
+    });
 
     // Add in the Machete link to the top bar
     chrome.runtime.sendMessage({ action: 'getUser' }, response => {

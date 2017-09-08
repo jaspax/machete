@@ -60,8 +60,5 @@ typings/
 # Output directory
 out
 
-# Files generated in the source tree
-*.gen.*
-
 # Our generated zip file
 machete-*.zip
