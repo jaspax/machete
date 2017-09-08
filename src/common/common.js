@@ -214,7 +214,7 @@ function getAllowedCampaigns(entityId) {
                 if (response.error) {
                     return reject(response.error);
                 }
-                resolve(allowedCampaigns);
+                resolve(response.data);
             });
         });
     }
