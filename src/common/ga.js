@@ -37,11 +37,7 @@ inpage(function () {
 });
 
 // This is next to useless, but at least we'll get *something*
-window.onerror = function(errorMsg, url, lineNumber) {
-    inpage(function(_errorMsg, _url, _lineNumber) {
-        __ga('machete.send', 'exception', { exDescription: `${_errorMsg}; ${_url}:${_lineNumber}`, exFatal: true });
-    }, [errorMsg, url, lineNumber]);
-};
+window.onerror = merror;
 
 $(document).on('click.machete.ga', '[data-mclick]', function() {
     const args = $(this).attr('data-mclick').split(' ');
@@ -58,8 +54,9 @@ function mga(...args) {
 }
 
 function merror(...msg) {
-    let error = new Error(msg.join(' '));
-    mex(new Error(msg), false);
+    let errstr = msg.map(x => JSON.stringify(x)).join(' ');
+    let error = new Error(errstr);
+    mex(error, false);
     return error;
 }
 
@@ -75,7 +72,7 @@ function mclick(category, label) {
 function mcatch(fn) {
     return function(...args) {
         try {
-            fn.apply(this, args);
+            return fn.apply(this, args);
         }
         catch (ex) {
             mex(ex);

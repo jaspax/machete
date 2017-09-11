@@ -29,12 +29,18 @@ function messageListener(handler) {
         console.log('Handling message:', req);
         co(handler(req, sender))
         .then(data => {
-            console.log('Success handling message:', req);
-            sendResponse({ data });
+            const response = { data };
+            console.log('Success handling message:', req, "response", response);
+            sendResponse(response);
         })
         .catch(error => {
-            console.log('Error handling message:', req, 'error:', error);
-            sendResponse({ status: error.status, error });
+            let response = null;
+            if (error.status !== undefined && error.statusText !== undefined)
+                response = { status: error.status, error: error.statusText };
+            else
+                response = { status: error.message, error };
+            console.log('Error handling message:', req, 'response', response);
+            sendResponse(response);
         });
 
         return true;
