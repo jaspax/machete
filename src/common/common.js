@@ -206,7 +206,7 @@ function getCampaignHistory(entityId, campaignId, cb) {
 let allowedPromise = null;
 function getAllowedCampaigns(entityId) {
     if (!allowedPromise) {
-        allowedPromise = new Promise((resolve, reject) => {
+        allowedPromise = ga.mpromise((resolve, reject) => {
             chrome.runtime.sendMessage({
                 action: 'getAllowedCampaigns', 
                 entityId

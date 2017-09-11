@@ -82,7 +82,7 @@ function* setSession(req) {
         yield* alarmHandler(req.entityId);
     }
 
-    yield new Promise(resolve => {
+    yield ga.mpromise(resolve => {
         chrome.alarms.get(sessionKey, alarm => {
             if (!alarm) {
                 chrome.alarms.create(sessionKey, {
