@@ -20,7 +20,7 @@ const ourTabs = [
 
 let allowedPromise = common.getCampaignAllowed(common.getEntityId(), common.getCampaignId());
 
-let adGroupPromise = new Promise(resolve => {
+let adGroupPromise = new Promise(ga.mcatch(resolve => {
     let adGroupInterval = window.setInterval(() => {
         let adGroupIdInput = $('input[name=adGroupId]');
         if (!adGroupIdInput.length)
@@ -40,16 +40,17 @@ let adGroupPromise = new Promise(resolve => {
         }));
         resolve(adGroupId);
     }, 100);
-});
+}));
 
 let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])
-.then(results => new Promise((resolve, reject) => {
+.then(results => new Promise(ga.mcatch((resolve, reject) => {
     let [allowed, adGroupId] = results;
-    if (!allowed) {
+    if (allowed)
+        getKeywordData(common.getEntityId(), adGroupId, resolve, reject);
+    else
         resolve([]);
-    }
-    getKeywordData(common.getEntityId(), adGroupId, resolve, reject);
-}));
+})))
+.catch(ga.mex);
 
 let makeTabsInterval = window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
@@ -129,7 +130,8 @@ function addCampaignTabs(tabs) {
                 keywordDataPromise.then(data => generateBulkUpdate(bulkContainer, data));
             }
         }
-    });
+    })
+    .catch(ga.mex);
 }
 
 function generateKeywordReports(entityId, container) {
@@ -152,7 +154,8 @@ function generateKeywordReports(entityId, container) {
             updateBid,
         });
         ReactDOM.render(chart, container[0]);
-    });
+    })
+    .catch(ga.mex);
 }
 
 function generateHistoryReports(entityId, container) {
@@ -168,7 +171,8 @@ function generateHistoryReports(entityId, container) {
             }),
         });
         ReactDOM.render(tabContent, container[0]);
-    });
+    })
+    .catch(ga.mex);
 }
 
 function generateBulkUpdate(container, data) {
