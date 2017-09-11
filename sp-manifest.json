@@ -12,8 +12,12 @@
   },
 
   "page_action": {
-    "default_name": "Machete",
-    "default_icon": "images/machete-128.png"
+    "default_name": "Machete for AMS",
+    "default_icon": {
+        "16": "images/machete-16.png",
+        "48": "images/machete-48.png",
+        "128": "images/machete-128.png"
+    }
   },
   "permissions": [
     "alarms",

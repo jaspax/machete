@@ -16,9 +16,9 @@ function checkEntityId(entityId) {
     }
 }
 
-bg.messageListener(function*(req) {
+bg.messageListener(function*(req, sender) {
     if (req.action == 'setSession')
-        return yield* setSession(req);
+        return yield* setSession(req, sender);
     else if (req.action == 'getUser')
         return yield* bg.getUser();
     else if (req.action == 'getAllowedCampaigns') 
@@ -72,10 +72,12 @@ function* alarmHandler(entityId) {
     console.log('Alarm handler finish at', new Date());
 }
 
-function* setSession(req) {
+function* setSession(req, sender) {
     console.log('page session startup for', req);
     let sessionKey = getSessionKey(req.entityId);
     
+    chrome.pageAction.show(sender.tab.id);
+
     // Always request data on login, then set the alarm
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {

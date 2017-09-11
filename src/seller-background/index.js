@@ -5,9 +5,9 @@ const constants = require('../common/constants.js');
 const bg = require('../common/background.js');
 const ga = require('../common/ga.js');
 
-bg.messageListener(function*(req) {
+bg.messageListener(function*(req, sender) {
     if (req.action == 'setSession')
-        return yield* setSession(req);
+        return yield* setSession(req, sender);
     if (req.action == 'getUser')
         return yield* bg.getUser();
     if (req.action == 'getCampaignDataRange')
@@ -54,6 +54,7 @@ function* synchronizeCampaignData() {
 }
 
 function* setSession() {
+    chrome.pageAction.show(sender.tab.id);
     yield* synchronizeCampaignData();
 }
 
