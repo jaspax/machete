@@ -36,7 +36,8 @@ function addChartButtons(rows) {
 
         let href = link.href;
         let campaignId = common.getCampaignId(href);
-        common.getCampaignAllowed(common.getEntityId(), campaignId).then(allowed => {
+
+        const renderButtons = allowed => {
             let campaignData = null;
             for (let chart of charts) {
                 let target = cells[chart.column];
@@ -56,17 +57,24 @@ function addChartButtons(rows) {
                     });
                 };
 
+                let container = $(target).find('.machete-dash-container');
+                if (!container.length) {
+                    container = $('<span class="machete-dash-container"></span>');
+                    $(target).append(container);
+                }
+
                 let btn = React.createElement(DashboardHistoryButton, {
                     allowed,
                     metric: chart.metric,
                     title: chart.label,
                     loadData,
                 });
-                const container = $('<span></span>');
-                $(target).append(container);
                 ReactDOM.render(btn, container[0]);
             }
-        });
+        };
+
+        renderButtons(false);
+        common.getCampaignAllowed(common.getEntityId(), campaignId).then(renderButtons);
     }
 }
 
