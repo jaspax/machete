@@ -231,50 +231,52 @@ function getCampaignAllowed(entityId, campaignId) {
     });
 }
 
-if (window.location.href.includes('ams')) {
-    chrome.runtime.sendMessage({
-        action: 'setSession', 
-        entityId: getEntityId(), 
-    }, response => {});
+ga.mcatch(() => {
+    if (window.location.href.includes('ams')) {
+        chrome.runtime.sendMessage({
+            action: 'setSession', 
+            entityId: getEntityId(), 
+        }, response => {});
 
-    // Add in the Machete link to the top bar
-    chrome.runtime.sendMessage({ action: 'getUser' }, response => {
-        if (response.error) {
-            ga.merror(response.error);
-            return;
-        }
-        const user = response.data;
-        let email = user.email;
-        user.isAnon = email == 'anon-user-email';
-        window.user = user;
+        // Add in the Machete link to the top bar
+        chrome.runtime.sendMessage({ action: 'getUser' }, ga.mcatch(response => {
+            if (response.error) {
+                ga.merror(response.error);
+                return;
+            }
+            const user = response.data || {};
+            let email = user.email;
+            user.isAnon = email == 'anon-user-email';
+            window.user = user;
 
-        const desc = user.activeSubscription.name;
-        let profileText = "Your Profile";
-        let label = 'view-profile';
-        if (user.isAnon) {
-            email = '';
-            profileText = 'Login/Register';
-            label = 'login';
-        }
-        let links = $('.userBarLinksRight');
-        if (links[0]) {
-            let chunks = links[0].innerHTML.split(' | ');
-            chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://${constants.hostname}/profile" target="_blank">${profileText}</a>)`);
-            links[0].innerHTML = chunks.join(' | ');
-        }
-        let logout = links.find('a');
-        if (logout[1]) {
-            $(logout[1]).click(() => {
-                const result = confirm(
-                    `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
-                        
-                    Continue logging out?`);
-                return result;
-            });
-        }
+            const desc = user.activeSubscription.name;
+            let profileText = "Your Profile";
+            let label = 'view-profile';
+            if (user.isAnon) {
+                email = '';
+                profileText = 'Login/Register';
+                label = 'login';
+            }
+            let links = $('.userBarLinksRight');
+            if (links[0]) {
+                let chunks = links[0].innerHTML.split(' | ');
+                chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://${constants.hostname}/profile" target="_blank">${profileText}</a>)`);
+                links[0].innerHTML = chunks.join(' | ');
+            }
+            let logout = links.find('a');
+            if (logout[1]) {
+                $(logout[1]).click(() => {
+                    const result = confirm(
+                        `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
+                            
+                        Continue logging out?`);
+                    return result;
+                });
+            }
 
-    });
-}
+        }));
+    }
+})();
 
 module.exports = {
     getEntityId,
