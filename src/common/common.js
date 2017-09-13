@@ -242,9 +242,8 @@ ga.mcatch(() => {
         chrome.runtime.sendMessage({ action: 'getUser' }, ga.mcatch(response => {
             if (response.error) {
                 ga.merror(response.error);
-                return;
             }
-            const user = response.data || {};
+            const user = response.data || { email: 'anon-user-email', activeSubscription: { name: 'Machete Free' } };
             let email = user.email;
             user.isAnon = email == 'anon-user-email';
             window.user = user;
