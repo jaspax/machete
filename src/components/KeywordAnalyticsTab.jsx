@@ -52,7 +52,7 @@ class KeywordAnalyticsTab extends React.Component {
             </div>;
         }
         else {
-            body = <DataNotAvailable allowed={false} anonymous={window.user.isAnon} />;
+            body = <DataNotAvailable allowed={false} anonymous={this.props.anonymous} />;
         }
 
         return (
@@ -89,6 +89,7 @@ function transformKeywordData(data) {
 
 KeywordAnalyticsTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
+    anonymous: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
     modifiedData: PropTypes.array,

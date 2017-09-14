@@ -254,12 +254,11 @@ if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    }, response => {
-        console.log('setSession success');
-    });
+    }, response => console.log('setSession success'));
 
     getUser().then(user => {
         const desc = user.activeSubscription.name;
+        let email = user.email;
         let profileText = "Your Profile";
         let label = 'view-profile';
         if (user.isAnon) {
@@ -286,8 +285,6 @@ if (window.location.href.includes('ams')) {
     });
 }
 
-
-
 module.exports = {
     getEntityId,
     getCampaignId,
@@ -295,7 +292,7 @@ module.exports = {
     getQueryArgs,
     getAsin,
     getCampaignAllowed,
-    getUser(),
+    getUser,
     moneyFmt,
     pctFmt,
     getCampaignHistory,

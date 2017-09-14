@@ -37,7 +37,7 @@ function addChartButtons(rows) {
         let href = link.href;
         let campaignId = common.getCampaignId(href);
 
-        const renderButtons = allowed => {
+        const renderButtons = (allowed, anonymous) => {
             let campaignData = null;
             for (let chart of charts) {
                 let target = cells[chart.column];
@@ -65,6 +65,7 @@ function addChartButtons(rows) {
 
                 let btn = React.createElement(DashboardHistoryButton, {
                     allowed,
+                    anonymous,
                     metric: chart.metric,
                     title: chart.label,
                     loadData,
@@ -73,8 +74,13 @@ function addChartButtons(rows) {
             }
         };
 
-        renderButtons(false);
-        common.getCampaignAllowed(common.getEntityId(), campaignId).then(renderButtons);
+        renderButtons(false, true);
+
+        Promise.all([common.getCampaignAllowed(common.getEntityId(), campaignId), common.getUser()])
+        .then(results => {
+            const [allowed, user] = results;
+            renderButtons(allowed, user.isAnon);
+        });
     }
 }
 

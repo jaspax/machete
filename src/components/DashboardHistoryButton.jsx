@@ -1,4 +1,3 @@
-const common = require('../common/common.js');
 const React = require('react');
 const PropTypes = require('prop-types');
 const HistoryChartPopup = require('./HistoryChartPopup.jsx');

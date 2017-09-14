@@ -136,6 +136,7 @@ function addCampaignTabs(tabs) {
 function generateKeywordReports(entityId, container) {
     const chart = React.createElement(KeywordAnalysis, { 
         allowed: true, // assume true until we know otherwise
+        anonymous: false,
         loading: true,
         updateStatus: () => console.warn("shouldn't update keywords while still loading"),
         updateBid: () => console.warn("shouldn't update keywords while still loading"),
@@ -143,10 +144,11 @@ function generateKeywordReports(entityId, container) {
     });
     ReactDOM.render(chart, container[0]);
 
-    Promise.all([allowedPromise, keywordDataPromise]).then(results => {
-        let [allowed, data] = results;
+    Promise.all([allowedPromise, keywordDataPromise, common.getUser()]).then(results => {
+        let [allowed, data, user] = results;
         const chart = React.createElement(KeywordAnalysis, {
             allowed,
+            anonymous: user.isAnon,
             loading: false,
             keywordData: data,
             updateStatus,
@@ -161,9 +163,12 @@ function generateHistoryReports(entityId, container) {
     const campaignId = common.getCampaignId();
     const downloadHref = `https://${constants.hostname}/api/data/${entityId}/${campaignId}/csv`;
 
-    allowedPromise.then(allowed => {
+    Promise.all([allowedPromise, common.getUser()])
+    .then(results => {
+        const [allowed, user] = results;
         let tabContent = React.createElement(CampaignHistoryTab, {
             allowed,
+            anonymous: user.isAnon,
             downloadHref,
             loadData: cb => common.getCampaignHistory(entityId, campaignId, data => {
                 cb(common.convertSnapshotsToDeltas(data, { rate: 'day', chunk: 'day', round: false }));
