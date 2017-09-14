@@ -32,7 +32,7 @@ const charts = [
     { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
 
-const setSessionPromise = new Promise((resolve, reject) => {
+const setSessionPromise = ga.mpromise((resolve, reject) => {
     chrome.runtime.sendMessage({ action: 'setSession', }, (response) => {
         if (response.error)
             return reject(response.error);

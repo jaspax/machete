@@ -89,8 +89,13 @@ function mcatch(fn) {
         }
         catch (ex) {
             mex(ex);
+            throw ex;
         }
     };
+}
+
+function mpromise(executor) {
+    return new Promise(executor).catch(mex);
 }
 
 module.exports = {
@@ -99,4 +104,5 @@ module.exports = {
     mex,
     mclick,
     mcatch,
+    mpromise,
 };

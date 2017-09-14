@@ -53,6 +53,7 @@ module.exports = function(grunt) {
         eslint: {
             options: { extensions: ['.js', '.jsx'] },
             components: ['src/components'],
+            common: ['src/common'],
             /* More targets created programatically */
         },
         browserify: {
@@ -76,7 +77,11 @@ module.exports = function(grunt) {
         watch: {
             components: {
                 files: ['src/components/*.jsx'],
-                tasks: ['eslint:components']
+                tasks: ['eslint:components', 'app']
+            },
+            common: {
+                files: ['src/common/*.js'],
+                tasks: ['eslint:common', 'app']
             },
             copy: {
                 files: ['css/**', 'images/**', 'html/**'],

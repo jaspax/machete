@@ -20,7 +20,7 @@ const ourTabs = [
 
 let allowedPromise = common.getCampaignAllowed(common.getEntityId(), common.getCampaignId());
 
-let adGroupPromise = new Promise(ga.mcatch(resolve => {
+let adGroupPromise = ga.mpromise(resolve => {
     let adGroupInterval = window.setInterval(() => {
         let adGroupIdInput = $('input[name=adGroupId]');
         if (!adGroupIdInput.length)
@@ -40,17 +40,16 @@ let adGroupPromise = new Promise(ga.mcatch(resolve => {
         }));
         resolve(adGroupId);
     }, 100);
-}));
+});
 
 let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])
-.then(results => new Promise(ga.mcatch((resolve, reject) => {
+.then(results => ga.mpromise((resolve, reject) => {
     let [allowed, adGroupId] = results;
     if (allowed)
         getKeywordData(common.getEntityId(), adGroupId, resolve, reject);
     else
         resolve([]);
-})))
-.catch(ga.mex);
+}));
 
 let makeTabsInterval = window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');

@@ -11,7 +11,8 @@
         "ecmaFeatures": { "jsx": true }
     },
     "globals": {
-        "chrome": true
+        "chrome": true,
+        "process": true
     },
     "extends": [
         "eslint:recommended",

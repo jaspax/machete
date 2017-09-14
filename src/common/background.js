@@ -36,7 +36,7 @@ function messageListener(handler) {
         })
         .catch(error => {
             let response = null;
-            if (error.status !== undefined && error.statusText !== undefined)
+            if (typeof error.status == 'undefined' && error.statusText)
                 response = { status: error.status, error: error.statusText };
             else
                 response = { status: error.message, error };
