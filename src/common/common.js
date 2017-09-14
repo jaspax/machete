@@ -234,7 +234,7 @@ function getCampaignAllowed(entityId, campaignId) {
 let getUserPromise = null;
 function getUser() {
     if (!getUserPromise) {
-        getUserPromise = new Promise((resolve, reject) => {
+        getUserPromise = ga.mpromise(resolve => {
             chrome.runtime.sendMessage({ action: 'getUser' }, response => {
                 if (response.error) {
                     ga.merror(response.error);
@@ -244,8 +244,7 @@ function getUser() {
                 user.isAnon = email == 'anon-user-email';
                 resolve(user);
             });
-        })
-        .catch(ga.merror);
+        });
     }
     return getUserPromise;
 }
