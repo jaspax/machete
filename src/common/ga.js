@@ -95,7 +95,7 @@ function mcatch(fn) {
 }
 
 function mpromise(executor) {
-    return new Promise(executor).catch(mex);
+    return new Promise(executor).catch(merror);
 }
 
 module.exports = {
