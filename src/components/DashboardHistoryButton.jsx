@@ -1,3 +1,4 @@
+const common = require('../common/common.js');
 const React = require('react');
 const PropTypes = require('prop-types');
 const HistoryChartPopup = require('./HistoryChartPopup.jsx');
@@ -37,7 +38,7 @@ class DashboardHistoryButton extends React.Component {
             onDismiss={this.onPopupDismissed}
             anchorId={this.btnId}
             allowed={this.props.allowed}
-            anonymous={window.user.isAnon}
+            anonymous={this.props.anonymous}
             title={this.props.title}
             loadData={this.props.loadData}
         />;
@@ -54,10 +55,10 @@ class DashboardHistoryButton extends React.Component {
 DashboardHistoryButton.chartClass = chartClass;
 DashboardHistoryButton.propTypes = {
     allowed: PropTypes.bool.isRequired,
+    anonymous: PropTypes.bool.isRequired,
     metric: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     loadData: PropTypes.func.isRequired,
 };
-
 
 module.exports = DashboardHistoryButton;
