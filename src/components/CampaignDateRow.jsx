@@ -30,7 +30,7 @@ class CampaignDateRow extends React.Component {
                 <td><span className="a-size-small metricValue">{Math.round(metrics.clicks)}</span></td>
                 <td><span className="a-size-small metricValue">{common.moneyFmt(metrics.avgCpc)}</span></td>
                 <td><span className="a-size-small metricValue">{common.moneyFmt(metrics.spend)}</span></td>
-                <td><span className="a-size-small metricValue">{common.moneyFmt(metrics.salesCount)}</span></td>
+                <td><span className="a-size-small metricValue">{common.moneyFmt(metrics.salesValue)}</span></td>
                 <td><span className="a-size-small metricValue">{common.pctFmt(metrics.acos)}</span></td>
             </tr>
         );
