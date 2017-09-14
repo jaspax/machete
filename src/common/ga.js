@@ -53,8 +53,21 @@ function mga(...args) {
     }, ['machete.send'].concat(args));
 }
 
+function errorToString(error) {
+    return JSON.stringify(error, (key, value) => {
+        if (value instanceof Error) {
+            const err = {};
+            Object.getOwnPropertyNames(value).forEach(prop => {
+                err[prop] = value[prop];
+            });
+            return err;
+        }
+        return value;
+    });
+}
+
 function merror(...msg) {
-    let errstr = msg.map(x => JSON.stringify(x)).join(' ');
+    let errstr = msg.map(errorToString).join(' ');
     let error = new Error(errstr);
     mex(error, false);
     return error;
@@ -82,7 +95,7 @@ function mcatch(fn) {
 }
 
 function mpromise(executor) {
-    return new Promise(executor).catch(mex);
+    return new Promise(executor).catch(merror);
 }
 
 module.exports = {

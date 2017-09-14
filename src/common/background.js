@@ -2,6 +2,7 @@ const $ = require('jquery');
 const co = require('co');
 
 const constants = require('../common/constants.js');
+const ga = require('../common/ga.js');
 
 const lastVersionKey = 'lastVersion';
 const serviceUrl = `https://${constants.hostname}`;
@@ -39,6 +40,7 @@ function messageListener(handler) {
                 response = { status: error.status, error: error.statusText };
             else
                 response = { status: error.message, error };
+            ga.merror(req, error);
             console.log('Error handling message:', req, 'response', response);
             sendResponse(response);
         });

@@ -231,26 +231,33 @@ function getCampaignAllowed(entityId, campaignId) {
     });
 }
 
+let getUserPromise = null;
+function getUser() {
+    if (!getUserPromise) {
+        getUserPromise = ga.mpromise(resolve => {
+            chrome.runtime.sendMessage({ action: 'getUser' }, response => {
+                if (response.error) {
+                    ga.merror(response.error);
+                }
+                const user = response.data || { email: 'anon-user-email', activeSubscription: { name: 'Machete Free' } };
+                let email = user.email;
+                user.isAnon = email == 'anon-user-email';
+                resolve(user);
+            });
+        });
+    }
+    return getUserPromise;
+}
+
 if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    }, response => {
-        console.log('setSession success');
-    });
+    }, response => console.log('setSession success'));
 
-    // Add in the Machete link to the top bar
-    chrome.runtime.sendMessage({ action: 'getUser' }, response => {
-        if (response.error) {
-            ga.merror(response.error);
-            return;
-        }
-        const user = response.data;
-        let email = user.email;
-        user.isAnon = email == 'anon-user-email';
-        window.user = user;
-
+    getUser().then(user => {
         const desc = user.activeSubscription.name;
+        let email = user.email;
         let profileText = "Your Profile";
         let label = 'view-profile';
         if (user.isAnon) {
@@ -274,7 +281,6 @@ if (window.location.href.includes('ams')) {
                 return result;
             });
         }
-
     });
 }
 
@@ -285,6 +291,7 @@ module.exports = {
     getQueryArgs,
     getAsin,
     getCampaignAllowed,
+    getUser,
     moneyFmt,
     pctFmt,
     getCampaignHistory,

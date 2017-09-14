@@ -129,6 +129,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-zip');
     grunt.loadNpmTasks('grunt-execute');
 
-    grunt.registerTask('app', sourceDirs[product].map(x => `browserify:${x}`));
+    grunt.registerTask('app', ['execute', ...sourceDirs[product].map(x => `browserify:${x}`)]);
     grunt.registerTask('default', ['execute', 'eslint', 'browserify', 'copy', 'zip']);
 };

@@ -22,7 +22,7 @@ class CampaignHistoryTab extends React.Component {
 
     render() {
         if (!this.props.allowed) {
-            return <DataNotAvailable allowed={false} anonymous={window.user.isAnon} />;
+            return <DataNotAvailable allowed={false} anonymous={this.props.anonymous} />;
         }
 
         return (
@@ -83,6 +83,7 @@ class CampaignHistoryTab extends React.Component {
 
 CampaignHistoryTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
+    anonymous: PropTypes.bool.isRequired,
     downloadHref: PropTypes.string.isRequired,
     loadData: PropTypes.func.isRequired,
 };

@@ -23,12 +23,8 @@ bg.messageListener(function*(req, sender) {
         return yield* bg.getUser();
     else if (req.action == 'getAllowedCampaigns') 
         return yield* getAllowedCampaigns(req.entityId);
-    else if (req.action == 'requestData')
-        return yield* requestCampaignData(req.entityId);
     else if (req.action == 'getDataHistory')
         return yield* getDataHistory(req.entityId, req.campaignId);
-    else if (req.action == 'requestKeywordData')
-        return yield* requestKeywordData(req.entityId, req.adGroupId);
     else if (req.action == 'getKeywordData')
         return yield* getKeywordData(req.entityId, req.adGroupId);
     else if (req.action == 'setCampaignMetadata')

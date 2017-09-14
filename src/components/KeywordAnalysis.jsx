@@ -179,6 +179,7 @@ class KeywordAnalysis extends React.Component {
 
         return <KeywordAnalyticsTab 
             allowed={this.props.allowed} 
+            anonymous={this.props.anonymous}
             loading={false}
             keywordData={data}
             modifiedData={this.state.modified}
@@ -213,6 +214,7 @@ class KeywordAnalysis extends React.Component {
 KeywordAnalysis.propTypes = {
     loading: PropTypes.bool.isRequired,
     allowed: PropTypes.bool.isRequired,
+    anonymous: PropTypes.bool.isRequired,
     keywordData: PropTypes.array.isRequired,
     updateStatus: PropTypes.func.isRequired,
     updateBid: PropTypes.func.isRequired,
