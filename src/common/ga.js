@@ -3,11 +3,16 @@ const $ = require('jquery');
 /* eslint-disable no-unused-vars */
 /* global __ga:false */
 
+function isBackgroundPage() {
+    return location.protocol == 'chrome-extension:';
+}
+
 // Execute a function in the context of the hosting page. For Chrome extension
 // scripts, we execute directly.
 function inpage(fn, args) {
-    if (location.protocol == 'chrome-extension:') {
-        fn(args);
+    args = args || [];
+    if (isBackgroundPage()) {
+        fn(...args);
     }
     else {
         const script = document.createElement('script');
@@ -19,8 +24,6 @@ function inpage(fn, args) {
     }
 }
 
-// Add Universal Analytics to the page. Only do this on http(s); not in the
-// chrome extension itself.
 /* eslint-disable */
 inpage(function () {
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -29,12 +32,17 @@ inpage(function () {
     })(window,document,'script','https://www.google-analytics.com/analytics.js','__ga');
 });
 
-/* eslint-enable */
-
 inpage(function () {
-    __ga('create', 'UA-98724833-1', 'auto', 'machete');
-    __ga('machete.send', 'pageview', location.pathname);
+    __ga('create', process.env.ANALYTICS_ID, 'auto', 'machete');
+    __ga(function() {
+        if (isBackgroundPage()) {
+            const tracker = __ga.getByName('machete');
+            tracker.set('checkProtocolTask', null);
+        }
+        __ga('machete.send', 'pageview', location.pathname);
+    });
 });
+/* eslint-enable */
 
 // This is next to useless, but at least we'll get *something*
 window.onerror = merror;
@@ -49,8 +57,8 @@ $(document).on('click.machete.ga', '[data-mclick]', function() {
 
 function mga(...args) {
     inpage(function(...a) {
-        __ga.apply(null, a);
-    }, ['machete.send'].concat(args));
+        __ga(...a);
+    }, ['machete.send', ...args]);
 }
 
 function errorToString(error) {
