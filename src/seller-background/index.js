@@ -53,7 +53,7 @@ function* synchronizeCampaignData() {
     }
 }
 
-function* setSession() {
+function* setSession(req, sender) {
     chrome.pageAction.show(sender.tab.id);
     yield* synchronizeCampaignData();
 }
