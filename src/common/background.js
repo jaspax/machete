@@ -28,6 +28,8 @@ chrome.runtime.onInstalled.addListener(details => {
 function messageListener(handler) {
     chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         console.log('Handling message:', req);
+        ga.mga('event', 'background-message', req.action);
+
         co(handler(req, sender))
         .then(data => {
             const response = { data };
