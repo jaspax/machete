@@ -29,6 +29,7 @@ function messageListener(handler) {
     chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         console.log('Handling message:', req);
         ga.mga('event', 'background-message', req.action);
+        const begin = performance.now();
 
         co(handler(req, sender))
         .then(data => {
@@ -45,6 +46,10 @@ function messageListener(handler) {
             ga.merror(req, error);
             console.log('Error handling message:', req, 'response', response);
             sendResponse(response);
+        })
+        .then(() => {
+            const end = performance.now();
+            ga.mga('timing', 'Background Task', req.action, Math.round(end - begin));
         });
 
         return true;
