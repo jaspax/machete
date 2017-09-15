@@ -2,6 +2,6 @@
     "NAME": "Machete - Your tool for cutting through AMS",
     "PRODUCT": "sp",
     "NODE_ENV": "production",
-    "HOSTNAME": "machete-app.com"
+    "HOSTNAME": "machete-app.com",
     "ANALYTICS_ID": "UA-98724833-1"
 }
