@@ -39,6 +39,9 @@ inpage(function () {
             const tracker = __ga.getByName('machete');
             tracker.set('checkProtocolTask', null);
         }
+        const manifest = chrome.runtime.getManifest();
+        __ga('machete.set', 'dimension1', manifest.version);
+        __ga('machete.set', 'dimension2', manifest.name);
         __ga('machete.send', 'pageview', location.pathname);
     });
 });
