@@ -2,5 +2,6 @@
     "NAME": "Machete - Upgrade your Amazon Seller Advertising",
     "PRODUCT": "seller",
     "NODE_ENV": "production",
-    "HOSTNAME": "machete-app.com"
+    "HOSTNAME": "machete-app.com",
+    "ANALYTICS_ID": "UA-98724833-1"
 }

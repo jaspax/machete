@@ -2,5 +2,6 @@
     "NAME": "Machete Beta",
     "PRODUCT": "sp",
     "NODE_ENV": "debug",
-    "HOSTNAME": "beta.machete-app.com"
+    "HOSTNAME": "beta.machete-app.com",
+    "ANALYTICS_ID": "UA-98724833-2"
 }
