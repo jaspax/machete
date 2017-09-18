@@ -249,10 +249,11 @@ common.getUser().then(user => {
     }
 
     function generateCampaignHistory(container) {
+        const { campaignId } = common.getSellerCampaignId(window.location.href);
         const content = React.createElement(CampaignHistoryTab, {
             allowed: user && !user.isAnon,
             anonymous: user.isAnon,
-            downloadHref: '',
+            downloadHref: `https://${constants.hostname}/api/seller/campaignData/${campaignId}/1-${Date.now()}/csv`,
             loadData: calcFetchDataFunction(window.location.href, window.location.href, 1),
         });
         ReactDOM.render(content, container[0]);
