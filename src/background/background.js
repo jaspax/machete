@@ -58,13 +58,9 @@ function* alarmHandler(entityId) {
 
     const adGroups = yield* getAdGroups(entityId);
     for (const item of adGroups) {
-        try {
-            yield* requestKeywordData(entityId, item.adGroupId);
-        }
-        catch (ex) {
-            ga.mex(ex);
-        }
+        yield* requestKeywordData(entityId, item.adGroupId);
     }
+
     console.log('Alarm handler finish at', new Date());
 }
 
@@ -190,11 +186,11 @@ function* requestKeywordData(entityId, adGroupId) {
     });
 
     if (data.message) {
-        throw new Error(data.message);
+        ga.mga('event', 'error-handled', 'keyword-data-failure', `${adGroupId}: ${data.message}`);
+        return;
     }
 
     yield* storeKeywordDataCloud(entityId, adGroupId, timestamp, data);
-    return data;
 }
 
 function* storeDataCloud(entityId, timestamp, data) {
