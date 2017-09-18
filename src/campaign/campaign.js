@@ -70,7 +70,7 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
 
     let href = bookLink[0].href;
     let match = href.match(/product\/(\w+)/);
-    if (match.length < 2)
+    if (!match || match.length < 2)
         return;
 
     chrome.runtime.sendMessage({
