@@ -25,6 +25,10 @@ chrome.runtime.onInstalled.addListener(details => {
     localStorage.setItem(lastVersionKey, manifest.version);
 });
 
+chrome.pageAction.onClicked.addListener(() => {
+    chrome.tabs.create({ url: `${serviceUrl}/profile` });
+});
+
 function messageListener(handler) {
     chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         console.log('Handling message:', req);
