@@ -135,6 +135,8 @@ function* requestCampaignData(entityId) {
         if (ex.status == 401 && lastRequestSucceeded) { // Unauthorized
             localStorage.setItem('lastRequestSucceeded', false);
             notifyNeedCredentials(entityId);
+            ga.mga('event', 'error-handled', 'request-campaign-data-401');
+            return null;
         }
         throw ex;
     }
@@ -210,11 +212,23 @@ function* storeStatusCloud(entityId, timestamp, data) {
 }
 
 function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
-    return yield $.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
-        method: 'PUT',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-    });
+    // Break data.aaData into chunks
+    const step = 50;
+    let index = 0;
+
+    // Chop the large keyword list into small, bite-sized chunks for easier
+    // digestion on the server.
+    while (index < data.aaData.length) {
+        let chunk = { aaData: data.aaData.slice(index, index + step) };
+
+        yield $.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
+            method: 'PUT',
+            data: JSON.stringify(chunk),
+            contentType: 'application/json',
+        });
+
+        index += step;
+    }
 }
 
 function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
