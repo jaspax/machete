@@ -239,9 +239,9 @@ function getUser() {
                 if (response.error) {
                     ga.merror(response.error);
                 }
-                const user = response.data || { email: 'anon-user-email', activeSubscription: { name: 'Machete Free' } };
-                let email = user.email;
-                user.isAnon = email == 'anon-user-email';
+                const user = response.data || { email: 'anon-user-email', activeSubscription: { id: 'free', name: 'Machete Free' } };
+                user.isAnon = user.email == 'anon-user-email';
+                user.isSeller = user.activeSubscription.id == 'seller';
                 resolve(user);
             });
         });
