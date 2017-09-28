@@ -42,14 +42,8 @@ function messageListener(handler) {
             sendResponse(response);
         })
         .catch(error => {
-            let response = null;
-            if (typeof error.status == 'undefined' && error.statusText)
-                response = { status: error.status, error: error.statusText };
-            else
-                response = { status: error.message, error };
             ga.merror(req, error);
-            console.log('Error handling message:', req, 'response', response);
-            sendResponse(response);
+            sendResponse({ status: error.message, error });
         })
         .then(() => {
             const end = performance.now();
@@ -67,8 +61,24 @@ function* getUser() {
     });
 }
 
+function ajax(...args) {
+    const err = new Error(); // capture more informative stack trace here
+
+    return new Promise((resolve, reject) => {
+        $.ajax(...args)
+        .done(resolve)
+        .fail(function (errorXhr) {
+            err.method = this.method; // eslint-disable-line no-invalid-this
+            err.url = this.url; // eslint-disable-line no-invalid-this
+            err.message = `${errorXhr.status} ${errorXhr.statusText}`;
+            reject(err);
+        });
+    });
+}
+
 module.exports = {
     serviceUrl,
     messageListener,
     getUser,
+    ajax,
 };

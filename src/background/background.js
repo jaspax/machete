@@ -1,4 +1,3 @@
-const $ = require('jquery');
 const co = require('co');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.js');
@@ -95,7 +94,7 @@ function* getAllowedCampaigns(entityId) {
     checkEntityId(entityId);
 
     try {
-        return yield $.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
+        return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
             method: 'GET',
             dataType: 'json'
         });
@@ -118,7 +117,7 @@ function* requestCampaignData(entityId) {
     let data = null;
     try {
         console.log('requesting campaign data for', entityId);
-        data = yield $.ajax('https://ams.amazon.com/api/rta/campaigns', {
+        data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
             method: 'GET',
             data: {
                 entityId,
@@ -156,7 +155,7 @@ function* requestCampaignData(entityId) {
 function* requestCampaignStatus(entityId, campaignIds, timestamp) {
     checkEntityId(entityId); 
 
-    const data = yield $.ajax('https://ams.amazon.com/api/rta/campaign-status', {
+    const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaign-status', {
         method: 'GET',
         data: { 
             entityId, 
@@ -174,7 +173,7 @@ function* requestKeywordData(entityId, adGroupId) {
 
     let timestamp = Date.now();
     console.log('requesting keyword data for', entityId, adGroupId);
-    const data = yield $.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
+    const data = yield bg.ajax('https://ams.amazon.com/api/sponsored-products/getAdGroupKeywordList', {
         method: 'POST',
         data: {
             entityId, adGroupId,
@@ -196,7 +195,7 @@ function* requestKeywordData(entityId, adGroupId) {
 }
 
 function* storeDataCloud(entityId, timestamp, data) {
-    return yield $.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -204,7 +203,7 @@ function* storeDataCloud(entityId, timestamp, data) {
 }
 
 function* storeStatusCloud(entityId, timestamp, data) {
-    return yield $.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -221,7 +220,7 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     while (index < data.aaData.length) {
         let chunk = { aaData: data.aaData.slice(index, index + step) };
 
-        yield $.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
+        yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
             data: JSON.stringify(chunk),
             contentType: 'application/json',
@@ -233,7 +232,7 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
 
 function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
     checkEntityId(entityId);
-    return yield $.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
+    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
         method: 'GET',
         dataType: 'json'
     });
@@ -247,14 +246,14 @@ function* getKeywordData(entityId, adGroupId) {
         method: 'GET',
         dataType: 'json',
     };
-    let data = yield $.ajax(ajaxOptions);
+    let data = yield bg.ajax(ajaxOptions);
 
     if (!data || data.length == 0) {
         // Possibly this is the first time we've ever seen this campaign. If so,
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
         yield* requestKeywordData(entityId, adGroupId);
-        data = yield $.ajax(ajaxOptions);
+        data = yield bg.ajax(ajaxOptions);
     }
 
     return data;
@@ -262,7 +261,7 @@ function* getKeywordData(entityId, adGroupId) {
 
 function* setCampaignMetadata(entityId, campaignId, asin) {
     checkEntityId(entityId);
-    return yield $.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
         data: JSON.stringify({ asin }),
         contentType: 'application/json',
@@ -271,7 +270,7 @@ function* setCampaignMetadata(entityId, campaignId, asin) {
 
 function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
     checkEntityId(entityId);
-    return yield $.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
         data: JSON.stringify({ campaignId }),
         contentType: 'application/json',
@@ -280,7 +279,7 @@ function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
 
 function* getAdGroups(entityId) {
     checkEntityId(entityId);
-    return yield $.ajax(`${bg.serviceUrl}/api/adGroups/${entityId}`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/adGroups/${entityId}`, {
         method: 'GET',
         dataType: 'json',
     });

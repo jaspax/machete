@@ -19,7 +19,7 @@ function getEntityId(href) {
         return entityId;
     }
 
-    throw ga.merror('could not discover entityId');
+    throw new Error('could not discover entityId');
 }
 
 function getCampaignId(href) {
@@ -33,7 +33,7 @@ function getCampaignId(href) {
         return campaignId;
     }
 
-    throw ga.merror('could not discover entityId');
+    throw new Error('could not discover entityId');
 }
 
 function getSellerCampaignId(href) {
@@ -211,10 +211,10 @@ function getAllowedCampaigns(entityId) {
                 action: 'getAllowedCampaigns', 
                 entityId
             }, response => {
-                if (response.error) {
-                    return reject(response.error);
-                }
-                return resolve(response.data);
+                if (response.error)
+                    reject(response.error);
+                else
+                    resolve(response.data);
             });
         });
     }
@@ -224,6 +224,9 @@ function getAllowedCampaigns(entityId) {
 
 function getCampaignAllowed(entityId, campaignId) {
     return getAllowedCampaigns(entityId).then(allowed => {
+        if (!allowed) {
+            return false;
+        }
         if (allowed[0] == '*') {
             return true;
         }

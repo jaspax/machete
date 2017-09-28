@@ -81,7 +81,6 @@ function merror(...msg) {
     let errstr = msg.map(errorToString).join(' ');
     let error = new Error(errstr);
     mex(error, false);
-    return error;
 }
 
 function mex(ex, fatal) {
