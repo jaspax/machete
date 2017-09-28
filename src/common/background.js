@@ -39,7 +39,7 @@ function messageListener(handler) {
         })
         .catch(error => {
             let response = null;
-            if (typeof error.status == 'undefined' && error.statusText) {
+            if (typeof error.status != 'undefined' && error.statusText) {
                 response = { status: error.status, error: error.statusText };
                 ga.merror(req, error);
             }
@@ -66,8 +66,20 @@ function* getUser() {
     });
 }
 
+function ajax(...args) {
+    // wrap jquery in an actually usable promise
+    return new Promise((resolve, reject) => {
+        $.ajax(...args)
+        .done(resolve)
+        .fail(function (errorXhr) {
+            reject(new Error(`${this.method} ${this.url} - ${errorXhr.status} ${errorXhr.statusText}`)); // eslint-disable-line no-invalid-this
+        });
+    });
+}
+
 module.exports = {
     serviceUrl,
     messageListener,
     getUser,
+    ajax,
 };
