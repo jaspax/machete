@@ -39,11 +39,14 @@ function messageListener(handler) {
         })
         .catch(error => {
             let response = null;
-            if (typeof error.status == 'undefined' && error.statusText)
+            if (typeof error.status == 'undefined' && error.statusText) {
                 response = { status: error.status, error: error.statusText };
-            else
+                ga.merror(req, error);
+            }
+            else {
                 response = { status: error.message, error };
-            ga.merror(req, error);
+                ga.merror(req, error);
+            }
             console.log('Error handling message:', req, 'response', response);
             sendResponse(response);
         })
