@@ -151,7 +151,7 @@ common.getUser().then(user => {
                 };
 
                 let btn = React.createElement(DashboardHistoryButton, {
-                    allowed: !user.isAnon,
+                    allowed: user.isSeller,
                     anonymous: user.isAnon,
                     metric: chart.metric,
                     title: chart.label,
@@ -251,7 +251,7 @@ common.getUser().then(user => {
     function generateCampaignHistory(container) {
         const { campaignId } = common.getSellerCampaignId(window.location.href);
         const content = React.createElement(CampaignHistoryTab, {
-            allowed: user && !user.isAnon,
+            allowed: user.isSeller,
             anonymous: user.isAnon,
             downloadHref: `https://${constants.hostname}/api/seller/campaignData/${campaignId}/1-${Date.now()}/csv`,
             loadData: calcFetchDataFunction(window.location.href, window.location.href, 1),
@@ -261,7 +261,7 @@ common.getUser().then(user => {
 
     function generateKeywordReports(container) {
         let content = React.createElement(KeywordAnalysis, { 
-            allowed: user && !user.isAnon, // assume true until we know otherwise
+            allowed: user.isSeller,
             loading: true,
             keywordData: [],
             updateStatus: () => console.warn("shouldn't update keywords while still loading"),
@@ -271,7 +271,7 @@ common.getUser().then(user => {
 
         getKeywordDataAggregate(data => {
             content = React.createElement(KeywordAnalysis, { 
-                allowed: user && !user.isAnon,
+                allowed: user.isSeller,
                 loading: false,
                 keywordData: data,
                 updateStatus,
