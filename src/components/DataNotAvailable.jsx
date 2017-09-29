@@ -1,18 +1,15 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 
+const constants = require('../common/constants.js');
+const href = `https://${constants.hostname}/profile`;
+
 function DataNotAvailable(props) {
     if (props.anonymous) {
         return (
             <div className="machete-login-required">
-                <p>You are not logged in to Machete, and reports for this campaign are
-                not available to anonymous users.</p>
-                
-                <p><a data-mclick="thumbnail-login" href="https://machete-app.com/login" 
-                target="_blank">Login to your Machete account</a> if you have created one.</p>
-
-                <p><a data-mclick="thumbnail-create-acct" href="https://machete-app.com/login" 
-                target="_blank">Create a Machete account</a> to subscribe.</p>
+                <p><a data-mclick="thumbnail-login" href={href}
+                target="_blank">Log in to Machete</a> to display data for this campaign.</p>
             </div>
         );
     }
@@ -21,7 +18,7 @@ function DataNotAvailable(props) {
             <p>Reports for this campaign are not available under your current
             subscription.</p>
             
-            <p><a data-mclick="thumbnail-upgrade" href="https://machete-app.com/profile" 
+            <p><a data-mclick="thumbnail-upgrade" href={href}
             target="_blank">Upgrade your account here</a>, then refresh this page.</p>
         </div>
     );
