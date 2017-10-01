@@ -244,7 +244,6 @@ function getUser() {
                 }
                 const user = response.data || { email: 'anon-user-email', activeSubscription: { id: 'free', name: 'Machete Free' } };
                 user.isAnon = user.email == 'anon-user-email';
-                user.isSeller = user.activeSubscription.id == 'seller';
                 resolve(user);
             });
         });
