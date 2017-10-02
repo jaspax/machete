@@ -4,7 +4,7 @@
   "name": "!! PLACEHOLDER NAME !!",
   "short_name": "Machete",
   "description": "Upgrade your advertising campaign analytics for Amazon Seller Central",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "icons": { 
       "16": "images/machete-16.png",
       "48": "images/machete-48.png",
