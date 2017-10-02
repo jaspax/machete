@@ -100,10 +100,10 @@ function* getAllowedCampaigns(entityId) {
         });
     }
     catch (ex) {
-        if (ex.status == 401) {
+        if (ex.message.match(/^401/)) {
             // this is basically expected, so don't propagate it as an error
             ga.mga('event', 'error-handled', 'entityid-unauthorized');
-            return yield [];
+            return [];
         }
         throw ex;
     }

@@ -7,7 +7,7 @@ const ga = require('../common/ga.js');
 const lastVersionKey = 'lastVersion';
 const serviceUrl = `https://${constants.hostname}`;
 
-chrome.runtime.onInstalled.addListener(details => {
+    chrome.runtime.onInstalled.addListener(details => {
     const manifest = chrome.runtime.getManifest();
     if (details.reason == 'install') {
         chrome.tabs.create({ url: `${serviceUrl}/${process.env.PRODUCT}/welcome` });
@@ -55,9 +55,9 @@ function messageListener(handler) {
 }
 
 function* getUser() {
-    return yield $.ajax(`${serviceUrl}/api/user`, { 
+    return yield ajax(`${serviceUrl}/api/user`, {
         method: 'GET',
-        dataType: 'json' 
+        dataType: 'json'
     });
 }
 
