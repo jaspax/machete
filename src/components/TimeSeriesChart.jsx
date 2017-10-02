@@ -43,6 +43,8 @@ class TimeSeriesChart extends React.Component {
             {
                 x: series.timestamp,
                 y: series.data,
+                text: series.data.map(series.format || (x => x.toString())),
+                hoverinfo: 'text',
                 name: series.name,
                 mode: 'lines+markers',
                 connectgaps: true

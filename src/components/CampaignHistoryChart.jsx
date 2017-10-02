@@ -85,6 +85,7 @@ class CampaignHistoryChart extends React.Component {
                 {
                     data: parallel.salesValue,
                     timestamp: parallel.timestamp,
+                    format: common.moneyFmt,
                     name: 'Sales',
                     options: {
                         mode: 'lines',
