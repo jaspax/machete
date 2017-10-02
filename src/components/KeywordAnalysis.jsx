@@ -57,6 +57,10 @@ class KeywordAnalysis extends React.Component {
                 title: 'Sales',
                 metric: x => x.sales,
                 format: common.moneyFmt,
+            }, {
+                title: 'Loss',
+                metric: x => x.spend - x.sales,
+                format: common.moneyFmt,
             }]
         }, {
             title: 'Keywords with low click-through rate (CTR)',
@@ -72,6 +76,10 @@ class KeywordAnalysis extends React.Component {
             }, {
                 title: 'Clicks',
                 metric: x => x.clicks
+            }, {
+                title: 'ACOS', 
+                metric: x => x.acos,
+                format: common.pctFmt,
             }]
         }, {
             title: 'Keywords spending money without sales',
@@ -86,7 +94,8 @@ class KeywordAnalysis extends React.Component {
                 metric: x => x.clicks,
             }, {
                 title: 'Avg CPC',
-                metric: x => x.avgCpc
+                metric: x => x.avgCpc,
+                format: common.moneyFmt,
             }]
         }, {
             title: 'Keywords with few impressions',
@@ -96,6 +105,10 @@ class KeywordAnalysis extends React.Component {
                 sort: 'asc',
                 metric: x => x.impressions,
                 format: x => x || 0,
+            }, {
+                title: 'ACOS', 
+                metric: x => x.acos,
+                format: common.pctFmt,
             }]
         }];
         
@@ -113,6 +126,10 @@ class KeywordAnalysis extends React.Component {
             }, {
                 title: 'Clicks',
                 metric: x => x.clicks
+            }, {
+                title: 'ACOS', 
+                metric: x => x.acos,
+                format: common.pctFmt,
             }]
         }, {
             title: 'Keywords with low ACOS',
@@ -130,9 +147,13 @@ class KeywordAnalysis extends React.Component {
                 title: 'Sales',
                 metric: x => x.sales,
                 format: common.moneyFmt,
+            }, {
+                title: 'Profit',
+                metric: x => x.sales - x.spend,
+                format: common.moneyFmt,
             }]
         }, {
-            title: 'Keywords with highest profit (sales - spend)',
+            title: 'Keywords with highest profit',
             filterFn: x => x.sales && x.acos < 100,
             columns: [{
                 title: 'Profit',
@@ -147,6 +168,10 @@ class KeywordAnalysis extends React.Component {
                 title: 'Sales',
                 metric: x => x.sales,
                 format: common.moneyFmt,
+            }, {
+                title: 'ACOS', 
+                metric: x => x.acos,
+                format: common.pctFmt,
             }]
         }, {
             title: 'Keywords with highest gross sales',
@@ -158,7 +183,6 @@ class KeywordAnalysis extends React.Component {
                 format: common.moneyFmt,
             }, {
                 title: 'ACOS',
-                sort: 'asc',
                 metric: x => x.acos,
                 format: common.pctFmt,
             }, {
@@ -174,6 +198,12 @@ class KeywordAnalysis extends React.Component {
                 sort: 'desc',
                 metric: x => x.acos,
                 format: common.pctFmt,
+            }, {
+                title: 'Impressions',
+                metric: x => x.impressions,
+            }, {
+                title: 'Clicks',
+                metric: x => x.clicks
             }]
         }];
 
