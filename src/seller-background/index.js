@@ -1,4 +1,3 @@
-const $ = require('jquery');
 const co = require('co');
 
 const constants = require('../common/constants.js');
@@ -95,7 +94,7 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             requestParams.filters = JSON.stringify(filters);
         }
 
-        const data = yield $.ajax(`https://sellercentral.amazon.com/hz/cm/${subRoute}/fetch`, {
+        const data = yield bg.ajax(`https://sellercentral.amazon.com/hz/cm/${subRoute}/fetch`, {
             method: 'GET',
             data: requestParams,
             dataType: 'json',
@@ -182,14 +181,14 @@ function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTime
 }
 
 function* getMissingRanges() {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/campaignData/missingRanges`, {
+    return yield bg.ajax(`https://${constants.hostname}/api/seller/campaignData/missingRanges`, {
         method: 'GET',
         dataType: 'json',
     });
 }
 
 function* storeSellerDataRange(subRoute, data, startTimestamp, endTimestamp) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
+    return yield bg.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -197,7 +196,7 @@ function* storeSellerDataRange(subRoute, data, startTimestamp, endTimestamp) {
 }
 
 function* getSellerDataRange(subRoute, startTimestamp, endTimestamp) {
-    return yield $.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
+    return yield bg.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
         method: 'GET',
         dataType: 'json'
     });
