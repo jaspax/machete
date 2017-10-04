@@ -107,6 +107,19 @@ function pctFmt(val) {
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
 const aggregateMetrics = qw`ctr acos avgCpc`;
 
+const round = {
+    whole: Math.round,
+    money: x => Math.round(x * 100)/100,
+};
+
+const roundMetrics = {
+    impressions: round.whole,
+    clicks: round.whole,
+    salesCount: round.whole,
+    salesValue: round.money,
+    spend: round.money,
+};
+
 // Convert a series of objects into a single object with a number of parallel
 // arrays. All objects in the series should have the same keys; in any case,
 // only the keys from the first object in the series are respected.
@@ -141,8 +154,6 @@ function parallelizeSeries(data) {
 //          range are discarded.
 //      endTimestamp: latest timestamp to examine. Items outside of this range
 //          are discarded.
-//      round: if true, then fractional values are rounded to the nearest whole
-//          value
 function convertSnapshotsToDeltas(data, opt) {
     let c = [];
     opt = opt || {};
@@ -154,7 +165,6 @@ function convertSnapshotsToDeltas(data, opt) {
             if (lastItem && moment(item.timestamp).isSame(moment(lastItem.timestamp), opt.chunk)) {
                 continue;
             }
-            item.timestamp = moment(item.timestamp).startOf(opt.chunk);
         }
 
         // Filter out things by date range
@@ -172,11 +182,13 @@ function convertSnapshotsToDeltas(data, opt) {
 
         if (lastItem) {
             const delta = Object.assign({}, item);
+            if (opt.chunk) {
+                delta.timestamp = moment(item.timestamp).startOf(opt.chunk);
+            }
             for (let metric of cumulativeMetrics) {
                 let rateFactor = (item.timestamp - lastItem.timestamp)/constants.timespan[opt.rate];
                 let normalized = (item[metric] - lastItem[metric])/rateFactor;
-                if (opt.round)
-                    normalized = Math.round(normalized);
+                normalized = (roundMetrics[metric] || (x => x))(normalized);
                 delta[metric] = normalized;
             }
             c.push(delta);

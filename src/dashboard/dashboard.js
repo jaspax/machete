@@ -17,7 +17,7 @@ const charts = [
     { column: 10, label: "Sales / day", metric: 'salesCount' },
     { column: 11, label: "ACOS", metric: 'acos' },
 ];
-const deltaConfig = { rate: 'day', chunk: 'day', round: false, startTimestamp };
+const deltaConfig = { rate: 'day', chunk: 'day', startTimestamp };
 
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
