@@ -7,7 +7,7 @@ class DownloadButton extends React.Component {
             <span className="a-button">
                 <span className="a-button-inner">
                     <a className="a-button-text" role="button" href={this.props.href} title={this.props.title}>
-                        <span className="download-icon">Download</span>
+                        <span className="download-icon"></span>&nbsp;Download
                     </a>
                 </span>
             </span>
