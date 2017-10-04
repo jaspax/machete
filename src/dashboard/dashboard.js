@@ -14,7 +14,7 @@ const charts = [
     { column: 7, label: "Clicks / day", metric: 'clicks' },
     { column: 8, label: "Avg CPC", metric: 'avgCpc' },
     { column: 9, label: "Spend / day", metric: 'spend' },
-    { column: 10, label: "Sales / day", metric: 'salesCount' },
+    { column: 10, label: "Sales ($) / day", metric: 'salesValue' },
     { column: 11, label: "ACOS", metric: 'acos' },
 ];
 const deltaConfig = { rate: 'day', chunk: 'day', startTimestamp };
