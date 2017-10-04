@@ -207,6 +207,25 @@ function convertSnapshotsToDeltas(data, opt) {
     return c;
 }
 
+function aggregateSeries(series, opt) {
+    const a = {};
+    for (const s of series) {
+        for (const item of s) {
+            const timestamp = moment(s.timestamp).startOf(opt.chunk);
+            if (a[timestamp]) {
+                for (const key of cumulativeMetrics) {
+                    a[timestamp][key] = item[key] + (a[timestamp][key] || 0);
+                }
+            }
+            else {
+                a[timestamp] = item;
+            }
+        }
+    }
+
+    return _.keys(a).sort().map(x => a[x]);
+}
+
 function getCampaignHistory(entityId, campaignId, cb) {
     chrome.runtime.sendMessage({
         action: 'getDataHistory',
@@ -319,4 +338,5 @@ module.exports = {
     getCampaignHistory,
     parallelizeSeries,
     convertSnapshotsToDeltas,
+    aggregateSeries,
 };
