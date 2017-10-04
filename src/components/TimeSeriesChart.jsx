@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const Plotly = require('plotly.js');
+const common = require('../common/common.js');
 
 let chartCounter = 0;
 
@@ -43,7 +44,7 @@ class TimeSeriesChart extends React.Component {
             {
                 x: series.timestamp,
                 y: series.data,
-                text: series.data.map(series.format || (x => x.toString())),
+                text: series.data.map(series.format || common.numberFmt),
                 hoverinfo: 'text',
                 name: series.name,
                 mode: 'lines+markers',

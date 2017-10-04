@@ -94,14 +94,21 @@ function moneyFmt(val) {
     if (Number.isNaN(+val)) {
         return '--';
     }
-    return `$${(+val).toFixed(2)}`;
+    return '$' + numberFmt(val);
 }
 
 function pctFmt(val) {
     if (Number.isNaN(+val)) {
         return '--';
     }
-    return `${(+val).toFixed(2)}%`;
+    return numberFmt(val) + '%';
+}
+
+function numberFmt(val) {
+    if (Number.isNaN(+val)) {
+        return '--';
+    }
+    return (+val).toFixed(2);
 }
 
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
@@ -308,6 +315,7 @@ module.exports = {
     getUser,
     moneyFmt,
     pctFmt,
+    numberFmt,
     getCampaignHistory,
     parallelizeSeries,
     convertSnapshotsToDeltas,
