@@ -190,7 +190,7 @@ function convertSnapshotsToDeltas(data, opt) {
         if (lastItem) {
             const delta = Object.assign({}, item);
             if (opt.chunk) {
-                delta.timestamp = moment(item.timestamp).startOf(opt.chunk);
+                delta.timestamp = moment(item.timestamp).startOf(opt.chunk).valueOf();
             }
             for (let metric of cumulativeMetrics) {
                 let rateFactor = (item.timestamp - lastItem.timestamp)/constants.timespan[opt.rate];
@@ -211,7 +211,7 @@ function aggregateSeries(series, opt) {
     const a = {};
     for (const s of series) {
         for (const item of s) {
-            const timestamp = moment(s.timestamp).startOf(opt.chunk);
+            const timestamp = moment(item.timestamp).startOf(opt.chunk).valueOf();
             if (a[timestamp]) {
                 for (const key of cumulativeMetrics) {
                     a[timestamp][key] = item[key] + (a[timestamp][key] || 0);
@@ -226,23 +226,27 @@ function aggregateSeries(series, opt) {
     return _.keys(a).sort().map(x => a[x]);
 }
 
+let campaignPromise = {};
 function getCampaignHistory(entityId, campaignId, cb) {
-    chrome.runtime.sendMessage({
-        action: 'getDataHistory',
-        entityId: entityId,
-        campaignId: campaignId,
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            return;
-        }
-        cb(response.data);
-    }));
+    if (!campaignPromise[campaignId]) {
+        campaignPromise[campaignId] = ga.mpromise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+                action: 'getDataHistory',
+                entityId: entityId,
+                campaignId: campaignId,
+            },
+            ga.mcatch(response => {
+                if (response.error)
+                    return reject(response.error);
+                return resolve(response.data || []);
+            }));
+        });
+    }
+    return campaignPromise[campaignId];
 }
 
 let allowedPromise = null;
-function getAllowedCampaigns(entityId) {
+function getAllCampaignsAllowed(entityId) {
     if (!allowedPromise) {
         allowedPromise = ga.mpromise((resolve, reject) => {
             chrome.runtime.sendMessage({
@@ -261,7 +265,7 @@ function getAllowedCampaigns(entityId) {
 }
 
 function getCampaignAllowed(entityId, campaignId) {
-    return getAllowedCampaigns(entityId).then(allowed => {
+    return getAllCampaignsAllowed(entityId).then(allowed => {
         if (!allowed) {
             return false;
         }
@@ -331,6 +335,7 @@ module.exports = {
     getQueryArgs,
     getAsin,
     getCampaignAllowed,
+    getAllCampaignsAllowed,
     getUser,
     moneyFmt,
     pctFmt,

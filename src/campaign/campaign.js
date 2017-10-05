@@ -94,22 +94,17 @@ function addCampaignTabs(tabs) {
 
         // Create the actual Tab control and embed it into the 
         let a = $(`<a href="#">${tab.label}</a>`);
-        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
+        let li = $(`<li class="a-tab-heading ${tabClass}" data-a-tab-name="machete-${tab.label}"></li>`);
         li.append(a);
 
-        let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden"></div>`);
+        let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden" data-a-name="machete-${tab.label}"></div>`);
         tabs.parent().append(container);
 
         a.click(ga.mcatch(function() {
             ga.mga('event', 'kword-data-tab', 'activate', tab.label);
-            li.addClass('a-active');
-            li.siblings().removeClass('a-active');
-            tabs.parent().children('div').addClass('a-hidden');
-            container.removeClass('a-hidden');
-
             if (tab.activate && !tab.hasActivated) {
                 tab.activate(common.getEntityId(), container);
-                // tab.hasActivated = true;
+                tab.hasActivated = true;
             }
         }));
         $(tabs.children()[0]).after(li);
