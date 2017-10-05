@@ -7,6 +7,7 @@ const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
+const tabber = require('../components/tabber.js');
 
 const twoWeeks = 15 * constants.timespan.day;
 const startTimestamp = Date.now() - twoWeeks;
@@ -31,38 +32,36 @@ window.setInterval(ga.mcatch(() => {
 function addTabs(wrapper) {
     if (wrapper.hasClass('a-tab-container'))
         return;
-
-    wrapper.addClass('a-tab-container');
-    const content = $('<div id="dashboard_tab" class="a-tab-content" data-a-name="dashboard_tab"></div>');
-    wrapper.children().detach().appendTo(content);
+    const detachedChildren = wrapper.children().detach();
 
     const tabs = $('<ul class="a-tabs a-declarative"></ul>');
-    tabs.append('<li class="a-tab-heading a-active" data-a-tab-name="dashboard_tab"><a href="#">Dashboard</a></li>');
-    tabs.append('<li class="a-tab-heading" data-a-tab-name="aggregate_history_tab"><a href="#">Aggregate History</a></li>');
-
-    const aggContainer = $('<div id="aggregate_history_tab" class="a-tab-content" data-a-name="aggregate_history_tab"></div>');
-    tabs.children().last().find('a').click(() => {
-        let aggContent = React.createElement(CampaignHistoryTab, {
-            allowed: true,
-            anonymous: false,
-            downloadHref: '',
-            loadData: cb => {
-                common.getAllCampaignsAllowed().then(allowed => {
-                    const historyPromises = allowed.map(campaign => common.getCampaignHistory(common.getEntityId(), campaign));
-                    Promise.all(historyPromises).then(series => {
-                        const deltas = series.map(s => common.convertSnapshotsToDeltas(s, { rate: 'day', chunk: 'day' }));
-                        const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
-                        cb(aggSeries);
-                    });
-                });
-            },
-        });
-        ReactDOM.render(aggContent, aggContainer[0]);
-    });
-
     wrapper.append(tabs);
-    wrapper.append(content);
-    wrapper.append(aggContainer);
+    wrapper.addClass('a-tab-container');
+
+    let {container} = tabber(tabs, { label: 'Dashboard', active: true });
+    container.append(detachedChildren);
+
+    tabber(tabs, { 
+        label: 'Aggregate History',
+        activate: (entityId, historyContainer) => {
+            let aggContent = React.createElement(CampaignHistoryTab, {
+                allowed: true,
+                anonymous: false,
+                downloadHref: '',
+                loadData: cb => {
+                    common.getAllCampaignsAllowed().then(allowed => {
+                        const historyPromises = allowed.map(campaign => common.getCampaignHistory(entityId, campaign));
+                        Promise.all(historyPromises).then(series => {
+                            const deltas = series.map(s => common.convertSnapshotsToDeltas(s, { rate: 'day', chunk: 'day' }));
+                            const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
+                            cb(aggSeries);
+                        });
+                    });
+                },
+            });
+            ReactDOM.render(aggContent, historyContainer[0]);
+        },
+    });
 }
 
 function addChartButtons(rows) {

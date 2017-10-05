@@ -102,11 +102,17 @@ function addCampaignTabs(tabs) {
 
         a.click(ga.mcatch(function() {
             ga.mga('event', 'kword-data-tab', 'activate', tab.label);
+            li.addClass('a-active');
+            li.siblings().removeClass('a-active');
+            tabs.parent().children('div').addClass('a-hidden');
+            container.removeClass('a-hidden');
+
             if (tab.activate && !tab.hasActivated) {
                 tab.activate(common.getEntityId(), container);
                 tab.hasActivated = true;
             }
         }));
+
         $(tabs.children()[0]).after(li);
     }
 
