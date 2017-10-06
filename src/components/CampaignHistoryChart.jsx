@@ -30,13 +30,14 @@ class CampaignHistoryChart extends React.Component {
             showticklabels: false,
             overlaying: 'y',
           },
-          yaxis3: { // sales
+          yaxis3: { // sales & spend
             showgrid: false,
             zeroline: true,
             showline: true,
             showticklabels: false,
             overlaying: 'y',
           },
+
         };
 
         const width = this.state ? this.state.width : 800;
@@ -87,6 +88,17 @@ class CampaignHistoryChart extends React.Component {
                     timestamp: parallel.timestamp,
                     format: common.moneyFmt,
                     name: 'Sales',
+                    options: {
+                        mode: 'lines',
+                        yaxis: 'y3',
+                        connectgaps: true,
+                    }, 
+                },
+                {
+                    data: parallel.spend,
+                    timestamp: parallel.timestamp,
+                    format: common.moneyFmt,
+                    name: 'Spend',
                     options: {
                         mode: 'lines',
                         yaxis: 'y3',
