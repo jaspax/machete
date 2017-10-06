@@ -14,8 +14,8 @@ const KeywordBulkUpdate = require('../components/KeywordBulkUpdate.jsx');
 const tabClass = `machete-tab`;
 
 const ourTabs = [
-    {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/ },
-    {label: "Campaign History", activate: generateHistoryReports, matching: /./ },
+    {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/, insertIndex: 1 },
+    {label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
 ];
 
 let allowedPromise = common.getCampaignAllowed(common.getEntityId(), common.getCampaignId());

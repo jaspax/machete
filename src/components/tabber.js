@@ -24,7 +24,10 @@ function tabber(tabs, opt) {
         }
     }));
 
-    tabs.append(tab);
+    if (!opt.insertIndex)
+        tabs.append(tab);
+    else
+        $(tabs.children()[opt.insertIndex - 1]).after(tab);
     tabs.parent().append(container);
     return { tab, container };
 }
