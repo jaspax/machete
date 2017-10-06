@@ -30,7 +30,7 @@
       {
           "matches": ["https://sellercentral.amazon.com/hz/cm/*"],
           "js": ["src/vendor.js", "src/seller-dash.js"],
-          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css"]
+          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css", "css/react-select.css"]
       }
   ],
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",

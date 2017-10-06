@@ -33,12 +33,12 @@
       {
           "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
           "js": ["src/vendor.js", "src/dashboard.js"],
-          "css": ["css/inject.css"]
+          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css", "css/react-select.css"]
       },
       {
           "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
           "js": ["src/vendor.js", "src/campaign.js"],
-          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css"]
+          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css", "css/react-select.css"]
       }
   ],
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
