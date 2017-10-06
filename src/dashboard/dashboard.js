@@ -44,22 +44,26 @@ function addTabs(wrapper) {
     tabber(tabs, { 
         label: 'Aggregate History',
         activate: (entityId, historyContainer) => {
-            let aggContent = React.createElement(CampaignHistoryTab, {
-                allowed: true,
-                anonymous: false,
-                downloadHref: '',
-                loadData: cb => {
-                    common.getAllCampaignsAllowed().then(allowed => {
-                        const historyPromises = allowed.map(campaign => common.getCampaignHistory(entityId, campaign));
-                        Promise.all(historyPromises).then(series => {
-                            const deltas = series.map(s => common.convertSnapshotsToDeltas(s, { rate: 'day', chunk: 'day' }));
-                            const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
-                            cb(aggSeries);
-                        });
+            common.getCampaignSummary(entityId).then(summary => {
+                const allowedPromises = summary.map(s => common.getCampaignAllowed(entityId, s.campaignId));
+                Promise.all(allowedPromises).then(allowed => {
+                    const summaryAllowed = summary.filter((item, index) => allowed[index]);
+                    let aggContent = React.createElement(CampaignHistoryTab, {
+                        allowed: true,
+                        anonymous: false,
+                        downloadHref: '',
+                        loadData: cb => {
+                            const historyPromises = summaryAllowed.map(s => common.getCampaignHistory(entityId, s.campaignId));
+                            Promise.all(historyPromises).then(series => {
+                                const deltas = series.map(s => common.convertSnapshotsToDeltas(s, { rate: 'day', chunk: 'day' }));
+                                const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
+                                cb(aggSeries);
+                            });
+                        },
                     });
-                },
+                    ReactDOM.render(aggContent, historyContainer[0]);
+                });
             });
-            ReactDOM.render(aggContent, historyContainer[0]);
         },
     });
 }

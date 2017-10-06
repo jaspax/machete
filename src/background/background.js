@@ -22,6 +22,8 @@ bg.messageListener(function*(req, sender) {
         return yield* bg.getUser();
     else if (req.action == 'getAllowedCampaigns') 
         return yield* getAllowedCampaigns(req.entityId);
+    else if (req.action == 'getCampaignSummary') 
+        return yield* getCampaignSummary(req.entityId);
     else if (req.action == 'getDataHistory')
         return yield* getDataHistory(req.entityId, req.campaignId);
     else if (req.action == 'getKeywordData')
@@ -101,7 +103,24 @@ function* getAllowedCampaigns(entityId) {
     }
     catch (ex) {
         if (ex.message.match(/^401/)) {
-            // this is basically expected, so don't propagate it as an error
+            ga.mga('event', 'error-handled', 'entityid-unauthorized');
+            return [];
+        }
+        throw ex;
+    }
+}
+
+function* getCampaignSummary(entityId) {
+    checkEntityId(entityId);
+
+    try {
+        return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
+            method: 'GET',
+            dataType: 'json'
+        });
+    }
+    catch (ex) {
+        if (ex.message.match(/^401/)) {
             ga.mga('event', 'error-handled', 'entityid-unauthorized');
             return [];
         }

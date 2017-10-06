@@ -276,6 +276,24 @@ function getCampaignAllowed(entityId, campaignId) {
     });
 }
 
+let summaryPromise = null;
+function getCampaignSummary(entityId) {
+    if (!summaryPromise) {
+        summaryPromise = ga.mpromise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+                action: 'getCampaignSummary',
+                entityId: entityId,
+            },
+            ga.mcatch(response => {
+                if (response.error)
+                    return reject(response.error);
+                return resolve(response.data || []);
+            }));
+        });
+    }
+    return summaryPromise;
+}
+
 let getUserPromise = null;
 function getUser() {
     if (!getUserPromise) {
@@ -336,6 +354,7 @@ module.exports = {
     getAsin,
     getCampaignAllowed,
     getAllCampaignsAllowed,
+    getCampaignSummary,
     getUser,
     moneyFmt,
     pctFmt,
