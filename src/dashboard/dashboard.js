@@ -1,6 +1,7 @@
 const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const co = require('co');
 
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
@@ -29,6 +30,14 @@ window.setInterval(ga.mcatch(() => {
     addTabs(wrapper);
 }), 100);
 
+const campaignSummaryPromise = co(function*() {
+    const entityId = common.getEntityId();
+    const summaries = yield common.getCampaignSummary(entityId);
+    const allowed = yield Promise.all(summaries.map(s => common.getCampaignAllowed(entityId, s.campaignId)));
+    const summaryAllowed = summaries.filter((item, index) => allowed[index]);
+    return summaryAllowed;
+});
+
 function addTabs(wrapper) {
     if (wrapper.hasClass('a-tab-container'))
         return;
@@ -44,26 +53,19 @@ function addTabs(wrapper) {
     tabber(tabs, { 
         label: 'Aggregate History',
         activate: (entityId, historyContainer) => {
-            common.getCampaignSummary(entityId).then(summary => {
-                const allowedPromises = summary.map(s => common.getCampaignAllowed(entityId, s.campaignId));
-                Promise.all(allowedPromises).then(allowed => {
-                    const summaryAllowed = summary.filter((item, index) => allowed[index]);
-                    let aggContent = React.createElement(CampaignHistoryTab, {
-                        allowed: true,
-                        anonymous: false,
-                        downloadHref: '',
-                        loadData: cb => {
-                            const historyPromises = summaryAllowed.map(s => common.getCampaignHistory(entityId, s.campaignId));
-                            Promise.all(historyPromises).then(series => {
-                                const deltas = series.map(s => common.convertSnapshotsToDeltas(s, { rate: 'day', chunk: 'day' }));
-                                const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
-                                cb(aggSeries);
-                            });
-                        },
-                    });
-                    ReactDOM.render(aggContent, historyContainer[0]);
-                });
+            let aggContent = React.createElement(CampaignHistoryTab, {
+                allowed: true,
+                anonymous: false,
+                downloadHref: '',
+                loadData: cb => co(function*() {
+                    const summaries = yield campaignSummaryPromise;
+                    const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
+                    const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
+                    const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
+                    cb(aggSeries);
+                }),
             });
+            ReactDOM.render(aggContent, historyContainer[0]);
         },
     });
 }
