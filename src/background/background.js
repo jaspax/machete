@@ -155,17 +155,25 @@ function* requestCampaignData(entityId) {
 function* requestCampaignStatus(entityId, campaignIds, timestamp) {
     checkEntityId(entityId); 
 
-    const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaign-status', {
-        method: 'GET',
-        data: { 
-            entityId, 
-            campaignIds: campaignIds.join(','),
-        },
-        dataType: 'json',
-    });
+    const step = 20;
+    let index = 0;
 
-    yield* storeStatusCloud(entityId, timestamp, data);
-    return data;
+    // Chop the campaignId list into bite-sized chunks
+    while (index < campaignIds.length) {
+        let chunk = campaignIds.slice(index, index + step);
+
+        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaign-status', {
+            method: 'GET',
+            data: { 
+                entityId, 
+                campaignIds: chunk.join(','),
+            },
+            dataType: 'json',
+        });
+
+        yield* storeStatusCloud(entityId, timestamp, data);
+        index += step;
+    }
 }
 
 function* requestKeywordData(entityId, adGroupId) {
