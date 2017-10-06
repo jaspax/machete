@@ -91,24 +91,25 @@ function getQueryArgs(str) {
 }
 
 function moneyFmt(val) {
-    if (Number.isNaN(+val)) {
-        return '--';
-    }
-    return '$' + numberFmt(val);
+    return '$' + numberFmt(val, 2);
 }
 
 function pctFmt(val) {
-    if (Number.isNaN(+val)) {
-        return '--';
-    }
-    return numberFmt(val) + '%';
+    return numberFmt(val, 1) + '%';
 }
 
-function numberFmt(val) {
+function numberFmt(val, digits) {
     if (Number.isNaN(+val)) {
-        return '--';
+        return ' -- ';
     }
     return (+val).toFixed(2);
+}
+
+function roundFmt(val) {
+    if (Number.isNaN(+val)) {
+        return ' -- ';
+    }
+    return Math.round(val);
 }
 
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
@@ -359,6 +360,7 @@ module.exports = {
     moneyFmt,
     pctFmt,
     numberFmt,
+    roundFmt,
     getCampaignHistory,
     parallelizeSeries,
     convertSnapshotsToDeltas,
