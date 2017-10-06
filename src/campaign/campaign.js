@@ -171,7 +171,7 @@ function generateHistoryReports(entityId, container) {
             allowed,
             anonymous: user.isAnon,
             downloadHref,
-            loadData: cb => common.getCampaignHistory(entityId, campaignId, data => {
+            loadData: cb => common.getCampaignHistory(entityId, campaignId).then(data => {
                 cb(common.convertSnapshotsToDeltas(data, { rate: 'day', chunk: 'day' }));
             }),
         });

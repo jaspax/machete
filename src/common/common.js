@@ -227,7 +227,7 @@ function aggregateSeries(series, opt) {
 }
 
 let campaignPromise = {};
-function getCampaignHistory(entityId, campaignId, cb) {
+function getCampaignHistory(entityId, campaignId) {
     if (!campaignPromise[campaignId]) {
         campaignPromise[campaignId] = ga.mpromise((resolve, reject) => {
             chrome.runtime.sendMessage({
