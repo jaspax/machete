@@ -19,8 +19,8 @@ function tabber(tabs, opt) {
         container.removeClass('a-hidden');
 
         if (opt.activate && !hasActivated) {
-            opt.activate(common.getEntityId(), container);
             hasActivated = true;
+            window.setTimeout(() => opt.activate(common.getEntityId(), container));
         }
     }));
 
