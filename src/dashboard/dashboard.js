@@ -57,12 +57,12 @@ function addTabs(wrapper) {
                 allowed: true,
                 anonymous: false,
                 downloadHref: '',
-                loadData: cb => co(function*() {
+                dataPromise: co(function*() {
                     const summaries = yield campaignSummaryPromise;
                     const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
                     const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
                     const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
-                    cb(aggSeries);
+                    return aggSeries;
                 }),
             });
             ReactDOM.render(aggContent, historyContainer[0]);
@@ -89,16 +89,15 @@ function addChartButtons(rows) {
                 if (!target)
                     continue;
 
-                const loadData = onComplete => {
+                const dataPromise = co(function*() {
                     if (!allowed)
-                        return onComplete(formatParallelData({}, chart.metric));
+                        return formatParallelData({}, chart.metric);
 
-                    return common.getCampaignHistory(common.getEntityId(), campaignId).then(data => {
-                        const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
-                        const campaignData = common.parallelizeSeries(deltas);
-                        onComplete(formatParallelData(campaignData, chart.metric));
-                    });
-                };
+                    const data = yield common.getCampaignHistory(common.getEntityId(), campaignId);
+                    const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
+                    const campaignData = common.parallelizeSeries(deltas);
+                    return formatParallelData(campaignData, chart.metric);
+                });
 
                 let container = $(target).find('.machete-dash-container');
                 if (!container.length) {
@@ -111,7 +110,7 @@ function addChartButtons(rows) {
                     anonymous,
                     metric: chart.metric,
                     title: chart.label,
-                    loadData,
+                    dataPromise,
                 });
                 ReactDOM.render(btn, container[0]);
             }

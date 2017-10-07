@@ -39,7 +39,7 @@ class DashboardHistoryButton extends React.Component {
             allowed={this.props.allowed}
             anonymous={this.props.anonymous}
             title={this.props.title}
-            loadData={this.props.loadData}
+            dataPromise={this.props.dataPromise}
         />;
 
         return <span>
@@ -57,7 +57,7 @@ DashboardHistoryButton.propTypes = {
     anonymous: PropTypes.bool.isRequired,
     metric: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
-    loadData: PropTypes.func.isRequired,
+    dataPromise: PropTypes.func.isRequired,
 };
 
 module.exports = DashboardHistoryButton;

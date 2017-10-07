@@ -149,9 +149,8 @@ function generateHistoryReports(entityId, container) {
             allowed,
             anonymous: user.isAnon,
             downloadHref,
-            loadData: cb => common.getCampaignHistory(entityId, campaignId).then(data => {
-                cb(common.convertSnapshotsToDeltas(data, { rate: 'day', chunk: 'day' }));
-            }),
+            dataPromise: common.getCampaignHistory(entityId, campaignId)
+                         .then(data => common.convertSnapshotsToDeltas(data, { rate: 'day', chunk: 'day' }))
         });
         ReactDOM.render(tabContent, container[0]);
     })

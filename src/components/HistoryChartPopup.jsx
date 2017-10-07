@@ -10,7 +10,7 @@ class HistoryChartPopup extends React.Component {
         if (this.props.allowed) {
             content = <ThumbnailChart 
                 title={this.props.title} 
-                loadData={this.props.loadData} />;
+                dataPromise={this.props.dataPromise} />;
         }
         else {
             content = <DataNotAvailable anonymous={this.props.anonymous} />;
@@ -31,7 +31,7 @@ HistoryChartPopup.propTypes = {
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
     title: PropTypes.string.isRequired,
-    loadData: PropTypes.func.isRequired,
+    dataPromise: PropTypes.object.isRequired,
 };
 
 module.exports = HistoryChartPopup;

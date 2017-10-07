@@ -11,7 +11,6 @@ class CampaignHistoryTab extends React.Component {
     constructor(props) {
         super(props);
         this.rangeChange = this.rangeChange.bind(this);
-        this.loadData = this.loadData.bind(this);
         this.state = {
             startDate: moment(),
             startMetrics: {},
@@ -25,6 +24,8 @@ class CampaignHistoryTab extends React.Component {
             return <DataNotAvailable allowed={false} anonymous={this.props.anonymous} />;
         }
 
+        const dataPromise = this.props.dataPromise.then(this.chartDataChanged.bind(this));
+
         return (
             <div className="a-box-inner">
                 <h1>Campaign History</h1>
@@ -37,24 +38,17 @@ class CampaignHistoryTab extends React.Component {
                     startDate={this.state.startDate} startMetrics={this.state.startMetrics}
                     endDate={this.state.endDate} endMetrics={this.state.endMetrics}
                     onRangeChange={this.rangeChange} />
-                <CampaignHistoryChart loadData={this.loadData} />
+                <CampaignHistoryChart dataPromise={dataPromise} />
             </div>
         );
     }
 
     rangeChange(range) {
         const filtered = this.state.data.filter(item => item.timestamp >= +range.start && item.timestamp < +range.end);
-        this.updateState(filtered);
+        this.chartDataChanged(filtered);
     }
 
-    loadData(chartDataChanged) {
-        this.props.loadData(data => {
-            this.setState({ data, chartDataChanged, });
-            this.updateState(data);
-        });
-    }
-
-    updateState(data) {
+    chartDataChanged(data) {
         data = data.sort((a, b) => a.timestamp - b.timestamp);
         const startMetrics = data[0];
         const endMetrics = data[data.length - 1];
@@ -64,7 +58,7 @@ class CampaignHistoryTab extends React.Component {
             endDate: moment(endMetrics.timestamp),
             endMetrics,
         });
-        this.state.chartDataChanged(data);
+        return data;
     }
 }
 
@@ -72,7 +66,7 @@ CampaignHistoryTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
     downloadHref: PropTypes.string.isRequired,
-    loadData: PropTypes.func.isRequired,
+    dataPromise: PropTypes.object.isRequired,
 };
 
 module.exports = CampaignHistoryTab;

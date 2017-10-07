@@ -7,26 +7,23 @@ let chartCounter = 0;
 
 /*
  * An asynchronously-loaded chart. On first render it shows a loading spinner,
- * and it calls the function passed in the loadData() property, passing in a
- * callback. The loadData() function should do whatever it needs to do to get
- * some data, then call the callback.
+ * when the dataPromise is resolved the chart is updated with new data.
  *
- * Argument to the loadData callback argument is an array of objects, each
- * representing one time series. Each object looks like this:
+ * The value resolved from dataPromise is an array of objects, each representing
+ * one time series. Each object looks like this:
+ *
  * {
  *   timestamp: array of timestamps
  *   data: array of data values
  *   name: name of this series
  * }
- *
- * Once the loadData callback has been called, the chart re-renders itself with
- * actual data.
  */
 class TimeSeriesChart extends React.Component {
     constructor(props) {
         super(props);
         chartCounter++;
         this.id = 'TimeSeriesChart' + chartCounter;
+        this.state = {};
     }
 
     render() {
@@ -36,7 +33,7 @@ class TimeSeriesChart extends React.Component {
         };
 
         // Initial render we just show the spinner. After initial render we request data.
-        if (!(this.state && this.state.data)) {
+        if (!this.state.data) {
             return <div id={this.id} style={containerStyle} className="loading-large"></div>;
         }
 
@@ -66,23 +63,29 @@ class TimeSeriesChart extends React.Component {
     }
 
     componentDidMount() {
-        // On first render, request the data, then update state
-        this.props.loadData(data => {
-            this.setState({ data });
-        });
+        this.props.dataPromise.then(data => this.setState({ data }));
+    }
+
+    componentWillReceiveProps() {
+        this.setState({});
     }
 
     componentDidUpdate() {
-        // After the state update triggered from componentDidMount, we
-        // actually draw the graph
-        Plotly.newPlot(this.id, this.series, this.layout, {displayModeBar: this.props.displayModeBar});
+        if (this.state.data) {
+            // After the state update triggered from componentDidMount, we
+            // actually draw the graph
+            Plotly.newPlot(this.id, this.series, this.layout, {displayModeBar: this.props.displayModeBar});
+        }
+        else {
+            this.props.dataPromise.then(data => this.setState({ data }));
+        }
     }
 }
 
 TimeSeriesChart.propTypes = {
     height: PropTypes.number,
     width: PropTypes.number.isRequired,
-    loadData: PropTypes.func.isRequired,
+    dataPromise: PropTypes.object.isRequired,
     title: PropTypes.string,
     displayModeBar: PropTypes.bool,
     layout: PropTypes.object,

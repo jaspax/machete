@@ -129,9 +129,8 @@ common.getUser().then(user => {
             if (!link)
                 continue;
 
-            let fetchData = calcFetchDataFunction(window.location.href, link.href);
+            let fetchData = fetchDataPromise(window.location.href, link.href);
 
-            let campaignData = null;
             for (let chart of charts) {
                 let target = cells[columns.indexOf(chart.column)];
                 if (!target)
@@ -140,22 +139,17 @@ common.getUser().then(user => {
                 if ($(target).find(`.${DashboardHistoryButton.chartClass}`).length)
                     continue;
 
-                const loadData = onComplete => {
-                    if (campaignData)
-                        return onComplete(formatParallelData(campaignData, chart.metric));
-
-                    return fetchData(data => {
-                        campaignData = common.parallelizeSeries(data);
-                        return onComplete(formatParallelData(campaignData, chart.metric));
-                    });
-                };
+                const dataPromise = fetchData.then(data => {
+                    const campaignData = common.parallelizeSeries(data);
+                    return formatParallelData(campaignData, chart.metric);
+                });
 
                 let btn = React.createElement(DashboardHistoryButton, {
                     allowed: user.isSeller,
                     anonymous: user.isAnon,
                     metric: chart.metric,
                     title: chart.label,
-                    loadData,
+                    dataPromise,
                 });
                 const container = $('<span></span>');
                 $(target).children().first().append(container);
@@ -172,7 +166,7 @@ common.getUser().then(user => {
         };
     }
 
-    function calcFetchDataFunction(locationHref, linkHref, startTimestamp, endTimestamp) {
+    function fetchDataPromise(locationHref, linkHref, startTimestamp, endTimestamp) {
         let { campaignId, adGroupId } = common.getSellerCampaignId(linkHref);
         let args = { startTimestamp: startTimestamp || twoWeeksAgo, endTimestamp: endTimestamp || now };
 
@@ -194,15 +188,14 @@ common.getUser().then(user => {
             args = Object.assign(args, { action: 'getAdDataRangeByAsin', campaignId, adGroupId, asin });
         }
 
-        return callback => {
+        return ga.mpromise((resolve, reject) => {
             chrome.runtime.sendMessage(args, ga.mcatch(response => {
                 if (response.error) {
-                    ga.merror(response.status, response.error);
-                    return;
+                    return reject(response.error);
                 }
-                callback(response.data);
+                return resolve(response.data);
             }));
-        };
+        });
     }
 
     function getKeywordDataAggregate(onComplete) {
@@ -254,7 +247,7 @@ common.getUser().then(user => {
             allowed: user.isSeller,
             anonymous: user.isAnon,
             downloadHref: `https://${constants.hostname}/api/seller/campaignData/${campaignId}/1-${Date.now()}/csv`,
-            loadData: calcFetchDataFunction(window.location.href, window.location.href, 1),
+            dataPromise: fetchDataPromise(window.location.href, window.location.href, 1),
         });
         ReactDOM.render(content, container[0]);
     }
