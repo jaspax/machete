@@ -5,7 +5,7 @@ const _ = require('lodash');
 
 function CampaignSelector(props) {
     const campaigns = props.campaigns;
-    let options = campaigns.map(c => ({ value: [c], label: c.name }));
+    let options = campaigns.map(c => ({ value: [c], label: 'Campaign: ' + c.name }));
 
     if (props.selectGroups) {
         // Add the 'All Campaigns' and others to the top
@@ -15,11 +15,17 @@ function CampaignSelector(props) {
         ].concat(...options);
 
         for (const asin of _.uniq(campaigns.map(c => c.asin))) {
-            options.push({ value: campaigns.filter(c => c.asin == asin), label: 'ASIN: ' + asin });
+            options.push({ value: campaigns.filter(c => c.asin == asin), label: 'Campaigns for ASIN: ' + asin });
         }
     }
 
-    return <Select name="campaign-select" options={options} onChange={props.onChange} />;
+    const onChange = selected => {
+        let value = [];
+        selected.forEach(s => value= value.concat(...s));
+        props.onChange(value);
+    };
+
+    return <Select name="campaign-select" options={options} onChange={onChange} multi={true} />;
 }
 
 CampaignSelector.propTypes = {
