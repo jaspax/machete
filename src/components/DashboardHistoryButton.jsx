@@ -9,14 +9,20 @@ const chartClassDisabled = `machete-chart-btn-disabled`;
 class DashboardHistoryButton extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { show: false };
+        this.state = { 
+            show: false, 
+            dataPromise: Promise.resolve([]) 
+        };
         this.btnId = `DashboardHistoryButton${Date.now()}`;
         this.onChartClick = this.onChartClick.bind(this);
         this.onPopupDismissed = this.onPopupDismissed.bind(this);
     }
 
     onChartClick() {
-        this.setState({ show: true });
+        this.setState({ 
+            show: true,
+            dataPromise: this.props.dataPromiseFactory(),
+        });
     }
 
     onPopupDismissed() {
@@ -32,21 +38,19 @@ class DashboardHistoryButton extends React.Component {
         }
         mclick += ' ' + this.props.metric;
 
-        this.chart = <HistoryChartPopup 
-            show={this.state.show}
-            onDismiss={this.onPopupDismissed}
-            anchorId={this.btnId}
-            allowed={this.props.allowed}
-            anonymous={this.props.anonymous}
-            title={this.props.title}
-            dataPromise={this.props.dataPromise}
-        />;
-
         return <span>
             <a id={this.btnId} className={btnClasses} data-mclick={mclick} onClick={this.onChartClick}>
                 <img src={chartPng} />
             </a>
-            {this.chart}
+            <HistoryChartPopup 
+                show={this.state.show}
+                onDismiss={this.onPopupDismissed}
+                anchorId={this.btnId}
+                allowed={this.props.allowed}
+                anonymous={this.props.anonymous}
+                title={this.props.title}
+                dataPromise={this.state.dataPromise}
+            />
         </span>;
     }
 }
@@ -57,7 +61,7 @@ DashboardHistoryButton.propTypes = {
     anonymous: PropTypes.bool.isRequired,
     metric: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
-    dataPromise: PropTypes.func.isRequired,
+    dataPromiseFactory: PropTypes.func.isRequired,
 };
 
 module.exports = DashboardHistoryButton;

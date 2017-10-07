@@ -89,7 +89,7 @@ function addChartButtons(rows) {
                 if (!target)
                     continue;
 
-                const dataPromise = co(function*() {
+                const dataPromiseFactory = () => co(function*() {
                     if (!allowed)
                         return formatParallelData({}, chart.metric);
 
@@ -110,7 +110,7 @@ function addChartButtons(rows) {
                     anonymous,
                     metric: chart.metric,
                     title: chart.label,
-                    dataPromise,
+                    dataPromiseFactory,
                 });
                 ReactDOM.render(btn, container[0]);
             }
