@@ -16,6 +16,7 @@ class CampaignHistoryTab extends React.Component {
             startMetrics: {},
             endDate: moment(),
             endMetrics: {},
+            dataPromise: this.props.dataPromise.then(this.chartDataChanged.bind(this))
         };
     }
 
@@ -23,8 +24,6 @@ class CampaignHistoryTab extends React.Component {
         if (!this.props.allowed) {
             return <DataNotAvailable allowed={false} anonymous={this.props.anonymous} />;
         }
-
-        const dataPromise = this.props.dataPromise.then(this.chartDataChanged.bind(this));
 
         return (
             <div className="a-box-inner">
@@ -38,7 +37,7 @@ class CampaignHistoryTab extends React.Component {
                     startDate={this.state.startDate} startMetrics={this.state.startMetrics}
                     endDate={this.state.endDate} endMetrics={this.state.endMetrics}
                     onRangeChange={this.rangeChange} />
-                <CampaignHistoryChart dataPromise={dataPromise} />
+                <CampaignHistoryChart dataPromise={this.state.dataPromise} />
             </div>
         );
     }
@@ -57,6 +56,7 @@ class CampaignHistoryTab extends React.Component {
             startMetrics,
             endDate: moment(endMetrics.timestamp),
             endMetrics,
+            dataPromise: Promise.resolve(data),
         });
         return data;
     }
