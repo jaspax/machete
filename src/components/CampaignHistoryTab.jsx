@@ -37,20 +37,7 @@ class CampaignHistoryTab extends React.Component {
                     startDate={this.state.startDate} startMetrics={this.state.startMetrics}
                     endDate={this.state.endDate} endMetrics={this.state.endMetrics}
                     onRangeChange={this.rangeChange} />
-
                 <CampaignHistoryChart loadData={this.loadData} />
-                <div className="machete-explanation">
-                    <p>Impressions, clicks, and reported sales are scaled
-                    differently for visibility.</p>
-                    
-                    <p><b>Hover</b> over any point in the graph to see the raw
-                    value.</p>
-
-                    <p><b>Click</b> on a metric name in the legend to enable or disable
-                    its display.</p>
-
-                    <p><b>Drag</b> along the x-axis to select a date range.</p>
-                </div>
             </div>
         );
     }
