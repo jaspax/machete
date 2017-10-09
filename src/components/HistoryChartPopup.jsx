@@ -4,24 +4,20 @@ const Popup = require('./Popup.jsx');
 const ThumbnailChart = require('./ThumbnailChart.jsx');
 const DataNotAvailable = require('./DataNotAvailable.jsx');
 
-class HistoryChartPopup extends React.Component {
-    render() {
-        let content = null;
-        if (this.props.allowed) {
-            content = <ThumbnailChart 
-                title={this.props.title} 
-                dataPromise={this.props.dataPromise} />;
-        }
-        else {
-            content = <DataNotAvailable anonymous={this.props.anonymous} />;
-        }
-
-        this.popup = <Popup anchorId={this.props.anchorId} show={this.props.show} onDismiss={this.props.onDismiss}>
-            {content}
-        </Popup>;
-
-        return this.popup;
+function HistoryChartPopup(props) {
+    let content = null;
+    if (props.allowed) {
+        content = <ThumbnailChart 
+            title={props.title} 
+            dataPromise={props.dataPromise} />;
     }
+    else {
+        content = <DataNotAvailable anonymous={props.anonymous} />;
+    }
+
+    return <Popup anchorId={props.anchorId} show={props.show} onDismiss={props.onDismiss}>
+        {content}
+    </Popup>;
 }
 
 HistoryChartPopup.propTypes = {

@@ -6,18 +6,16 @@ const process = require('process');
 const loDataHref = chrome.runtime.getURL('html/low-data.html');
 
 class ThumbnailChart extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = this.baseState(props);
+    }
+
     render() {
         let height = 300;
         let lodata = null;
 
-        const dataPromise = this.props.dataPromise.then(data => {
-            if (data.timestamp.length < 4) {
-                this.setState({ lodata: true });
-            }
-            return [data];
-        });
-
-        if (this.state && this.state.lodata) {
+        if (this.state.lodata) {
             height = 270; // leaving room for the lodata link
             if (process.env.PRODUCT == 'sp') {
                 lodata = <p>
@@ -29,15 +27,28 @@ class ThumbnailChart extends React.Component {
             }
         }
 
-        return (
-            <div>
-                <TimeSeriesChart 
-                    width={400} height={height} title={this.props.title} 
-                    displayModeBar={false}
-                    dataPromise={dataPromise} />
-                {lodata}
-            </div>
-        );
+        return <div>
+            <TimeSeriesChart 
+                width={400} height={height} title={this.props.title} 
+                displayModeBar={false}
+                dataPromise={this.state.dataPromise} />
+            {lodata}
+        </div>;
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState(this.baseState(nextProps));
+    }
+
+    baseState(props) {
+        return { 
+            dataPromise: props.dataPromise.then(data => {
+                if (data.timestamp.length < 4) {
+                    this.setState({ lodata: true });
+                }
+                return [data];
+            })
+        };
     }
 }
 

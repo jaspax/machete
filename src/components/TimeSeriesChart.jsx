@@ -24,6 +24,7 @@ class TimeSeriesChart extends React.Component {
         chartCounter++;
         this.id = 'TimeSeriesChart' + chartCounter;
         this.state = {};
+        this.props.dataPromise.then(data => this.setState({ data }));
     }
 
     render() {
@@ -41,7 +42,7 @@ class TimeSeriesChart extends React.Component {
             {
                 x: series.timestamp,
                 y: series.data,
-                text: series.data.map(series.format || common.numberFmt),
+                text: series.data.map(series.format || common.roundFmt),
                 hoverinfo: 'text',
                 name: series.name,
                 mode: 'lines+markers',
@@ -62,18 +63,13 @@ class TimeSeriesChart extends React.Component {
         return <div id={this.id} style={containerStyle}></div>;
     }
 
-    componentDidMount() {
-        this.props.dataPromise.then(data => this.setState({ data }));
-    }
-
     componentWillReceiveProps() {
         this.setState({});
     }
 
     componentDidUpdate() {
         if (this.state.data) {
-            // After the state update triggered from componentDidMount, we
-            // actually draw the graph
+            // After the state update triggered from the data completion
             Plotly.newPlot(this.id, this.series, this.layout, {displayModeBar: this.props.displayModeBar});
         }
         else {

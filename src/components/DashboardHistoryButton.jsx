@@ -11,7 +11,7 @@ class DashboardHistoryButton extends React.Component {
         super(props);
         this.state = { 
             show: false, 
-            dataPromise: Promise.resolve([]) 
+            dataPromise: Promise.resolve({ timestamp: [], data: [], name: '' }),
         };
         this.btnId = `DashboardHistoryButton${Date.now()}`;
         this.onChartClick = this.onChartClick.bind(this);
