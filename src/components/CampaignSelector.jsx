@@ -13,6 +13,7 @@ class CampaignSelector extends React.Component {
     onChange(value) {
         let selected = [];
         value.forEach(x => selected = selected.concat(...this.state.rawOptions[x.value].value));
+        selected = _.uniq(selected, x => x.campaignId);
         this.props.onChange(selected);
         this.setState({ value });
     }

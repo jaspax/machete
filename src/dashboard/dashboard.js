@@ -47,8 +47,7 @@ function addTabs(wrapper) {
         activate: (entityId, historyContainer) => {
             let aggContent = React.createElement(AggregateHistory, {
                 campaignPromise: common.getCampaignSummaries(common.getEntityId()),
-                dataPromiseFactory: () => co(function*() {
-                    const summaries = common.getCampaignSummaries(common.getEntityId());
+                loadDataPromise: (summaries) => co(function*() {
                     const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
                     const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
                     const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });

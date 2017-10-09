@@ -132,7 +132,7 @@ const roundMetrics = {
 // arrays. All objects in the series should have the same keys; in any case,
 // only the keys from the first object in the series are respected.
 function parallelizeSeries(data) {
-    let c = { timestamp: [] };
+    let c = { timestamp: [], data: [] };
     if (!data || !data.length)
         return c;
 
@@ -315,7 +315,7 @@ if (window.location.href.includes('ams')) {
     chrome.runtime.sendMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    }, response => console.log('setSession success'));
+    }, response => console.info('setSession success'));
 
     getUser().then(user => {
         const desc = user.activeSubscription.name;

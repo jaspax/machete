@@ -9,13 +9,7 @@ class CampaignHistoryView extends React.Component {
     constructor(props) {
         super(props);
         this.rangeChange = this.rangeChange.bind(this);
-        this.state = {
-            startDate: moment(),
-            startMetrics: {},
-            endDate: moment(),
-            endMetrics: {},
-            dataPromise: this.props.dataPromise.then(this.chartDataChanged.bind(this))
-        };
+        this.state = this.baseState(props);
     }
 
     render() {
@@ -28,6 +22,20 @@ class CampaignHistoryView extends React.Component {
         </div>;
     }
 
+    baseState() {
+        return {
+            startDate: moment(),
+            startMetrics: {},
+            endDate: moment(),
+            endMetrics: {},
+            dataPromise: this.props.dataPromise.then(this.chartDataChanged.bind(this))
+        };
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState(this.baseState(nextProps));
+    }
+
     rangeChange(range) {
         const filtered = this.state.data.filter(item => item.timestamp >= +range.start && item.timestamp < +range.end);
         this.chartDataChanged(filtered);
@@ -35,8 +43,8 @@ class CampaignHistoryView extends React.Component {
 
     chartDataChanged(data) {
         data = data.sort((a, b) => a.timestamp - b.timestamp);
-        const startMetrics = data[0];
-        const endMetrics = data[data.length - 1];
+        const startMetrics = data[0] || { timestamp: Date.now() };
+        const endMetrics = data[data.length - 1] || { timestamp: Date.now() };
         this.setState({
             startDate: moment(startMetrics.timestamp),
             startMetrics,
