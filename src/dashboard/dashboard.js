@@ -7,7 +7,7 @@ const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
-const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
+const AggregateHistory = require('../components/AggregateHistory.jsx');
 const tabber = require('../components/tabber.js');
 
 const twoWeeks = 15 * constants.timespan.day;
@@ -30,14 +30,6 @@ window.setInterval(ga.mcatch(() => {
     addTabs(wrapper);
 }), 100);
 
-const campaignSummaryPromise = co(function*() {
-    const entityId = common.getEntityId();
-    const summaries = yield common.getCampaignSummary(entityId);
-    const allowed = yield Promise.all(summaries.map(s => common.getCampaignAllowed(entityId, s.campaignId)));
-    const summaryAllowed = summaries.filter((item, index) => allowed[index]);
-    return summaryAllowed;
-});
-
 function addTabs(wrapper) {
     if (wrapper.hasClass('a-tab-container'))
         return;
@@ -53,12 +45,10 @@ function addTabs(wrapper) {
     tabber(tabs, { 
         label: 'Aggregate History',
         activate: (entityId, historyContainer) => {
-            let aggContent = React.createElement(CampaignHistoryTab, {
-                allowed: true,
-                anonymous: false,
-                downloadHref: '',
-                dataPromise: co(function*() {
-                    const summaries = yield campaignSummaryPromise;
+            let aggContent = React.createElement(AggregateHistory, {
+                campaignPromise: common.getCampaignSummaries(common.getEntityId()),
+                dataPromiseFactory: () => co(function*() {
+                    const summaries = common.getCampaignSummaries(common.getEntityId());
                     const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
                     const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
                     const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });

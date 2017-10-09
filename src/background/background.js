@@ -22,8 +22,8 @@ bg.messageListener(function*(req, sender) {
         return yield* bg.getUser();
     else if (req.action == 'getAllowedCampaigns') 
         return yield* getAllowedCampaigns(req.entityId);
-    else if (req.action == 'getCampaignSummary') 
-        return yield* getCampaignSummary(req.entityId);
+    else if (req.action == 'getCampaignSummaries') 
+        return yield* getCampaignSummaries(req.entityId);
     else if (req.action == 'getDataHistory')
         return yield* getDataHistory(req.entityId, req.campaignId);
     else if (req.action == 'getKeywordData')
@@ -110,7 +110,7 @@ function* getAllowedCampaigns(entityId) {
     }
 }
 
-function* getCampaignSummary(entityId) {
+function* getCampaignSummaries(entityId) {
     checkEntityId(entityId);
 
     try {

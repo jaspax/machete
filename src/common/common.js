@@ -278,18 +278,17 @@ function getCampaignAllowed(entityId, campaignId) {
 }
 
 let summaryPromise = null;
-function getCampaignSummary(entityId) {
+function getCampaignSummaries(entityId) {
     if (!summaryPromise) {
         summaryPromise = ga.mpromise((resolve, reject) => {
             chrome.runtime.sendMessage({
-                action: 'getCampaignSummary',
+                action: 'getCampaignSummaries',
                 entityId: entityId,
-            },
-            ga.mcatch(response => {
+            }, response => {
                 if (response.error)
                     return reject(response.error);
                 return resolve(response.data || []);
-            }));
+            });
         });
     }
     return summaryPromise;
@@ -355,7 +354,7 @@ module.exports = {
     getAsin,
     getCampaignAllowed,
     getAllCampaignsAllowed,
-    getCampaignSummary,
+    getCampaignSummaries,
     getUser,
     moneyFmt,
     pctFmt,
