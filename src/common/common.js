@@ -227,6 +227,26 @@ function aggregateSeries(series, opt) {
     return _.keys(a).sort().map(x => a[x]);
 }
 
+function aggregateKeywords(kwSets, opt) {
+    const a = {};
+    for (const kws of kwSets) {
+        for (const item of kws) {
+            const kw = item.keyword;
+            if (a[kw]) {
+                for (const key of cumulativeMetrics) {
+                    a[kw][key] = item[key] + (a[kw][key] || 0);
+                }
+            }
+            else {
+                a[kw] = item;
+            }
+        }
+    }
+
+    return _.keys(a).map(x => a[x]);
+}
+
+
 let campaignPromise = {};
 function getCampaignHistory(entityId, campaignId) {
     if (!campaignPromise[campaignId]) {
@@ -384,4 +404,5 @@ module.exports = {
     parallelizeSeries,
     convertSnapshotsToDeltas,
     aggregateSeries,
+    aggregateKeywords,
 };

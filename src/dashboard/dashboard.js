@@ -8,6 +8,7 @@ const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const AggregateHistory = require('../components/AggregateHistory.jsx');
+const AggregateKeywords = require('../components/AggregateKeywords.jsx');
 const tabber = require('../components/tabber.js');
 
 const twoWeeks = 15 * constants.timespan.day;
@@ -70,11 +71,12 @@ function activateAggregateKeywordTab(entityId, container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: common.getCampaignSummaries(common.getEntityId()),
         loadDataPromise: (summaries) => co(function*() {
-            const histories = yield Promise.all(summaries.map(s => common.getCampaignKeyword(entityId, s.campaignId)));
-            const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
-            const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
-            return aggSeries;
+            const kwData = yield Promise.all(summaries.map(s => common.getKeywordData(entityId, s.adGroupId)));
+            const aggKws = common.aggregateKeywords(kwData);
+            return aggKws;
         }),
+        updateStatus: (...args) => console.log('status update', ...args),
+        updateBid: (...args) => console.log('bid update', ...args),
     });
     ReactDOM.render(aggContent, container[0]);
 }

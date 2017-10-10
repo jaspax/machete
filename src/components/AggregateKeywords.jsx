@@ -2,7 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 
 const CampaignSelector = require('./CampaignSelector.jsx');
-const KeywordAnalysis = require('./CampaignHistoryView.jsx');
+const KeywordAnalysis = require('./KeywordAnalysis.jsx');
 
 class AggregateKeywords extends React.Component {
     constructor(props) {
