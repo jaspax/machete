@@ -24,7 +24,7 @@ function KeywordAnalyticsView(props) {
 
     return <div>
         <section>
-            <h1>Keyword Performance</h1>
+            <h2>Performance Overview</h2>
             <KeywordBubbleChart width={800} height={600}
                 keywordData={transformKeywordData(props.keywordData)} />
             <div className="machete-explanation">
@@ -37,11 +37,11 @@ function KeywordAnalyticsView(props) {
             </div>
         </section>
         <section>
-            <h1>Underperforming keywords</h1>
+            <h2>Underperforming keywords</h2>
             {worstTables}
         </section>
         <section>
-            <h1>Overperforming keywords</h1>
+            <h2>Overperforming keywords</h2>
             {bestTables}
         </section>
     </div>;

@@ -13,11 +13,17 @@ class KeywordAnalysis extends React.Component {
     }
 
     render() {
-        return <Async before={this.before.bind(this)} then={this.after.bind(this)} promise={this.props.dataPromise} />;
+        return <Async ref={ref => this.asyncRef = ref}
+            pending={this.before()} then={this.after.bind(this)} 
+            promise={this.props.dataPromise} />;
     }
 
     before() { // eslint-disable-line class-methods-use-this
-        return <div className="loading-large" />;
+        const loadingStyle = {
+            width: 800,
+            height: 600,
+        };
+        return <div className="loading-large" style={loadingStyle}>&nbsp;</div>;
     }
 
     after(data) {
