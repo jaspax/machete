@@ -17,11 +17,7 @@ class KeywordAnalysis extends React.Component {
     }
 
     before() { // eslint-disable-line class-methods-use-this
-        return <KeywordAnalyticsView 
-            loading={true}
-            onKeywordEnabledChange={() => console.warn("shouldn't update keywords while still loading")}
-            onKeywordBidChange={() => console.warn("shouldn't update keywords while still loading")}
-        />;
+        return <div className="loading-large" />;
     }
 
     after(data) {
@@ -208,7 +204,6 @@ class KeywordAnalysis extends React.Component {
         }];
 
         return <KeywordAnalyticsView 
-            loading={false}
             keywordData={data}
             modifiedData={this.state.modified}
             worstKeywordTables={worstKwTables}

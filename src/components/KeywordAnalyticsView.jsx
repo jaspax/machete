@@ -25,9 +25,8 @@ function KeywordAnalyticsView(props) {
     return <div>
         <section>
             <h1>Keyword Performance</h1>
-            <KeywordBubbleChart 
-                width={800} height={600}
-                loading={props.loading} keywordData={transformKeywordData(props.keywordData)} />
+            <KeywordBubbleChart width={800} height={600}
+                keywordData={transformKeywordData(props.keywordData)} />
             <div className="machete-explanation">
                 <h3 id="machete-explanation-title">Understanding this chart</h3>
                 <p><b>X-axis</b>: number of impressions</p>
@@ -72,7 +71,6 @@ function transformKeywordData(data) {
 }
 
 KeywordAnalyticsView.propTypes = {
-    loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
     modifiedData: PropTypes.array,
     bestKeywordTables: PropTypes.array,

@@ -18,12 +18,7 @@ class KeywordBubbleChart extends React.Component {
             width: this.props.width,
             height: this.props.height,
         };
-
-        if (this.props.loading) {
-            return <div id={this.id} style={chartStyle} className="loading-large"></div>;
-        }
-
-        return <div id={this.id}></div>;
+        return <div style={chartStyle} id={this.id}></div>;
     }
 
     shouldComponentUpdate() {
@@ -43,9 +38,6 @@ class KeywordBubbleChart extends React.Component {
     }
 
     renderChart() {
-        if (this.props.loading)
-            return;
-
         let kws = this.props.keywordData;
         let chartData = {
             mode: 'markers',
@@ -76,7 +68,6 @@ class KeywordBubbleChart extends React.Component {
 }
 
 KeywordBubbleChart.propTypes = {
-    loading: PropTypes.bool.isRequired,
     width: PropTypes.number.isRequired,
     height: PropTypes.number.isRequired,
     keywordData: PropTypes.object,
