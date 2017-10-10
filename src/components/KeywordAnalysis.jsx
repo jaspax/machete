@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');
+const Async = require('react-promise');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
@@ -12,17 +13,19 @@ class KeywordAnalysis extends React.Component {
     }
 
     render() {
-        if (this.props.loading) {
-            return <KeywordAnalyticsTab 
-                allowed={true}
-                loading={true}
-                onKeywordEnabledChange={() => console.warn("shouldn't update keywords while still loading")}
-                onKeywordBidChange={() => console.warn("shouldn't update keywords while still loading")}
-            />;
-        }
+        return <Async before={this.before.bind(this)} then={this.after.bind(this)} promise={this.props.dataPromise} />;
+    }
 
-        let data = this.props.keywordData;
+    before() {
+        return <KeywordAnalyticsTab 
+            allowed={this.props.allowed}
+            loading={true}
+            onKeywordEnabledChange={() => console.warn("shouldn't update keywords while still loading")}
+            onKeywordBidChange={() => console.warn("shouldn't update keywords while still loading")}
+        />;
+    }
 
+    after(data) {
         let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
         let minImpressions = totalImpressions / (data.length * 10);
 
@@ -242,10 +245,9 @@ class KeywordAnalysis extends React.Component {
 }
 
 KeywordAnalysis.propTypes = {
-    loading: PropTypes.bool.isRequired,
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
-    keywordData: PropTypes.array.isRequired,
+    dataPromise: PropTypes.object.isRequired,
     updateStatus: PropTypes.func.isRequired,
     updateBid: PropTypes.func.isRequired,
 };

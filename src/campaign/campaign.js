@@ -116,20 +116,18 @@ function generateKeywordReports(entityId, container) {
     const chart = React.createElement(KeywordAnalysis, { 
         allowed: true, // assume true until we know otherwise
         anonymous: false,
-        loading: true,
+        dataPromise: keywordDataPromise,
         updateStatus: () => console.warn("shouldn't update keywords while still loading"),
         updateBid: () => console.warn("shouldn't update keywords while still loading"),
-        keywordData: [],
     });
     ReactDOM.render(chart, container[0]);
 
-    Promise.all([allowedPromise, keywordDataPromise, common.getUser()]).then(results => {
-        let [allowed, data, user] = results;
+    Promise.all([allowedPromise, common.getUser()]).then(results => {
+        let [allowed, user] = results;
         const chart = React.createElement(KeywordAnalysis, {
             allowed,
             anonymous: user.isAnon,
-            loading: false,
-            keywordData: data,
+            dataPromise: keywordDataPromise,
             updateStatus,
             updateBid,
         });

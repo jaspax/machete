@@ -2,7 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 
 const CampaignSelector = require('./CampaignSelector.jsx');
-const CampaignHistoryView = require('./CampaignHistoryView.jsx');
+const KeywordAnalysis = require('./CampaignHistoryView.jsx');
 
 class AggregateKeywords extends React.Component {
     constructor(props) {
@@ -25,7 +25,7 @@ class AggregateKeywords extends React.Component {
                 <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
             <section>
-                <h2>History</h2>
+                <h2>Keywords</h2>
                 {display}
             </section>
         </div>;
@@ -36,9 +36,9 @@ class AggregateKeywords extends React.Component {
     }
 }
 
-AggregateHistory.propTypes = {
+AggregateKeywords.propTypes = {
     loadDataPromise: PropTypes.func.isRequired,
     campaignPromise: PropTypes.object.isRequired,
 };
 
-module.exports = AggregateHistory;
+module.exports = AggregateKeywords;
