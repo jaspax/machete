@@ -15,7 +15,8 @@ class AggregateKeywords extends React.Component {
     render() {
         let display = null;
         if (this.state.dataPromise) {
-             display = <KeywordAnalysis dataPromise={this.state.dataPromise} />;
+            display = <KeywordAnalysis dataPromise={this.state.dataPromise} 
+                updateStatus={this.props.updateStatus} updateBid={this.props.updateBid} />;
         }
 
         return <div className="a-box-inner">
@@ -25,7 +26,6 @@ class AggregateKeywords extends React.Component {
                 <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
             <section>
-                <h2>Keywords</h2>
                 {display}
             </section>
         </div>;
@@ -37,8 +37,10 @@ class AggregateKeywords extends React.Component {
 }
 
 AggregateKeywords.propTypes = {
-    loadDataPromise: PropTypes.func.isRequired,
     campaignPromise: PropTypes.object.isRequired,
+    loadDataPromise: PropTypes.func.isRequired,
+    updateStatus: PropTypes.func.isRequired,
+    updateBid: PropTypes.func.isRequired,
 };
 
 module.exports = AggregateKeywords;

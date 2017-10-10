@@ -43,13 +43,12 @@ let adGroupPromise = ga.mpromise(resolve => {
 });
 
 let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])
-.then(results => ga.mpromise((resolve, reject) => {
+.then(results => ga.mcatch(() => {
     let [allowed, adGroupId] = results;
     if (allowed)
-        getKeywordData(common.getEntityId(), adGroupId, resolve, reject);
-    else
-        resolve([]);
-}));
+        return common.getKeywordData(common.getEntityId(), adGroupId);
+    return [];
+})());
 
 let makeTabsInterval = window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
@@ -203,19 +202,4 @@ function updateStatus(keywordIdList, enable, cb) {
 function updateBid(keywordIdList, bid, cb) {
     bid = parseFloat(bid).toFixed(2).toString();
     return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
-}
-
-function getKeywordData(entityId, adGroupId, resolve, reject) {
-    chrome.runtime.sendMessage({
-        action: 'getKeywordData', // from our server
-        entityId: entityId,
-        adGroupId: adGroupId,
-    },
-    ga.mcatch(response => {
-        if (response.error) {
-            ga.merror(response.status, response.error);
-            return reject(response.error);
-        }
-        return resolve(response.data || []);
-    }));
 }

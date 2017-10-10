@@ -246,6 +246,25 @@ function getCampaignHistory(entityId, campaignId) {
     return campaignPromise[campaignId];
 }
 
+let keywordPromise = {};
+function getKeywordData(entityId, adGroupId) {
+    if (!keywordPromise[adGroupId]) {
+        keywordPromise[adGroupId] = ga.mpromise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+                action: 'getKeywordData',
+                entityId,
+                adGroupId,
+            },
+            ga.mcatch(response => {
+                if (response.error)
+                    return reject(response.error);
+                return resolve(response.data || []);
+            }));
+        });
+    }
+    return keywordPromise[adGroupId];
+}
+
 let allowedPromise = null;
 function getAllCampaignsAllowed(entityId) {
     if (!allowedPromise) {
@@ -361,6 +380,7 @@ module.exports = {
     numberFmt,
     roundFmt,
     getCampaignHistory,
+    getKeywordData,
     parallelizeSeries,
     convertSnapshotsToDeltas,
     aggregateSeries,
