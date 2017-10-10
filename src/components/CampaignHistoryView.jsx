@@ -22,13 +22,13 @@ class CampaignHistoryView extends React.Component {
         </div>;
     }
 
-    baseState() {
+    baseState(props) {
         return {
             startDate: moment(),
             startMetrics: {},
             endDate: moment(),
             endMetrics: {},
-            dataPromise: this.props.dataPromise.then(this.chartDataChanged.bind(this))
+            dataPromise: props.dataPromise.then(this.chartDataChanged.bind(this))
         };
     }
 

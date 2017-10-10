@@ -75,7 +75,7 @@ function createHistoryData(data) {
 
     let series = [
         {
-            data: parallel.impressions,
+            data: parallel.impressions || [],
             timestamp: parallel.timestamp,
             name: 'Impressions',
             options: {
@@ -86,7 +86,7 @@ function createHistoryData(data) {
             }
         },
         {
-            data: parallel.clicks,
+            data: parallel.clicks || [],
             timestamp: parallel.timestamp,
             name: 'Clicks',
             options: {
@@ -97,7 +97,7 @@ function createHistoryData(data) {
             },
         },
         {
-            data: parallel.salesValue,
+            data: parallel.salesValue || [],
             timestamp: parallel.timestamp,
             format: common.moneyFmt,
             name: 'Sales',
@@ -108,7 +108,7 @@ function createHistoryData(data) {
             }, 
         },
         {
-            data: parallel.spend,
+            data: parallel.spend || [],
             timestamp: parallel.timestamp,
             format: common.moneyFmt,
             name: 'Spend',

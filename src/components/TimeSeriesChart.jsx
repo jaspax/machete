@@ -23,8 +23,7 @@ class TimeSeriesChart extends React.Component {
         super(props);
         chartCounter++;
         this.id = 'TimeSeriesChart' + chartCounter;
-        this.state = {};
-        this.props.dataPromise.then(data => this.setState({ data }));
+        this.drawGraph = this.drawGraph.bind(this);
     }
 
     render() {
@@ -33,12 +32,23 @@ class TimeSeriesChart extends React.Component {
             width: this.props.width + 'px',
         };
 
-        // Initial render we just show the spinner. After initial render we request data.
-        if (!this.state.data) {
-            return <div id={this.id} style={containerStyle} className="loading-large"></div>;
-        }
+        return <div id={this.id} style={containerStyle} className="loading-large"></div>;
+    }
 
-        this.series = this.state.data.map(series => Object.assign(
+    componentDidMount() {
+        this.props.dataPromise.then(this.drawGraph);
+    }
+
+    componentWillReceiveProps() {
+        Plotly.purge(this.id);
+    }
+
+    componentDidUpdate() {
+        this.props.dataPromise.then(this.drawGraph);
+    }
+
+    drawGraph(data) {
+        const series = data.map(series => Object.assign(
             {
                 x: series.timestamp,
                 y: series.data,
@@ -50,7 +60,7 @@ class TimeSeriesChart extends React.Component {
             }, 
             series.options));
 
-        this.layout = Object.assign(
+        const layout = Object.assign(
             {
                 title: this.props.title,
                 width: this.props.width,
@@ -60,21 +70,7 @@ class TimeSeriesChart extends React.Component {
             },
             this.props.layout);
 
-        return <div id={this.id} style={containerStyle}></div>;
-    }
-
-    componentWillReceiveProps() {
-        this.setState({});
-    }
-
-    componentDidUpdate() {
-        if (this.state.data) {
-            // After the state update triggered from the data completion
-            Plotly.newPlot(this.id, this.series, this.layout, {displayModeBar: this.props.displayModeBar});
-        }
-        else {
-            this.props.dataPromise.then(data => this.setState({ data }));
-        }
+        Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
     }
 }
 
