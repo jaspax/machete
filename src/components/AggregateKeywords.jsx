@@ -4,7 +4,7 @@ const PropTypes = require('prop-types');
 const CampaignSelector = require('./CampaignSelector.jsx');
 const CampaignHistoryView = require('./CampaignHistoryView.jsx');
 
-class AggregateHistory extends React.Component {
+class AggregateKeywords extends React.Component {
     constructor(props) {
         super(props);
 
@@ -15,11 +15,11 @@ class AggregateHistory extends React.Component {
     render() {
         let display = null;
         if (this.state.dataPromise) {
-             display = <CampaignHistoryView dataPromise={this.state.dataPromise} />;
+             display = <KeywordAnalysis dataPromise={this.state.dataPromise} />;
         }
 
         return <div className="a-box-inner">
-            <h1>Aggregate Campaign History</h1>
+            <h1>Aggregate Keywords</h1>
             <section className="machete-campaign-selector">
                 <b>Select campaigns:</b>
                 <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />

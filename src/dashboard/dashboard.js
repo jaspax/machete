@@ -44,19 +44,39 @@ function addTabs(wrapper) {
 
     tabber(tabs, { 
         label: 'Aggregate History',
-        activate: (entityId, historyContainer) => {
-            let aggContent = React.createElement(AggregateHistory, {
-                campaignPromise: common.getCampaignSummaries(common.getEntityId()),
-                loadDataPromise: (summaries) => co(function*() {
-                    const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
-                    const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
-                    const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
-                    return aggSeries;
-                }),
-            });
-            ReactDOM.render(aggContent, historyContainer[0]);
-        },
+        activate: activateAggregateHistoryTab,
     });
+
+    tabber(tabs, {
+        label: 'Aggregate Keywords',
+        activate: activateAggregateKeywordTab,
+    });
+}
+
+function activateAggregateHistoryTab(entityId, container) {
+    let aggContent = React.createElement(AggregateHistory, {
+        campaignPromise: common.getCampaignSummaries(common.getEntityId()),
+        loadDataPromise: (summaries) => co(function*() {
+            const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
+            const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
+            const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
+            return aggSeries;
+        }),
+    });
+    ReactDOM.render(aggContent, container[0]);
+}
+
+function activateAggregateKeywordTab(entityId, container) {
+    let aggContent = React.createElement(AggregateKeywords, {
+        campaignPromise: common.getCampaignSummaries(common.getEntityId()),
+        loadDataPromise: (summaries) => co(function*() {
+            const histories = yield Promise.all(summaries.map(s => common.getCampaignKeyword(entityId, s.campaignId)));
+            const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
+            const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
+            return aggSeries;
+        }),
+    });
+    ReactDOM.render(aggContent, container[0]);
 }
 
 function addChartButtons(rows) {
