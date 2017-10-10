@@ -1,6 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const KeywordAnalyticsTab = require('./KeywordAnalyticsTab.jsx');
+const KeywordAnalyticsView = require('./KeywordAnalyticsView.jsx');
 const Async = require('react-promise');
 
 const common = require('../common/common.js');
@@ -17,7 +17,7 @@ class KeywordAnalysis extends React.Component {
     }
 
     before() {
-        return <KeywordAnalyticsTab 
+        return <KeywordAnalyticsView 
             allowed={this.props.allowed}
             loading={true}
             onKeywordEnabledChange={() => console.warn("shouldn't update keywords while still loading")}
@@ -210,7 +210,7 @@ class KeywordAnalysis extends React.Component {
             }]
         }];
 
-        return <KeywordAnalyticsTab 
+        return <KeywordAnalyticsView 
             allowed={this.props.allowed} 
             anonymous={this.props.anonymous}
             loading={false}

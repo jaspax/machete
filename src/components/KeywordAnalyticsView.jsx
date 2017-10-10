@@ -4,7 +4,7 @@ const DataNotAvailable = require('./DataNotAvailable.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
 const KeywordReport = require('./KeywordReport.jsx');
 
-class KeywordAnalyticsTab extends React.Component {
+class KeywordAnalyticsView extends React.Component {
     render() {
         let body = null;
         if (this.props.allowed) {
@@ -87,7 +87,7 @@ function transformKeywordData(data) {
 }
 
 
-KeywordAnalyticsTab.propTypes = {
+KeywordAnalyticsView.propTypes = {
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
@@ -99,10 +99,10 @@ KeywordAnalyticsTab.propTypes = {
     onKeywordBidChange: PropTypes.func.isRequired,
 };
 
-KeywordAnalyticsTab.defaultProps = {
+KeywordAnalyticsView.defaultProps = {
     keywordData: [],
     bestKeywordTables: [],
     worstKeywordTables: [],
 };
 
-module.exports = KeywordAnalyticsTab;
+module.exports = KeywordAnalyticsView;
