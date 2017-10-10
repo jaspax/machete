@@ -8,7 +8,7 @@ const constants = require('../common/constants.js');
 const tabber = require('../components/tabber.js');
 
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
-const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
+const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
 const KeywordBulkUpdate = require('../components/KeywordBulkUpdate.jsx');
 
 const tabClass = `machete-tab`;
@@ -113,7 +113,7 @@ function addCampaignTabs(tabs) {
 }
 
 function generateKeywordReports(entityId, container) {
-    const chart = React.createElement(KeywordAnalysis, { 
+    const chart = React.createElement(KeywordAnalyticsTab, { 
         allowed: true, // assume true until we know otherwise
         anonymous: false,
         dataPromise: keywordDataPromise,
@@ -124,7 +124,7 @@ function generateKeywordReports(entityId, container) {
 
     Promise.all([allowedPromise, common.getUser()]).then(results => {
         let [allowed, user] = results;
-        const chart = React.createElement(KeywordAnalysis, {
+        const chart = React.createElement(KeywordAnalyticsTab, {
             allowed,
             anonymous: user.isAnon,
             dataPromise: keywordDataPromise,

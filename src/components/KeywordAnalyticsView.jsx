@@ -1,66 +1,51 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const DataNotAvailable = require('./DataNotAvailable.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
 const KeywordReport = require('./KeywordReport.jsx');
 
-class KeywordAnalyticsView extends React.Component {
-    render() {
-        let body = null;
-        if (this.props.allowed) {
-            const keywordMapper = table => {
-                const filterFn = table.filterFn ? table.filterFn : () => true;
-                const tableData = this.props.keywordData.filter(filterFn);
+function KeywordAnalyticsView(props) {
+    const keywordMapper = table => {
+        const filterFn = table.filterFn ? table.filterFn : () => true;
+        const tableData = props.keywordData.filter(filterFn);
 
-                return <KeywordReport
-                    key={table.title}
-                    title={table.title}
-                    data={tableData}
-                    modifiedData={this.props.modifiedData}
-                    columns={table.columns}
-                    onKeywordEnabledChange={this.props.onKeywordEnabledChange}
-                    onKeywordBidChange={this.props.onKeywordBidChange}
-                />;
-            };
+        return <KeywordReport
+            key={table.title}
+            title={table.title}
+            data={tableData}
+            modifiedData={props.modifiedData}
+            columns={table.columns}
+            onKeywordEnabledChange={props.onKeywordEnabledChange}
+            onKeywordBidChange={props.onKeywordBidChange}
+        />;
+    };
 
-            const bestTables = this.props.bestKeywordTables.map(keywordMapper);
-            const worstTables = this.props.worstKeywordTables.map(keywordMapper);
+    const bestTables = props.bestKeywordTables.map(keywordMapper);
+    const worstTables = props.worstKeywordTables.map(keywordMapper);
 
-            body = <div>
-                <section>
-                    <h1>Keyword Performance</h1>
-                    <KeywordBubbleChart 
-                        width={800} height={600}
-                        loading={this.props.loading} keywordData={transformKeywordData(this.props.keywordData)} />
-                    <div className="machete-explanation">
-                        <h3 id="machete-explanation-title">Understanding this chart</h3>
-                        <p><b>X-axis</b>: number of impressions</p>
-                        <p><b>Y-axis</b>: number of clicks</p>
-                        <p><b>Bubble size</b>: total spend</p>
-                        <p><b>Bubble color</b>: ACOS (green is lower, red is higher, gray has no recorded sales)</p>
-                        <p><b>Drag</b> to zoom in on a region</p>
-                    </div>
-                </section>
-                <section>
-                    <h1>Underperforming keywords</h1>
-                    {worstTables}
-                </section>
-                <section>
-                    <h1>Overperforming keywords</h1>
-                    {bestTables}
-                </section>
-            </div>;
-        }
-        else {
-            body = <DataNotAvailable allowed={false} anonymous={this.props.anonymous} />;
-        }
-
-        return (
-            <div id="machete-keyword-analysis" className="a-box-inner">
-                {body}
+    return <div>
+        <section>
+            <h1>Keyword Performance</h1>
+            <KeywordBubbleChart 
+                width={800} height={600}
+                loading={props.loading} keywordData={transformKeywordData(props.keywordData)} />
+            <div className="machete-explanation">
+                <h3 id="machete-explanation-title">Understanding this chart</h3>
+                <p><b>X-axis</b>: number of impressions</p>
+                <p><b>Y-axis</b>: number of clicks</p>
+                <p><b>Bubble size</b>: total spend</p>
+                <p><b>Bubble color</b>: ACOS (green is lower, red is higher, gray has no recorded sales)</p>
+                <p><b>Drag</b> to zoom in on a region</p>
             </div>
-        );
-    }
+        </section>
+        <section>
+            <h1>Underperforming keywords</h1>
+            {worstTables}
+        </section>
+        <section>
+            <h1>Overperforming keywords</h1>
+            {bestTables}
+        </section>
+    </div>;
 }
 
 function transformKeywordData(data) {
@@ -86,10 +71,7 @@ function transformKeywordData(data) {
     return kws;
 }
 
-
 KeywordAnalyticsView.propTypes = {
-    allowed: PropTypes.bool.isRequired,
-    anonymous: PropTypes.bool.isRequired,
     loading: PropTypes.bool.isRequired,
     keywordData: PropTypes.array,
     modifiedData: PropTypes.array,

@@ -16,9 +16,8 @@ class KeywordAnalysis extends React.Component {
         return <Async before={this.before.bind(this)} then={this.after.bind(this)} promise={this.props.dataPromise} />;
     }
 
-    before() {
+    before() { // eslint-disable-line class-methods-use-this
         return <KeywordAnalyticsView 
-            allowed={this.props.allowed}
             loading={true}
             onKeywordEnabledChange={() => console.warn("shouldn't update keywords while still loading")}
             onKeywordBidChange={() => console.warn("shouldn't update keywords while still loading")}
@@ -29,8 +28,6 @@ class KeywordAnalysis extends React.Component {
         let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
         let minImpressions = totalImpressions / (data.length * 10);
 
-        // Calculate these two derived metrics once, because we use them
-        // multiple times below
         for (let kw of data) {
             kw.hasEnoughImpressions = kw.clicks && kw.impressions > minImpressions;
         }
@@ -211,8 +208,6 @@ class KeywordAnalysis extends React.Component {
         }];
 
         return <KeywordAnalyticsView 
-            allowed={this.props.allowed} 
-            anonymous={this.props.anonymous}
             loading={false}
             keywordData={data}
             modifiedData={this.state.modified}
@@ -245,8 +240,6 @@ class KeywordAnalysis extends React.Component {
 }
 
 KeywordAnalysis.propTypes = {
-    allowed: PropTypes.bool.isRequired,
-    anonymous: PropTypes.bool.isRequired,
     dataPromise: PropTypes.object.isRequired,
     updateStatus: PropTypes.func.isRequired,
     updateBid: PropTypes.func.isRequired,
