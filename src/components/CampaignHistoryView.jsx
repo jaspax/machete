@@ -28,7 +28,11 @@ class CampaignHistoryView extends React.Component {
             startMetrics: {},
             endDate: moment(),
             endMetrics: {},
-            dataPromise: props.dataPromise.then(this.chartDataChanged.bind(this))
+            dataPromise: props.dataPromise.then(data => {
+                this.setState({ data });
+                this.chartDataChanged(data);
+                return data;
+            })
         };
     }
 
@@ -52,7 +56,6 @@ class CampaignHistoryView extends React.Component {
             endMetrics,
             dataPromise: Promise.resolve(data),
         });
-        return data;
     }
 }
 
