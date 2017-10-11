@@ -228,6 +228,7 @@ function aggregateSeries(series, opt) {
 }
 
 function aggregateKeywords(kwSets, opt) {
+    // Aggregate the cumulative metrics
     const a = {};
     for (const kws of kwSets) {
         for (const item of kws) {
@@ -243,7 +244,15 @@ function aggregateKeywords(kwSets, opt) {
         }
     }
 
-    return _.keys(a).map(x => a[x]);
+    // Recalculate the aggregate metrics
+    const keywords = _.keys(a).map(x => a[x]);
+    for (const kw of keywords) {
+        kw.acos = kw.sales ? 100 * (kw.spend / kw.sales) : null;
+        kw.avgCpc = kw.spend / kw.clicks;
+        kw.ctr = kw.impressions ? 100 * (kw.clicks / kw.impressions) : null;
+    }
+
+    return keywords;
 }
 
 
