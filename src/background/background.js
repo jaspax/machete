@@ -92,21 +92,10 @@ function* setSession(req, sender) {
 
 function* getAllowedCampaigns(entityId) {
     checkEntityId(entityId);
-
-    try {
-        return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
-            method: 'GET',
-            dataType: 'json'
-        });
-    }
-    catch (ex) {
-        if (ex.message.match(/^401/)) {
-            // this is basically expected, so don't propagate it as an error
-            ga.mga('event', 'error-handled', 'entityid-unauthorized');
-            return [];
-        }
-        throw ex;
-    }
+    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
+        method: 'GET',
+        dataType: 'json'
+    });
 }
 
 function* requestCampaignData(entityId) {
@@ -131,10 +120,9 @@ function* requestCampaignData(entityId) {
         });
     }
     catch (ex) {
-        if (ex.status == 401 && lastRequestSucceeded) { // Unauthorized
+        if (bg.handleAuthErrors(ex) && lastRequestSucceeded) {
             localStorage.setItem('lastRequestSucceeded', false);
             notifyNeedCredentials(entityId);
-            ga.mga('event', 'error-handled', 'request-campaign-data-401');
             return null;
         }
         throw ex;
