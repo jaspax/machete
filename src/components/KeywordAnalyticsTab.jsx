@@ -12,7 +12,7 @@ function KeywordAnalyticsTab(props) {
     else {
         body = <DataNotAvailable allowed={props.allowed} anonymous={props.anonymous} />;
     }
-    return <div id="machete-keyword-analysis" className="a-box-inner">
+    return <div className="a-box-inner">
         <h1>Keyword Analytics</h1>
         {body}
     </div>;

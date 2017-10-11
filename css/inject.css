@@ -120,6 +120,15 @@
     display: inline-block;
 }
 
+.machete-kwbid .machete-small-input {
+    margin-left: 1px;
+    margin-right: 4px;
+    width: 70px;
+    height: 22px;
+    padding: 3px 7px;
+    line-height: normal;
+}
+
 #machete-bulk-all {
     margin-left: 8px;
 }

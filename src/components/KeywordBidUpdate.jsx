@@ -1,6 +1,8 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 
+const common = require('../common/common.js');
+
 class KeywordBidUpdate extends React.Component {
     constructor(props) {
         super(props);
@@ -20,7 +22,7 @@ class KeywordBidUpdate extends React.Component {
             <div className="machete-kwbid sspa-editor-input-container">
                 <span>
                     $<input type="text" maxLength="6" value={common.numberFmt(this.state.bid)} onChange={this.handleChange}
-                        className="a-input-text inplaceBidInput"></input>
+                        className="a-input-text machete-small-input"></input>
                 </span>
                 <span className="a-button a-button-primary a-button-small" onClick={this.handleClick}>
                     <span className="a-button-inner">

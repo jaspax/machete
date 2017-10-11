@@ -13,7 +13,7 @@ class KeywordBulkUpdate extends React.Component {
 
     render() {
         const enabled = this.props.data.length ? this.props.data[0].enabled : false;
-        const bid = this.props.data.length ? this.props.data[0].bid : 0;
+        const bid = this.props.data.length ? Number(this.props.data[0].bid) : 0;
         return (
             <div className="machete-kwupdate-bulk">
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
