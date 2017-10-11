@@ -7,7 +7,7 @@ const ga = require('../common/ga.js');
 const lastVersionKey = 'lastVersion';
 const serviceUrl = `https://${constants.hostname}`;
 
-    chrome.runtime.onInstalled.addListener(details => {
+chrome.runtime.onInstalled.addListener(details => {
     const manifest = chrome.runtime.getManifest();
     if (details.reason == 'install') {
         chrome.tabs.create({ url: `${serviceUrl}/${process.env.PRODUCT}/welcome` });
@@ -42,7 +42,9 @@ function messageListener(handler) {
             sendResponse(response);
         })
         .catch(error => {
-            ga.merror(req, error);
+            if (!handleAuthErrors(error, req.action)) {
+                ga.merror(req, error);
+            }
             sendResponse({ status: error.message, error });
         })
         .then(() => {
@@ -59,6 +61,18 @@ function* getUser() {
         method: 'GET',
         dataType: 'json'
     });
+}
+
+function handleAuthErrors(ex, desc) {
+    if (ex.message.match(/^401/)) {
+        ga.mga('event', 'error-handled', 'auth-error-401', desc);
+        return true;
+    }
+    if (ex.message.match(/^403/)) {
+        ga.mga('event', 'error-handled', 'auth-error-403', desc);
+        return true;
+    }
+    return false;
 }
 
 function ajax(...args) {
@@ -80,5 +94,6 @@ module.exports = {
     serviceUrl,
     messageListener,
     getUser,
+    handleAuthErrors,
     ajax,
 };
