@@ -104,6 +104,14 @@
     font-size: 11pt;
 }
 
+.machete-warning {
+    border: 2px solid rgb(196, 85, 0);
+    border-radius: 4px;
+    padding: 4px;
+    width: 75%;
+    margin: 10px;
+}
+
 .machete-kwbulk-label {
     font-weight: bold;
 }

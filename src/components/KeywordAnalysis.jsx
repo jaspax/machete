@@ -19,8 +19,8 @@ class KeywordAnalysis extends React.Component {
 
     pending() { // eslint-disable-line class-methods-use-this
         const loadingStyle = {
-            width: 800,
-            height: 600,
+            width: '100%',
+            height: 200,
         };
         return <div className="loading-large" style={loadingStyle}>&nbsp;</div>;
     }

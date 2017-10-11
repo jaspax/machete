@@ -15,8 +15,13 @@ class AggregateKeywords extends React.Component {
     render() {
         let display = null;
         if (this.state.dataPromise) {
-            display = <KeywordAnalysis dataPromise={this.state.dataPromise} 
-                updateStatus={this.props.updateStatus} updateBid={this.props.updateBid} />;
+            display = <section>
+                <div className="machete-warning"><b>Caution:</b> Updates made to
+                    keywords in this view will affect all campaigns that contain
+                    that keyword.</div>
+                <KeywordAnalysis dataPromise={this.state.dataPromise} 
+                updateStatus={this.props.updateStatus} updateBid={this.props.updateBid} />
+            </section>;
         }
 
         return <div className="a-box-inner">
@@ -25,9 +30,7 @@ class AggregateKeywords extends React.Component {
                 <b>Select campaigns:</b>
                 <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
-            <section>
-                {display}
-            </section>
+            {display}
         </div>;
     }
 
