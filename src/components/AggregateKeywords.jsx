@@ -17,8 +17,7 @@ class AggregateKeywords extends React.Component {
         if (this.state.dataPromise) {
             display = <section>
                 <div className="machete-warning"><b>Caution:</b> Updates made to
-                    keywords in this view will affect all campaigns that contain
-                    that keyword.</div>
+                    keywords in this view will affect all campaigns selected above.</div>
                 <KeywordAnalysis dataPromise={this.state.dataPromise} 
                 updateStatus={this.props.updateStatus} updateBid={this.props.updateBid} />
             </section>;
