@@ -237,9 +237,13 @@ function aggregateKeywords(kwSets, opt) {
                 for (const key of cumulativeMetrics) {
                     a[kw][key] = item[key] + (a[kw][key] || 0);
                 }
+                a[kw].id.push(item.id);
+                a[kw].bid = Math.max(a[kw].bid, item.bid);
+                a[kw].enabled = a[kw].enabled || item.enabled;
             }
             else {
                 a[kw] = item;
+                a[kw].id = [item.id];
             }
         }
     }
