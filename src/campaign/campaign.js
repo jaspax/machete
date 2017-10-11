@@ -127,8 +127,8 @@ function generateKeywordReports(entityId, container) {
             allowed,
             anonymous: user.isAnon,
             dataPromise: keywordDataPromise,
-            updateStatus,
-            updateBid,
+            updateStatus: (ids, enabled, callback) => common.updateKeywordStatus(ids, enabled).then(callback),
+            updateBid: (ids, bid, callback) => common.updateKeywordBid(ids, bid).then(callback),
         });
         ReactDOM.render(chart, container[0]);
     })
@@ -157,12 +157,8 @@ function generateHistoryReports(entityId, container) {
 function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
-        onEnabledChange: (enabled, keywords) => {
-            updateStatus(keywords.map(kw => kw.id), enabled, () => window.location.reload());
-        },
-        onBidChange: (bid, keywords) => {
-            updateBid(keywords.map(kw => kw.id), bid, () => window.location.reload());
-        },
+        onEnabledChange: (enabled, keywords) => common.updateStatus(keywords.map(kw => kw.id), enabled).then(window.location.reload),
+        onBidChange: (bid, keywords) => common.updateBid(keywords.map(kw => kw.id), bid).then(window.location.reload),
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }
