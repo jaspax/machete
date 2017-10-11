@@ -2,6 +2,7 @@ const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const co = require('co');
+const _ = require('lodash');
 
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
@@ -58,6 +59,7 @@ function activateAggregateHistoryTab(entityId, container) {
     let aggContent = React.createElement(AggregateHistory, {
         campaignPromise: common.getCampaignSummaries(common.getEntityId()),
         loadDataPromise: (summaries) => co(function*() {
+            console.log('load history for', summaries);
             const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
             const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
             const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
@@ -71,12 +73,19 @@ function activateAggregateKeywordTab(entityId, container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: common.getCampaignSummaries(common.getEntityId()),
         loadDataPromise: (summaries) => co(function*() {
+            console.log('load keywords for', summaries);
             const kwData = yield Promise.all(summaries.map(s => common.getKeywordData(entityId, s.adGroupId)));
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),
-        updateStatus: (...args) => console.log('status update', ...args),
-        updateBid: (...args) => console.log('bid update', ...args),
+        updateStatus: (ids, enabled, callback) => {
+            const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
+            common.updateKeywordStatus(idList, enabled).then(callback);
+        },
+        updateBid: (ids, bid, callback) => {
+            const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
+            common.updateKeywordBid(idList, bid).then(callback);
+        },
     });
     ReactDOM.render(aggContent, container[0]);
 }

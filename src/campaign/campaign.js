@@ -167,39 +167,3 @@ function generateBulkUpdate(container, data) {
     ReactDOM.render(bulkUpdate, container[0]);
 }
 
-function updateKeyword(keywordIdList, operation, dataValues, cb) {
-    let entityId = common.getEntityId();
-
-    // TODO: the parameters to the Amazon API imply that you can pass more than
-    // 1 keyword at a time, but testing this shows that doing so just generates
-    // an error. So we do it the stupid way instead, with a loop.
-    let requests = [];
-    for (let id of keywordIdList) {
-        let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
-        requests.push($.ajax({
-            url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
-            method: 'POST',
-            data: postData,
-            dataType: 'json',
-        }));
-    }
-
-    // TODO: in the case that we have a lot of these (bulk update), implement
-    // progress feedback.
-    $.when.apply($, requests)
-        .done((result) => {
-            result.length ? cb(Object.assign(result[0], dataValues))
-                          : cb(Object.assign(result, dataValues));
-        })
-        .fail((error) => cb({error}));
-}
-
-function updateStatus(keywordIdList, enable, cb) {
-    let operation = enable ? "ENABLE" : "PAUSE";
-    return updateKeyword(keywordIdList, operation, {}, cb);
-}
-
-function updateBid(keywordIdList, bid, cb) {
-    bid = parseFloat(bid).toFixed(2).toString();
-    return updateKeyword(keywordIdList, 'UPDATE', {bid}, cb);
-}

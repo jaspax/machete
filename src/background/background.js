@@ -32,6 +32,8 @@ bg.messageListener(function*(req, sender) {
         return yield* setCampaignMetadata(req.entityId, req.campaignId, req.asin);
     else if (req.action == 'setAdGroupMetadata')
         return yield* setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
+    else if (req.action == 'updateKeyword')
+        return yield* updateKeyword(req.entityId, req.keywordIdList, req.operation, req.dataValues);
     throw new Error('unknown action');
 });
 
@@ -290,6 +292,34 @@ function* getAdGroups(entityId) {
         dataType: 'json',
     });
 }
+
+function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
+    // TODO: the parameters to the Amazon API imply that you can pass more than
+    // 1 keyword at a time, but testing this shows that doing so just generates
+    // an error. So we do it the stupid way instead, with a loop.
+    const step = 20;
+
+    // Chop the campaignId list into bite-sized chunks
+    for (let index = 0; index < keywordIdList.length; index += step) {
+        let requests = [];
+        let chunk = keywordIdList.slice(index, index + step);
+        for (let id of chunk) {
+            let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
+            requests.push(bg.ajax({
+                url: 'https://ams.amazon.com/api/sponsored-products/updateKeywords/',
+                method: 'POST',
+                data: postData,
+                dataType: 'json',
+            }));
+        }
+
+        yield Promise.all(requests);
+    }
+
+    // TODO: in the case that we have a lot of these (bulk update), implement
+    // progress feedback.
+}
+
 
 let notificationExists = false;
 function notifyNeedCredentials(entityId) {

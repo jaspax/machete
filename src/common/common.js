@@ -113,6 +113,7 @@ function roundFmt(val) {
 }
 
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
+const cumulativeKeywordMetrics = qw`impressions clicks sales spend`;
 const aggregateMetrics = qw`ctr acos avgCpc`;
 
 const round = {
@@ -234,7 +235,7 @@ function aggregateKeywords(kwSets, opt) {
         for (const item of kws) {
             const kw = item.keyword;
             if (a[kw]) {
-                for (const key of cumulativeMetrics) {
+                for (const key of cumulativeKeywordMetrics) {
                     a[kw][key] = item[key] + (a[kw][key] || 0);
                 }
                 a[kw].id.push(item.id);
@@ -398,6 +399,34 @@ if (window.location.href.includes('ams')) {
     });
 }
 
+function updateKeyword(keywordIdList, operation, dataValues) {
+    return ga.mpromise((resolve, reject) => {
+        chrome.runtime.sendMessage({
+            action: 'updateKeyword',
+            entityId: getEntityId(),
+            keywordIdList,
+            operation,
+            dataValues,
+        },
+        ga.mcatch(response => {
+            if (response.error)
+                return reject(response.error);
+            return resolve({success: true});
+        }));
+    });
+
+}
+
+function updateKeywordStatus(keywordIdList, enable) {
+    let operation = enable ? "ENABLE" : "PAUSE";
+    return updateKeyword(keywordIdList, operation, {});
+}
+
+function updateKeywordBid(keywordIdList, bid) {
+    bid = parseFloat(bid).toFixed(2).toString();
+    return updateKeyword(keywordIdList, 'UPDATE', {bid});
+}
+
 module.exports = {
     getEntityId,
     getCampaignId,
@@ -418,4 +447,6 @@ module.exports = {
     convertSnapshotsToDeltas,
     aggregateSeries,
     aggregateKeywords,
+    updateKeywordStatus,
+    updateKeywordBid,
 };
