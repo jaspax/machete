@@ -19,7 +19,7 @@ class KeywordBidUpdate extends React.Component {
         return (
             <div className="machete-kwbid sspa-editor-input-container">
                 <span>
-                    <input type="text" maxLength="6" value={this.state.bid} onChange={this.handleChange}
+                    $<input type="text" maxLength="6" value={common.numberFmt(this.state.bid)} onChange={this.handleChange}
                         className="a-input-text inplaceBidInput"></input>
                 </span>
                 <span className="a-button a-button-primary a-button-small" onClick={this.handleClick}>
