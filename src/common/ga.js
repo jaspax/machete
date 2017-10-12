@@ -112,6 +112,8 @@ function mpromise(executor) {
         else {
             merror(error);
         }
+        error.handled = true;
+        return Promise.reject(error);
     });
 }
 
