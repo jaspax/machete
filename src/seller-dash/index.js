@@ -40,7 +40,7 @@ const setSessionPromise = ga.mpromise((resolve, reject) => {
     });
 });
 
-let loadingInterval = window.setInterval(() => {
+let loadingInterval = window.setInterval(ga.mcatch(() => {
     const navbar = $('.sspa-navigation-bar');
     if (!navbar.length)
         return;
@@ -56,7 +56,7 @@ let loadingInterval = window.setInterval(() => {
 
     setSessionPromise.then(() => container.remove());
     window.clearInterval(loadingInterval);
-}, 100);
+}), 100);
 
 common.getUser().then(user => {
     window.setInterval(ga.mcatch(() => {

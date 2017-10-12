@@ -21,7 +21,7 @@ const ourTabs = [
 let allowedPromise = common.getCampaignAllowed(common.getEntityId(), common.getCampaignId());
 
 let adGroupPromise = ga.mpromise(resolve => {
-    let adGroupInterval = window.setInterval(() => {
+    let adGroupInterval = window.setInterval(ga.mcatch(() => {
         let adGroupIdInput = $('input[name=adGroupId]');
         if (!adGroupIdInput.length)
             return;
@@ -39,7 +39,7 @@ let adGroupPromise = ga.mpromise(resolve => {
                  ga.merror(response.status, response.error);
         }));
         resolve(adGroupId);
-    }, 100);
+    }), 100);
 });
 
 let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])

@@ -20,7 +20,7 @@ function tabber(tabs, opt) {
 
         if (opt.activate && !hasActivated) {
             hasActivated = true;
-            window.setTimeout(() => opt.activate(common.getEntityId(), container));
+            window.setTimeout(ga.mcatch(() => opt.activate(common.getEntityId(), container)));
         }
     }));
 
