@@ -32,13 +32,7 @@ const charts = [
     { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
 
-const setSessionPromise = ga.mpromise((resolve, reject) => {
-    chrome.runtime.sendMessage({ action: 'setSession', }, (response) => {
-        if (response.error)
-            return reject(response.error);
-        return resolve();
-    });
-});
+const setSessionPromise = common.bgMessage({ action: 'setSession' });
 
 let loadingInterval = window.setInterval(ga.mcatch(() => {
     const navbar = $('.sspa-navigation-bar');
@@ -188,33 +182,21 @@ common.getUser().then(user => {
             args = Object.assign(args, { action: 'getAdDataRangeByAsin', campaignId, adGroupId, asin });
         }
 
-        return ga.mpromise((resolve, reject) => {
-            chrome.runtime.sendMessage(args, ga.mcatch(response => {
-                if (response.error) {
-                    return reject(response.error);
-                }
-                return resolve(response.data);
-            }));
-        });
+        return common.bgMessage(args);
     }
 
     function getKeywordDataAggregate(onComplete) {
         let { campaignId, adGroupId } = common.getSellerCampaignId(window.location.href);
 
-        chrome.runtime.sendMessage({
+        common.bgMessage({
             action: 'getKeywordDataRange',
             campaignId,
             adGroupId,
             startTimestamp: ninetyDaysAgo,
             endTimestamp: now,
-        }, ga.mcatch(response => {
-            if (response.error) {
-                ga.merror(response.status, response.error);
-                return;
-            }
-
+        }).then(data => {
             const keywords = {};
-            for (const record of response.data.sort((a, b) => a.timestamp - b.timestamp)) {
+            for (const record of data.sort((a, b) => a.timestamp - b.timestamp)) {
                 const kw = record.keyword;
                 if (!keywords[kw])
                     keywords[kw] = {};
@@ -238,7 +220,7 @@ common.getUser().then(user => {
             }
 
             onComplete(values);
-        }));
+        });
     }
 
     function generateCampaignHistory(container) {

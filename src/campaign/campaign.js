@@ -29,15 +29,12 @@ let adGroupPromise = ga.mpromise(resolve => {
         let adGroupId = adGroupIdInput[0].value;
         window.clearInterval(adGroupInterval);
 
-        chrome.runtime.sendMessage({
+        common.bgMessage({
             action: 'setAdGroupMetadata',
             entityId: common.getEntityId(),
             campaignId: common.getCampaignId(),
             adGroupId,
-        }, ga.mcatch(response => {
-            if (response.error)
-                 ga.merror(response.status, response.error);
-        }));
+        });
         resolve(adGroupId);
     }), 100);
 });
@@ -72,15 +69,12 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
     if (!match || match.length < 2)
         return;
 
-    chrome.runtime.sendMessage({
+    common.bgMessage({
         action: 'setCampaignMetadata',
         entityId: common.getEntityId(),
         campaignId: common.getCampaignId(),
         asin: match[1],
-    }, ga.mcatch(response => {
-        if (response.error)
-             ga.merror(response.status, response.error);
-    }));
+    });
 
     window.clearInterval(metadataInterval);
 }), 100);

@@ -112,6 +112,16 @@ function roundFmt(val) {
     return Math.round(val);
 }
 
+function bgMessage(opts) {
+    return ga.mpromise((resolve, reject) => {
+        chrome.runtime.sendMessage(opts, response => {
+            if (response.error)
+                return reject(response.error);
+            return resolve(response.data);
+        });
+    });
+}
+
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
 const cumulativeKeywordMetrics = qw`impressions clicks sales spend`;
 const aggregateMetrics = qw`ctr acos avgCpc`;
@@ -264,17 +274,10 @@ function aggregateKeywords(kwSets, opt) {
 let campaignPromise = {};
 function getCampaignHistory(entityId, campaignId) {
     if (!campaignPromise[campaignId]) {
-        campaignPromise[campaignId] = ga.mpromise((resolve, reject) => {
-            chrome.runtime.sendMessage({
-                action: 'getDataHistory',
-                entityId: entityId,
-                campaignId: campaignId,
-            },
-            ga.mcatch(response => {
-                if (response.error)
-                    return reject(response.error);
-                return resolve(response.data || []);
-            }));
+        campaignPromise[campaignId] = bgMessage({
+            action: 'getDataHistory',
+            entityId: entityId,
+            campaignId: campaignId,
         });
     }
     return campaignPromise[campaignId];
@@ -283,17 +286,10 @@ function getCampaignHistory(entityId, campaignId) {
 let keywordPromise = {};
 function getKeywordData(entityId, adGroupId) {
     if (!keywordPromise[adGroupId]) {
-        keywordPromise[adGroupId] = ga.mpromise((resolve, reject) => {
-            chrome.runtime.sendMessage({
-                action: 'getKeywordData',
-                entityId,
-                adGroupId,
-            },
-            ga.mcatch(response => {
-                if (response.error)
-                    return reject(response.error);
-                return resolve(response.data || []);
-            }));
+        keywordPromise[adGroupId] = bgMessage({
+            action: 'getKeywordData',
+            entityId,
+            adGroupId,
         });
     }
     return keywordPromise[adGroupId];
@@ -302,19 +298,11 @@ function getKeywordData(entityId, adGroupId) {
 let allowedPromise = null;
 function getAllCampaignsAllowed(entityId) {
     if (!allowedPromise) {
-        allowedPromise = ga.mpromise((resolve, reject) => {
-            chrome.runtime.sendMessage({
-                action: 'getAllowedCampaigns', 
-                entityId
-            }, response => {
-                if (response.error)
-                    reject(response.error);
-                else
-                    resolve(response.data);
-            });
+        allowedPromise = bgMessage({
+            action: 'getAllowedCampaigns', 
+            entityId
         });
     }
-
     return allowedPromise;
 }
 
@@ -333,15 +321,9 @@ function getCampaignAllowed(entityId, campaignId) {
 let summaryPromise = null;
 function getCampaignSummaries(entityId) {
     if (!summaryPromise) {
-        summaryPromise = ga.mpromise((resolve, reject) => {
-            chrome.runtime.sendMessage({
-                action: 'getCampaignSummaries',
-                entityId: entityId,
-            }, response => {
-                if (response.error)
-                    return reject(response.error);
-                return resolve(response.data || []);
-            });
+        summaryPromise = bgMessage({
+            action: 'getCampaignSummaries',
+            entityId: entityId,
         });
     }
     return summaryPromise;
@@ -365,12 +347,12 @@ function getUser() {
 }
 
 if (window.location.href.includes('ams')) {
-    chrome.runtime.sendMessage({
+    bgMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    }, response => console.info('setSession success'));
+    }).then(() => console.info('setSession success'));
 
-    getUser().then(user => {
+    getUser().then(ga.mcatch(user => {
         const desc = user.activeSubscription.name;
         let email = user.email;
         let profileText = "Your Profile";
@@ -396,25 +378,18 @@ if (window.location.href.includes('ams')) {
                 return result;
             });
         }
-    });
+    }));
 }
 
 function updateKeyword(keywordIdList, operation, dataValues) {
-    return ga.mpromise((resolve, reject) => {
-        chrome.runtime.sendMessage({
-            action: 'updateKeyword',
-            entityId: getEntityId(),
-            keywordIdList,
-            operation,
-            dataValues,
-        },
-        ga.mcatch(response => {
-            if (response.error)
-                return reject(response.error);
-            return resolve({success: true});
-        }));
-    });
-
+    return bgMessage({
+        action: 'updateKeyword',
+        entityId: getEntityId(),
+        keywordIdList,
+        operation,
+        dataValues,
+    })
+    .then(() => ({success: true}));
 }
 
 function updateKeywordStatus(keywordIdList, enable) {
@@ -441,6 +416,7 @@ module.exports = {
     pctFmt,
     numberFmt,
     roundFmt,
+    bgMessage,
     getCampaignHistory,
     getKeywordData,
     parallelizeSeries,
