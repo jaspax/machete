@@ -351,7 +351,9 @@ if (window.location.href.includes('ams')) {
     bgMessage({
         action: 'setSession', 
         entityId: getEntityId(), 
-    }).then(() => console.info('setSession success'));
+    })
+    .then(() => console.info('setSession success'))
+    .catch(() => console.warn('setSession failure'));
 
     getUser().then(ga.mcatch(user => {
         const desc = user.activeSubscription.name;

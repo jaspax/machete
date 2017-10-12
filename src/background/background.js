@@ -72,13 +72,6 @@ function* setSession(req, sender) {
     let sessionKey = getSessionKey(req.entityId);
     
     chrome.pageAction.show(sender.tab.id);
-
-    // Always request data on login, then set the alarm
-    let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
-    if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
-        yield* alarmHandler(req.entityId);
-    }
-
     yield ga.mpromise(resolve => {
         chrome.alarms.get(sessionKey, alarm => {
             if (!alarm) {
@@ -92,6 +85,12 @@ function* setSession(req, sender) {
             resolve(false);
         });
     });
+
+    // Always request data on login, then set the alarm
+    let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
+    if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
+        yield* alarmHandler(req.entityId);
+    }
 }
 
 function* getAllowedCampaigns(entityId) {
@@ -140,15 +139,14 @@ function* requestCampaignData(entityId) {
         throw ex;
     }
     localStorage.setItem('lastRequestSucceeded', true);
+    yield* storeDataCloud(entityId, timestamp, data);
 
     if (data && data.aaData && data.aaData.length) {
         let campaignIds = data.aaData.map(x => x.campaignId);
         yield* requestCampaignStatus(entityId, campaignIds, timestamp);
     }
 
-    yield* storeDataCloud(entityId, timestamp, data);
     localStorage.setItem(getCampaignDataKey(entityId), timestamp);
-
     return data;
 }
 

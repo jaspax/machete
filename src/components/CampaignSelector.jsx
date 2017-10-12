@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const Select = require('react-select').default;
+const DataNotAvailable = require('./DataNotAvailable.jsx');
 const _ = require('lodash');
 
 class CampaignSelector extends React.Component {
@@ -26,8 +27,15 @@ class CampaignSelector extends React.Component {
                 multi={true} 
                 value={this.state.value} />;
         }
+        if (this.state.error) {
+            const error = this.state.error;
+            if (this.state.error.handled) {
+                return <DataNotAvailable allowed={!error.notAllowed} anonymous={error.notLoggedIn} />;
+            }
+        }
 
-        this.props.campaignPromise.then(campaigns => {
+        this.props.campaignPromise
+        .then(campaigns => {
             let rawOptions = campaigns.map(c => ({ value: [c], label: 'Campaign: ' + c.name }));
 
             if (this.props.selectGroups) {
@@ -49,7 +57,9 @@ class CampaignSelector extends React.Component {
                 rawOptions,
                 options: rawOptions.map((x, index) => ({ value: index, label: x.label }))
             });
-        });
+        })
+        .catch(error => this.setState({ error }));
+
         return <Select name="campaign-select" isLoading={true} />;
     }
 

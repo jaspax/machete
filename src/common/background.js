@@ -70,10 +70,12 @@ function* getUser() {
 
 function handleAuthErrors(ex, desc) {
     if (ex.message.match(/^401/)) {
+        ex.notLoggedIn = true;
         ga.mga('event', 'error-handled', 'auth-error-401', desc);
         return true;
     }
     if (ex.message.match(/^403/)) {
+        ex.notAllowed = true;
         ga.mga('event', 'error-handled', 'auth-error-403', desc);
         return true;
     }
