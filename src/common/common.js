@@ -307,7 +307,8 @@ function getAllCampaignsAllowed(entityId) {
 }
 
 function getCampaignAllowed(entityId, campaignId) {
-    return getAllCampaignsAllowed(entityId).then(allowed => {
+    return getAllCampaignsAllowed(entityId)
+    .then(allowed => {
         if (!allowed) {
             return false;
         }
@@ -315,7 +316,7 @@ function getCampaignAllowed(entityId, campaignId) {
             return true;
         }
         return allowed.includes(campaignId);
-    });
+    }).catch(() => false);
 }
 
 let summaryPromise = null;
