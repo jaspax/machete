@@ -42,10 +42,15 @@ function messageListener(handler) {
             sendResponse(response);
         })
         .catch(error => {
-            if (!handleAuthErrors(error, req.action)) {
+            const response = { status: error.message, error };
+            if (handleAuthErrors(error, req.action)) {
+                response.error.handled = true;
+                console.warn(error);
+            }
+            else {
                 ga.merror(req, error);
             }
-            sendResponse({ status: error.message, error });
+            sendResponse(response);
         })
         .then(() => {
             const end = performance.now();

@@ -105,7 +105,14 @@ function mcatch(fn) {
 }
 
 function mpromise(executor) {
-    return new Promise(executor).catch(merror);
+    return new Promise(executor).catch(error => {
+        if (error.handled) {
+            console.warn(error);
+        }
+        else {
+            merror(error);
+        }
+    });
 }
 
 module.exports = {

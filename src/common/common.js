@@ -334,7 +334,7 @@ function getUser() {
     if (!getUserPromise) {
         getUserPromise = ga.mpromise(resolve => {
             chrome.runtime.sendMessage({ action: 'getUser' }, response => {
-                if (response.error) {
+                if (response.error && !response.error.handled) {
                     ga.merror(response.error);
                 }
                 const user = response.data || { email: 'anon-user-email', activeSubscription: { id: 'free', name: 'Machete Free' } };
