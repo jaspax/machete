@@ -55,12 +55,12 @@ function addTabs(wrapper) {
     });
 }
 
-function activateAggregateHistoryTab(entityId, container) {
+function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
         campaignPromise: common.getCampaignSummaries(common.getEntityId()),
         loadDataPromise: (summaries) => co(function*() {
             console.log('load history for', summaries);
-            const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(entityId, s.campaignId)));
+            const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(common.getEntityId(), s.campaignId)));
             const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
             const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
             return aggSeries;
@@ -69,12 +69,12 @@ function activateAggregateHistoryTab(entityId, container) {
     ReactDOM.render(aggContent, container[0]);
 }
 
-function activateAggregateKeywordTab(entityId, container) {
+function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: common.getCampaignSummaries(common.getEntityId()),
         loadDataPromise: (summaries) => co(function*() {
             console.log('load keywords for', summaries);
-            const kwData = yield Promise.all(summaries.map(s => common.getKeywordData(entityId, s.adGroupId)));
+            const kwData = yield Promise.all(summaries.map(s => common.getKeywordData(common.getEntityId(), s.adGroupId)));
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),

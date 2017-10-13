@@ -19,13 +19,13 @@ class AggregateHistory extends React.Component {
         }
 
         return <div className="a-box-inner">
-            <h1>Aggregate Campaign History</h1>
             <section className="machete-campaign-selector">
+                <h1>Aggregate Campaign History</h1>
                 <b>Select campaigns:</b>
                 <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
-            <section>
-                <h2>History</h2>
+            <section className="machete-report">
+                <h1>History</h1>
                 {display}
             </section>
         </div>;

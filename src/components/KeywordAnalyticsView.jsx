@@ -22,7 +22,7 @@ function KeywordAnalyticsView(props) {
     const bestTables = props.bestKeywordTables.map(keywordMapper);
     const worstTables = props.worstKeywordTables.map(keywordMapper);
 
-    return <div id="machete-keyword-analysis">
+    return <div className="machete-report">
         <section>
             <h1>Performance Overview</h1>
             <KeywordBubbleChart width={800} height={600}

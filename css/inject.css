@@ -32,11 +32,11 @@
     background: linear-gradient(to bottom, rgb(231,233,236), rgb(141, 144, 150));
 }
 
-#machete-keyword-analysis section {
+.machete-report section {
     margin-bottom: 50px;
 }
 
-#machete-keyword-analysis h3 {
+.machete-report h3 {
     margin-top: 30px;
 }
 
