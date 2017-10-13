@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const Plotly = require('plotly.js');
+const DataNotAvailable = require('./DataNotAvailable.jsx');
 const common = require('../common/common.js');
 
 let chartCounter = 0;
@@ -24,6 +25,8 @@ class TimeSeriesChart extends React.Component {
         chartCounter++;
         this.id = 'TimeSeriesChart' + chartCounter;
         this.drawGraph = this.drawGraph.bind(this);
+        this.handleError = this.handleError.bind(this);
+        this.state = {};
     }
 
     render() {
@@ -32,11 +35,20 @@ class TimeSeriesChart extends React.Component {
             width: this.props.width + 'px',
         };
 
-        return <div id={this.id} style={containerStyle} className="loading-large"></div>;
+        let content = null;
+        if (this.state.error) {
+            content = <DataNotAvailable allowed={!this.state.error.notAllowed} anonymous={this.state.error.notLoggedIn} />;
+        }
+
+        return <div id={this.id} style={containerStyle} className="loading-large">{content}</div>;
+    }
+
+    handleError(error) {
+        this.setState({ error });
     }
 
     componentDidMount() {
-        this.props.dataPromise.then(this.drawGraph);
+        this.props.dataPromise.then(this.drawGraph).catch(this.handleError);
     }
 
     componentWillReceiveProps() {
@@ -44,7 +56,7 @@ class TimeSeriesChart extends React.Component {
     }
 
     componentDidUpdate() {
-        this.props.dataPromise.then(this.drawGraph);
+        this.props.dataPromise.then(this.drawGraph).catch(this.handleError);
     }
 
     drawGraph(data) {

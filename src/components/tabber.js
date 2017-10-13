@@ -10,8 +10,10 @@ function tabber(tabs, opt) {
         container.removeClass('a-hidden');
     }
 
-    tab.find('a').click(ga.mcatch(() => {
+    tab.find('a').click(ga.mcatch((evt) => {
+        evt.preventDefault();
         ga.mga('event', 'kword-data-tab', 'activate', opt.label);
+
         tab.addClass('a-active');
         tab.siblings().removeClass('a-active');
         tabs.parent().children('div').addClass('a-hidden');
