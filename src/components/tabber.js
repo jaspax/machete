@@ -1,5 +1,4 @@
 const $ = require('jquery');
-const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 
 function tabber(tabs, opt) {
@@ -20,7 +19,7 @@ function tabber(tabs, opt) {
 
         if (opt.activate && !hasActivated) {
             hasActivated = true;
-            window.setTimeout(ga.mcatch(() => opt.activate(common.getEntityId(), container)));
+            window.setTimeout(ga.mcatch(() => opt.activate(container)));
         }
     }));
 

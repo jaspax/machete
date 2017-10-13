@@ -7,9 +7,10 @@ const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 
+const tabber = require('../components/tabber.js');
 const LoadingNotice = require('./LoadingNotice.jsx');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
-const KeywordAnalysis = require('../components/KeywordAnalysis.jsx');
+const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
 
 const now = Date.now();
@@ -72,46 +73,25 @@ common.getUser().then(user => {
 
 
     window.setInterval(ga.mcatch(() => {
-        let tabs = $('.a-tab-heading');
-        if (tabs.parent().find(`.${tabClass}`).length)
+        let tabs = $('.a-tabs');
+        if (!tabs.length)
             return;
+        if (tabs.hasClass(tabClass))
+            return;
+        tabs.addClass(tabClass);
 
-        if (window.location.href.match(/ad_group\/A\w+\//)) {
-            // On the ad group page. Add the keyword analytics page
-            injectTab(tabs, "Keyword Analytics", generateKeywordReports);
+        const loc = window.location.href;
+        if (loc.match(/ad_group\/A\w+\//)) {
+            tabber(tabs, { label: "Keyword Analytics", activate: generateKeywordReports });
         }
-        else if (window.location.href.match(/ad_groups\//)) {
-            // On a history page, add that tab in
-            injectTab(tabs, "Campaign History", generateCampaignHistory);
+        else if (loc.match(/ad_groups\//)) {
+            tabber(tabs, { label: "Campaign History", activate: generateCampaignHistory });
+        }
+        else if (loc.match(/campaigns\//)) {
+            tabber(tabs, { label: "Aggregate Campaign History", activate: generateAggregateCampaignHistory });
+            tabber(tabs, { label: "Aggregate Keyword Analytics", activate: generateAggregateKeywordAnalytics });
         }
     }), 100);
-
-    function injectTab(tabs, label, activate) {
-        // Create the actual Tab control and embed it into the existing tab list
-        let a = $(`<a href="javascript:void(0);">${label}</a>`);
-        let li = $(`<li class="a-tab-heading ${tabClass}"></li>`);
-        li.append(a);
-
-        let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden"></div>`);
-        tabs.parent().after(container);
-
-        let hasActivated = false;
-        a.click(ga.mcatch(function(evt) {
-            evt.preventDefault();
-            ga.mga('event', 'kword-data-tab', 'activate', label);
-            li.addClass('a-active');
-            li.siblings().removeClass('a-active');
-            tabs.parent().siblings('div').addClass('a-hidden');
-            container.removeClass('a-hidden');
-
-            if (activate && !hasActivated) {
-                activate(container);
-                hasActivated = true;
-            }
-        }));
-
-        tabs.parent().append(li);
-    }
 
     function addChartButtons(columns, rows) {
         for (let row of rows) {
@@ -123,8 +103,6 @@ common.getUser().then(user => {
             if (!link)
                 continue;
 
-            let fetchData = fetchDataPromise(window.location.href, link.href);
-
             for (let chart of charts) {
                 let target = cells[columns.indexOf(chart.column)];
                 if (!target)
@@ -133,17 +111,15 @@ common.getUser().then(user => {
                 if ($(target).find(`.${DashboardHistoryButton.chartClass}`).length)
                     continue;
 
-                const dataPromise = fetchData.then(data => {
-                    const campaignData = common.parallelizeSeries(data);
-                    return formatParallelData(campaignData, chart.metric);
-                });
-
                 let btn = React.createElement(DashboardHistoryButton, {
                     allowed: user.isSeller,
                     anonymous: user.isAnon,
                     metric: chart.metric,
                     title: chart.label,
-                    dataPromise,
+                    dataPromiseFactory: () => fetchDataPromise(window.location.href, link.href).then(data => {
+                        const campaignData = common.parallelizeSeries(data);
+                        return formatParallelData(campaignData, chart.metric);
+                    }),
                 });
                 const container = $('<span></span>');
                 $(target).children().first().append(container);
@@ -185,10 +161,10 @@ common.getUser().then(user => {
         return common.bgMessage(args);
     }
 
-    function getKeywordDataAggregate(onComplete) {
+    function getKeywordDataAggregate() {
         let { campaignId, adGroupId } = common.getSellerCampaignId(window.location.href);
 
-        common.bgMessage({
+        return common.bgMessage({
             action: 'getKeywordDataRange',
             campaignId,
             adGroupId,
@@ -219,7 +195,7 @@ common.getUser().then(user => {
                 kw.avgCpc = kw.clicks ? kw.spend/kw.clicks : null;
             }
 
-            onComplete(values);
+            return values;
         });
     }
 
@@ -235,25 +211,22 @@ common.getUser().then(user => {
     }
 
     function generateKeywordReports(container) {
-        let content = React.createElement(KeywordAnalysis, { 
+        let content = React.createElement(KeywordAnalyticsTab, { 
             allowed: user.isSeller,
-            loading: true,
-            keywordData: [],
-            updateStatus: () => console.warn("shouldn't update keywords while still loading"),
-            updateBid: () => console.warn("shouldn't update keywords while still loading"),
+            anonymous: false,
+            dataPromise: getKeywordDataAggregate(),
+            updateStatus,
+            updateBid,
         });
         ReactDOM.render(content, container[0]);
+    }
 
-        getKeywordDataAggregate(data => {
-            content = React.createElement(KeywordAnalysis, { 
-                allowed: user.isSeller,
-                loading: false,
-                keywordData: data,
-                updateStatus,
-                updateBid,
-            });
-            ReactDOM.render(content, container[0]);
-        });
+    function generateAggregateCampaignHistory() {
+        // TODO
+    }
+
+    function generateAggregateKeywordAnalytics() {
+        // TODO
     }
 
     function updateKeyword(data, cb) {
