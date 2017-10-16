@@ -225,7 +225,7 @@ common.getUser().then(user => {
     }
 
     function campaignSelectOptions(summaries) {
-        let options = [{ value: summaries, label: 'All Campaigns' }];
+        let options = [];
 
         const campaigns = _.groupBy(summaries, x => x.campaignId);
         options = options.concat(..._.keys(campaigns).map(x => ({
@@ -244,7 +244,13 @@ common.getUser().then(user => {
             label: `Campaign: ${x.campaignName} > Ad Group: ${x.adGroupName} > Ad: ${x.title}`
         })));
 
-        return _.sortBy(options, ['label']);
+        const products = _.groupBy(summaries, x => x.asin);
+        options = options.concat(..._.keys(products).map(x => ({
+            value: products[x],
+            label: `Ads for ${products[x][0].title} (ASIN ${x})`
+        })));
+
+        return [{ value: summaries, label: 'All Campaigns' }].concat(..._.sortBy(options, ['label']));
     }
 
     function adDataPromise(summary, startTimestamp, endTimestamp) {
