@@ -235,7 +235,14 @@ function aggregateSeries(series, opt) {
         }
     }
 
-    return _.keys(a).sort().map(x => a[x]);
+    const agg = _.keys(a).sort().map(x => a[x]);
+    for (const item of agg) {
+        item.acos = item.salesValue ? 100 * (item.spend / item.salesValue) : null;
+        item.avgCpc = item.spend / item.clicks;
+        item.ctr = item.impressions ? 100 * (item.clicks / item.impressions) : null;
+    }
+
+    return agg;
 }
 
 function aggregateKeywords(kwSets, opt) {
