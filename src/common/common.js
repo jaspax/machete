@@ -245,7 +245,7 @@ function aggregateSeries(series, opt) {
     return agg;
 }
 
-function aggregateKeywords(kwSets, opt) {
+function aggregateKeywords(kwSets) {
     // Aggregate the cumulative metrics
     const a = {};
     for (const kws of kwSets) {
@@ -275,6 +275,34 @@ function aggregateKeywords(kwSets, opt) {
     }
 
     return keywords;
+}
+
+function accumulateKeywordSeries(data) {
+    const keywords = {};
+    for (const record of data.sort((a, b) => a.timestamp - b.timestamp)) {
+        const kw = record.keyword;
+        if (!keywords[kw])
+            keywords[kw] = {};
+        _.each(_.keys(record), key => {
+            if (cumulativeKeywordMetrics.includes(key)) {
+                if (isNaN(keywords[kw][key]))
+                    keywords[kw][key] = 0;
+                keywords[kw][key] += record[key];
+            }
+            else {
+                keywords[kw][key] = record[key];
+            }
+        });
+    }
+
+    const values = _.values(keywords);
+    for (const kw of values) {
+        kw.acos = kw.sales ? 100 * kw.spend/kw.sales : null;
+        kw.ctr = kw.impressions ? 100* kw.clicks/kw.impressions : null;
+        kw.avgCpc = kw.clicks ? kw.spend/kw.clicks : null;
+    }
+
+    return values;
 }
 
 
@@ -442,6 +470,7 @@ module.exports = {
     convertSnapshotsToDeltas,
     aggregateSeries,
     aggregateKeywords,
+    accumulateKeywordSeries,
     updateKeywordStatus,
     updateKeywordBid,
 };

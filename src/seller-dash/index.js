@@ -166,40 +166,7 @@ common.getUser().then(user => {
 
     function getKeywordDataAggregate() {
         let { campaignId, adGroupId } = common.getSellerCampaignId(window.location.href);
-
-        return common.bgMessage({
-            action: 'getKeywordDataRange',
-            campaignId,
-            adGroupId,
-            startTimestamp: ninetyDaysAgo,
-            endTimestamp: now,
-        }).then(data => {
-            const keywords = {};
-            for (const record of data.sort((a, b) => a.timestamp - b.timestamp)) {
-                const kw = record.keyword;
-                if (!keywords[kw])
-                    keywords[kw] = {};
-                _.each(_.keys(record), key => {
-                    if (['impressions', 'clicks', 'sales', 'spend'].includes(key)) {
-                        if (isNaN(keywords[kw][key]))
-                            keywords[kw][key] = 0;
-                        keywords[kw][key] += record[key];
-                    }
-                    else {
-                        keywords[kw][key] = record[key];
-                    }
-                });
-            }
-
-            const values = _.values(keywords);
-            for (const kw of values) {
-                kw.acos = kw.sales ? 100 * kw.spend/kw.sales : null;
-                kw.ctr = kw.impressions ? 100* kw.clicks/kw.impressions : null;
-                kw.avgCpc = kw.clicks ? kw.spend/kw.clicks : null;
-            }
-
-            return values;
-        });
+        return keywordDataPromise({ campaignId, adGroupId }, ninetyDaysAgo, now);
     }
 
     function generateCampaignHistory(container) {
@@ -253,6 +220,24 @@ common.getUser().then(user => {
         return [{ value: summaries, label: 'All Campaigns' }].concat(..._.sortBy(options, ['label']));
     }
 
+    function keywordSelectOptions(summaries) {
+        let options = [];
+
+        const campaigns = _.groupBy(summaries, x => x.campaignId);
+        options = options.concat(..._.keys(campaigns).map(x => ({
+            value: campaigns[x],
+            label: `Campaign: ${campaigns[x][0].campaignName}`,
+        })));
+
+        const adGroups = _.groupBy(summaries, x => x.adGroupId);
+        options = options.concat(..._.keys(adGroups).map(x => ({
+            value: adGroups[x],
+            label: `Campaign: ${adGroups[x][0].campaignName} > Ad Group: ${adGroups[x][0].adGroupName}`
+        })));
+
+        return [{ value: summaries, label: 'All Campaigns' }].concat(..._.sortBy(options, ['label']));
+    }
+
     function adDataPromise(summary, startTimestamp, endTimestamp) {
         return common.bgMessage({
             action: 'getAdDataRange',
@@ -262,6 +247,16 @@ common.getUser().then(user => {
             startTimestamp,
             endTimestamp
         });
+    }
+
+    function keywordDataPromise(summary, startTimestamp, endTimestamp) {
+        return common.bgMessage({
+            action: 'getKeywordDataRange',
+            campaignId: summary.campaignId,
+            adGroupId: summary.adGroupId,
+            startTimestamp,
+            endTimestamp
+        }).then(common.accumulateKeywordSeries);
     }
 
     function activateAggregateHistoryTab(container) {
@@ -278,15 +273,12 @@ common.getUser().then(user => {
 
     function activateAggregateKeywordTab(container) {
         let aggContent = React.createElement(AggregateKeywords, {
-            campaignPromise: common.getSellerCampaignSummaries().then(campaignSelectOptions),
+            campaignPromise: common.getSellerCampaignSummaries().then(keywordSelectOptions),
             loadDataPromise: (summaries) => co(function*() {
-                return yield Promise.resolve(summaries);
-                /*
-                const adGroupIds = _.uniq(summaries.map(x => x.adGroupId));
-                const kwData = yield Promise.all(adGroupIds.map(x => common.getKeywordData(common.getEntityId(), x)));
-                const aggKws = common.aggregateKeywords(kwData);
-                return aggKws;
-                */
+                const adGroups = _.uniqBy(summaries, x => x.adGroupId);
+                const kwSeries = yield Promise.all(adGroups.map(x => keywordDataPromise(x, ninetyDaysAgo, now)));
+                const aggregate = common.aggregateKeywords(kwSeries);
+                return aggregate;
             }),
             updateStatus: (ids, enabled, callback) => {
                 const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
