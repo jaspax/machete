@@ -55,12 +55,24 @@ function addTabs(wrapper) {
     });
 }
 
+function campaignSelectOptions(campaigns) {
+    let options = [
+        { value: campaigns, label: 'All Campaigns' },
+        { value: campaigns.filter(c => c.status == 'RUNNING'), label: 'All Active Campaigns' }
+    ].concat(...campaigns.map(c => ({ value: [c], label: 'Campaign: ' + c.name })));
+
+    for (const asin of _.uniq(campaigns.map(c => c.asin).filter(a => a))) {
+        options.push({ value: campaigns.filter(c => c.asin == asin), label: 'Campaigns for ASIN: ' + asin });
+    }
+    return options;
+}
+
 function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
-        campaignPromise: common.getCampaignSummaries(common.getEntityId()),
+        campaignPromise: common.getCampaignSummaries(common.getEntityId()).then(campaignSelectOptions),
         loadDataPromise: (summaries) => co(function*() {
-            console.log('load history for', summaries);
-            const histories = yield Promise.all(summaries.map(s => common.getCampaignHistory(common.getEntityId(), s.campaignId)));
+            const campaignIds = _.uniq(summaries.map(x => x.campaignId));
+            const histories = yield Promise.all(campaignIds.map(x => common.getCampaignHistory(common.getEntityId(), x)));
             const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
             const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
             return aggSeries;
@@ -71,10 +83,10 @@ function activateAggregateHistoryTab(container) {
 
 function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
-        campaignPromise: common.getCampaignSummaries(common.getEntityId()),
+        campaignPromise: common.getCampaignSummaries(common.getEntityId()).then(campaignSelectOptions),
         loadDataPromise: (summaries) => co(function*() {
-            console.log('load keywords for', summaries);
-            const kwData = yield Promise.all(summaries.map(s => common.getKeywordData(common.getEntityId(), s.adGroupId)));
+            const adGroupIds = _.uniq(summaries.map(x => x.adGroupId));
+            const kwData = yield Promise.all(adGroupIds.map(x => common.getKeywordData(common.getEntityId(), x)));
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),

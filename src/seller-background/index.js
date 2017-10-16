@@ -9,10 +9,14 @@ bg.messageListener(function*(req, sender) {
         return yield* setSession(req, sender);
     if (req.action == 'getUser')
         return yield* bg.getUser();
+    if (req.action == 'getSummaries')
+        return yield* getSummaries();
     if (req.action == 'getCampaignDataRange')
         return yield* getCampaignDataRange(req.campaignId, req.startTimestamp, req.endTimestamp);
     if (req.action == 'getAdGroupDataRange')
         return yield* getAdGroupDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
+    if (req.action == 'getAdDataRange')
+        return yield* getAdDataRange(req.campaignId, req.adGroupId, req.adId, req.startTimestamp, req.endTimestamp);
     if (req.action == 'getAdDataRangeByAsin')
         return yield* getAdDataRangeByAsin(req.campaignId, req.adGroupId, req.asin, req.startTimestamp, req.endTimestamp);
     if (req.action == 'getKeywordDataRange')
@@ -187,6 +191,13 @@ function* getMissingRanges() {
     });
 }
 
+function* getSummaries() {
+    return yield bg.ajax(`https://${constants.hostname}/api/seller/summary`, {
+        method: 'GET',
+        dataType: 'json'
+    });
+}
+
 function* storeSellerDataRange(subRoute, data, startTimestamp, endTimestamp) {
     return yield bg.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
         method: 'PUT',
@@ -220,6 +231,10 @@ function* getAdGroupDataRange(campaignId, adGroupId, startTimestamp, endTimestam
 
 function* storeAdDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('adData', data, startTimestamp, endTimestamp);
+}
+
+function* getAdDataRange(campaignId, adGroupId, adId, startTimestamp, endTimestamp) {
+    return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/${adId}`, startTimestamp, endTimestamp);
 }
 
 function* getAdDataRangeByAsin(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {

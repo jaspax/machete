@@ -1,5 +1,6 @@
 const $ = require('jquery');
 const _ = require('lodash');
+const co = require('co');
 const React = require('react');
 const ReactDOM = require('react-dom');
 
@@ -12,6 +13,8 @@ const LoadingNotice = require('./LoadingNotice.jsx');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
+const AggregateHistory = require('../components/AggregateHistory.jsx');
+const AggregateKeywords = require('../components/AggregateKeywords.jsx');
 
 const now = Date.now();
 const twoWeeks = 15 * constants.timespan.day;
@@ -67,7 +70,7 @@ common.getUser().then(user => {
         }
         if (columns.length == 0)
             return;
-        
+
         addChartButtons(columns, rows);
     }), 100);
 
@@ -88,8 +91,8 @@ common.getUser().then(user => {
             tabber(tabs, { label: "Campaign History", activate: generateCampaignHistory });
         }
         else if (loc.match(/campaigns\//)) {
-            tabber(tabs, { label: "Aggregate Campaign History", activate: generateAggregateCampaignHistory });
-            tabber(tabs, { label: "Aggregate Keyword Analytics", activate: generateAggregateKeywordAnalytics });
+            tabber(tabs, { label: "Aggregate Campaign History", activate: activateAggregateHistoryTab });
+            tabber(tabs, { label: "Aggregate Keyword Analytics", activate: activateAggregateKeywordTab });
         }
     }), 100);
 
@@ -129,9 +132,9 @@ common.getUser().then(user => {
     }
 
     function formatParallelData(data, name) {
-        return { 
-            timestamp: data.timestamp, 
-            data: data[name], 
+        return {
+            timestamp: data.timestamp,
+            data: data[name],
             name,
         };
     }
@@ -211,7 +214,7 @@ common.getUser().then(user => {
     }
 
     function generateKeywordReports(container) {
-        let content = React.createElement(KeywordAnalyticsTab, { 
+        let content = React.createElement(KeywordAnalyticsTab, {
             allowed: user.isSeller,
             anonymous: false,
             dataPromise: getKeywordDataAggregate(),
@@ -221,13 +224,76 @@ common.getUser().then(user => {
         ReactDOM.render(content, container[0]);
     }
 
-    function generateAggregateCampaignHistory() {
-        // TODO
+    function campaignSelectOptions(summaries) {
+        let options = [{ value: summaries, label: 'All Campaigns' }];
+
+        const campaigns = _.groupBy(summaries, x => x.campaignId);
+        options = options.concat(..._.keys(campaigns).map(x => ({
+            value: campaigns[x],
+            label: `Campaign: ${campaigns[x][0].campaignName}`,
+        })));
+
+        const adGroups = _.groupBy(summaries, x => x.adGroupId);
+        options = options.concat(..._.keys(adGroups).map(x => ({
+            value: adGroups[x],
+            label: `Campaign: ${adGroups[x][0].campaignName} > Ad Group: ${adGroups[x][0].adGroupName}`
+        })));
+
+        options = options.concat(...summaries.map(x => ({
+            value: [x],
+            label: `Campaign: ${x.campaignName} > Ad Group: ${x.adGroupName} > Ad: ${x.title}`
+        })));
+
+        return _.sortBy(options, ['label']);
     }
 
-    function generateAggregateKeywordAnalytics() {
-        // TODO
+    function adDataPromise(summary, startTimestamp, endTimestamp) {
+        return common.bgMessage({
+            action: 'getAdDataRange',
+            campaignId: summary.campaignId,
+            adGroupId: summary.adGroupId,
+            adId: summary.adId,
+            startTimestamp,
+            endTimestamp
+        });
     }
+
+    function activateAggregateHistoryTab(container) {
+        let aggContent = React.createElement(AggregateHistory, {
+            campaignPromise: common.getSellerCampaignSummaries().then(campaignSelectOptions),
+            loadDataPromise: (summaries) => co(function*() {
+                const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
+                const aggSeries = common.aggregateSeries(histories, { chunk: 'day' });
+                return aggSeries;
+            }),
+        });
+        ReactDOM.render(aggContent, container[0]);
+    }
+
+    function activateAggregateKeywordTab(container) {
+        let aggContent = React.createElement(AggregateKeywords, {
+            campaignPromise: common.getSellerCampaignSummaries().then(campaignSelectOptions),
+            loadDataPromise: (summaries) => co(function*() {
+                return yield Promise.resolve(summaries);
+                /*
+                const adGroupIds = _.uniq(summaries.map(x => x.adGroupId));
+                const kwData = yield Promise.all(adGroupIds.map(x => common.getKeywordData(common.getEntityId(), x)));
+                const aggKws = common.aggregateKeywords(kwData);
+                return aggKws;
+                */
+            }),
+            updateStatus: (ids, enabled, callback) => {
+                const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
+                common.updateKeywordStatus(idList, enabled).then(callback);
+            },
+            updateBid: (ids, bid, callback) => {
+                const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
+                common.updateKeywordBid(idList, bid).then(callback);
+            },
+        });
+        ReactDOM.render(aggContent, container[0]);
+    }
+
 
     function updateKeyword(data, cb) {
         $.ajax({

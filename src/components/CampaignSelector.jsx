@@ -2,7 +2,8 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const Select = require('react-select').default;
 const DataNotAvailable = require('./DataNotAvailable.jsx');
-const _ = require('lodash');
+
+const ga = require('../common/ga.js');
 
 class CampaignSelector extends React.Component {
     constructor(props) {
@@ -14,9 +15,8 @@ class CampaignSelector extends React.Component {
     onChange(value) {
         let selected = [];
         value.forEach(x => selected = selected.concat(...this.state.rawOptions[x.value].value));
-        selected = _.uniq(selected, x => x.campaignId);
-        this.props.onChange(selected);
         this.setState({ value });
+        window.setTimeout(ga.mcatch(() => this.props.onChange(selected)));
     }
 
     render() {
@@ -34,22 +34,7 @@ class CampaignSelector extends React.Component {
             }
         }
 
-        this.props.campaignPromise
-        .then(campaigns => {
-            let rawOptions = campaigns.map(c => ({ value: [c], label: 'Campaign: ' + c.name }));
-
-            if (this.props.selectGroups) {
-                // Add the 'All Campaigns' and others to the top
-                rawOptions = [
-                    { value: campaigns, label: 'All Campaigns' },
-                    { value: campaigns.filter(c => c.status == 'RUNNING'), label: 'All Active Campaigns' }
-                ].concat(...rawOptions);
-
-                for (const asin of _.uniq(campaigns.map(c => c.asin).filter(a => a))) {
-                    rawOptions.push({ value: campaigns.filter(c => c.asin == asin), label: 'Campaigns for ASIN: ' + asin });
-                }
-            }
-
+        this.props.campaignPromise.then(rawOptions => {
             // The actual value that we put into the selector has to be an
             // integer, so we make a second array that just has the indexes into
             // the rawOptions array

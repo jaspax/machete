@@ -330,6 +330,14 @@ function getCampaignSummaries(entityId) {
     return summaryPromise;
 }
 
+let sellerSummaryPromise = null;
+function getSellerCampaignSummaries(entityId) {
+    if (!sellerSummaryPromise) {
+        sellerSummaryPromise = bgMessage({ action: 'getSummaries' });
+    }
+    return sellerSummaryPromise;
+}
+
 let getUserPromise = null;
 function getUser() {
     if (!getUserPromise) {
@@ -413,6 +421,7 @@ module.exports = {
     getAsin,
     getCampaignAllowed,
     getAllCampaignsAllowed,
+    getSellerCampaignSummaries,
     getCampaignSummaries,
     getUser,
     moneyFmt,
