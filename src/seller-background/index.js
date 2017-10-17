@@ -234,7 +234,7 @@ function* storeAdDataRange(data, startTimestamp, endTimestamp) {
 }
 
 function* getAdDataRange(campaignId, adGroupId, adId, startTimestamp, endTimestamp) {
-    return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/${adId}`, startTimestamp, endTimestamp);
+    return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/ad=${adId}`, startTimestamp, endTimestamp);
 }
 
 function* getAdDataRangeByAsin(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {

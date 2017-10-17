@@ -2,7 +2,10 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const Plotly = require('plotly.js');
 const DataNotAvailable = require('./DataNotAvailable.jsx');
+const Async = require('react-promise');
+
 const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 
 let chartCounter = 0;
 
@@ -24,9 +27,6 @@ class TimeSeriesChart extends React.Component {
         super(props);
         chartCounter++;
         this.id = 'TimeSeriesChart' + chartCounter;
-        this.drawGraph = this.drawGraph.bind(this);
-        this.handleError = this.handleError.bind(this);
-        this.state = {};
     }
 
     render() {
@@ -35,28 +35,30 @@ class TimeSeriesChart extends React.Component {
             width: this.props.width + 'px',
         };
 
-        let content = null;
-        if (this.state.error) {
-            content = <DataNotAvailable allowed={!this.state.error.notAllowed} anonymous={this.state.error.notLoggedIn} />;
+        return <div id={this.id} style={containerStyle}>
+            <Async promise={this.props.dataPromise} pending={this.pending(containerStyle)}
+                then={this.then.bind(this)} catch={this.catch.bind(this)} />
+        </div>;
+    }
+
+    pending(style) {
+        return <div className="loading-large" style={style}></div>;
+    }
+
+    then(data) {
+        window.setTimeout(ga.mcatch(() => this.drawGraph(data)));
+        return <div></div>;
+    }
+
+    catch(error) {
+        if (error.handled) {
+            return <DataNotAvailable allowed={!error.notAllowed} anonymous={error.notLoggedIn} />;
         }
-
-        return <div id={this.id} style={containerStyle} className="loading-large">{content}</div>;
-    }
-
-    handleError(error) {
-        this.setState({ error });
-    }
-
-    componentDidMount() {
-        this.props.dataPromise.then(this.drawGraph).catch(this.handleError);
+        return <pre>{error.toString()}</pre>;
     }
 
     componentWillReceiveProps() {
         Plotly.purge(this.id);
-    }
-
-    componentDidUpdate() {
-        this.props.dataPromise.then(this.drawGraph).catch(this.handleError);
     }
 
     drawGraph(data) {

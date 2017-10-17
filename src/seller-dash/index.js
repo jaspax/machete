@@ -134,7 +134,7 @@ common.getUser().then(user => {
     function formatParallelData(data, name) {
         return {
             timestamp: data.timestamp,
-            data: data[name],
+            data: data[name] || [],
             name,
         };
     }
