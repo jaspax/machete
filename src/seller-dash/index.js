@@ -185,8 +185,8 @@ common.getUser().then(user => {
             allowed: user.isSeller,
             anonymous: false,
             dataPromise: getKeywordDataAggregate(),
-            updateStatus,
-            updateBid,
+            updateStatus: (ids, enabled, cb) => updateStatus(ids, enabled).then(cb),
+            updateBid: (ids, bid, cb) => updateBid(ids, bid).then(cb),
         });
         ReactDOM.render(content, container[0]);
     }
@@ -282,37 +282,37 @@ common.getUser().then(user => {
             }),
             updateStatus: (ids, enabled, callback) => {
                 const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-                common.updateKeywordStatus(idList, enabled).then(callback);
+                updateStatus(idList, enabled).then(callback);
             },
             updateBid: (ids, bid, callback) => {
                 const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-                common.updateKeywordBid(idList, bid).then(callback);
+                updateBid(idList, bid).then(callback);
             },
         });
         ReactDOM.render(aggContent, container[0]);
     }
 
 
-    function updateKeyword(data, cb) {
-        $.ajax({
+    function updateKeyword(data) {
+        return $.ajax({
             url: 'https://sellercentral.amazon.com/hz/cm/keyword/update',
             method: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
             dataType: 'json',
         })
-        .then(() => cb({success: true}))
-        .catch(error => cb({error}));
+        .then(() => ({ success: true }))
+        .catch(error => ({ error }));
     }
 
-    function updateStatus(keywordIds, enabled, cb) {
+    function updateStatus(keywordIds, enabled) {
         const status = enabled ? 'ENABLED' : 'PAUSED';
         const postData = { entities: keywordIds.map(id => ({ id, status })) };
-        updateKeyword(postData, cb);
+        return updateKeyword(postData);
     }
 
-    function updateBid(keywordIds, bid, cb) {
+    function updateBid(keywordIds, bid) {
         const postData = { entities: keywordIds.map(id => ({ id, bid })) };
-        updateKeyword(postData, cb);
+        return updateKeyword(postData);
     }
 });
