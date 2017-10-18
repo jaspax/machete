@@ -5,7 +5,7 @@ const co = require('co');
 const _ = require('lodash');
 
 const common = require('../common/common.js');
-const data = require('../common/sp-data.js');
+const spdata = require('../common/sp-data.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
@@ -70,10 +70,10 @@ function campaignSelectOptions(campaigns) {
 
 function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
-        campaignPromise: data.getCampaignSummaries(data.getEntityId()).then(campaignSelectOptions),
+        campaignPromise: spdata.getCampaignSummaries().then(campaignSelectOptions),
         loadDataPromise: (summaries) => co(function*() {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
-            const histories = yield Promise.all(campaignIds.map(x => data.getCampaignHistory(data.getEntityId(), x)));
+            const histories = yield Promise.all(campaignIds.map(x => spdata.getCampaignHistory(spdata.getEntityId(), x)));
             const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
             const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
             return aggSeries;
@@ -84,20 +84,20 @@ function activateAggregateHistoryTab(container) {
 
 function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
-        campaignPromise: data.getCampaignSummaries(data.getEntityId()).then(campaignSelectOptions),
+        campaignPromise: spdata.getCampaignSummaries(spdata.getEntityId()).then(campaignSelectOptions),
         loadDataPromise: (summaries) => co(function*() {
             const adGroupIds = _.uniq(summaries.map(x => x.adGroupId));
-            const kwData = yield Promise.all(adGroupIds.map(x => data.getKeywordData(data.getEntityId(), x)));
+            const kwData = yield Promise.all(adGroupIds.map(x => spdata.getKeywordData(spdata.getEntityId(), x)));
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),
         updateStatus: (ids, enabled, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-            data.updateKeywordStatus(idList, enabled).then(callback);
+            spdata.updateKeywordStatus(idList, enabled).then(callback);
         },
         updateBid: (ids, bid, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-            data.updateKeywordBid(idList, bid).then(callback);
+            spdata.updateKeywordBid(idList, bid).then(callback);
         },
     });
     ReactDOM.render(aggContent, container[0]);
@@ -114,7 +114,7 @@ function addChartButtons(rows) {
             continue;
 
         let href = link.href;
-        let campaignId = data.getCampaignId(href);
+        let campaignId = spdata.getCampaignId(href);
 
         const renderButtons = (allowed, anonymous) => {
             for (let chart of charts) {
@@ -126,7 +126,7 @@ function addChartButtons(rows) {
                     if (!allowed)
                         return formatParallelData({}, chart.metric);
 
-                    const data = yield data.getCampaignHistory(data.getEntityId(), campaignId);
+                    const data = yield spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
                     const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
                     const campaignData = common.parallelizeSeries(deltas);
                     return formatParallelData(campaignData, chart.metric);
@@ -151,7 +151,7 @@ function addChartButtons(rows) {
 
         renderButtons(false, true);
 
-        Promise.all([data.getCampaignAllowed(data.getEntityId(), campaignId), common.getUser()])
+        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser()])
         .then(results => {
             const [allowed, user] = results;
             renderButtons(allowed, user.isAnon);

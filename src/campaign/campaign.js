@@ -3,7 +3,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
-const data = require('../common/sp-data.js');
+const spdata = require('../common/sp-data.js');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.js');
 const tabber = require('../components/tabber.js');
@@ -19,7 +19,7 @@ const ourTabs = [
     {label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
 ];
 
-let allowedPromise = data.getCampaignAllowed(data.getEntityId(), data.getCampaignId());
+let allowedPromise = spdata.getCampaignAllowed();
 
 let adGroupPromise = ga.mpromise(resolve => {
     let adGroupInterval = window.setInterval(ga.mcatch(() => {
@@ -32,8 +32,8 @@ let adGroupPromise = ga.mpromise(resolve => {
 
         common.bgMessage({
             action: 'setAdGroupMetadata',
-            entityId: data.getEntityId(),
-            campaignId: data.getCampaignId(),
+            entityId: spdata.getEntityId(),
+            campaignId: spdata.getCampaignId(),
             adGroupId,
         });
         resolve(adGroupId);
@@ -44,7 +44,7 @@ let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])
 .then(results => ga.mcatch(() => {
     let [allowed, adGroupId] = results;
     if (allowed)
-        return data.getKeywordData(data.getEntityId(), adGroupId);
+        return spdata.getKeywordData(spdata.getEntityId(), adGroupId);
     return [];
 })());
 
@@ -72,8 +72,8 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
 
     common.bgMessage({
         action: 'setCampaignMetadata',
-        entityId: data.getEntityId(),
-        campaignId: data.getCampaignId(),
+        entityId: spdata.getEntityId(),
+        campaignId: spdata.getCampaignId(),
         asin: match[1],
     });
 
@@ -106,7 +106,7 @@ function addCampaignTabs(tabs) {
     .catch(ga.mex);
 }
 
-function generateKeywordReports(entityId, container) {
+function generateKeywordReports(container) {
     const chart = React.createElement(KeywordAnalyticsTab, { 
         allowed: true, // assume true until we know otherwise
         anonymous: false,
@@ -122,26 +122,27 @@ function generateKeywordReports(entityId, container) {
             allowed,
             anonymous: user.isAnon,
             dataPromise: keywordDataPromise,
-            updateStatus: (ids, enabled, callback) => data.updateKeywordStatus(ids, enabled).then(callback),
-            updateBid: (ids, bid, callback) => data.updateKeywordBid(ids, bid).then(callback),
+            updateStatus: (ids, enabled, callback) => spdata.updateKeywordStatus(ids, enabled).then(callback),
+            updateBid: (ids, bid, callback) => spdata.updateKeywordBid(ids, bid).then(callback),
         });
         ReactDOM.render(chart, container[0]);
     })
     .catch(ga.mex);
 }
 
-function generateHistoryReports(entityId, container) {
-    const campaignId = data.getCampaignId();
+function generateHistoryReports(container) {
+    const entityId = spdata.getEntityId();
+    const campaignId = spdata.getCampaignId();
     const downloadHref = `https://${constants.hostname}/api/data/${entityId}/${campaignId}/csv`;
 
-    Promise.all([allowedPromise, data.getUser()])
+    Promise.all([allowedPromise, common.getUser()])
     .then(results => {
         const [allowed, user] = results;
         let tabContent = React.createElement(CampaignHistoryTab, {
             allowed,
             anonymous: user.isAnon,
             downloadHref,
-            dataPromise: data.getCampaignHistory(entityId, campaignId)
+            dataPromise: spdata.getCampaignHistory(entityId, campaignId)
                          .then(data => common.convertSnapshotsToDeltas(data, { rate: 'day', chunk: 'day' }))
         });
         ReactDOM.render(tabContent, container[0]);

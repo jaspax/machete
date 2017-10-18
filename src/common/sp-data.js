@@ -51,7 +51,7 @@ function getQueryArgs(str) {
 }
 
 let campaignPromise = {};
-function getCampaignHistory(entityId, campaignId) {
+function getCampaignHistory(entityId = getEntityId(), campaignId = getCampaignId()) {
     if (!campaignPromise[campaignId]) {
         campaignPromise[campaignId] = common.bgMessage({
             action: 'getDataHistory',
@@ -63,7 +63,7 @@ function getCampaignHistory(entityId, campaignId) {
 }
 
 let keywordPromise = {};
-function getKeywordData(entityId, adGroupId) {
+function getKeywordData(entityId = getEntityId(), adGroupId) {
     if (!keywordPromise[adGroupId]) {
         keywordPromise[adGroupId] = common.bgMessage({
             action: 'getKeywordData',
@@ -75,7 +75,7 @@ function getKeywordData(entityId, adGroupId) {
 }
 
 let allowedPromise = null;
-function getAllCampaignsAllowed(entityId) {
+function getAllCampaignsAllowed(entityId = getEntityId()) {
     if (!allowedPromise) {
         allowedPromise = common.bgMessage({
             action: 'getAllowedCampaigns', 
@@ -85,7 +85,7 @@ function getAllCampaignsAllowed(entityId) {
     return allowedPromise;
 }
 
-function getCampaignAllowed(entityId, campaignId) {
+function getCampaignAllowed(entityId = getEntityId(), campaignId = getCampaignId()) {
     return getAllCampaignsAllowed(entityId)
     .then(allowed => {
         if (!allowed) {
@@ -99,7 +99,7 @@ function getCampaignAllowed(entityId, campaignId) {
 }
 
 let summaryPromise = null;
-function getCampaignSummaries(entityId) {
+function getCampaignSummaries(entityId = getEntityId()) {
     if (!summaryPromise) {
         summaryPromise = common.bgMessage({
             action: 'getCampaignSummaries',
