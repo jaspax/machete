@@ -6,36 +6,6 @@ const ga = require('./ga.js');
 const constants = require('./constants.js');
 const moment = require('moment');
 
-function getEntityId(href) {
-    let entityId = getQueryArgs(href).entityId;
-    if (entityId) {
-        return entityId;
-    }
-
-    let navLink = $('.topNavLogo')[0].href;
-    let query = navLink.substring(navLink.indexOf('?') + 1);
-    entityId = getQueryArgs(query).entityId;
-    if (entityId) {
-        return entityId;
-    }
-
-    throw new Error('could not discover entityId');
-}
-
-function getCampaignId(href) {
-    let campaignId = getQueryArgs(href).campaignId;
-    if (campaignId) {
-        return campaignId;
-    }
-
-    campaignId = $('input[name=campaignId]').val();
-    if (campaignId) {
-        return campaignId;
-    }
-
-    throw new Error('could not discover entityId');
-}
-
 function getSellerCampaignId(href) {
     let path = href.split('?')[0];
     let parts = path.split('/');
@@ -72,22 +42,6 @@ function getAsin(url) {
     // Just return the first ASIN-like thing and hope for the best. This returns
     // undefined if there were *no* ASINs found.
     return asinLookalikes[0];
-}
-
-function getQueryArgs(str) {
-    let qstring = str || window.location.toString();
-    qstring = qstring.split('?').pop();
-    if (qstring.includes('#')) {
-        qstring = qstring.substring(0, qstring.lastIndexOf('#'));
-    }
-
-    let qs = qstring.split('&');
-    let args = {};
-    for (let q of qs) {
-        let parts = q.split('=');
-        args[parts[0]] = parts[1];
-    }
-    return args;
 }
 
 function moneyFmt(val) {
@@ -305,66 +259,6 @@ function accumulateKeywordSeries(data) {
     return values;
 }
 
-
-let campaignPromise = {};
-function getCampaignHistory(entityId, campaignId) {
-    if (!campaignPromise[campaignId]) {
-        campaignPromise[campaignId] = bgMessage({
-            action: 'getDataHistory',
-            entityId: entityId,
-            campaignId: campaignId,
-        });
-    }
-    return campaignPromise[campaignId];
-}
-
-let keywordPromise = {};
-function getKeywordData(entityId, adGroupId) {
-    if (!keywordPromise[adGroupId]) {
-        keywordPromise[adGroupId] = bgMessage({
-            action: 'getKeywordData',
-            entityId,
-            adGroupId,
-        });
-    }
-    return keywordPromise[adGroupId];
-}
-
-let allowedPromise = null;
-function getAllCampaignsAllowed(entityId) {
-    if (!allowedPromise) {
-        allowedPromise = bgMessage({
-            action: 'getAllowedCampaigns', 
-            entityId
-        });
-    }
-    return allowedPromise;
-}
-
-function getCampaignAllowed(entityId, campaignId) {
-    return getAllCampaignsAllowed(entityId)
-    .then(allowed => {
-        if (!allowed) {
-            return false;
-        }
-        if (allowed[0] == '*') {
-            return true;
-        }
-        return allowed.includes(campaignId);
-    }).catch(() => false);
-}
-
-let summaryPromise = null;
-function getCampaignSummaries(entityId) {
-    if (!summaryPromise) {
-        summaryPromise = bgMessage({
-            action: 'getCampaignSummaries',
-            entityId: entityId,
-        });
-    }
-    return summaryPromise;
-}
-
 let sellerSummaryPromise = null;
 function getSellerCampaignSummaries(entityId) {
     if (!sellerSummaryPromise) {
@@ -390,87 +284,19 @@ function getUser() {
     return getUserPromise;
 }
 
-if (window.location.href.includes('ams')) {
-    bgMessage({
-        action: 'setSession', 
-        entityId: getEntityId(), 
-    })
-    .then(() => console.info('setSession success'))
-    .catch(() => console.warn('setSession failure'));
-
-    getUser().then(ga.mcatch(user => {
-        const desc = user.activeSubscription.name;
-        let email = user.email;
-        let profileText = "Your Profile";
-        let label = 'view-profile';
-        if (user.isAnon) {
-            email = '';
-            profileText = 'Login/Register';
-            label = 'login';
-        }
-        let links = $('.userBarLinksRight');
-        if (links[0]) {
-            let chunks = links[0].innerHTML.split(' | ');
-            chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://${constants.hostname}/profile" target="_blank">${profileText}</a>)`);
-            links[0].innerHTML = chunks.join(' | ');
-        }
-        let logout = links.find('a');
-        if (logout[1]) {
-            $(logout[1]).click(() => {
-                const result = confirm(
-                    `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
-                        
-                    Continue logging out?`);
-                return result;
-            });
-        }
-    }));
-}
-
-function updateKeyword(keywordIdList, operation, dataValues) {
-    return bgMessage({
-        action: 'updateKeyword',
-        entityId: getEntityId(),
-        keywordIdList,
-        operation,
-        dataValues,
-    })
-    .then(() => ({success: true}));
-}
-
-function updateKeywordStatus(keywordIdList, enable) {
-    let operation = enable ? "ENABLE" : "PAUSE";
-    return updateKeyword(keywordIdList, operation, {});
-}
-
-function updateKeywordBid(keywordIdList, bid) {
-    bid = parseFloat(bid).toFixed(2).toString();
-    return updateKeyword(keywordIdList, 'UPDATE', {bid});
-}
-
 module.exports = {
-    getEntityId,
-    getCampaignId,
     getSellerCampaignId,
-    getQueryArgs,
     getAsin,
-    getCampaignAllowed,
-    getAllCampaignsAllowed,
     getSellerCampaignSummaries,
-    getCampaignSummaries,
     getUser,
     moneyFmt,
     pctFmt,
     numberFmt,
     roundFmt,
     bgMessage,
-    getCampaignHistory,
-    getKeywordData,
     parallelizeSeries,
     convertSnapshotsToDeltas,
     aggregateSeries,
     aggregateKeywords,
     accumulateKeywordSeries,
-    updateKeywordStatus,
-    updateKeywordBid,
 };
