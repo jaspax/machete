@@ -124,12 +124,12 @@ function addChartButtons(rows) {
 
                 const dataPromiseFactory = () => co(function*() {
                     if (!allowed)
-                        return formatParallelData({}, chart.metric);
+                        return common.formatParallelData({}, chart.metric);
 
                     const data = yield spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
                     const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
                     const campaignData = common.parallelizeSeries(deltas);
-                    return formatParallelData(campaignData, chart.metric);
+                    return common.formatParallelData(campaignData, chart.metric);
                 });
 
                 let container = $(target).find('.machete-dash-container');
@@ -159,10 +159,3 @@ function addChartButtons(rows) {
     }
 }
 
-function formatParallelData(data, name) {
-    return { 
-        timestamp: data.timestamp || [],
-        data: data[name] || [], 
-        name,
-    };
-}

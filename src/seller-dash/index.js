@@ -5,6 +5,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 const common = require('../common/common.js');
+const sdata = require('../common/seller-data.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 
@@ -121,7 +122,7 @@ common.getUser().then(user => {
                     title: chart.label,
                     dataPromiseFactory: () => fetchDataPromise(window.location.href, link.href).then(data => {
                         const campaignData = common.parallelizeSeries(data);
-                        return formatParallelData(campaignData, chart.metric);
+                        return common.formatParallelData(campaignData, chart.metric);
                     }),
                 });
                 const container = $('<span></span>');
@@ -131,16 +132,8 @@ common.getUser().then(user => {
         }
     }
 
-    function formatParallelData(data, name) {
-        return {
-            timestamp: data.timestamp,
-            data: data[name] || [],
-            name,
-        };
-    }
-
     function fetchDataPromise(locationHref, linkHref, startTimestamp, endTimestamp) {
-        let { campaignId, adGroupId } = common.getSellerCampaignId(linkHref);
+        let { campaignId, adGroupId } = sdata.getCampaignId(linkHref);
         let args = { startTimestamp: startTimestamp || twoWeeksAgo, endTimestamp: endTimestamp || now };
 
         if (adGroupId && campaignId) {
@@ -156,8 +149,8 @@ common.getUser().then(user => {
         else {
             // We're on the adGroup page, looking at a link to the product. The
             // current location has the campaignId and the adGroupId.
-            ({ campaignId, adGroupId } = common.getSellerCampaignId(locationHref));
-            const asin = common.getAsin(linkHref);
+            ({ campaignId, adGroupId } = sdata.getCampaignId(locationHref));
+            const asin = sdata.getAsin(linkHref);
             args = Object.assign(args, { action: 'getAdDataRangeByAsin', campaignId, adGroupId, asin });
         }
 
@@ -165,12 +158,12 @@ common.getUser().then(user => {
     }
 
     function getKeywordDataAggregate() {
-        let { campaignId, adGroupId } = common.getSellerCampaignId(window.location.href);
+        let { campaignId, adGroupId } = sdata.getCampaignId(window.location.href);
         return keywordDataPromise({ campaignId, adGroupId }, ninetyDaysAgo, now);
     }
 
     function generateCampaignHistory(container) {
-        const { campaignId } = common.getSellerCampaignId(window.location.href);
+        const { campaignId } = sdata.getCampaignId(window.location.href);
         const content = React.createElement(CampaignHistoryTab, {
             allowed: user.isSeller,
             anonymous: user.isAnon,
@@ -261,7 +254,7 @@ common.getUser().then(user => {
 
     function activateAggregateHistoryTab(container) {
         let aggContent = React.createElement(AggregateHistory, {
-            campaignPromise: common.getSellerCampaignSummaries().then(campaignSelectOptions),
+            campaignPromise: sdata.getCampaignSummaries().then(campaignSelectOptions),
             loadDataPromise: (summaries) => co(function*() {
                 const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
                 const aggSeries = common.aggregateSeries(histories, { chunk: 'day' });
@@ -273,7 +266,7 @@ common.getUser().then(user => {
 
     function activateAggregateKeywordTab(container) {
         let aggContent = React.createElement(AggregateKeywords, {
-            campaignPromise: common.getSellerCampaignSummaries().then(keywordSelectOptions),
+            campaignPromise: sdata.getCampaignSummaries().then(keywordSelectOptions),
             loadDataPromise: (summaries) => co(function*() {
                 const adGroups = _.uniqBy(summaries, x => x.adGroupId);
                 const kwSeries = yield Promise.all(adGroups.map(x => keywordDataPromise(x, ninetyDaysAgo, now)));
