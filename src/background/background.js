@@ -297,7 +297,7 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
     // an error. So we do it the stupid way instead, with a loop.
     const step = 20;
 
-    // Chop the campaignId list into bite-sized chunks
+    const results = [];
     for (let index = 0; index < keywordIdList.length; index += step) {
         let requests = [];
         let chunk = keywordIdList.slice(index, index + step);
@@ -311,11 +311,12 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
             }));
         }
 
-        yield Promise.all(requests);
+        results.concat(...yield Promise.all(requests));
     }
 
     // TODO: in the case that we have a lot of these (bulk update), implement
     // progress feedback.
+    return { success: results.every(x => x.success) };
 }
 
 

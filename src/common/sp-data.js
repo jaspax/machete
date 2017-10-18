@@ -116,8 +116,7 @@ function updateKeyword(keywordIdList, operation, dataValues) {
         keywordIdList,
         operation,
         dataValues,
-    })
-    .then(() => ({success: true}));
+    });
 }
 
 function updateKeywordStatus(keywordIdList, enable) {
