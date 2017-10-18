@@ -6,7 +6,7 @@ const common = require('../common/common.js');
 class KeywordBidUpdate extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { changing: false, bid: props.bid };
+        this.state = { changing: false, bid: common.numberFmt(props.bid) };
         this.handleClick = this.handleClick.bind(this);
         this.handleChange = this.handleChange.bind(this);
     }
@@ -21,7 +21,7 @@ class KeywordBidUpdate extends React.Component {
         return (
             <div className="machete-kwbid sspa-editor-input-container">
                 <span>
-                    <input type="text" maxLength="6" value={common.numberFmt(this.state.bid)} onChange={this.handleChange}
+                    <input type="text" maxLength="6" value={this.state.bid} onChange={this.handleChange}
                         className="a-input-text machete-small-input"></input>
                 </span>
                 <span className="a-button a-button-primary a-button-small" onClick={this.handleClick}>
