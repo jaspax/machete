@@ -161,7 +161,7 @@ function convertSnapshotsToDeltas(data, opt) {
         }
 
         if (lastItem) {
-            // Skip this point if any metric decreased or no metrics increased
+            // Skip this point if any metric decreased
             if (cumulativeMetrics.some(metric => item[metric] < lastItem[metric]))
                 continue;
 

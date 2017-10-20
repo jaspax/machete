@@ -73,7 +73,7 @@ function activateAggregateHistoryTab(container) {
         loadDataPromise: (summaries) => co(function*() {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
             const histories = yield Promise.all(campaignIds.map(x => spdata.getCampaignHistory(spdata.getEntityId(), x)));
-            const deltas = histories.map(common.convertSnapshotsToDeltas).map(common.chunkSeries);
+            const deltas = histories.map(common.convertSnapshotsToDeltas).map(x => common.chunkSeries(x, 'day'));
             const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
             return aggSeries;
         }),
