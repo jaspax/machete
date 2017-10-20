@@ -23,7 +23,6 @@ const charts = [
     { column: 10, label: "Sales ($) / day", metric: 'salesValue' },
     { column: 11, label: "ACOS", metric: 'acos' },
 ];
-const deltaConfig = { rate: 'day', chunk: 'day', startTimestamp };
 
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
@@ -74,7 +73,7 @@ function activateAggregateHistoryTab(container) {
         loadDataPromise: (summaries) => co(function*() {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
             const histories = yield Promise.all(campaignIds.map(x => spdata.getCampaignHistory(spdata.getEntityId(), x)));
-            const deltas = histories.map(h => common.convertSnapshotsToDeltas(h, { rate: 'day', chunk: 'day' }));
+            const deltas = histories.map(common.convertSnapshotsToDeltas).map(common.chunkSeries);
             const aggSeries = common.aggregateSeries(deltas, { chunk: 'day' });
             return aggSeries;
         }),
@@ -127,7 +126,7 @@ function addChartButtons(rows) {
                         return common.formatParallelData({}, chart.metric);
 
                     const data = yield spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
-                    const deltas = common.convertSnapshotsToDeltas(data, deltaConfig);
+                    const deltas = common.chunkSeries(common.convertSnapshotsToDeltas(data, { startTimestamp }), 'day');
                     const campaignData = common.parallelizeSeries(deltas);
                     return common.formatParallelData(campaignData, chart.metric);
                 });

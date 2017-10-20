@@ -52,6 +52,18 @@ const roundMetrics = {
     spend: round.money,
 };
 
+const formatMetric = {
+    impressions: roundFmt,
+    clicks: roundFmt,
+    sales: moneyFmt,
+    salesCount: roundFmt,
+    salesValue: moneyFmt,
+    spend: moneyFmt,
+    acos: pctFmt,
+    avgCpc: moneyFmt,
+    ctr: pctFmt,
+};
+
 // Calculate the statistical measures for a delta at a particular time
 function calculateItemStats(item) {
     const sales = item.salesValue || item.sales; // salesValue for campaigns, sales for keywords
@@ -246,6 +258,7 @@ function formatParallelData(data, name) {
     return {
         timestamp: data.timestamp || [],
         data: data[name] || [],
+        format: formatMetric[name] || roundFmt,
         name,
     };
 }
