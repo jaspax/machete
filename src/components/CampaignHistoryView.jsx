@@ -44,7 +44,8 @@ class CampaignHistoryView extends React.Component {
     }
 
     granularityChange(granularity) {
-        this.chartDataChanged(this.state.data, granularity.chunk);
+        const newState = Object.assign({}, this.state, { granularity: granularity.chunk });
+        this.setState(newState);
     }
 
     rangeChange(range) {

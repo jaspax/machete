@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const qw = require('qw');
 const ga = require('./ga.js');
-const constants = require('./constants.js');
 const moment = require('moment');
 
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
@@ -47,10 +46,20 @@ const round = {
 const roundMetrics = {
     impressions: round.whole,
     clicks: round.whole,
+    sales: round.money,
     salesCount: round.whole,
     salesValue: round.money,
     spend: round.money,
 };
+
+// Calculate the statistical measures for a delta at a particular time
+function calculateItemStats(item) {
+    const sales = item.salesValue || item.sales; // salesValue for campaigns, sales for keywords
+    item.acos = sales ? 100 * (item.spend / sales) : null;
+    item.avgCpc = item.spend / item.clicks;
+    item.ctr = item.impressions ? 100 * (item.clicks / item.impressions) : null;
+    return item;
+}
 
 // Convert a series of objects into a single object with a number of parallel
 // arrays. All objects in the series should have the same keys; in any case,
@@ -74,14 +83,52 @@ function parallelizeSeries(data) {
     return c;
 }
 
+// Convert a series of irregularly spaced deltas into a series of evenly-spaced
+// deltas with the spacing given by 'chunk'. Chunk may be any timespan value
+// recognized by moment.js.
+function chunkSeries(data, chunk) {
+    let c = [];
+    let lastItem = null;
+    let lastOrigItem = null;
+    for (const origItem of data) {
+        const item = Object.assign({}, origItem);
+        item.timestamp = moment(item.timestamp).startOf(chunk).valueOf();
+
+        if (!lastItem) {
+            lastItem = item;
+        }
+        else if (item.timestamp == lastItem.timestamp) {
+            for (const metric of cumulativeMetrics) {
+                lastItem[metric] += item[metric] || 0;
+            }
+        }
+        else {
+            // When crossing a chunk boundary, calculate the portion of the time
+            // diff that lies within the chunk we're entering and the chunk
+            // we're leaving, and then credit each item with the proper
+            // proportion of the metric change
+            const span = origItem.timestamp - lastOrigItem.timestamp;
+            const thisChunkRatio = (origItem.timestamp - item.timestamp) / span;
+            const lastChunkRatio = (moment(lastItem.timestamp).endOf(chunk).valueOf() - lastOrigItem.timestamp) / span;
+            for (const metric of cumulativeMetrics) {
+                lastItem[metric] += roundMetrics[metric](item[metric] * lastChunkRatio);
+                item[metric] = roundMetrics[metric](item[metric] * thisChunkRatio);
+            }
+
+            calculateItemStats(lastItem);
+            c.push(lastItem);
+            lastItem = item;
+        }
+        lastOrigItem = origItem;
+    }
+    c.push(lastItem);
+    return c;
+}
+
 // Convert a series of timestamped snapshots into a series of objects in which
 // each key has the difference from the previous snapshot, ie. the rate of
 // change between snapshots. Only the metrics found in `cumulativeMetrics` are
 // converted into rates. The opt object has the following relevant keys:
-//      chunk: round timestamps off to the nearest hour/day/etc. and only
-//          compare values that cross a chunk boundary.
-//      rate: the timespn over which to calculate rates. Should generally be the
-//          same as chunk, when present.
 //      startTimestamp: earliest timestamp to examine. Items outside of this
 //          range are discarded.
 //      endTimestamp: latest timestamp to examine. Items outside of this range
@@ -93,12 +140,6 @@ function convertSnapshotsToDeltas(data, opt) {
     let lastItem = null;
     data = data.sort((a, b) => a.timestamp - b.timestamp);
     for (let item of data) {
-        if (opt.chunk) {
-            if (lastItem && moment(item.timestamp).isSame(moment(lastItem.timestamp), opt.chunk)) {
-                continue;
-            }
-        }
-
         // Filter out things by date range
         if (opt.startTimestamp && item.timestamp < opt.startTimestamp) {
             continue;
@@ -107,21 +148,14 @@ function convertSnapshotsToDeltas(data, opt) {
             continue;
         }
 
-        // Skip this data point unless one of our metrics actually changed.
-        if (lastItem && !cumulativeMetrics.some(metric => item[metric] != lastItem[metric])) {
-            continue;
-        }
-
         if (lastItem) {
+            // Skip this point if any metric decreased or no metrics increased
+            if (cumulativeMetrics.some(metric => item[metric] < lastItem[metric]))
+                continue;
+
             const delta = Object.assign({}, item);
-            if (opt.chunk) {
-                delta.timestamp = moment(item.timestamp).startOf(opt.chunk).valueOf();
-            }
             for (let metric of cumulativeMetrics) {
-                let rateFactor = (item.timestamp - lastItem.timestamp)/constants.timespan[opt.rate];
-                let normalized = (item[metric] - lastItem[metric])/rateFactor;
-                normalized = (roundMetrics[metric] || (x => x))(normalized);
-                delta[metric] = normalized;
+                delta[metric] = item[metric] - lastItem[metric];
             }
             c.push(delta);
         }
@@ -149,12 +183,7 @@ function aggregateSeries(series, opt) {
     }
 
     const agg = _.keys(a).sort().map(x => a[x]);
-    for (const item of agg) {
-        item.acos = item.salesValue ? 100 * (item.spend / item.salesValue) : null;
-        item.avgCpc = item.spend / item.clicks;
-        item.ctr = item.impressions ? 100 * (item.clicks / item.impressions) : null;
-    }
-
+    agg.forEach(calculateItemStats);
     return agg;
 }
 
@@ -181,12 +210,7 @@ function aggregateKeywords(kwSets) {
 
     // Recalculate the aggregate metrics
     const keywords = _.keys(a).map(x => a[x]);
-    for (const kw of keywords) {
-        kw.acos = kw.sales ? 100 * (kw.spend / kw.sales) : null;
-        kw.avgCpc = kw.spend / kw.clicks;
-        kw.ctr = kw.impressions ? 100 * (kw.clicks / kw.impressions) : null;
-    }
-
+    keywords.forEach(calculateItemStats);
     return keywords;
 }
 
@@ -251,6 +275,7 @@ module.exports = {
     roundFmt,
     bgMessage,
     parallelizeSeries,
+    chunkSeries,
     convertSnapshotsToDeltas,
     aggregateSeries,
     aggregateKeywords,
