@@ -4,6 +4,7 @@ const moment = require('moment');
 
 const CampaignDateRangeTable = require('./CampaignDateRangeTable.jsx');
 const CampaignHistoryChart = require('./CampaignHistoryChart.jsx');
+const TimeSeriesGranularitySelector = require('./TimeSeriesGranularitySelector.jsx');
 
 class CampaignHistoryView extends React.Component {
     constructor(props) {
@@ -14,7 +15,8 @@ class CampaignHistoryView extends React.Component {
 
     render() {
         return <div>
-            <CampaignDateRangeTable 
+            <TimeSeriesGranularitySelector value={this.state.granularity} onChange={this.granularityChange.bind(this)} />
+            <CampaignDateRangeTable
                 startDate={this.state.startDate} startMetrics={this.state.startMetrics}
                 endDate={this.state.endDate} endMetrics={this.state.endMetrics}
                 onRangeChange={this.rangeChange} />
@@ -24,6 +26,7 @@ class CampaignHistoryView extends React.Component {
 
     baseState(props) {
         return {
+            granularity: 'day',
             startDate: moment(),
             startMetrics: {},
             endDate: moment(),
@@ -40,12 +43,16 @@ class CampaignHistoryView extends React.Component {
         this.setState(this.baseState(nextProps));
     }
 
+    granularityChange(granularity) {
+        this.chartDataChanged(this.state.data, granularity.chunk);
+    }
+
     rangeChange(range) {
         const filtered = this.state.data.filter(item => item.timestamp >= +range.start && item.timestamp < +range.end);
         this.chartDataChanged(filtered);
     }
 
-    chartDataChanged(data) {
+    chartDataChanged(data, chunk) {
         data = data.sort((a, b) => a.timestamp - b.timestamp);
         const startMetrics = data[0] || { timestamp: Date.now() };
         const endMetrics = data[data.length - 1] || { timestamp: Date.now() };

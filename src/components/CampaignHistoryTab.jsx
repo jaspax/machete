@@ -7,7 +7,7 @@ const DownloadButton = require('./DownloadButton.jsx');
 
 function CampaignHistoryTab(props) {
     if (!props.allowed) {
-        return <DataNotAvailable allowed={false} anonymous={props.anonymous} />;
+        return <DataNotAvailable allowed={props.allowed} anonymous={props.anonymous} />;
     }
 
     return (
