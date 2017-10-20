@@ -296,6 +296,7 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
     // 1 keyword at a time, but testing this shows that doing so just generates
     // an error. So we do it the stupid way instead, with a loop.
     const step = 20;
+    const timestamp = Date.now();
 
     const results = [];
     for (let index = 0; index < keywordIdList.length; index += step) {
@@ -311,7 +312,16 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
             }));
         }
 
-        results.concat(...yield Promise.all(requests));
+        const responses = yield Promise.all(requests);
+        const successes = chunk.filter((x, index) => responses[index].success);
+        yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
+            method: 'PATCH',
+            dataType: 'json',
+            data: JSON.stringify({ operation, dataValues, keywordIds: successes }),
+            contentType: 'application/json',
+        });
+
+        results.concat(...responses);
     }
 
     // TODO: in the case that we have a lot of these (bulk update), implement
