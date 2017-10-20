@@ -99,6 +99,9 @@ function parallelizeSeries(data) {
 // deltas with the spacing given by 'chunk'. Chunk may be any timespan value
 // recognized by moment.js.
 function chunkSeries(data, chunk) {
+    if (!chunk)
+        throw new Error("parameter 'chunk' is required");
+
     let c = [];
     let lastItem = null;
     let lastOrigItem = null;

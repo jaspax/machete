@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const moment = require('moment');
+const common = require('../common/common.js');
 
 const CampaignDateRangeTable = require('./CampaignDateRangeTable.jsx');
 const CampaignHistoryChart = require('./CampaignHistoryChart.jsx');
@@ -33,8 +34,7 @@ class CampaignHistoryView extends React.Component {
             endMetrics: {},
             dataPromise: props.dataPromise.then(data => {
                 this.setState({ data });
-                this.chartDataChanged(data);
-                return data;
+                return this.chartDataChanged(data, this.state.granularity);
             })
         };
     }
@@ -44,26 +44,28 @@ class CampaignHistoryView extends React.Component {
     }
 
     granularityChange(granularity) {
-        const newState = Object.assign({}, this.state, { granularity: granularity.chunk });
-        this.setState(newState);
+        this.chartDataChanged(this.state.data, granularity);
     }
 
     rangeChange(range) {
         const filtered = this.state.data.filter(item => item.timestamp >= +range.start && item.timestamp < +range.end);
-        this.chartDataChanged(filtered);
+        this.chartDataChanged(filtered, this.state.granularity);
     }
 
-    chartDataChanged(data, chunk) {
+    chartDataChanged(data, granularity) {
         data = data.sort((a, b) => a.timestamp - b.timestamp);
+        data = common.chunkSeries(data, granularity);
         const startMetrics = data[0] || { timestamp: Date.now() };
         const endMetrics = data[data.length - 1] || { timestamp: Date.now() };
         this.setState({
+            granularity,
             startDate: moment(startMetrics.timestamp),
             startMetrics,
             endDate: moment(endMetrics.timestamp),
             endMetrics,
             dataPromise: Promise.resolve(data),
         });
+        return data;
     }
 }
 
