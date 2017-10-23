@@ -233,3 +233,20 @@
     margin: 6px;
     padding: 10px;
 }
+
+.machete-granularity-select-wrapper {
+    float: right;
+    clear: right;
+}
+
+.machete-granularity-select-wrapper > * {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.machete-granularity-select {
+    width: 100px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    margin-left: 10px;
+}
