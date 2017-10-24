@@ -5,7 +5,6 @@ const ReactDOM = require('react-dom');
 const common = require('../common/common.js');
 const spdata = require('../common/sp-data.js');
 const ga = require('../common/ga.js');
-const constants = require('../common/constants.js');
 const tabber = require('../components/tabber.js');
 
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
@@ -133,7 +132,6 @@ function generateKeywordReports(container) {
 function generateHistoryReports(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
-    const downloadHref = `https://${constants.hostname}/api/data/${entityId}/${campaignId}/csv`;
 
     Promise.all([allowedPromise, common.getUser()])
     .then(results => {
@@ -141,7 +139,6 @@ function generateHistoryReports(container) {
         let tabContent = React.createElement(CampaignHistoryTab, {
             allowed,
             anonymous: user.isAnon,
-            downloadHref,
             dataPromise: spdata.getCampaignHistory(entityId, campaignId).then(common.convertSnapshotsToDeltas),
         });
         ReactDOM.render(tabContent, container[0]);

@@ -20,7 +20,6 @@ function CampaignHistoryTab(props) {
 CampaignHistoryTab.propTypes = {
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
-    downloadHref: PropTypes.string.isRequired,
     dataPromise: PropTypes.object.isRequired,
 };
 
