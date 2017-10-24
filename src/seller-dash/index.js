@@ -163,10 +163,16 @@ common.getUser().then(user => {
     }
 
     function generateCampaignHistory(container) {
+        const initialPromise = Promise.all([fetchDataPromise(window.location.href, window.location.href, 1), sdata.getCampaignSummaries()]);
         const content = React.createElement(CampaignHistoryTab, {
             allowed: user.isSeller,
             anonymous: user.isAnon,
-            dataPromise: fetchDataPromise(window.location.href, window.location.href, 1),
+            dataPromise: initialPromise.then(results => {
+                const [data, summaries] = results;
+                const { campaignId } = sdata.getCampaignId(window.location.href);
+                const campaignName = summaries.find(x => x.campaignId == campaignId).campaignName;
+                return data.map(x => Object.assign(x, {campaignId, campaignName}));
+            }),
         });
         ReactDOM.render(content, container[0]);
     }
@@ -255,8 +261,10 @@ common.getUser().then(user => {
             campaignPromise: sdata.getCampaignSummaries().then(campaignSelectOptions),
             loadDataPromise: (summaries) => co(function*() {
                 const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
-                const aggSeries = common.aggregateSeries(histories, { chunk: 'day' });
-                return aggSeries;
+                const aggregate = histories
+                                  .map((history, index) => history.map(x => Object.assign(x, {campaignId: summaries[index].campaignId, campaignName: summaries[index].campaignName})))
+                                  .reduce((array, deltas) => array.concat(...deltas), []);
+                return aggregate;
             }),
         });
         ReactDOM.render(aggContent, container[0]);

@@ -74,6 +74,7 @@ function activateAggregateHistoryTab(container) {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
             const histories = yield Promise.all(campaignIds.map(x => spdata.getCampaignHistory(spdata.getEntityId(), x)));
             const aggregate = histories.map(common.convertSnapshotsToDeltas)
+                .map((delta, index) => delta.map(x => Object.assign(x, {campaignId: summaries[index].campaignId, campaignName: summaries[index].name})))
                 .reduce((array, deltas) => array.concat(...deltas), []);
             return aggregate;
         }),

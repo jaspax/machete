@@ -133,13 +133,17 @@ function generateHistoryReports(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
 
-    Promise.all([allowedPromise, common.getUser()])
+    Promise.all([allowedPromise, common.getUser(), spdata.getCampaignSummaries()])
     .then(results => {
-        const [allowed, user] = results;
+        const [allowed, user, summaries] = results;
+        const summary = summaries.find(x => x.campaignId == campaignId);
+        const campaignName = summary.name;
         let tabContent = React.createElement(CampaignHistoryTab, {
             allowed,
             anonymous: user.isAnon,
-            dataPromise: spdata.getCampaignHistory(entityId, campaignId).then(common.convertSnapshotsToDeltas),
+            dataPromise: spdata.getCampaignHistory(entityId, campaignId)
+                               .then(common.convertSnapshotsToDeltas)
+                               .then(delta => delta.map(x => Object.assign(x, {campaignId, campaignName}))),
         });
         ReactDOM.render(tabContent, container[0]);
     })
