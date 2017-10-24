@@ -35,8 +35,11 @@ class TimeSeriesChart extends React.Component {
             width: this.props.width + 'px',
         };
 
+        const layoutPromise = Promise.resolve(this.props.layout);
+        const dataPromise = Promise.all([layoutPromise, this.props.dataPromise]);
+
         return <div id={this.id} style={containerStyle}>
-            <Async promise={this.props.dataPromise} pending={this.pending(containerStyle)}
+            <Async promise={dataPromise} pending={this.pending(containerStyle)}
                 then={this.then.bind(this)} catch={this.catch.bind(this)} />
         </div>;
     }
@@ -45,8 +48,9 @@ class TimeSeriesChart extends React.Component {
         return <div className="loading-large" style={style}></div>;
     }
 
-    then(data) {
-        window.setTimeout(ga.mcatch(() => this.drawGraph(data)));
+    then(results) {
+        let [layout, data] = results;
+        window.setTimeout(ga.mcatch(() => this.drawGraph(layout, data)));
         return <div></div>;
     }
 
@@ -61,28 +65,24 @@ class TimeSeriesChart extends React.Component {
         Plotly.purge(this.id);
     }
 
-    drawGraph(data) {
-        const series = data.map(series => Object.assign(
-            {
-                x: series.timestamp,
-                y: series.data,
-                text: series.data.map(series.format || common.roundFmt),
-                hoverinfo: 'text',
-                name: series.name,
-                mode: 'lines+markers',
-                connectgaps: true
-            }, 
-            series.options));
+    drawGraph(layout, data) {
+        const series = data.map(series => Object.assign({
+            x: series.timestamp,
+            y: series.data,
+            text: series.data.map(series.format || common.roundFmt),
+            hoverinfo: 'text',
+            name: series.name,
+            mode: 'lines+markers',
+            connectgaps: true
+        }, series.options));
 
-        const layout = Object.assign(
-            {
-                title: this.props.title,
-                width: this.props.width,
-                height: this.props.height,
-                margin: { l: 40, r: 20, b: 28, t: 40, pad: 4 },
-                xaxis: { showticklabels: true }
-            },
-            this.props.layout);
+        layout = Object.assign({
+            title: this.props.title,
+            width: this.props.width,
+            height: this.props.height,
+            margin: { l: 40, r: 20, b: 28, t: 40, pad: 4 },
+            xaxis: { showticklabels: true }
+        }, layout);
 
         Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
     }

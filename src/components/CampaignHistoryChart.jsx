@@ -6,48 +6,15 @@ const common = require('../common/common.js');
 
 class CampaignHistoryChart extends React.Component {
     render() {
-        var layout = {
-          margin: { l: 20, b: 40, t: 20, r: 20 },
-          legend: {x: 0, y: 1},
-          xaxis: {
-              autorange: true,
-              showgrid: true,
-              zeroline: false,
-              showline: false,
-              autotick: true,
-              showticklabels: true
-          },
-          yaxis: { // impressions
-            showgrid: false,
-            zeroline: true,
-            showline: true,
-            showticklabels: false,
-          },
-          yaxis2: { // clicks
-            showgrid: false,
-            zeroline: true,
-            showline: true,
-            showticklabels: false,
-            overlaying: 'y',
-          },
-          yaxis3: { // sales & spend
-            showgrid: false,
-            zeroline: true,
-            showline: true,
-            showticklabels: false,
-            overlaying: 'y',
-          },
-
-        };
-
         const width = this.state ? this.state.width : 800;
         const dataPromise = this.props.dataPromise.then(createHistoryData);
+        const layoutPromise = dataPromise.then(createLayout);
 
         return (
             <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
                 <TimeSeriesChart
                     width={width} height={600}
-                    layout={layout}
+                    layout={layoutPromise}
                     dataPromise={dataPromise} />
                 <div className="machete-explanation">
                     <p>Impressions, clicks, and reported sales are scaled
@@ -121,6 +88,52 @@ function createHistoryData(data) {
     ];
 
     return series;
+}
+
+function createLayout(series) {
+    const impressions = series.find(x => x.name == 'Impressions').data;
+    const clicks = series.find(x => x.name == 'Clicks').data;
+    const spend = series.find(x => x.name == 'Spend').data;
+    const sales = series.find(x => x.name == 'Sales').data;
+    const money = [].concat(...spend).concat(...sales);
+
+    var layout = {
+      margin: { l: 20, b: 40, t: 20, r: 20 },
+      legend: {x: 0, y: 1},
+      xaxis: {
+          autorange: true,
+          showgrid: true,
+          zeroline: false,
+          showline: false,
+          autotick: true,
+          showticklabels: true
+      },
+      yaxis: { // impressions
+        showgrid: false,
+        zeroline: true,
+        showline: true,
+        showticklabels: false,
+        range: [0, Math.max(...impressions)],
+      },
+      yaxis2: { // clicks
+        showgrid: false,
+        zeroline: false,
+        showline: true,
+        showticklabels: false,
+        overlaying: 'y',
+        range: [0, Math.max(...clicks) * 1.2]
+      },
+      yaxis3: { // sales & spend
+        showgrid: false,
+        zeroline: false,
+        showline: true,
+        showticklabels: false,
+        overlaying: 'y',
+        range: [0, Math.max(...money) * 1.5]
+      },
+    };
+
+    return layout;
 }
 
 CampaignHistoryChart.propTypes = { dataPromise: PropTypes.object.isRequired };
