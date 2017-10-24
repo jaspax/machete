@@ -15,7 +15,10 @@ class AggregateHistory extends React.Component {
     render() {
         let display = null;
         if (this.state.dataPromise) {
-             display = <CampaignHistoryView dataPromise={this.state.dataPromise} />;
+             display = <section className="machete-report">
+                <h1>History</h1>
+                <CampaignHistoryView dataPromise={this.state.dataPromise} />;
+            </section>;
         }
 
         return <div className="a-box-inner">
@@ -24,10 +27,7 @@ class AggregateHistory extends React.Component {
                 <b>Select campaigns:</b>
                 <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
-            <section className="machete-report">
-                <h1>History</h1>
-                {display}
-            </section>
+            {display}
         </div>;
     }
 

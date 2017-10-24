@@ -1,8 +1,12 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const moment = require('moment');
+const csv = require('csv-stringify');
+const $ = require('jquery');
+
 const common = require('../common/common.js');
 
+const DownloadButton = require('./DownloadButton.jsx');
 const CampaignDateRangeTable = require('./CampaignDateRangeTable.jsx');
 const CampaignHistoryChart = require('./CampaignHistoryChart.jsx');
 const TimeSeriesGranularitySelector = require('./TimeSeriesGranularitySelector.jsx');
@@ -16,6 +20,7 @@ class CampaignHistoryView extends React.Component {
 
     render() {
         return <div>
+            <DownloadButton title="Download complete history" onClick={this.generateDownloadCsv.bind(this)} />
             <TimeSeriesGranularitySelector value={this.state.granularity} onChange={this.granularityChange.bind(this)} />
             <CampaignDateRangeTable
                 startDate={this.state.startDate} startMetrics={this.state.startMetrics}
@@ -66,6 +71,32 @@ class CampaignHistoryView extends React.Component {
             dataPromise: Promise.resolve(data),
         });
         return data;
+    }
+
+    generateDownloadCsv(evt) {
+        evt.preventDefault();
+        if (!this.state.data) {
+            return;
+        }
+        const data = this.state.data.map(x => ({
+            "Campaign Name": x.campaignName || '',
+            "Campaign Id": x.campaignId || '',
+            "Timestamp": moment(x.timestamp).format('YYYY-MM-DD HH:mm'),
+            "Impressions": x.impressions,
+            "Clicks": x.clicks,
+            "Sales (units)": x.salesCount,
+            "Sales (value)": common.numberFmt(x.salesValue),
+            "Spend": common.numberFmt(x.spend),
+            "ACOS": common.numberFmt(x.acos),
+            "Average CPC": common.numberFmt(x.avgCpc),
+        }));
+        csv(data, { header: true }, (error, data) => {
+            if (error) {
+                console.error(error);
+            }
+            const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(data);
+            $(`<a href='${dataUri}' download='CampaignHistory.csv'></a>`)[0].click();
+        });
     }
 }
 

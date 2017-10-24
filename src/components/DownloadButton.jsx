@@ -6,7 +6,7 @@ class DownloadButton extends React.Component {
         return (
             <span className="a-button">
                 <span className="a-button-inner">
-                    <a className="a-button-text" role="button" href={this.props.href} title={this.props.title}>
+                    <a className="a-button-text" role="button" href={this.props.href} title={this.props.title} onClick={this.props.onClick}>
                         <span className="download-icon"></span>&nbsp;Download
                     </a>
                 </span>
@@ -16,7 +16,8 @@ class DownloadButton extends React.Component {
 }
 
 DownloadButton.propTypes = {
-    href: PropTypes.string.isRequired,
+    href: PropTypes.string,
+    onClick: PropTypes.func,
     title: PropTypes.string,
 };
 
