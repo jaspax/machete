@@ -142,8 +142,7 @@ function generateHistoryReports(container) {
             allowed,
             anonymous: user.isAnon,
             downloadHref,
-            dataPromise: spdata.getCampaignHistory(entityId, campaignId)
-                         .then(data => common.chunkSeries(common.convertSnapshotsToDeltas(data), 'day'))
+            dataPromise: spdata.getCampaignHistory(entityId, campaignId).then(common.convertSnapshotsToDeltas),
         });
         ReactDOM.render(tabContent, container[0]);
     })
