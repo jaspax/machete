@@ -136,6 +136,7 @@ function chunkSeries(data, chunk) {
         }
         lastOrigItem = origItem;
     }
+    calculateItemStats(lastItem);
     c.push(lastItem);
     return c;
 }

@@ -137,7 +137,7 @@ function generateHistoryReports(container) {
     .then(results => {
         const [allowed, user, summaries] = results;
         const summary = summaries.find(x => x.campaignId == campaignId);
-        const campaignName = summary.name;
+        const campaignName = summary ? summary.name : '';
         let tabContent = React.createElement(CampaignHistoryTab, {
             allowed,
             anonymous: user.isAnon,

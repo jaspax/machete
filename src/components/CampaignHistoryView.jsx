@@ -34,9 +34,9 @@ class CampaignHistoryView extends React.Component {
         return {
             granularity: 'day',
             startDate: moment(),
-            startMetrics: {},
+            startMetrics: { timestamp: Date.now() },
             endDate: moment(),
-            endMetrics: {},
+            endMetrics: { timestamp: Date.now() },
             dataPromise: props.dataPromise.then(data => {
                 this.setState({ data });
                 return this.chartDataChanged(data, this.state.granularity);
