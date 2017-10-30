@@ -42,9 +42,10 @@ function messageListener(handler) {
             sendResponse(response);
         })
         .catch(error => {
-            const response = { status: error.message, error };
+            const response = { status: error.message, error: ga.errorToObject(error) };
             if (handleAuthErrors(error, req.action)) {
                 response.error.handled = true;
+                response.error.authError = true;
                 console.warn(error);
             }
             else {

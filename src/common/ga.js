@@ -64,14 +64,18 @@ function mga(...args) {
     }, ['machete.send', ...args]);
 }
 
+function errorToObject(error) {
+    const err = {};
+    Object.getOwnPropertyNames(error).forEach(prop => {
+        err[prop] = error[prop];
+    });
+    return err;
+}
+
 function errorToString(error) {
     return JSON.stringify(error, (key, value) => {
         if (value instanceof Error) {
-            const err = {};
-            Object.getOwnPropertyNames(value).forEach(prop => {
-                err[prop] = value[prop];
-            });
-            return err;
+            return errorToObject(error);
         }
         return value;
     });
@@ -124,4 +128,6 @@ module.exports = {
     mclick,
     mcatch,
     mpromise,
+    errorToString, 
+    errorToObject, 
 };

@@ -55,8 +55,8 @@ class TimeSeriesChart extends React.Component {
     }
 
     catch(error) {
-        if (error.handled) {
-            return <DataNotAvailable allowed={!error.notAllowed} anonymous={error.notLoggedIn} />;
+        if (error.authError) {
+            return <DataNotAvailable allowed={!error.notAllowed} anonymous={!!error.notLoggedIn} />;
         }
         return <pre>{error.stack}</pre>;
     }

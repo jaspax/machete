@@ -62,6 +62,14 @@ function getCampaignHistory(entityId = getEntityId(), campaignId = getCampaignId
     return campaignPromise[campaignId];
 }
 
+function getAggregateCampaignHistory(entityId = getEntityId(), campaignIds) {
+    return common.bgMessage({
+        action: 'getAggregateCampaignHistory', 
+        entityId,
+        campaignIds,
+    });
+}
+
 let keywordPromise = {};
 function getKeywordData(entityId = getEntityId(), adGroupId) {
     if (!keywordPromise[adGroupId]) {
@@ -169,6 +177,7 @@ module.exports = {
     getCampaignId,
     getQueryArgs,
     getCampaignHistory,
+    getAggregateCampaignHistory,
     getKeywordData,
     getAllCampaignsAllowed,
     getCampaignAllowed,

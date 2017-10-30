@@ -2,6 +2,7 @@ const co = require('co');
 const ga = require('../common/ga.js');
 const constants = require('../common/constants.js');
 const bg = require('../common/background.js');
+const common = require('../common/common.js');
 
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
@@ -26,6 +27,8 @@ bg.messageListener(function*(req, sender) {
         return yield* getCampaignSummaries(req.entityId);
     else if (req.action == 'getDataHistory')
         return yield* getDataHistory(req.entityId, req.campaignId);
+    else if (req.action == 'getAggregateCampaignHistory')
+        return yield* getAggregateCampaignHistory(req.entityId, req.campaignIds);
     else if (req.action == 'getKeywordData')
         return yield* getKeywordData(req.entityId, req.adGroupId);
     else if (req.action == 'setCampaignMetadata')
@@ -51,6 +54,12 @@ chrome.alarms.onAlarm.addListener((session) => {
         yield* alarmHandler(entityId);
     });
 });
+
+function* pageArray(array, step) {
+    for (let index = 0; index < array.length; index += step) {
+        yield array.slice(index, index + step);
+    }
+}
 
 function* alarmHandler(entityId) {
     console.log('Alarm handler start at', new Date());
@@ -242,6 +251,23 @@ function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
         method: 'GET',
         dataType: 'json'
     });
+}
+
+function* getAggregateCampaignHistory(entityId, campaignIds) {
+    let aggregate = [];
+    for (const page of pageArray(campaignIds, 6)) {
+        const promises = [];
+        for (const campaignId of page) {
+            promises.push(co(function*() {
+                let history = yield getDataHistory(entityId, campaignId);
+                history = common.convertSnapshotsToDeltas(history);
+                aggregate = aggregate.concat(...history);
+            }));
+        }
+        yield Promise.all(promises);
+    }
+
+    return aggregate.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 function* getKeywordData(entityId, adGroupId) {
