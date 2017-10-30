@@ -83,7 +83,7 @@ function activateAggregateKeywordTab(container) {
         campaignPromise: spdata.getCampaignSummaries(spdata.getEntityId()).then(campaignSelectOptions),
         loadDataPromise: (summaries) => co(function*() {
             const adGroupIds = _.uniq(summaries.map(x => x.adGroupId));
-            const kwData = yield Promise.all(adGroupIds.map(x => spdata.getKeywordData(spdata.getEntityId(), x)));
+            const kwData = yield spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),

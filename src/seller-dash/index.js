@@ -262,7 +262,6 @@ common.getUser().then(user => {
             loadDataPromise: (summaries) => co(function*() {
                 const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
                 const aggregate = histories
-                                  .map((history, index) => history.map(x => Object.assign(x, {campaignId: summaries[index].campaignId, campaignName: summaries[index].campaignName})))
                                   .reduce((array, deltas) => array.concat(...deltas), []);
                 return aggregate;
             }),

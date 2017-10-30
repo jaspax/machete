@@ -31,6 +31,8 @@ bg.messageListener(function*(req, sender) {
         return yield* getAggregateCampaignHistory(req.entityId, req.campaignIds);
     else if (req.action == 'getKeywordData')
         return yield* getKeywordData(req.entityId, req.adGroupId);
+    else if (req.action == 'getAggregateKeywordData')
+        return yield* getAggregateKeywordData(req.entityId, req.adGroupIds);
     else if (req.action == 'setCampaignMetadata')
         return yield* setCampaignMetadata(req.entityId, req.campaignId, req.asin);
     else if (req.action == 'setAdGroupMetadata')
@@ -261,7 +263,7 @@ function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
         const snapshots = yield campaignPromise[key];
         return common.convertSnapshotsToDeltas(snapshots);
     }
-    catch(error) {
+    catch (error) {
         campaignPromise[key] = null;
         throw error;
     }
@@ -283,25 +285,50 @@ function* getAggregateCampaignHistory(entityId, campaignIds) {
     return aggregate.sort((a, b) => a.timestamp - b.timestamp);
 }
 
+const keywordPromise = {};
 function* getKeywordData(entityId, adGroupId) {
     checkEntityId(entityId);
 
-    const ajaxOptions = {
-        url: `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
-        method: 'GET',
-        dataType: 'json',
-    };
-    let data = yield bg.ajax(ajaxOptions);
+    const key = entityId + '-' + adGroupId;
+    if (!keywordPromise[key]) {
+        keywordPromise[key] = co(function*() {
+            const ajaxOptions = {
+                url: `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
+                method: 'GET',
+                dataType: 'json',
+            };
+            let data = yield bg.ajax(ajaxOptions);
 
-    if (!data || data.length == 0) {
-        // Possibly this is the first time we've ever seen this campaign. If so,
-        // let's query Amazon and populate our own servers, and then come back.
-        // This is very slow but should usually only happen once.
-        yield* requestKeywordData(entityId, adGroupId);
-        data = yield bg.ajax(ajaxOptions);
+            if (!data || data.length == 0) {
+                // Possibly this is the first time we've ever seen this campaign. If so,
+                // let's query Amazon and populate our own servers, and then come back.
+                // This is very slow but should usually only happen once.
+                yield* requestKeywordData(entityId, adGroupId);
+                data = yield bg.ajax(ajaxOptions);
+            }
+
+            return data;
+        });
     }
 
-    return data;
+    try {
+        return yield keywordPromise[key];
+    }
+    catch (error) {
+        keywordPromise[key] = null;
+        throw error;
+    }
+}
+
+function* getAggregateKeywordData(entityId, adGroupIds) {
+    let keywordSets = [];
+
+    for (const page of pageArray(adGroupIds, 6)) {
+        const kwSets = yield Promise.all(page.map(adGroupId => co(getKeywordData(entityId, adGroupId))));
+        keywordSets = keywordSets.concat(kwSets);
+    }
+
+    return keywordSets;
 }
 
 function* setCampaignMetadata(entityId, campaignId, asin) {

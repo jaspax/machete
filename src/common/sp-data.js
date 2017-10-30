@@ -66,16 +66,20 @@ function getAggregateCampaignHistory(entityId = getEntityId(), campaignIds) {
     });
 }
 
-let keywordPromise = {};
 function getKeywordData(entityId = getEntityId(), adGroupId) {
-    if (!keywordPromise[adGroupId]) {
-        keywordPromise[adGroupId] = common.bgMessage({
-            action: 'getKeywordData',
-            entityId,
-            adGroupId,
-        });
-    }
-    return keywordPromise[adGroupId];
+    return common.bgMessage({
+        action: 'getKeywordData',
+        entityId,
+        adGroupId,
+    });
+}
+
+function getAggregateKeywordData(entityId = getEntityId(), adGroupIds) {
+    return common.bgMessage({
+        action: 'getAggregateKeywordData',
+        entityId,
+        adGroupIds
+    });
 }
 
 let allowedPromise = null;
@@ -175,6 +179,7 @@ module.exports = {
     getCampaignHistory,
     getAggregateCampaignHistory,
     getKeywordData,
+    getAggregateKeywordData,
     getAllCampaignsAllowed,
     getCampaignAllowed,
     getCampaignSummaries,
