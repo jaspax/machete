@@ -50,16 +50,12 @@ function getQueryArgs(str) {
     return args;
 }
 
-let campaignPromise = {};
 function getCampaignHistory(entityId = getEntityId(), campaignId = getCampaignId()) {
-    if (!campaignPromise[campaignId]) {
-        campaignPromise[campaignId] = common.bgMessage({
-            action: 'getDataHistory',
-            entityId: entityId,
-            campaignId: campaignId,
-        });
-    }
-    return campaignPromise[campaignId];
+    return common.bgMessage({
+        action: 'getDataHistory',
+        entityId: entityId,
+        campaignId: campaignId,
+    });
 }
 
 function getAggregateCampaignHistory(entityId = getEntityId(), campaignIds) {

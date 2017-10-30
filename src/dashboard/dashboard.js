@@ -123,7 +123,7 @@ function addChartButtons(rows) {
                         return common.formatParallelData({}, chart.metric);
 
                     const data = yield spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
-                    const deltas = common.chunkSeries(common.convertSnapshotsToDeltas(data, { startTimestamp }), 'day');
+                    const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
                     const campaignData = common.parallelizeSeries(deltas);
                     return common.formatParallelData(campaignData, chart.metric);
                 });

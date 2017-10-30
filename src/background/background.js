@@ -245,12 +245,26 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     }
 }
 
+let campaignPromise = {};
 function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
-        method: 'GET',
-        dataType: 'json'
-    });
+
+    const key = entityId + '-' + campaignId;
+    if (!campaignPromise[key]) {
+        campaignPromise[key] = bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
+            method: 'GET',
+            dataType: 'json'
+        });
+    }
+
+    try {
+        const snapshots = yield campaignPromise[key];
+        return common.convertSnapshotsToDeltas(snapshots);
+    }
+    catch(error) {
+        campaignPromise[key] = null;
+        throw error;
+    }
 }
 
 function* getAggregateCampaignHistory(entityId, campaignIds) {
@@ -260,7 +274,6 @@ function* getAggregateCampaignHistory(entityId, campaignIds) {
         for (const campaignId of page) {
             promises.push(co(function*() {
                 let history = yield getDataHistory(entityId, campaignId);
-                history = common.convertSnapshotsToDeltas(history);
                 aggregate = aggregate.concat(...history);
             }));
         }
