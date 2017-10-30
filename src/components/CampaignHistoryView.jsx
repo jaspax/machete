@@ -5,6 +5,7 @@ const csv = require('csv-stringify');
 const $ = require('jquery');
 
 const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 
 const DownloadButton = require('./DownloadButton.jsx');
 const CampaignDateRangeTable = require('./CampaignDateRangeTable.jsx');
@@ -92,10 +93,14 @@ class CampaignHistoryView extends React.Component {
         }));
         csv(data, { header: true }, (error, data) => {
             if (error) {
-                console.error(error);
+                // TODO: report errors
+                return ga.merror(error);
             }
-            const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(data);
-            $(`<a href='${dataUri}' download='CampaignHistory.csv'></a>`)[0].click();
+            const blob = new Blob([data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            $(`<a href='${url}' download='CampaignHistory.csv'></a>`)[0].click();
+
+            return url;
         });
     }
 }
