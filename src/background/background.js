@@ -164,13 +164,8 @@ function* requestCampaignData(entityId) {
 function* requestCampaignStatus(entityId, campaignIds, timestamp) {
     checkEntityId(entityId); 
 
-    const step = 20;
-    let index = 0;
-
     // Chop the campaignId list into bite-sized chunks
-    while (index < campaignIds.length) {
-        let chunk = campaignIds.slice(index, index + step);
-
+    for (const chunk of pageArray(campaignIds, 20)) {
         const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaign-status', {
             method: 'GET',
             data: { 
@@ -181,7 +176,6 @@ function* requestCampaignStatus(entityId, campaignIds, timestamp) {
         });
 
         yield* storeStatusCloud(entityId, timestamp, data);
-        index += step;
     }
 }
 
@@ -228,22 +222,14 @@ function* storeStatusCloud(entityId, timestamp, data) {
 }
 
 function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
-    // Break data.aaData into chunks
-    const step = 50;
-    let index = 0;
-
     // Chop the large keyword list into small, bite-sized chunks for easier
     // digestion on the server.
-    while (index < data.aaData.length) {
-        let chunk = { aaData: data.aaData.slice(index, index + step) };
-
+    for (const chunk of pageArray(data.aaData, 50)) {
         yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
-            data: JSON.stringify(chunk),
+            data: JSON.stringify({ aaData: chunk }),
             contentType: 'application/json',
         });
-
-        index += step;
     }
 }
 
@@ -361,13 +347,11 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
     // TODO: the parameters to the Amazon API imply that you can pass more than
     // 1 keyword at a time, but testing this shows that doing so just generates
     // an error. So we do it the stupid way instead, with a loop.
-    const step = 20;
     const timestamp = Date.now();
 
     const results = [];
-    for (let index = 0; index < keywordIdList.length; index += step) {
+    for (const chunk of pageArray(keywordIdList, 20)) {
         let requests = [];
-        let chunk = keywordIdList.slice(index, index + step);
         for (let id of chunk) {
             let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
             requests.push(bg.ajax({
