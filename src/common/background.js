@@ -1,5 +1,6 @@
 const $ = require('jquery');
 const co = require('co');
+const memoize = require('memoizee');
 
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
@@ -29,9 +30,16 @@ chrome.pageAction.onClicked.addListener(() => {
     chrome.tabs.create({ url: `${serviceUrl}/profile` });
 });
 
+function coMemo(fn, opts = {}) {
+    return memoize((...args) => co(fn(...args)), 
+                   Object.assign({ promise: true, length: false, primitive: true }, opts));
+}
+
 function messageListener(handler) {
     chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         console.log('Handling message:', req);
+        chrome.pageAction.show(sender.tab.id); // Do this for all actions
+
         ga.mga('event', 'background-message', req.action);
         const begin = performance.now();
 
@@ -101,7 +109,8 @@ function ajax(...args) {
 module.exports = {
     serviceUrl,
     messageListener,
-    getUser,
+    getUser: coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
     handleAuthErrors,
     ajax,
+    coMemo,
 };

@@ -16,29 +16,29 @@ function checkEntityId(entityId) {
     }
 }
 
-bg.messageListener(function*(req, sender) {
+bg.messageListener(function*(req) {
     if (req.action == 'setSession')
-        return yield* setSession(req, sender);
+        return yield setSession(req);
     else if (req.action == 'getUser')
-        return yield* bg.getUser();
+        return yield bg.getUser();
     else if (req.action == 'getAllowedCampaigns') 
-        return yield* getAllowedCampaigns(req.entityId);
+        return yield getAllowedCampaigns(req.entityId);
     else if (req.action == 'getCampaignSummaries') 
-        return yield* getCampaignSummaries(req.entityId);
+        return yield getCampaignSummaries(req.entityId);
     else if (req.action == 'getDataHistory')
-        return yield* getDataHistory(req.entityId, req.campaignId);
+        return yield getDataHistory(req.entityId, req.campaignId);
     else if (req.action == 'getAggregateCampaignHistory')
-        return yield* getAggregateCampaignHistory(req.entityId, req.campaignIds);
+        return yield getAggregateCampaignHistory(req.entityId, req.campaignIds);
     else if (req.action == 'getKeywordData')
-        return yield* getKeywordData(req.entityId, req.adGroupId);
+        return yield getKeywordData(req.entityId, req.adGroupId);
     else if (req.action == 'getAggregateKeywordData')
-        return yield* getAggregateKeywordData(req.entityId, req.adGroupIds);
+        return yield getAggregateKeywordData(req.entityId, req.adGroupIds);
     else if (req.action == 'setCampaignMetadata')
-        return yield* setCampaignMetadata(req.entityId, req.campaignId, req.asin);
+        return yield setCampaignMetadata(req.entityId, req.campaignId, req.asin);
     else if (req.action == 'setAdGroupMetadata')
-        return yield* setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
+        return yield setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
     else if (req.action == 'updateKeyword')
-        return yield* updateKeyword(req.entityId, req.keywordIdList, req.operation, req.dataValues);
+        return yield updateKeyword(req.entityId, req.keywordIdList, req.operation, req.dataValues);
     throw new Error('unknown action');
 });
 
@@ -78,11 +78,10 @@ function* alarmHandler(entityId) {
     console.log('Alarm handler finish at', new Date());
 }
 
-function* setSession(req, sender) {
+const setSession = bg.coMemo(function*(req) {
     console.log('page session startup for', req);
     let sessionKey = getSessionKey(req.entityId);
     
-    chrome.pageAction.show(sender.tab.id);
     yield ga.mpromise(resolve => {
         chrome.alarms.get(sessionKey, alarm => {
             if (!alarm) {
@@ -102,23 +101,23 @@ function* setSession(req, sender) {
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
         yield* alarmHandler(req.entityId);
     }
-}
+});
 
-function* getAllowedCampaigns(entityId) {
+const getAllowedCampaigns = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
         dataType: 'json'
     });
-}
+}, { maxAge: 2 * constants.timespan.minute });
 
-function* getCampaignSummaries(entityId) {
+const getCampaignSummaries = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
         method: 'GET',
         dataType: 'json'
     });
-}
+}, { maxAge: 2 * constants.timespan.minute });
 
 function* requestCampaignData(entityId) {
     checkEntityId(entityId);
@@ -233,29 +232,16 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     }
 }
 
-let campaignPromise = {};
-function* getDataHistory(entityId, campaignId) { // TODO: date ranges, etc.
+const getDataHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
     checkEntityId(entityId);
+    const snapshots = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
+        method: 'GET',
+        dataType: 'json'
+    });
+    return common.convertSnapshotsToDeltas(snapshots);
+});
 
-    const key = entityId + '-' + campaignId;
-    if (!campaignPromise[key]) {
-        campaignPromise[key] = bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
-            method: 'GET',
-            dataType: 'json'
-        });
-    }
-
-    try {
-        const snapshots = yield campaignPromise[key];
-        return common.convertSnapshotsToDeltas(snapshots);
-    }
-    catch (error) {
-        campaignPromise[key] = null;
-        throw error;
-    }
-}
-
-function* getAggregateCampaignHistory(entityId, campaignIds) {
+const getAggregateCampaignHistory = bg.coMemo(function*(entityId, campaignIds) {
     let aggregate = [];
     for (const page of pageArray(campaignIds, 6)) {
         const promises = [];
@@ -269,44 +255,29 @@ function* getAggregateCampaignHistory(entityId, campaignIds) {
     }
 
     return aggregate.sort((a, b) => a.timestamp - b.timestamp);
-}
+});
 
-const keywordPromise = {};
-function* getKeywordData(entityId, adGroupId) {
+const getKeywordData = bg.coMemo(function*(entityId, adGroupId) {
     checkEntityId(entityId);
+    const ajaxOptions = {
+        url: `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
+        method: 'GET',
+        dataType: 'json',
+    };
+    let data = yield bg.ajax(ajaxOptions);
 
-    const key = entityId + '-' + adGroupId;
-    if (!keywordPromise[key]) {
-        keywordPromise[key] = co(function*() {
-            const ajaxOptions = {
-                url: `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
-                method: 'GET',
-                dataType: 'json',
-            };
-            let data = yield bg.ajax(ajaxOptions);
-
-            if (!data || data.length == 0) {
-                // Possibly this is the first time we've ever seen this campaign. If so,
-                // let's query Amazon and populate our own servers, and then come back.
-                // This is very slow but should usually only happen once.
-                yield* requestKeywordData(entityId, adGroupId);
-                data = yield bg.ajax(ajaxOptions);
-            }
-
-            return data;
-        });
+    if (!data || data.length == 0) {
+        // Possibly this is the first time we've ever seen this campaign. If so,
+        // let's query Amazon and populate our own servers, and then come back.
+        // This is very slow but should usually only happen once.
+        yield* requestKeywordData(entityId, adGroupId);
+        data = yield bg.ajax(ajaxOptions);
     }
 
-    try {
-        return yield keywordPromise[key];
-    }
-    catch (error) {
-        keywordPromise[key] = null;
-        throw error;
-    }
-}
+    return data;
+});
 
-function* getAggregateKeywordData(entityId, adGroupIds) {
+const getAggregateKeywordData = bg.coMemo(function*(entityId, adGroupIds) {
     let keywordSets = [];
 
     for (const page of pageArray(adGroupIds, 6)) {
@@ -315,25 +286,25 @@ function* getAggregateKeywordData(entityId, adGroupIds) {
     }
 
     return keywordSets;
-}
+});
 
-function* setCampaignMetadata(entityId, campaignId, asin) {
+const setCampaignMetadata = bg.coMemo(function*(entityId, campaignId, asin) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
         data: JSON.stringify({ asin }),
         contentType: 'application/json',
     });
-}
+});
 
-function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
+const setAdGroupMetadata = bg.coMemo(function*(entityId, adGroupId, campaignId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
         data: JSON.stringify({ campaignId }),
         contentType: 'application/json',
     });
-}
+});
 
 function* getAdGroups(entityId) {
     checkEntityId(entityId);
