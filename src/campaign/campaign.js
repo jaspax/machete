@@ -149,8 +149,8 @@ function generateHistoryReports(container) {
 function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
-        onEnabledChange: (enabled, keywords) => common.updateStatus(keywords.map(kw => kw.id), enabled).then(window.location.reload),
-        onBidChange: (bid, keywords) => common.updateBid(keywords.map(kw => kw.id), bid).then(window.location.reload),
+        onEnabledChange: (enabled, keywords) => spdata.updateKeywordStatus(keywords.map(kw => kw.id), enabled).then(window.location.reload),
+        onBidChange: (bid, keywords) => spdata.updateKeywordBid(keywords.map(kw => kw.id), bid).then(window.location.reload),
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }
