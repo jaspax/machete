@@ -27,7 +27,7 @@ class AggregateKeywords extends React.Component {
             <h1>Aggregate Keywords</h1>
             <section className="machete-campaign-selector">
                 <b>Select campaigns:</b>
-                <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
+                <CampaignSelector campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
             {display}
         </div>;

@@ -163,24 +163,12 @@ common.getUser().then(user => {
     }
 
     function generateCampaignHistory(container) {
-        const initialPromise = Promise.all([fetchDataPromise(window.location.href, window.location.href, 1), sdata.getCampaignSummaries()]);
-        const content = React.createElement(CampaignHistoryTab, {
-            allowed: user.isSeller,
-            anonymous: user.isAnon,
-            dataPromise: initialPromise.then(results => {
-                const [data, summaries] = results;
-                const { campaignId } = sdata.getCampaignId(window.location.href);
-                const campaignName = summaries.find(x => x.campaignId == campaignId).campaignName;
-                return data.map(x => Object.assign(x, {campaignId, campaignName}));
-            }),
-        });
+        const content = React.createElement(CampaignHistoryTab, { dataPromise: fetchDataPromise(window.location.href, window.location.href, 1) });
         ReactDOM.render(content, container[0]);
     }
 
     function generateKeywordReports(container) {
         let content = React.createElement(KeywordAnalyticsTab, {
-            allowed: user.isSeller,
-            anonymous: false,
             dataPromise: getKeywordDataAggregate(),
             updateStatus: (ids, enabled, cb) => updateStatus(ids, enabled).then(cb),
             updateBid: (ids, bid, cb) => updateBid(ids, bid).then(cb),

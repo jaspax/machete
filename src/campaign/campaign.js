@@ -18,8 +18,6 @@ const ourTabs = [
     {label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
 ];
 
-let allowedPromise = spdata.getCampaignAllowed();
-
 let adGroupPromise = ga.mpromise(resolve => {
     let adGroupInterval = window.setInterval(ga.mcatch(() => {
         let adGroupIdInput = $('input[name=adGroupId]');
@@ -39,13 +37,7 @@ let adGroupPromise = ga.mpromise(resolve => {
     }), 100);
 });
 
-let keywordDataPromise = Promise.all([allowedPromise, adGroupPromise])
-.then(results => ga.mcatch(() => {
-    let [allowed, adGroupId] = results;
-    if (allowed)
-        return spdata.getKeywordData(spdata.getEntityId(), adGroupId);
-    return [];
-})());
+let keywordDataPromise = adGroupPromise.then(adGroupId => spdata.getKeywordData(spdata.getEntityId(), adGroupId));
 
 let makeTabsInterval = window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
@@ -87,63 +79,35 @@ function addCampaignTabs(tabs) {
         tabber(tabs, tab);
     }
 
-    allowedPromise.then(allowed => {
-        if (allowed) {
-            // Render the bulk update control on the main keyword list
-            const allTable = $('#keywordTableControls');
-            if (allTable.find('#machete-bulk-all').length == 0) {
-                // Hack ourselves into the Amazon layout
-                const bulkContainer = $('<div class="a-span4 machete-kwupdate-all" id="machete-bulk-all"></div>');
-                const first = $('#keywordTableControls').children().first();
-                first.removeClass('a-span8');
-                first.addClass('a-span4');
-                first.after(bulkContainer);
-                keywordDataPromise.then(data => generateBulkUpdate(bulkContainer, data));
-            }
-        }
-    })
-    .catch(ga.mex);
+    // Render the bulk update control on the main keyword list
+    const allTable = $('#keywordTableControls');
+    if (allTable.find('#machete-bulk-all').length == 0) {
+        keywordDataPromise.then(data => {
+            // Hack ourselves into the Amazon layout
+            const bulkContainer = $('<div class="a-span4 machete-kwupdate-all" id="machete-bulk-all"></div>');
+            const first = $('#keywordTableControls').children().first();
+            first.removeClass('a-span8');
+            first.addClass('a-span4');
+            first.after(bulkContainer);
+            generateBulkUpdate(bulkContainer, data);
+        });
+    }
 }
 
 function generateKeywordReports(container) {
-    const chart = React.createElement(KeywordAnalyticsTab, { 
-        allowed: true, // assume true until we know otherwise
-        anonymous: false,
+    const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
-        updateStatus: () => console.warn("shouldn't update keywords while still loading"),
-        updateBid: () => console.warn("shouldn't update keywords while still loading"),
+        updateStatus: (ids, enabled, callback) => spdata.updateKeywordStatus(ids, enabled).then(callback),
+        updateBid: (ids, bid, callback) => spdata.updateKeywordBid(ids, bid).then(callback),
     });
     ReactDOM.render(chart, container[0]);
-
-    Promise.all([allowedPromise, common.getUser()]).then(results => {
-        let [allowed, user] = results;
-        const chart = React.createElement(KeywordAnalyticsTab, {
-            allowed,
-            anonymous: user.isAnon,
-            dataPromise: keywordDataPromise,
-            updateStatus: (ids, enabled, callback) => spdata.updateKeywordStatus(ids, enabled).then(callback),
-            updateBid: (ids, bid, callback) => spdata.updateKeywordBid(ids, bid).then(callback),
-        });
-        ReactDOM.render(chart, container[0]);
-    })
-    .catch(ga.mex);
 }
 
 function generateHistoryReports(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
-
-    Promise.all([allowedPromise, common.getUser()])
-    .then(results => {
-        const [allowed, user] = results;
-        let tabContent = React.createElement(CampaignHistoryTab, {
-            allowed,
-            anonymous: user.isAnon,
-            dataPromise: spdata.getCampaignHistory(entityId, campaignId)
-        });
-        ReactDOM.render(tabContent, container[0]);
-    })
-    .catch(ga.mex);
+    let tabContent = React.createElement(CampaignHistoryTab, { dataPromise: spdata.getCampaignHistory(entityId, campaignId) });
+    ReactDOM.render(tabContent, container[0]);
 }
 
 function generateBulkUpdate(container, data) {

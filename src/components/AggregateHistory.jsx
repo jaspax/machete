@@ -25,7 +25,7 @@ class AggregateHistory extends React.Component {
             <section className="machete-campaign-selector">
                 <h1>Aggregate Campaign History</h1>
                 <b>Select campaigns:</b>
-                <CampaignSelector selectGroups={true} campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
+                <CampaignSelector campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
             </section>
             {display}
         </div>;

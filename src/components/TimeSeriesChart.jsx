@@ -1,8 +1,8 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const Plotly = require('plotly.js');
-const DataNotAvailable = require('./DataNotAvailable.jsx');
 const Async = require('react-promise');
+const ErrorSink = require('./ErrorSink.jsx');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
@@ -55,10 +55,7 @@ class TimeSeriesChart extends React.Component {
     }
 
     catch(error) {
-        if (error.authError) {
-            return <DataNotAvailable allowed={!error.notAllowed} anonymous={!!error.notLoggedIn} />;
-        }
-        return <pre>{error.stack}</pre>;
+        return <ErrorSink error={error} />;
     }
 
     componentWillReceiveProps() {

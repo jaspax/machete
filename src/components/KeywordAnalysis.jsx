@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const KeywordAnalyticsView = require('./KeywordAnalyticsView.jsx');
+const ErrorSink = require('./ErrorSink.jsx');
 const Async = require('react-promise');
 
 const common = require('../common/common.js');
@@ -14,7 +15,8 @@ class KeywordAnalysis extends React.Component {
 
     render() {
         return <Async promise={this.props.dataPromise}
-            pending={this.pending()} then={this.after.bind(this)} />;
+            pending={this.pending()} then={this.after.bind(this)} 
+            catch={this.catch.bind(this)} />;
     }
 
     pending() { // eslint-disable-line class-methods-use-this
@@ -216,6 +218,10 @@ class KeywordAnalysis extends React.Component {
             onKeywordEnabledChange={this.updateStatus.bind(this)}
             onKeywordBidChange={this.updateBid.bind(this)}
         />;
+    }
+
+    catch(error) {
+        return <ErrorSink error={error} />;
     }
 
     updateStatus(enabled, keywords) {
