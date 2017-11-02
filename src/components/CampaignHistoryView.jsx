@@ -3,6 +3,7 @@ const PropTypes = require('prop-types');
 const moment = require('moment');
 const csv = require('csv-stringify');
 const $ = require('jquery');
+const _ = require('lodash');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
@@ -59,19 +60,22 @@ class CampaignHistoryView extends React.Component {
     }
 
     chartDataChanged(data, granularity) {
-        data = data.sort((a, b) => a.timestamp - b.timestamp);
-        data = common.chunkSeries(data, granularity);
-        const startMetrics = data[0] || { timestamp: Date.now() };
-        const endMetrics = data[data.length - 1] || { timestamp: Date.now() };
+        const groupedData = _.groupBy(data, x => x.campaignId);
+        const chunkedCampaigns = _.values(groupedData).map(series => common.chunkSeries(series, granularity));
+        const combinedChunks = chunkedCampaigns.reduce((array, item) => array.concat(...item), []).sort(common.timestampSort);
+        const aggregate = common.chunkSeries(combinedChunks, granularity);
+
+        const startMetrics = aggregate[0] || { timestamp: Date.now() };
+        const endMetrics = aggregate[aggregate.length - 1] || { timestamp: Date.now() };
         this.setState({
             granularity,
             startDate: moment(startMetrics.timestamp),
             startMetrics,
             endDate: moment(endMetrics.timestamp),
             endMetrics,
-            dataPromise: Promise.resolve(data),
+            dataPromise: Promise.resolve(aggregate),
         });
-        return data;
+        return aggregate;
     }
 
     generateDownloadCsv(evt) {

@@ -28,6 +28,10 @@ function roundFmt(val) {
     return Math.round(val);
 }
 
+function timestampSort(a, b) {
+    return a.timestamp - b.timestamp;
+}
+
 function bgMessage(opts) {
     return ga.mpromise((resolve, reject) => {
         chrome.runtime.sendMessage(opts, response => {
@@ -109,6 +113,11 @@ function chunkSeries(data, chunk) {
         const item = Object.assign({}, origItem);
         item.timestamp = moment(item.timestamp).startOf(chunk).valueOf();
 
+        // Sanity check
+        if (lastOrigItem && origItem.timestamp < lastOrigItem.timestamp) {
+            throw new Error('arrays passed to chunkSeries must be sorted by timestamp');
+        }
+
         if (!lastItem) {
             lastItem = item;
         }
@@ -118,22 +127,25 @@ function chunkSeries(data, chunk) {
             }
         }
         else {
-            // When crossing a chunk boundary, calculate the portion of the time
-            // diff that lies within the chunk we're entering and the chunk
-            // we're leaving, and then credit each item with the proper
-            // proportion of the metric change
-            const span = origItem.timestamp - lastOrigItem.timestamp;
-            const thisChunkRatio = (origItem.timestamp - item.timestamp) / span;
-            const lastChunkRatio = (moment(lastItem.timestamp).endOf(chunk).valueOf() - lastOrigItem.timestamp) / span;
-            for (const metric of cumulativeMetrics) {
-                lastItem[metric] += roundMetrics[metric](item[metric] * lastChunkRatio);
-                item[metric] = roundMetrics[metric](item[metric] * thisChunkRatio);
+            if (origItem.timestamp != item.timestamp) {
+                // When crossing a chunk boundary with irregularly spaced data,
+                // calculate the portion of the time diff that lies within the
+                // chunk we're entering and the chunk we're leaving, and then
+                // credit each item with the proper proportion of the change
+                const span = origItem.timestamp - lastOrigItem.timestamp;
+                const thisChunkRatio = (origItem.timestamp - item.timestamp) / span;
+                const lastChunkRatio = (moment(lastItem.timestamp).endOf(chunk).valueOf() - lastOrigItem.timestamp) / span;
+                for (const metric of cumulativeMetrics) {
+                    lastItem[metric] += roundMetrics[metric](item[metric] * lastChunkRatio);
+                    item[metric] = roundMetrics[metric](item[metric] * thisChunkRatio);
+                }
             }
 
             calculateItemStats(lastItem);
             c.push(lastItem);
             lastItem = item;
         }
+
         lastOrigItem = origItem;
     }
 
@@ -158,7 +170,7 @@ function convertSnapshotsToDeltas(data, opt) {
     opt = opt || {};
 
     let lastItem = null;
-    data = data.sort((a, b) => a.timestamp - b.timestamp);
+    data = data.sort(timestampSort);
     for (let item of data) {
         // Filter out things by date range
         if (opt.startTimestamp && item.timestamp < opt.startTimestamp) {
@@ -169,6 +181,10 @@ function convertSnapshotsToDeltas(data, opt) {
         }
 
         if (lastItem) {
+            // identical timestamps are probably server-side duplicates
+            if (item.timestamp == lastItem.timestamp)
+                continue;
+
             // Skip this point if any metric decreased
             if (cumulativeMetrics.some(metric => item[metric] < lastItem[metric]))
                 continue;
@@ -186,7 +202,7 @@ function convertSnapshotsToDeltas(data, opt) {
     return c;
 }
 
-function aggregateSeries(series, opt) {
+function aggregateSeries(series, opt = { chunk: 'day' }) {
     const a = {};
     for (const s of series) {
         for (const item of s) {
@@ -294,6 +310,7 @@ module.exports = {
     pctFmt,
     numberFmt,
     roundFmt,
+    timestampSort,
     bgMessage,
     parallelizeSeries,
     chunkSeries,
