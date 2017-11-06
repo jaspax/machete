@@ -18,6 +18,7 @@ class CampaignDateRangeTable extends React.Component {
             avgCpc: endMetrics.avgCpc - startMetrics.avgCpc,
             spend: endMetrics.spend- startMetrics.spend,
             salesCount: endMetrics.salesCount - startMetrics.salesCount,
+            salesValue: endMetrics.salesValue - startMetrics.salesValue,
             acos: endMetrics.acos - startMetrics.acos,
         };
 
