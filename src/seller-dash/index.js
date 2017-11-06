@@ -250,7 +250,8 @@ common.getUser().then(user => {
             loadDataPromise: (summaries) => co(function*() {
                 const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
                 const aggregate = histories
-                                  .reduce((array, deltas) => array.concat(...deltas), []);
+                                  .reduce((array, deltas) => array.concat(...deltas), [])
+                                  .sort(common.timestampSort);
                 return aggregate;
             }),
         });
