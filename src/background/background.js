@@ -96,7 +96,7 @@ const setSession = bg.coMemo(function*(req) {
         });
     });
 
-    // Always request data on login, then set the alarm
+    // Request data on login if it's stale
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
         yield* alarmHandler(req.entityId);
@@ -105,6 +105,18 @@ const setSession = bg.coMemo(function*(req) {
 
 const getAllowedCampaigns = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
+    const allowed = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
+        method: 'GET',
+        dataType: 'json'
+    });
+
+    if (allowed.length)
+        return allowed;
+
+    // nb: setSession is memoized so this should never actually rerun, it just
+    // makes us wait until setSession is done
+    yield setSession({ entityId });
+
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
         dataType: 'json'

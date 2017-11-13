@@ -30,9 +30,15 @@ chrome.pageAction.onClicked.addListener(() => {
     chrome.tabs.create({ url: `${serviceUrl}/profile` });
 });
 
+const memoOptsDefault = {
+    promise: true,
+    length: false,
+    primitive: true,
+    maxAge: 6 * constants.timespan.hour,
+};
 function coMemo(fn, opts = {}) {
     return memoize((...args) => co(fn(...args)), 
-                   Object.assign({ promise: true, length: false, primitive: true }, opts));
+                   Object.assign({}, memoOptsDefault, opts));
 }
 
 function messageListener(handler) {
