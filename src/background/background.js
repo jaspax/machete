@@ -96,7 +96,7 @@ const setSession = bg.coMemo(function*(req) {
         });
     });
 
-    // Always request data on login, then set the alarm
+    // Request data on login if it's stale
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
         yield* alarmHandler(req.entityId);
@@ -105,6 +105,18 @@ const setSession = bg.coMemo(function*(req) {
 
 const getAllowedCampaigns = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
+    const allowed = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
+        method: 'GET',
+        dataType: 'json'
+    });
+
+    if (allowed.length)
+        return allowed;
+
+    // nb: setSession is memoized so this should never actually rerun, it just
+    // makes us wait until setSession is done
+    yield setSession({ entityId });
+
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
         dataType: 'json'
@@ -223,7 +235,7 @@ function* storeStatusCloud(entityId, timestamp, data) {
 function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     // Chop the large keyword list into small, bite-sized chunks for easier
     // digestion on the server.
-    for (const chunk of pageArray(data.aaData, 50)) {
+    for (const chunk of pageArray(data.aaData, 20)) {
         yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
             data: JSON.stringify({ aaData: chunk }),
@@ -321,7 +333,7 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
     const timestamp = Date.now();
 
     const results = [];
-    for (const chunk of pageArray(keywordIdList, 20)) {
+    for (const chunk of pageArray(keywordIdList, 6)) {
         let requests = [];
         for (let id of chunk) {
             let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);

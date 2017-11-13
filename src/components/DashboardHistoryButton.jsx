@@ -19,7 +19,7 @@ class DashboardHistoryButton extends React.Component {
     }
 
     onChartClick() {
-        const dataPromise = this.props.allowed ? this.props.dataPromiseFactory() : Promise.resolve([]);
+        const dataPromise = this.props.dataPromiseFactory();
         this.setState({ show: true, dataPromise });
     }
 

@@ -30,9 +30,15 @@ chrome.pageAction.onClicked.addListener(() => {
     chrome.tabs.create({ url: `${serviceUrl}/profile` });
 });
 
+const memoOptsDefault = {
+    promise: true,
+    length: false,
+    primitive: true,
+    maxAge: 6 * constants.timespan.hour,
+};
 function coMemo(fn, opts = {}) {
     return memoize((...args) => co(fn(...args)), 
-                   Object.assign({ promise: true, length: false, primitive: true }, opts));
+                   Object.assign({}, memoOptsDefault, opts));
 }
 
 function messageListener(handler) {
@@ -51,9 +57,10 @@ function messageListener(handler) {
         })
         .catch(error => {
             const response = { status: error.message, error: ga.errorToObject(error) };
-            if (handleAuthErrors(error, req.action)) {
+            const authError = handleAuthErrors(error, req.action, response.error);
+            if (authError) {
                 response.error.handled = true;
-                response.error.authError = true;
+                response.error.authError = authError;
                 console.warn(error);
             }
             else {
@@ -79,16 +86,18 @@ function* getUser() {
 
 function handleAuthErrors(ex, desc) {
     if (ex.message.match(/^401/)) {
-        ex.notLoggedIn = true;
         ga.mga('event', 'error-handled', 'auth-error-401', desc);
-        return true;
+        return 'notLoggedIn';
+    }
+    if (ex.message.match(/^402/)) {
+        ga.mga('event', 'error-handled', 'auth-error-402', desc);
+        return 'notAllowed';
     }
     if (ex.message.match(/^403/)) {
-        ex.notAllowed = true;
         ga.mga('event', 'error-handled', 'auth-error-403', desc);
-        return true;
+        return 'notOwned';
     }
-    return false;
+    return null;
 }
 
 function ajax(...args) {
