@@ -43,7 +43,7 @@ class ThumbnailChart extends React.Component {
     baseState(props) {
         return { 
             dataPromise: props.dataPromise.then(data => {
-                if (data.timestamp.length < 4) {
+                if (data && data.timestamp.length < 4) {
                     this.setState({ lodata: true });
                 }
                 return [data];

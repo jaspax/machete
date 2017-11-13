@@ -5,7 +5,7 @@ const constants = require('../common/constants.js');
 const href = `https://${constants.hostname}/profile`;
 
 function DataNotAvailable(props) {
-    if (props.anonymous) {
+    if (props.reason == 'notLoggedIn') {
         return (
             <div className="machete-login-required">
                 <p><a data-mclick="thumbnail-login" href={href}
@@ -13,7 +13,7 @@ function DataNotAvailable(props) {
             </div>
         );
     }
-    else if (!props.owned) {
+    else if (props.reason == 'notAllowed') {
         return (
             <div className="machete-upgrade-required">
                 <p>Reports for this campaign are not available under your current
@@ -24,22 +24,23 @@ function DataNotAvailable(props) {
             </div>
         );
     }
+    else if (props.reason == 'notOwned') {
+        return <div className="machete-upgrade-required">
+            <p>This Machete account does not own this campaign data. Ensure that you
+                are logged in under the correct Machete account.</p>
+
+            <p><a data-mclick="thumbnail-profile" href={href} target="_blank">Check
+                    your current account here and logout if necessary</a>, then
+                        refresh this page when you are logged in as the correct
+                        Machete account.</p>
+        </div>;
+    }
 
     return <div className="machete-upgrade-required">
-        <p>This Machete account does not own this campaign data. Ensure that you
-            are logged in under the correct Machete account.</p>
-
-        <p><a data-mclick="thumbnail-profile" href={href} target="_blank">Check
-                your current account here and logout if necessary</a>, then
-                    refresh this page when you are logged in as the correct
-                    Machete account.</p>
+        <p>Machete cannot display this data right now.</p>
     </div>;
 }
 
-DataNotAvailable.propTypes = { 
-    anonymous: PropTypes.bool.isRequired,
-    allowed: PropTypes.bool.isRequired,
-    owned: PropTypes.bool.isRequired
-};
+DataNotAvailable.propTypes = { reason: PropTypes.string.isRequired };
 
 module.exports = DataNotAvailable;
