@@ -29,10 +29,11 @@ function DataNotAvailable(props) {
             <p>This Machete account does not own this campaign data. Ensure that you
                 are logged in under the correct Machete account.</p>
 
-            <p><a data-mclick="thumbnail-profile" href={href} target="_blank">Check
-                    your current account here and logout if necessary</a>, then
-                        refresh this page when you are logged in as the correct
-                        Machete account.</p>
+            <p><a data-mclick="thumbnail-profile" href={href}
+                    target="_blank">Check your current account and log out if
+                    necessary</a>, then refresh this page when you have switched
+                Machete accounts.</p>
+
         </div>;
     }
 
