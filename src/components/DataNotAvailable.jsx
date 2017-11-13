@@ -13,17 +13,33 @@ function DataNotAvailable(props) {
             </div>
         );
     }
-    return (
-        <div className="machete-upgrade-required">
-            <p>Reports for this campaign are not available under your current
-            subscription.</p>
-            
-            <p><a data-mclick="thumbnail-upgrade" href={href}
-            target="_blank">Upgrade your account here</a>, then refresh this page.</p>
-        </div>
-    );
+    else if (!props.owned) {
+        return (
+            <div className="machete-upgrade-required">
+                <p>Reports for this campaign are not available under your current
+                subscription.</p>
+                
+                <p><a data-mclick="thumbnail-upgrade" href={href}
+                target="_blank">Upgrade your account here</a>, then refresh this page.</p>
+            </div>
+        );
+    }
+
+    return <div className="machete-upgrade-required">
+        <p>This Machete account does not own this campaign data. Ensure that you
+            are logged in under the correct Machete account.</p>
+
+        <p><a data-mclick="thumbnail-profile" href={href} target="_blank">Check
+                your current account here and logout if necessary</a>, then
+                    refresh this page when you are logged in as the correct
+                    Machete account.</p>
+    </div>;
 }
 
-DataNotAvailable.propTypes = { anonymous: PropTypes.bool.isRequired };
+DataNotAvailable.propTypes = { 
+    anonymous: PropTypes.bool.isRequired,
+    allowed: PropTypes.bool.isRequired,
+    owned: PropTypes.bool.isRequired
+};
 
 module.exports = DataNotAvailable;

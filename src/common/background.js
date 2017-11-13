@@ -89,8 +89,13 @@ function handleAuthErrors(ex, desc) {
         ga.mga('event', 'error-handled', 'auth-error-401', desc);
         return true;
     }
-    if (ex.message.match(/^403/)) {
+    if (ex.message.match(/^402/)) {
         ex.notAllowed = true;
+        ga.mga('event', 'error-handled', 'auth-error-402', desc);
+        return true;
+    }
+    if (ex.message.match(/^403/)) {
+        ex.notOwned = true;
         ga.mga('event', 'error-handled', 'auth-error-403', desc);
         return true;
     }

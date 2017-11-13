@@ -6,13 +6,13 @@ const DataNotAvailable = require('./DataNotAvailable.jsx');
 
 function HistoryChartPopup(props) {
     let content = null;
-    if (props.allowed) {
+    if (props.anonymous && !props.allowed) {
+        content = <DataNotAvailable anonymous={props.anonymous} allowed={props.allowed} owned={false} />;
+    }
+    else {
         content = <ThumbnailChart 
             title={props.title} 
             dataPromise={props.dataPromise} />;
-    }
-    else {
-        content = <DataNotAvailable anonymous={props.anonymous} />;
     }
 
     return <Popup anchorId={props.anchorId} show={props.show} onDismiss={props.onDismiss}>

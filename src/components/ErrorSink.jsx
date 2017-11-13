@@ -9,7 +9,7 @@ function ErrorSink(props) {
 
     if (error.handled) {
         if (error.authError) {
-            return <DataNotAvailable allowed={!error.notAllowed} anonymous={!!error.notLoggedIn} />;
+            return <DataNotAvailable owned={!error.notOwned} allowed={!error.notAllowed} anonymous={!!error.notLoggedIn} />;
         }
         return <div className="machete-error">
             <div className="machete-error-explain">
