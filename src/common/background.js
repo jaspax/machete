@@ -56,8 +56,15 @@ function messageListener(handler) {
             sendResponse(response);
         })
         .catch(error => {
+            // Disconnected port object means we can't communicate with the
+            // frontend anymore, unrecoverable
+            if (error.message.match(/disconnected port object/)) {
+                ga.mga('event', 'error-handled', 'port-disconnected', req.action);
+                return;
+            }
+
             const response = { status: error.message, error: ga.errorToObject(error) };
-            const authError = handleAuthErrors(error, req.action, response.error);
+            const authError = handleAuthErrors(error, req.action);
             if (authError) {
                 response.error.handled = true;
                 response.error.authError = authError;
@@ -66,6 +73,7 @@ function messageListener(handler) {
             else {
                 ga.merror(req, error);
             }
+
             sendResponse(response);
         })
         .then(() => {
