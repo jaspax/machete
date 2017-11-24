@@ -42,6 +42,56 @@ function bgMessage(opts) {
     });
 }
 
+function renormKeywordStats(kws) {
+    // Get the total impressions, sales, etc. for the thing
+    const totalImpressions = _.sumBy(kws, kw => kw.impressions);
+    const totalClicks = _.sumBy(kws, kw => kw.clicks);
+    const totalSales = _.sumBy(kws, kw => kw.sales);
+    const totalSpend = _.sumBy(kws, kw => kw.spend);
+
+    const avgImpressions = totalImpressions / kws.length;
+    const avgClicks = totalClicks / kws.length;
+    const avgSales = totalSales / kws.length;
+    const avgSpend = totalSpend / kws.length;
+
+    // We add 10% to maxImpressions to avoid over-fitting to whatever keyword
+    // happens to have the most impressions. This number is a good target for
+    // optimization.
+    const maxImpressions = Math.max(...kws.map(x => x.impressions));
+
+    return kws.map(kw => {
+        const x = Object.assign({}, kw);
+        const selfNormRatio = Math.sqrt(x.impressions / maxImpressions);
+        const avgNormRatio = 1 - selfNormRatio;
+
+        x.impressions = (x.impressions * selfNormRatio) + (avgImpressions * avgNormRatio);
+        x.clicks = (x.clicks * selfNormRatio) + (avgClicks * avgNormRatio);
+        x.sales = (x.sales * selfNormRatio) + (avgSales * avgNormRatio);
+        x.spend = (x.spend * selfNormRatio) + (avgSpend * avgNormRatio);
+        calculateItemStats(x);
+
+        return x;
+    });
+}
+
+function optimizeKeywordsAcos(targetAcos, kws) {
+    return kws.map(x => {
+        const kw = Object.assign({}, x);
+        kw.bid *= targetAcos / kw.acos;
+        return kw;
+    });
+}
+
+function optimizeKeywordsSalesPerDay(targetSpd, campaign, campaignDays, kws) {
+    const campaignSpd = campaign.salesValue / campaignDays;
+    const campaignRatio = targetSpd / campaignSpd;
+    return kws.map(x => {
+        const kw = Object.assign({}, x);
+        kw.bid *= campaignRatio * (kw.ctr / campaign.ctr);
+        return kw;
+    });
+}
+
 const round = {
     whole: Math.round,
     money: x => Math.round(x * 100)/100,
@@ -269,11 +319,7 @@ function accumulateKeywordSeries(data) {
     }
 
     const values = _.values(keywords);
-    for (const kw of values) {
-        kw.acos = kw.sales ? 100 * kw.spend/kw.sales : null;
-        kw.ctr = kw.impressions ? 100* kw.clicks/kw.impressions : null;
-        kw.avgCpc = kw.clicks ? kw.spend/kw.clicks : null;
-    }
+    values.forEach(calculateItemStats);
 
     return values;
 }
@@ -319,4 +365,7 @@ module.exports = {
     aggregateKeywords,
     accumulateKeywordSeries,
     formatParallelData,
+    renormKeywordStats,
+    optimizeKeywordsAcos,
+    optimizeKeywordsSalesPerDay,
 };

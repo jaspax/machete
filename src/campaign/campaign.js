@@ -1,6 +1,8 @@
 const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const co = require('co');
+const moment = require('moment');
 
 const common = require('../common/common.js');
 const spdata = require('../common/sp-data.js');
@@ -9,13 +11,15 @@ const tabber = require('../components/tabber.js');
 
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
 const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
+const BidOptimizerTab = require('../components/BidOptimizerTab.jsx');
 const KeywordBulkUpdate = require('../components/KeywordBulkUpdate.jsx');
 
 const tabClass = `machete-tab`;
 
 const ourTabs = [
-    {label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/, insertIndex: 1 },
-    {label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
+    { label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/, insertIndex: 1 },
+    { label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
+    { label: "Bid Optimizer", activate: generateBidOptimizer, matching: /ads\/campaign/, insertIndex: 3 },
 ];
 
 let adGroupPromise = ga.mpromise(resolve => {
@@ -108,6 +112,44 @@ function generateHistoryReports(container) {
     const campaignId = spdata.getCampaignId();
     let tabContent = React.createElement(CampaignHistoryTab, { dataPromise: spdata.getCampaignHistory(entityId, campaignId) });
     ReactDOM.render(tabContent, container[0]);
+}
+
+function generateBidOptimizer(container) {
+    const entityId = spdata.getEntityId();
+    const campaignId = spdata.getCampaignId();
+
+    co(function*() {
+        const adGroupId = yield adGroupPromise;
+        const campaignData = (yield spdata.getCampaignHistory(entityId, campaignId)).pop();
+        const campaignSummary = (yield spdata.getCampaignSummaries(entityId, campaignId)).find(x => x.campaignId == campaignId);
+        const campaignDays = moment().diff(campaignSummary.startDate, 'days');
+
+        function optimizeAcos(value) {
+            co(function*() {
+                const origKws = yield spdata.getKeywordData(entityId, adGroupId);
+                const renormedKws = common.renormKeywordStats(origKws);
+                const optimized = common.optimizeKeywordsAcos(value, renormedKws);
+                console.log('orig', origKws, 'acos optim', optimized);
+            });
+        }
+
+        function optimizeSales(value) {
+            co(function*() {
+                const origKws = yield spdata.getKeywordData(entityId, adGroupId);
+                const renormedKws = common.renormKeywordStats(origKws);
+                const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignDays, renormedKws);
+                console.log('orig', origKws, 'sales optim', optimized);
+            });
+        }
+
+        let tabContent = React.createElement(BidOptimizerTab, { 
+            targetAcos: campaignData.acos,
+            targetSales: campaignData.salesValue / campaignDays,
+            optimizeAcos,
+            optimizeSales
+        });
+        ReactDOM.render(tabContent, container[0]);
+    });
 }
 
 function generateBulkUpdate(container, data) {
