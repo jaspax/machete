@@ -78,7 +78,7 @@ function* alarmHandler(entityId) {
     console.log('Alarm handler finish at', new Date());
 }
 
-const setSession = bg.coMemo(function*(req) {
+function* setSession(req) {
     console.log('page session startup for', req);
     let sessionKey = getSessionKey(req.entityId);
     
@@ -101,7 +101,7 @@ const setSession = bg.coMemo(function*(req) {
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
         yield* alarmHandler(req.entityId);
     }
-});
+}
 
 const getAllowedCampaigns = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
@@ -121,7 +121,7 @@ const getAllowedCampaigns = bg.coMemo(function*(entityId) {
         method: 'GET',
         dataType: 'json'
     });
-}, { maxAge: 2 * constants.timespan.minute });
+}, { maxAge: 30000 });
 
 const getCampaignSummaries = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
@@ -129,7 +129,7 @@ const getCampaignSummaries = bg.coMemo(function*(entityId) {
         method: 'GET',
         dataType: 'json'
     });
-}, { maxAge: 2 * constants.timespan.minute });
+}, { maxAge: 30000 });
 
 function* requestCampaignData(entityId) {
     checkEntityId(entityId);
@@ -300,23 +300,23 @@ const getAggregateKeywordData = bg.coMemo(function*(entityId, adGroupIds) {
     return keywordSets;
 });
 
-const setCampaignMetadata = bg.coMemo(function*(entityId, campaignId, asin) {
+function* setCampaignMetadata(entityId, campaignId, asin) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
         data: JSON.stringify({ asin }),
         contentType: 'application/json',
     });
-});
+}
 
-const setAdGroupMetadata = bg.coMemo(function*(entityId, adGroupId, campaignId) {
+function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
         data: JSON.stringify({ campaignId }),
         contentType: 'application/json',
     });
-});
+}
 
 function* getAdGroups(entityId) {
     checkEntityId(entityId);
