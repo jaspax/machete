@@ -25,6 +25,8 @@ bg.messageListener(function*(req) {
         return yield getAllowedCampaigns(req.entityId);
     else if (req.action == 'getCampaignSummaries') 
         return yield getCampaignSummaries(req.entityId);
+    else if (req.action == 'getCurrentCampaignSnapshot')
+        return yield getCurrentCampaignSnapshot(req.entityId, req.campaignId);
     else if (req.action == 'getDataHistory')
         return yield getDataHistory(req.entityId, req.campaignId);
     else if (req.action == 'getAggregateCampaignHistory')
@@ -244,12 +246,22 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     }
 }
 
-const getDataHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
+const getCampaignHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
     checkEntityId(entityId);
-    const snapshots = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
+    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
         method: 'GET',
         dataType: 'json'
     });
+});
+
+
+const getCurrentCampaignSnapshot = bg.coMemo(function*(entityId, campaignId) {
+    const snapshots = yield getCampaignHistory(entityId, campaignId);
+    return snapshots.pop();
+});
+
+const getDataHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
+    const snapshots = yield getCampaignHistory(entityId, campaignId);
     return common.convertSnapshotsToDeltas(snapshots);
 });
 

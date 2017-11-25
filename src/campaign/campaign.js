@@ -119,15 +119,29 @@ function generateBidOptimizer(container) {
     const campaignId = spdata.getCampaignId();
 
     co(function*() {
+        let tabContent = React.createElement(BidOptimizerTab, { 
+            targetAcos: 0,
+            targetSales: 0,
+            optimizeAcos,
+            optimizeSales,
+            loading: true,
+            message: 'Loading keyword data...'
+        });
+        ReactDOM.render(tabContent, container[0]);
+
         const adGroupId = yield adGroupPromise;
-        const campaignData = (yield spdata.getCampaignHistory(entityId, campaignId)).pop();
-        const campaignSummary = (yield spdata.getCampaignSummaries(entityId, campaignId)).find(x => x.campaignId == campaignId);
+        const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
+        const summaries = yield spdata.getCampaignSummaries(entityId);
+        const campaignSummary = summaries.find(x => x.campaignId == campaignId);
         const campaignDays = moment().diff(campaignSummary.startDate, 'days');
+        const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
+        const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
+        const origKws = yield spdata.getKeywordData(entityId, adGroupId);
+        const renormedKws = common.renormKeywordStats(aggrKws);
 
         function optimizeAcos(value) {
             co(function*() {
-                const origKws = yield spdata.getKeywordData(entityId, adGroupId);
-                const renormedKws = common.renormKeywordStats(origKws);
+                yield Promise.resolve();
                 const optimized = common.optimizeKeywordsAcos(value, renormedKws);
                 console.log('orig', origKws, 'acos optim', optimized);
             });
@@ -135,18 +149,19 @@ function generateBidOptimizer(container) {
 
         function optimizeSales(value) {
             co(function*() {
-                const origKws = yield spdata.getKeywordData(entityId, adGroupId);
-                const renormedKws = common.renormKeywordStats(origKws);
+                yield Promise.resolve();
                 const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignDays, renormedKws);
                 console.log('orig', origKws, 'sales optim', optimized);
             });
         }
 
-        let tabContent = React.createElement(BidOptimizerTab, { 
+        tabContent = React.createElement(BidOptimizerTab, { 
             targetAcos: campaignData.acos,
             targetSales: campaignData.salesValue / campaignDays,
             optimizeAcos,
-            optimizeSales
+            optimizeSales,
+            loading: false,
+            message: 'Ready'
         });
         ReactDOM.render(tabContent, container[0]);
     });

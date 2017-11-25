@@ -50,6 +50,14 @@ function getQueryArgs(str) {
     return args;
 }
 
+function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
+    return common.bgMessage({
+        action: 'getCurrentCampaignSnapshot',
+        entityId: entityId,
+        campaignId: campaignId,
+    });
+}
+
 function getCampaignHistory(entityId = getEntityId(), campaignId = getCampaignId()) {
     return common.bgMessage({
         action: 'getDataHistory',
@@ -176,6 +184,7 @@ module.exports = {
     getEntityId,
     getCampaignId,
     getQueryArgs,
+    getCurrentCampaignSnapshot,
     getCampaignHistory,
     getAggregateCampaignHistory,
     getKeywordData,
