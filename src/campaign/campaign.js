@@ -3,6 +3,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const co = require('co');
 const moment = require('moment');
+const queue = require('async/queue');
 
 const common = require('../common/common.js');
 const spdata = require('../common/sp-data.js');
@@ -119,15 +120,7 @@ function generateBidOptimizer(container) {
     const campaignId = spdata.getCampaignId();
 
     co(function*() {
-        let tabContent = React.createElement(BidOptimizerTab, { 
-            targetAcos: 0,
-            targetSales: 0,
-            optimizeAcos,
-            optimizeSales,
-            loading: true,
-            message: 'Loading keyword data...'
-        });
-        ReactDOM.render(tabContent, container[0]);
+        renderOptimizeStatus({ loading: true, message: 'Loading keyword data...'}, container[0]);
 
         const adGroupId = yield adGroupPromise;
         const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
@@ -140,38 +133,83 @@ function generateBidOptimizer(container) {
         const renormedKws = common.renormKeywordStats(aggrKws);
 
         function optimizeAcos(value) {
-            co(function*() {
-                yield Promise.resolve();
-                const optimized = common.optimizeKeywordsAcos(value, renormedKws);
-                console.log('orig', origKws, 'acos optim', optimized);
-            });
+            const optimized = common.optimizeKeywordsAcos(value, renormedKws);
+            const q = queue((kw, callback) => {
+                const origKw = origKws.find(orig => kw.id.includes(orig.id));
+                if (!origKw) {
+                    callback();
+                    return;
+                }
+
+                renderOptimizeStatus({ 
+                    loading: true, 
+                    message: `Change bid on "${kw.keyword}": ${common.moneyFmt(origKw.bid)} to ${common.moneyFmt(kw.bid)}`
+                }, container[0]);
+                spdata.updateKeywordBid([origKw.id], kw.bid).then(callback, callback);
+            }, 6);
+            q.drain = () => {
+                renderOptimizeStatus({
+                    loading: false,
+                    message: 'Done!',
+                });
+            };
+            q.push(optimized);
         }
 
         function optimizeSales(value) {
-            co(function*() {
-                yield Promise.resolve();
-                const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignDays, renormedKws);
-                console.log('orig', origKws, 'sales optim', optimized);
-            });
+            const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignDays, renormedKws);
+            const q = queue((kw, callback) => {
+                const origKw = origKws.find(orig => kw.id.includes(orig.id));
+                if (!origKw) {
+                    callback();
+                    return;
+                }
+
+                renderOptimizeStatus({ 
+                    loading: true, 
+                    message: `Change bid on "${kw.keyword}": ${common.moneyFmt(origKw.bid)} to ${common.moneyFmt(kw.bid)}`
+                }, container[0]);
+                spdata.updateKeywordBid([origKw.id], kw.bid).then(callback, callback);
+            }, 6);
+            q.drain = () => {
+                renderOptimizeStatus({
+                    loading: false,
+                    message: 'Done!',
+                });
+            };
+            q.push(optimized);
         }
 
-        tabContent = React.createElement(BidOptimizerTab, { 
+        renderOptimizeStatus({ 
             targetAcos: campaignData.acos,
             targetSales: campaignData.salesValue / campaignDays,
             optimizeAcos,
             optimizeSales,
             loading: false,
             message: 'Ready'
-        });
-        ReactDOM.render(tabContent, container[0]);
+        }, container[0]);
     });
+}
+
+const lastOptimizeStatus = {
+    targetAcos: 0,
+    targetSales: 0,
+    optimizeAcos: () => console.log('unset'),
+    optimizeSales: () => console.log('unset'),
+    loading: false,
+    message: 'Ready'
+};
+function renderOptimizeStatus(args, container) {
+    const opts = Object.assign(lastOptimizeStatus, args);
+    const tabContent = React.createElement(BidOptimizerTab, opts);
+    ReactDOM.render(tabContent, container);
 }
 
 function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
-        onEnabledChange: (enabled, keywords) => spdata.updateKeywordStatus(keywords.map(kw => kw.id), enabled).then(window.location.reload),
-        onBidChange: (bid, keywords) => spdata.updateKeywordBid(keywords.map(kw => kw.id), bid).then(window.location.reload),
+        onEnabledChange: (enabled, keywords) => spdata.updateKeywordStatus(keywords.map(kw => kw.id), enabled).then(() => window.location.reload()),
+        onBidChange: (bid, keywords) => spdata.updateKeywordBid(keywords.map(kw => kw.id), bid).then(() => window.location.reload()),
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }
