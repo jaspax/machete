@@ -85,9 +85,11 @@ function optimizeKeywordsAcos(targetAcos, kws) {
 function optimizeKeywordsSalesPerDay(targetSpd, campaign, campaignDays, kws) {
     const campaignSpd = campaign.salesValue / campaignDays;
     const campaignRatio = targetSpd / campaignSpd;
+    const campaignSalesOnClick = campaign.salesValue / campaign.clicks;
     return kws.map(x => {
         const kw = Object.assign({}, x);
-        kw.bid *= campaignRatio * (kw.ctr / campaign.ctr);
+        const kwSalesOnClick = kw.sales / kw.clicks;
+        kw.bid *= campaignRatio * (kwSalesOnClick / campaignSalesOnClick);
         return kw;
     });
 }
