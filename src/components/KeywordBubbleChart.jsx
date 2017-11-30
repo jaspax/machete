@@ -3,6 +3,7 @@ const PropTypes = require('prop-types');
 const Plotly = require('plotly.js');
 
 const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 
 let chartCounter = 0;
 
@@ -43,8 +44,8 @@ class KeywordBubbleChart extends React.Component {
             mode: 'markers',
             x: kws.impressions,
             y: kws.clicks,
-            text: kws.kw.map((kw, i) =>
-                `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${common.moneyFmt(kws.avgCpc[i])}<br />ACOS: ${common.pctFmt(kws.acos[i])}`),
+            text: kws.kw.map(ga.mcatch((kw, i) =>
+                `"${kw}"<br />Impressions: ${kws.impressions[i]}<br />Clicks: ${kws.clicks[i]}<br />Avg CPC: ${common.moneyFmt(kws.avgCpc[i])}<br />ACOS: ${common.pctFmt(kws.acos[i])}`)),
             hoverinfo: 'text',
             marker: {
                 sizemode: 'area',

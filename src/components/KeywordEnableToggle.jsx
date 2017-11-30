@@ -42,9 +42,7 @@ class KeywordEnableToggle extends React.Component {
 
     handleClick() {
         this.setState({ changing: true });
-        this.props.onChange(!this.props.enabled, () => {
-            this.setState({ changing: false });
-        });
+        this.props.onChange(!this.props.enabled, () => this.setState({ changing: false }));
     }
 
     componentWillReceiveProps() {

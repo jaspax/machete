@@ -3,6 +3,8 @@ const PropTypes = require('prop-types');
 const KeywordTable = require('./KeywordTable.jsx');
 const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
 
+const ga = require('../common/ga.js');
+
 class KeywordReport extends React.Component {
     render() {
         return (
@@ -39,7 +41,7 @@ class KeywordReport extends React.Component {
 }
 
 function singleKeywordChange(handler) {
-    return (value, item) => handler(value, [item]);
+    return ga.mcatch((value, item) => handler(value, [item]));
 }
 
 KeywordReport.propTypes = {

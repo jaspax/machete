@@ -8,7 +8,7 @@ const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 
-const alarmPeriodMinutes = 240;
+const alarmPeriodMinutes = 24 * 60;
 
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
@@ -44,7 +44,7 @@ bg.messageListener(function*(req) {
     throw new Error('unknown action');
 });
 
-chrome.alarms.onAlarm.addListener((session) => {
+chrome.alarms.onAlarm.addListener(ga.mcatch(session => {
     let entityId = getEntityIdFromSession(session.name);
     try {
         checkEntityId(entityId);
@@ -57,7 +57,7 @@ chrome.alarms.onAlarm.addListener((session) => {
     co(function*() { 
         yield* alarmHandler(entityId);
     });
-});
+}));
 
 function* pageArray(array, step) {
     for (let index = 0; index < array.length; index += step) {
@@ -80,7 +80,7 @@ function* alarmHandler(entityId) {
     console.log('Alarm handler finish at', new Date());
 }
 
-const setSession = bg.coMemo(function*(req) {
+function* setSession(req) {
     console.log('page session startup for', req);
     let sessionKey = getSessionKey(req.entityId);
     
@@ -103,7 +103,7 @@ const setSession = bg.coMemo(function*(req) {
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
         yield* alarmHandler(req.entityId);
     }
-});
+}
 
 const getAllowedCampaigns = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
@@ -123,7 +123,7 @@ const getAllowedCampaigns = bg.coMemo(function*(entityId) {
         method: 'GET',
         dataType: 'json'
     });
-}, { maxAge: 2 * constants.timespan.minute });
+}, { maxAge: 30000 });
 
 const getCampaignSummaries = bg.coMemo(function*(entityId) {
     checkEntityId(entityId);
@@ -131,7 +131,7 @@ const getCampaignSummaries = bg.coMemo(function*(entityId) {
         method: 'GET',
         dataType: 'json'
     });
-}, { maxAge: 2 * constants.timespan.minute });
+}, { maxAge: 30000 });
 
 function* requestCampaignData(entityId) {
     checkEntityId(entityId);
@@ -312,23 +312,23 @@ const getAggregateKeywordData = bg.coMemo(function*(entityId, adGroupIds) {
     return keywordSets;
 });
 
-const setCampaignMetadata = bg.coMemo(function*(entityId, campaignId, asin) {
+function* setCampaignMetadata(entityId, campaignId, asin) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
         data: JSON.stringify({ asin }),
         contentType: 'application/json',
     });
-});
+}
 
-const setAdGroupMetadata = bg.coMemo(function*(entityId, adGroupId, campaignId) {
+function* setAdGroupMetadata(entityId, adGroupId, campaignId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
         data: JSON.stringify({ campaignId }),
         contentType: 'application/json',
     });
-});
+}
 
 function* getAdGroups(entityId) {
     checkEntityId(entityId);
@@ -391,17 +391,17 @@ function notifyNeedCredentials(entityId) {
 
         notificationExists = true;
         ga.mga('event', 'credential-popup', 'show');
-        chrome.notifications.onClicked.addListener((clickId) => {
+        chrome.notifications.onClicked.addListener(ga.mcatch(clickId => {
             if (clickId == notificationId) {
                 ga.mga('event', 'credential-popup', 'click');
                 chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
                 chrome.notifications.clear(notificationId);
                 notificationExists = false;
             }
-        });
-        chrome.notifications.onClosed.addListener(() => {
+        }));
+        chrome.notifications.onClosed.addListener(ga.mcatch(() => {
             notificationExists = false;
             ga.mga('event', 'credential-popup', 'dismiss');
-        });
+        }));
     }
 }
