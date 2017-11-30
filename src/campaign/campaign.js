@@ -97,8 +97,8 @@ function addCampaignTabs(tabs) {
 function generateKeywordReports(container) {
     const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
-        updateStatus: (ids, enabled, callback) => spdata.updateKeywordStatus(ids, enabled).then(callback),
-        updateBid: (ids, bid, callback) => spdata.updateKeywordBid(ids, bid).then(callback),
+        updateStatus: ga.mcatch((ids, enabled, callback) => spdata.updateKeywordStatus(ids, enabled).then(callback)),
+        updateBid: ga.mcatch((ids, bid, callback) => spdata.updateKeywordBid(ids, bid).then(callback)),
     });
     ReactDOM.render(chart, container[0]);
 }
@@ -113,8 +113,10 @@ function generateHistoryReports(container) {
 function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
-        onEnabledChange: (enabled, keywords) => spdata.updateKeywordStatus(keywords.map(kw => kw.id), enabled).then(window.location.reload),
-        onBidChange: (bid, keywords) => spdata.updateKeywordBid(keywords.map(kw => kw.id), bid).then(window.location.reload),
+        onEnabledChange: ga.mcatch((enabled, keywords) => 
+                                   spdata.updateKeywordStatus(keywords.map(kw => kw.id), enabled).then(window.location.reload)),
+        onBidChange: ga.mcatch((bid, keywords) => 
+                               spdata.updateKeywordBid(keywords.map(kw => kw.id), bid).then(window.location.reload)),
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }

@@ -26,9 +26,9 @@ chrome.runtime.onInstalled.addListener(details => {
     localStorage.setItem(lastVersionKey, manifest.version);
 });
 
-chrome.pageAction.onClicked.addListener(() => {
+chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
     chrome.tabs.create({ url: `${serviceUrl}/profile` });
-});
+}));
 
 const memoOptsDefault = {
     promise: true,
@@ -42,7 +42,7 @@ function coMemo(fn, opts = {}) {
 }
 
 function messageListener(handler) {
-    chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener(ga.mcatch((req, sender, sendResponse) => {
         console.log('Handling message:', req);
         chrome.pageAction.show(sender.tab.id); // Do this for all actions
 
@@ -82,7 +82,7 @@ function messageListener(handler) {
         });
 
         return true;
-    });
+    }));
 }
 
 function* getUser() {

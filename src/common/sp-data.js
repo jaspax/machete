@@ -162,13 +162,13 @@ common.getUser().then(ga.mcatch(user => {
     }
     let logout = links.find('a');
     if (logout[1]) {
-        $(logout[1]).click(() => {
+        $(logout[1]).click(ga.mcatch(() => {
             const result = confirm(
                 `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
                     
                 Continue logging out?`);
             return result;
-        });
+        }));
     }
 }));
 

@@ -42,7 +42,7 @@ bg.messageListener(function*(req) {
     throw new Error('unknown action');
 });
 
-chrome.alarms.onAlarm.addListener((session) => {
+chrome.alarms.onAlarm.addListener(ga.mcatch(session => {
     let entityId = getEntityIdFromSession(session.name);
     try {
         checkEntityId(entityId);
@@ -55,7 +55,7 @@ chrome.alarms.onAlarm.addListener((session) => {
     co(function*() { 
         yield* alarmHandler(entityId);
     });
-});
+}));
 
 function* pageArray(array, step) {
     for (let index = 0; index < array.length; index += step) {
@@ -379,17 +379,17 @@ function notifyNeedCredentials(entityId) {
 
         notificationExists = true;
         ga.mga('event', 'credential-popup', 'show');
-        chrome.notifications.onClicked.addListener((clickId) => {
+        chrome.notifications.onClicked.addListener(ga.mcatch(clickId => {
             if (clickId == notificationId) {
                 ga.mga('event', 'credential-popup', 'click');
                 chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
                 chrome.notifications.clear(notificationId);
                 notificationExists = false;
             }
-        });
-        chrome.notifications.onClosed.addListener(() => {
+        }));
+        chrome.notifications.onClosed.addListener(ga.mcatch(() => {
             notificationExists = false;
             ga.mga('event', 'credential-popup', 'dismiss');
-        });
+        }));
     }
 }

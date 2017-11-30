@@ -53,7 +53,7 @@ let loadingInterval = window.setInterval(ga.mcatch(() => {
     const loading = React.createElement(LoadingNotice, {});
     ReactDOM.render(loading, container[0]);
 
-    setSessionPromise.then(() => container.remove());
+    setSessionPromise.then(ga.mcatch(() => container.remove()));
     window.clearInterval(loadingInterval);
 }), 100);
 
@@ -120,10 +120,10 @@ common.getUser().then(user => {
                     anonymous: user.isAnon,
                     metric: chart.metric,
                     title: chart.label,
-                    dataPromiseFactory: () => fetchDataPromise(window.location.href, link.href).then(data => {
+                    dataPromiseFactory: ga.mcatch(() => fetchDataPromise(window.location.href, link.href).then(data => {
                         const campaignData = common.parallelizeSeries(data);
                         return common.formatParallelData(campaignData, chart.metric);
-                    }),
+                    })),
                 });
                 const container = $('<span></span>');
                 $(target).children().first().append(container);
@@ -170,8 +170,8 @@ common.getUser().then(user => {
     function generateKeywordReports(container) {
         let content = React.createElement(KeywordAnalyticsTab, {
             dataPromise: getKeywordDataAggregate(),
-            updateStatus: (ids, enabled, cb) => updateStatus(ids, enabled).then(cb),
-            updateBid: (ids, bid, cb) => updateBid(ids, bid).then(cb),
+            updateStatus: ga.mcatch((ids, enabled, cb) => updateStatus(ids, enabled).then(cb)),
+            updateBid: ga.mcatch((ids, bid, cb) => updateBid(ids, bid).then(cb)),
         });
         ReactDOM.render(content, container[0]);
     }
@@ -267,14 +267,14 @@ common.getUser().then(user => {
                 const aggregate = common.aggregateKeywords(kwSeries);
                 return aggregate;
             }),
-            updateStatus: (ids, enabled, callback) => {
+            updateStatus: ga.mcatch((ids, enabled, callback) => {
                 const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
                 updateStatus(idList, enabled).then(callback);
-            },
-            updateBid: (ids, bid, callback) => {
+            }),
+            updateBid: ga.mcatch((ids, bid, callback) => {
                 const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
                 updateBid(idList, bid).then(callback);
-            },
+            }),
         });
         ReactDOM.render(aggContent, container[0]);
     }

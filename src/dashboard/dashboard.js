@@ -87,14 +87,14 @@ function activateAggregateKeywordTab(container) {
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),
-        updateStatus: (ids, enabled, callback) => {
+        updateStatus: ga.mcatch((ids, enabled, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
             spdata.updateKeywordStatus(idList, enabled).then(callback);
-        },
-        updateBid: (ids, bid, callback) => {
+        }),
+        updateBid: ga.mcatch((ids, bid, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
             spdata.updateKeywordBid(idList, bid).then(callback);
-        },
+        }),
     });
     ReactDOM.render(aggContent, container[0]);
 }
@@ -112,7 +112,7 @@ function addChartButtons(rows) {
         let href = link.href;
         let campaignId = spdata.getCampaignId(href);
 
-        const renderButtons = (allowed, anonymous) => {
+        const renderButtons = ga.mcatch((allowed, anonymous) => {
             for (let chart of charts) {
                 let target = cells[chart.column];
                 if (!target)
@@ -140,7 +140,7 @@ function addChartButtons(rows) {
                 });
                 ReactDOM.render(btn, container[0]);
             }
-        };
+        });
 
         renderButtons(false, true);
 

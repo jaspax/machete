@@ -2,6 +2,8 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const ReactTable = require('react-table').default;
 
+const ga = require('../common/ga.js');
+
 const KeywordEnableToggle = require('./KeywordEnableToggle.jsx');
 const KeywordBidUpdate = require('./KeywordBidUpdate.jsx');
 
@@ -48,7 +50,7 @@ class KeywordTable extends React.Component {
 }
 
 function bindKeywordChange(item, callback) {
-    return (value) => callback(value, item);
+    return ga.mcatch((value) => callback(value, item));
 }
 
 KeywordTable.propTypes = {
