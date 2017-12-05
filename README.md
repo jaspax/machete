@@ -11,3 +11,4 @@ to get the following:
 * Reports on various keyword metrics, allowing you to modify keywords directly
 * Detailed charts of campaign history for multiple campaign metrics
 
+Visit [Machete](https://machete-app.com) for more information.
