@@ -51,7 +51,7 @@ class TimeSeriesChart extends React.Component {
     then(results) {
         let [layout, data] = results;
         window.setTimeout(ga.mcatch(() => this.drawGraph(layout, data)));
-        return <div></div>;
+        return <div>Drawing graph...</div>;
     }
 
     catch(error) {
@@ -81,7 +81,12 @@ class TimeSeriesChart extends React.Component {
             xaxis: { showticklabels: true }
         }, layout);
 
-        Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
+        try {
+            Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
+        }
+        catch (ex) {
+            ga.mga('event', 'error-handled', 'plotly-error', ex.message);
+        }
     }
 }
 
