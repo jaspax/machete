@@ -82,7 +82,7 @@ function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: spdata.getCampaignSummaries(spdata.getEntityId()).then(campaignSelectOptions),
         loadDataPromise: (summaries) => co(function*() {
-            const adGroupIds = _.uniq(summaries.map(x => x.adGroupId));
+            const adGroupIds = _.uniq(summaries.map(x => x.adGroupId).filter(x => x && x != 'null'));
             const kwData = yield spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
