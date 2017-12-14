@@ -81,12 +81,13 @@ class TimeSeriesChart extends React.Component {
             xaxis: { showticklabels: true }
         }, layout);
 
-        try {
-            Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
+        const target = document.getElementById(this.id);
+        if (!target) {
+            ga.mga('event', 'error-handled', 'plotly-error', 'target element removed before rendering');
+            return;
         }
-        catch (ex) {
-            ga.mga('event', 'error-handled', 'plotly-error', ex.message);
-        }
+
+        Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
     }
 }
 
