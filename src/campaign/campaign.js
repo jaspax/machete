@@ -2,7 +2,6 @@ const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const co = require('co');
-const moment = require('moment');
 const queue = require('async/queue');
 
 const common = require('../common/common.js');
@@ -126,7 +125,6 @@ function generateBidOptimizer(container) {
         const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
         const summaries = yield spdata.getCampaignSummaries(entityId);
         const campaignSummary = summaries.find(x => x.campaignId == campaignId);
-        const campaignDays = moment().diff(campaignSummary.startDate, 'days');
         const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
         const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
         const origKws = yield spdata.getKeywordData(entityId, adGroupId);
@@ -157,7 +155,7 @@ function generateBidOptimizer(container) {
         }
 
         function optimizeSales(value) {
-            const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignDays, renormedKws);
+            const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignSummary, renormedKws);
             const q = queue((kw, callback) => {
                 const origKw = origKws.find(orig => kw.id.includes(orig.id));
                 if (!origKw) {
@@ -181,8 +179,8 @@ function generateBidOptimizer(container) {
         }
 
         renderOptimizeStatus({ 
-            targetAcos: campaignData.acos,
-            targetSales: campaignData.salesValue / campaignDays,
+            targetAcos: 0,
+            targetSales: 0,
             optimizeAcos,
             optimizeSales,
             loading: false,
