@@ -82,14 +82,25 @@ function optimizeKeywordsAcos(targetAcos, kws) {
     });
 }
 
-function optimizeKeywordsSalesPerDay(targetSpd, campaign, campaignDays, kws) {
-    const campaignSpd = campaign.salesValue / campaignDays;
-    const campaignRatio = targetSpd / campaignSpd;
+function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummary, kws) {
+    const now = moment();
+    const campaignDays = now.diff(campaignSummary.startDate, 'days');
+    const campaignSalesPerDay = campaign.salesValue / campaignDays;
+    const salesRatio = targetSalesPerDay / campaignSalesPerDay;
+
+    let spendRatio = 0;
+    if (campaignSummary.budgetType == 'DAILY') {
+        const targetSpendPerDay = campaignSummary.budget;
+        const campaignSpendPerDay = campaign.spend / campaignDays;
+        spendRatio = targetSpendPerDay / campaignSpendPerDay;
+    }
+
+    const ratio = Math.max(salesRatio, spendRatio);
     const campaignSalesOnClick = campaign.salesValue / campaign.clicks;
     return kws.map(x => {
         const kw = Object.assign({}, x);
         const kwSalesOnClick = kw.sales / kw.clicks;
-        kw.bid *= campaignRatio * (kwSalesOnClick / campaignSalesOnClick);
+        kw.bid = ratio * kw.averageCpc * (kwSalesOnClick / campaignSalesOnClick);
         return kw;
     });
 }
