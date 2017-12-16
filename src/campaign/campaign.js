@@ -2,7 +2,6 @@ const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const co = require('co');
-const queue = require('async/queue');
 
 const common = require('../common/common.js');
 const spdata = require('../common/sp-data.js');
@@ -118,88 +117,35 @@ function generateBidOptimizer(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
 
-    co(function*() {
-        renderOptimizeStatus({ loading: true, message: 'Loading keyword data...'}, container[0]);
-
-        const adGroupId = yield adGroupPromise;
-        const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
+    function* prepareKwData() {
         const summaries = yield spdata.getCampaignSummaries(entityId);
         const campaignSummary = summaries.find(x => x.campaignId == campaignId);
         const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
         const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
-        const origKws = yield spdata.getKeywordData(entityId, adGroupId);
         const renormedKws = common.renormKeywordStats(aggrKws);
+        return { renormedKws, campaignSummary };
+    }
 
-        function optimizeAcos(value) {
-            const optimized = common.optimizeKeywordsAcos(value, renormedKws);
-            const q = queue((kw, callback) => {
-                const origKw = origKws.find(orig => kw.id.includes(orig.id));
-                if (!origKw) {
-                    callback();
-                    return;
-                }
-
-                renderOptimizeStatus({ 
-                    loading: true, 
-                    message: `Change bid on "${kw.keyword}": ${common.moneyFmt(origKw.bid)} to ${common.moneyFmt(kw.bid)}`
-                }, container[0]);
-                spdata.updateKeywordBid([origKw.id], kw.bid).then(callback, callback);
-            }, 6);
-            q.drain = () => {
-                renderOptimizeStatus({
-                    loading: false,
-                    message: 'Done!',
-                });
-            };
-            q.push(optimized);
-        }
-
-        function optimizeSales(value) {
-            const optimized = common.optimizeKeywordsSalesPerDay(value, campaignData, campaignSummary, renormedKws);
-            const q = queue((kw, callback) => {
-                const origKw = origKws.find(orig => kw.id.includes(orig.id));
-                if (!origKw) {
-                    callback();
-                    return;
-                }
-
-                renderOptimizeStatus({ 
-                    loading: true, 
-                    message: `Change bid on "${kw.keyword}": ${common.moneyFmt(origKw.bid)} to ${common.moneyFmt(kw.bid)}`
-                }, container[0]);
-                spdata.updateKeywordBid([origKw.id], kw.bid).then(callback, callback);
-            }, 6);
-            q.drain = () => {
-                renderOptimizeStatus({
-                    loading: false,
-                    message: 'Done!',
-                });
-            };
-            q.push(optimized);
-        }
-
-        renderOptimizeStatus({ 
-            targetAcos: 0,
-            targetSales: 0,
-            optimizeAcos,
-            optimizeSales,
-            loading: false,
-            message: 'Ready'
-        }, container[0]);
+    const tabContent = React.createElement(BidOptimizerTab, {
+        targetAcos: 0.7,
+        targetSales: 0,
+        optimizeAcos: value => co(function*() {
+            const prep = yield* prepareKwData();
+            return common.optimizeKeywordsAcos(value, prep.renormedKws);
+        }),
+        optimizeSales: value => co(function*() {
+            const prep = yield* prepareKwData();
+            const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
+            return common.optimizeKeywordsSalesPerDay(value, campaignData, prep.campaignSummary, prep.renormedKws);
+        }),
+        updateKeyword: kw => co(function*() {
+            const origKws = yield spdata.getKeywordData(entityId, yield adGroupPromise);
+            const origKw = origKws.find(orig => kw.id.includes(orig.id));
+            if (!origKw)
+                return;
+            yield spdata.updateKeywordBid([origKw.id], kw.bid);
+        }),
     });
-}
-
-const lastOptimizeStatus = {
-    targetAcos: 0,
-    targetSales: 0,
-    optimizeAcos: () => console.log('unset'),
-    optimizeSales: () => console.log('unset'),
-    loading: false,
-    message: 'Ready'
-};
-function renderOptimizeStatus(args, container) {
-    const opts = Object.assign(lastOptimizeStatus, args);
-    const tabContent = React.createElement(BidOptimizerTab, opts);
     ReactDOM.render(tabContent, container);
 }
 
