@@ -146,7 +146,7 @@ function generateBidOptimizer(container) {
             yield spdata.updateKeywordBid([origKw.id], kw.bid);
         }),
     });
-    ReactDOM.render(tabContent, container);
+    ReactDOM.render(tabContent, container[0]);
 }
 
 function generateBulkUpdate(container, data) {

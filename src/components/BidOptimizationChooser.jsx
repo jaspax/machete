@@ -1,60 +1,67 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const co = require('co');
 
 const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 
-class BidOptimizationChooser extends React.Component(props) {
+class BidOptimizationChooser extends React.Component {
     constructor(props) {
         super(props);
         this.state = { loading: false, message: '' };
+        this.clickOptimizeAcos = ga.mcatch(this.clickOptimizeAcos.bind(this));
+        this.clickOptimizeSales = ga.mcatch(this.clickOptimizeSales.bind(this));
     }
 
     render() {
         return <div className="machete-optimization-chooser">
             <form name="optimizeOptions">
                 <div className="machete-optimize-choice">
-                    <input type="radio" name="optimizeTarget" value="acos" />&nbsp;Target ACOS:
+                    Target ACOS:&nbsp;
                     <input type="text" name="targetAcos" defaultValue={common.numberFmt(this.props.targetAcos)} />%&nbsp;
-                    <button onClick={this.clickOptimizeAcos.bind(this)}>Optimize ACOS</button>
+                    <button onClick={this.clickOptimizeAcos}>Optimize ACOS</button>
                 </div>
                 <div className="machete-optimize-choice">
-                    <input type="radio" name="optimizeTarget" value="sales" />&nbsp;Target Sales/day:
+                    Target Sales/day:&nbsp;
                     $<input type="text" name="targetSales" defaultValue={common.numberFmt(this.props.targetSales)} />&nbsp;
-                    <button onClick={this.clickOptimizeSales.bind(this)}>Optimize Sales</button>
+                    <button onClick={this.clickOptimizeSales}>Optimize Sales</button>
                 </div>
             </form>
-            <StatusMessage loading={this.state.loading} message={this.state.message} />
+            <div>
+                <span className={this.state.loading ? 'loading-small' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                {this.state.message}
+            </div>
         </div>;
     }
 
     clickOptimizeAcos(evt) {
         const form = document.forms.optimizeOptions;
-        return optimize(evt, form.targetAcos.value, this.props.optimizeAcos);
+        return this.optimize(evt, form.targetAcos.value, this.props.optimizeAcos);
     }
 
     clickOptimizeSales(evt) {
         const form = document.forms.optimizeOptions;
-        return optimize(evt, form.targetSales.value, this.props.optimizeSales);
+        return this.optimize(evt, form.targetSales.value, this.props.optimizeSales);
     }
 
     optimize(evt, value, callback) {
         evt.preventDefault();
-        this.setStatu({ loading: true, message: "Analyzing keywords..." });
-        value = Number(form.targetSales.value);
-        callback(value).then(this.updateKeywords.bind(this));
+        this.setState({ loading: true, message: "Analyzing keywords..." });
+        callback(Number(value)).then(this.updateKeywords.bind(this));
         return false;
     }
 
-    updateKeywordList(kws) {
+    updateKeywords(kws) {
+        const self = this;
         co(function*() {
             for (const kw of kws) {
-                this.setState({ 
+                self.setState({ 
                     loading: true, 
                     message: `Change bid on "${kw.keyword}" to ${common.moneyFmt(kw.bid)}`
                 });
-                yield this.props.updateKeyword(kw);
+                yield self.props.updateKeyword(kw);
             }
-            this.setState({
+            self.setState({
                 loading: false,
                 message: "Done."
             });
