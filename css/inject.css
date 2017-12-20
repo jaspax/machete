@@ -113,6 +113,16 @@
     margin: 10px;
 }
 
+.machete-error {
+    border: 2px solid red;
+    box-shadow: 2px 2px 3px rgb(166, 166, 166);
+    border-radius: 4px;
+    padding: 4px;
+    width: 75%;
+    margin: 10px;
+}
+
+
 .machete-kwbulk-label {
     font-weight: bold;
 }

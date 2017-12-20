@@ -1,6 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const co = require('co');
+const qu = require('async/queue');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
@@ -8,7 +8,7 @@ const ga = require('../common/ga.js');
 class BidOptimizationChooser extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { loading: false, message: '' };
+        this.state = { loading: false, error: false, message: '' };
         this.clickOptimizeAcos = ga.mcatch(this.clickOptimizeAcos.bind(this));
         this.clickOptimizeSales = ga.mcatch(this.clickOptimizeSales.bind(this));
     }
@@ -16,20 +16,24 @@ class BidOptimizationChooser extends React.Component {
     render() {
         return <div className="machete-optimization-chooser">
             <form name="optimizeOptions">
-                <div className="machete-optimize-choice">
-                    Target ACOS:&nbsp;
+                <section className="machete-optimize-choice">
+                    <h2>Target ACOS</h2>
                     <input type="text" name="targetAcos" defaultValue={common.numberFmt(this.props.targetAcos)} />%&nbsp;
                     <button onClick={this.clickOptimizeAcos}>Optimize ACOS</button>
-                </div>
-                <div className="machete-optimize-choice">
-                    Target Sales/day:&nbsp;
+                    <p>Analyze your current ACOS and adjust bids to bring each keyword as close to the target ACOS as possible.</p>
+                </section>
+                <section className="machete-optimize-choice">
+                    <h2>Target Sales</h2>
                     $<input type="text" name="targetSales" defaultValue={common.numberFmt(this.props.targetSales)} />&nbsp;
                     <button onClick={this.clickOptimizeSales}>Optimize Sales</button>
-                </div>
+                    <p>Analyze your historical sales and adjust bids to attempt to hit the target sales per day.</p>
+                </section>
             </form>
             <div>
-                <span className={this.state.loading ? 'loading-small' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                {this.state.message}
+                <div style={{ display: 'inline-block' }} className={this.state.loading ? 'loading-small' : ''}>&nbsp;</div>
+                <span className={this.state.error ? 'machete-error' : ''}>
+                    {this.state.message}
+                </span>
             </div>
         </div>;
     }
@@ -46,26 +50,33 @@ class BidOptimizationChooser extends React.Component {
 
     optimize(evt, value, callback) {
         evt.preventDefault();
-        this.setState({ loading: true, message: "Analyzing keywords..." });
-        callback(Number(value)).then(this.updateKeywords.bind(this));
+        value = Number(value);
+        if (value && !isNaN(value) && value > 0) {
+            this.setState({ loading: true, error: false, message: "Analyzing keywords..." });
+            callback(value).then(this.updateKeywords.bind(this));
+        }
+        else {
+            this.setState({ error: true, message: "Please enter a value greater than 0" });
+        }
         return false;
     }
 
     updateKeywords(kws) {
         const self = this;
-        co(function*() {
-            for (const kw of kws) {
-                self.setState({ 
-                    loading: true, 
-                    message: `Change bid on "${kw.keyword}" to ${common.moneyFmt(kw.bid)}`
-                });
-                yield self.props.updateKeyword(kw);
-            }
-            self.setState({
-                loading: false,
-                message: "Done."
+        const kwq = qu((kw, callback) => {
+            self.setState({ 
+                loading: true, 
+                message: `Change bid on "${kw.keyword}" to ${common.moneyFmt(kw.bid)}`
             });
+            self.props.updateKeyword(kw).then(callback, callback);
+        }, 6);
+
+        kwq.drain = () => self.setState({
+            loading: false,
+            message: "Done."
         });
+
+        kwq.push(kws);
     }
 }
 
