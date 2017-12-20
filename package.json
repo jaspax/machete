@@ -31,7 +31,7 @@
     "react": "^16.2.0",
     "react-datepicker": "^0.52.0",
     "react-dom": "^16.2.0",
-    "react-element-portal": "^1.1.1",
+    "react-element-portal": "^2.0.0-0",
     "react-promise": "^2.0.0",
     "react-select": "^1.0.0-rc.10",
     "react-table": "^6.5.3"
