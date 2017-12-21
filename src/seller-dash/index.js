@@ -156,7 +156,7 @@ common.getUser().then(user => {
             args = Object.assign(args, { action: 'getAdDataRangeByAsin', campaignId, adGroupId, asin });
         }
 
-        return common.bgMessage(args);
+        return common.bgMessage(args).then(data => data.sort(common.timestampSort));
     }
 
     function getKeywordDataAggregate() {
