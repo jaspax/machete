@@ -313,6 +313,25 @@ function aggregateKeywords(kwSets) {
     return keywords;
 }
 
+function accumulateCampaignSeries(data) {
+    const accum = {};
+    for (const record of data.sort(timestampSort)) {
+        for (const key of Object.keys(record)) {
+            if (cumulativeMetrics.includes(key)) {
+                if (isNaN(accum[key]))
+                    accum[key] = 0;
+                accum[key] += record[key];
+            }
+            else {
+                accum[key] = record[key];
+            }
+        }
+    }
+
+    calculateItemStats(accum);
+    return accum;
+}
+
 function accumulateKeywordSeries(data) {
     const keywords = {};
     for (const record of data.sort((a, b) => a.timestamp - b.timestamp)) {
@@ -377,6 +396,7 @@ module.exports = {
     aggregateSeries,
     aggregateKeywords,
     accumulateKeywordSeries,
+    accumulateCampaignSeries,
     formatParallelData,
     renormKeywordStats,
     optimizeKeywordsAcos,

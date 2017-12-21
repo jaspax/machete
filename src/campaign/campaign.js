@@ -131,7 +131,7 @@ function generateBidOptimizer(container) {
         targetSales: 0,
         optimizeAcos: value => co(function*() {
             const prep = yield* prepareKwData();
-            return common.optimizeKeywordsAcos(value / 100, prep.renormedKws);
+            return common.optimizeKeywordsAcos(value, prep.renormedKws);
         }),
         optimizeSales: value => co(function*() {
             const prep = yield* prepareKwData();

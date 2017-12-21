@@ -16,6 +16,7 @@ const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
 const CampaignHistoryTab = require('../components/CampaignHistoryTab.jsx');
 const AggregateHistory = require('../components/AggregateHistory.jsx');
 const AggregateKeywords = require('../components/AggregateKeywords.jsx');
+const BidOptimizerTab = require('../components/BidOptimizerTab.jsx');
 
 const now = Date.now();
 const twoWeeks = 15 * constants.timespan.day;
@@ -87,6 +88,7 @@ common.getUser().then(user => {
         const loc = window.location.href;
         if (loc.match(/ad_group\/A\w+\//)) {
             tabber(tabs, { label: "Keyword Analytics", activate: generateKeywordReports });
+            tabber(tabs, { label: "Bid Optimizer", activate: generateBidOptimizer });
         }
         else if (loc.match(/ad_groups\//)) {
             tabber(tabs, { label: "Campaign History", activate: generateCampaignHistory });
@@ -174,6 +176,44 @@ common.getUser().then(user => {
             updateBid: ga.mcatch((ids, bid, cb) => updateBid(ids, bid).then(cb)),
         });
         ReactDOM.render(content, container[0]);
+    }
+
+    function generateBidOptimizer(container) {
+        const campaignKey = sdata.getCampaignId(window.location.href);
+
+        function* prepareKwData() {
+            const kwSeries = yield keywordDataPromise(campaignKey, ninetyDaysAgo, now);
+            const renormedKws = common.renormKeywordStats(kwSeries);
+            const summaries = yield sdata.getCampaignSummaries();
+            const campaignSummary = summaries.find(x => x.campaignId == campaignKey.campaignId);
+            return { renormedKws, campaignSummary };
+        }
+
+        const tabContent = React.createElement(BidOptimizerTab, {
+            targetAcos: 70,
+            targetSales: 0,
+            optimizeAcos: value => co(function*() {
+                const prep = yield* prepareKwData();
+                return common.optimizeKeywordsAcos(value, prep.renormedKws);
+            }),
+            optimizeSales: value => co(function*() {
+                const prep = yield* prepareKwData();
+                const campaignData = common.accumulateCampaignSeries(yield fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
+                // Hack: since we get campaign data from the last 90 days, we need to adjust the campaign info to cover the same period.
+                prep.campaignSummary.startDate = new Date(Math.max(ninetyDaysAgo, new Date(prep.campaignSummary.startDate).getTime()));
+                return common.optimizeKeywordsSalesPerDay(value, campaignData, prep.campaignSummary, prep.renormedKws);
+            }),
+            updateKeyword: kw => co(function*() {
+                const origKws = yield getKeywordDataAggregate();
+                const origKw = origKws.find(orig => kw.id.includes(orig.id));
+                if (!origKw)
+                    return;
+                if (origKw.bid === kw.bid)
+                    return;
+                yield updateBid([origKw.id], kw.bid);
+            }),
+        });
+        ReactDOM.render(tabContent, container[0]);
     }
 
     function campaignSelectOptions(summaries) {
@@ -278,7 +318,6 @@ common.getUser().then(user => {
         });
         ReactDOM.render(aggContent, container[0]);
     }
-
 
     function updateKeyword(data) {
         return $.ajax({
