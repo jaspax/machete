@@ -11,6 +11,7 @@ const ga = require('../common/ga.js');
 const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx');
 const AggregateHistory = require('../components/AggregateHistory.jsx');
 const AggregateKeywords = require('../components/AggregateKeywords.jsx');
+const AmsCampaignRow = require('../components/AmsCampaignRow.jsx');
 const tabber = require('../components/tabber.js');
 
 const twoWeeks = 15 * constants.timespan.day;
@@ -32,6 +33,7 @@ window.setInterval(ga.mcatch(() => {
 
     let wrapper = $('#campaignTable_wrapper');
     addTabs(wrapper);
+    addTotalsRow(wrapper);
 }), 100);
 
 function addTabs(wrapper) {
@@ -54,6 +56,33 @@ function addTabs(wrapper) {
     tabber(tabs, {
         label: 'Aggregate Keywords',
         activate: activateAggregateKeywordTab,
+    });
+}
+
+function addTotalsRow(wrapper) {
+    if (!wrapper.length || wrapper.find('#machete-totals').length)
+        return;
+
+    const head = wrapper.find('#campaignTable thead');
+    if (!head.length)
+        return;
+
+    const body = $('<tbody id="machete-totals"></tbody>');
+    head.after(body);
+
+    Promise.all([snapshotPromise, spdata.getCampaignSummaries()]).then(results => {
+        const [snapshots, summaries] = results;
+        const latest = _.chain(snapshots).groupBy('campaignId').mapValues(x => x[x.length - 1]).values().value();
+        const totals = common.aggregateSeries([latest])[0];
+
+        const activeCampaigns = summaries.filter(x => ['RUNNING', 'OUT_OF_BUDGET'].includes(x.status));
+        totals.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
+
+        const totalRow = React.createElement(AmsCampaignRow, { 
+            label: "All Recent Campaigns",
+            campaign: totals,
+        });
+        ReactDOM.render(totalRow, body[0]);
     });
 }
 
