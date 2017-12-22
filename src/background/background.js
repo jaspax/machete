@@ -25,6 +25,8 @@ bg.messageListener(function*(req) {
         return yield getAllowedCampaigns(req.entityId);
     else if (req.action == 'getCampaignSummaries') 
         return yield getCampaignSummaries(req.entityId);
+    else if (req.action == 'getAllCampaignData')
+        return yield getAllCampaignData(req.entityId, req.start, req.end);
     else if (req.action == 'getCurrentCampaignSnapshot')
         return yield getCurrentCampaignSnapshot(req.entityId, req.campaignId);
     else if (req.action == 'getDataHistory')
@@ -254,6 +256,13 @@ const getCampaignHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: 
     });
 });
 
+const getAllCampaignData = bg.coMemo(function*(entityId, startTimestamp, endTimestamp) {
+    checkEntityId(entityId);
+    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`, { 
+        method: 'GET',
+        dataType: 'json'
+    });
+});
 
 const getCurrentCampaignSnapshot = bg.coMemo(function*(entityId, campaignId) {
     const snapshots = yield getCampaignHistory(entityId, campaignId);

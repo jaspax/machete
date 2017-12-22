@@ -24,6 +24,8 @@ const charts = [
     { column: 11, label: "ACOS", metric: 'acos' },
 ];
 
+const snapshotPromise = spdata.getAllCampaignsTwoDaySnapshot();
+
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
     addChartButtons(tableRows);
