@@ -17,15 +17,15 @@ const tabber = require('../components/tabber.js');
 const twoWeeks = 15 * constants.timespan.day;
 const startTimestamp = Date.now() - twoWeeks;
 const charts = [
-    { column: 6, label: "Impressions / day", metric: 'impressions' },
-    { column: 7, label: "Clicks / day", metric: 'clicks' },
-    { column: 8, label: "Avg CPC", metric: 'avgCpc' },
-    { column: 9, label: "Spend / day", metric: 'spend' },
-    { column: 10, label: "Sales ($) / day", metric: 'salesValue' },
-    { column: 11, label: "ACOS", metric: 'acos' },
+    { column: 6, label: "Impressions / day", metric: 'impressions', format: x => common.numberFmt(x, 0) },
+    { column: 7, label: "Clicks / day", metric: 'clicks', format: x => common.numberFmt(x, 0) },
+    { column: 8, label: "Avg CPC", metric: 'avgCpc', format: common.moneyFmt },
+    { column: 9, label: "Spend / day", metric: 'spend', format: common.moneyFmt },
+    { column: 10, label: "Sales ($) / day", metric: 'salesValue', format: common.moneyFmt },
+    { column: 11, label: "ACOS", metric: 'acos', format: common.pctFmt },
 ];
 
-const snapshotPromise = spdata.getAllCampaignsTwoDaySnapshot();
+const snapshotPromise = spdata.getAllCampaignsTwoDaySnapshot().then(data => _.groupBy(data, 'campaignId'));
 
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
@@ -72,10 +72,10 @@ function addTotalsRow(wrapper) {
 
     Promise.all([snapshotPromise, spdata.getCampaignSummaries()]).then(results => {
         const [snapshots, summaries] = results;
-        const byCampaign = _.groupBy(snapshots, 'campaignId');
-        const lastDay = common.aggregateSeries(_.values(byCampaign).map(common.convertSnapshotsToDeltas))[0];
+        const aggregate = common.aggregateSeries(_.values(snapshots).map(common.convertSnapshotsToDeltas));
+        const lastDay = aggregate[aggregate.length - 1];
 
-        const latest = _.chain(byCampaign).mapValues(x => x[x.length - 1]).values().value();
+        const latest = _.chain(snapshots).mapValues(x => x[x.length - 1]).values().value();
         const totals = common.aggregateSeries([latest])[0];
 
         const activeCampaigns = summaries.filter(x => ['RUNNING', 'OUT_OF_BUDGET'].includes(x.status));
@@ -147,7 +147,7 @@ function addChartButtons(rows) {
         let href = link.href;
         let campaignId = spdata.getCampaignId(href);
 
-        const renderButtons = ga.mcatch((allowed, anonymous) => {
+        const renderButtons = ga.mcatch((allowed, anonymous, snapshot) => {
             for (let chart of charts) {
                 let target = cells[chart.column];
                 if (!target)
@@ -174,15 +174,23 @@ function addChartButtons(rows) {
                     dataPromiseFactory,
                 });
                 ReactDOM.render(btn, container[0]);
+
+                if (allowed) {
+                    const deltas = common.convertSnapshotsToDeltas(snapshot);
+                    const lastDay = common.chunkSeries(deltas, 'day').pop();
+                    const value = chart.format(lastDay[chart.metric]);
+                    if (lastDay && lastDay.timestamp > Date.now() - (2 * constants.timespan.day))
+                        $(target).append(`<div><span class="machete-ghost">24h:</span>${value}</div>`);
+                }
             }
         });
 
         renderButtons(false, true);
 
-        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser()])
+        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), snapshotPromise])
         .then(results => {
-            const [allowed, user] = results;
-            renderButtons(allowed, user.isAnon);
+            const [allowed, user, snapshots] = results;
+            renderButtons(allowed, user.isAnon, snapshots[campaignId]);
         });
     }
 }
