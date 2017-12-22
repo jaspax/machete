@@ -72,15 +72,19 @@ function addTotalsRow(wrapper) {
 
     Promise.all([snapshotPromise, spdata.getCampaignSummaries()]).then(results => {
         const [snapshots, summaries] = results;
-        const latest = _.chain(snapshots).groupBy('campaignId').mapValues(x => x[x.length - 1]).values().value();
+        const byCampaign = _.groupBy(snapshots, 'campaignId');
+        const lastDay = common.aggregateSeries(_.values(byCampaign).map(common.convertSnapshotsToDeltas))[0];
+
+        const latest = _.chain(byCampaign).mapValues(x => x[x.length - 1]).values().value();
         const totals = common.aggregateSeries([latest])[0];
 
         const activeCampaigns = summaries.filter(x => ['RUNNING', 'OUT_OF_BUDGET'].includes(x.status));
         totals.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
 
         const totalRow = React.createElement(AmsCampaignRow, { 
-            label: "All Recent Campaigns",
-            campaign: totals,
+            label: "All Active Campaigns",
+            totals,
+            lastDay
         });
         ReactDOM.render(totalRow, body[0]);
     });

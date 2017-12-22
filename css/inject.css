@@ -264,3 +264,9 @@
 #machete-totals td {
     font-weight: bold;
 }
+
+.machete-ghost {
+    font-weight: normal;
+    color: #b1aaaa;
+    margin-right: 2px;
+}
