@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const $ = require('jquery');
+const _ = require('lodash');
 const ga = require('./ga.js');
 const common = require('./common.js');
 const constants = require('./constants.js');
@@ -58,7 +59,7 @@ function getAllCampaignsTwoDaySnapshot(entityId = getEntityId()) {
         entityId,
         start,
         end: now
-    });
+    }).then(data => _.groupBy(data, 'campaignId'))
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
