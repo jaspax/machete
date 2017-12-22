@@ -260,3 +260,7 @@
     margin-bottom: 8px;
     margin-left: 10px;
 }
+
+#machete-totals td {
+    font-weight: bold;
+}
