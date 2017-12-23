@@ -59,7 +59,7 @@ function getAllCampaignsTwoDaySnapshot(entityId = getEntityId()) {
         entityId,
         start,
         end: now
-    }).then(data => _.groupBy(data, 'campaignId'))
+    }).then(data => _.groupBy(data, 'campaignId'));
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
