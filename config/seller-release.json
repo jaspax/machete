@@ -3,5 +3,6 @@
     "PRODUCT": "seller",
     "NODE_ENV": "production",
     "HOSTNAME": "machete-app.com",
-    "ANALYTICS_ID": "UA-98724833-1"
+    "ANALYTICS_ID": "UA-98724833-1",
+    "APP_ID": "doggogocakpiacfoebkjgjolmpklkeha"
 }

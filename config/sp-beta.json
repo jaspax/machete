@@ -3,5 +3,6 @@
     "PRODUCT": "sp",
     "NODE_ENV": "debug",
     "HOSTNAME": "beta.machete-app.com",
-    "ANALYTICS_ID": "UA-98724833-2"
+    "ANALYTICS_ID": "UA-98724833-2",
+    "APP_ID": "ekcgmjhleflmfemjpeomblomcbhfnfcj"
 }
