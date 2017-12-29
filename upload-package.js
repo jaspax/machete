@@ -57,20 +57,28 @@ function* accessToken(codes) {
 
 function* uploadPackage(appId, token, pkgPath) {
     const pkgBuffer = yield new Promise((resolve, reject) => fs.readFile(pkgPath, (err, data) => (err && reject(err)) || resolve(data)));
-    const result = yield requestp({
+    const response = yield requestp({
         uri: 'https://www.googleapis.com/upload/chromewebstore/v1.1/items/' + appId,
         method: 'PUT',
         headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
         body: pkgBuffer
     });
-    return JSON.parse(result);
+
+    const status = JSON.parse(response);
+    if (status.uploadState != 'SUCCESS')
+        throw new Error(uploadState.error_detail);
+
+    return status;
 }
 
 function* publishPackage(appId, token) {
-    const result = yield requestp({
+    const response = yield requestp({
         uri: `https://www.googleapis.com/chromewebstore/v1.1/items/${appId}/publish`,
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
     });
-    return JSON.parse(result);
+
+    const status = JSON.parse(response);
+    if (status.status[0] != 'OK')
+        throw new Error(status.statusDetail.join('. '));
 }
