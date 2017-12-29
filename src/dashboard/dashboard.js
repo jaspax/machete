@@ -25,6 +25,8 @@ const charts = [
     { column: 11, label: "ACOS", metric: 'acos', format: common.pctFmt },
 ];
 
+const twoDaySnapshotPromise = spdata.getAllCampaignsTwoDaySnapshot();
+
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
     addChartButtons(tableRows);
@@ -68,7 +70,7 @@ function addTotalsRow(wrapper) {
     const body = $('<tbody id="machete-totals"></tbody>');
     head.after(body);
 
-    Promise.all([spdata.getAllCampaignsTwoDaySnapshot(), spdata.getCampaignSummaries()]).then(results => {
+    Promise.all([twoDaySnapshotPromise, spdata.getCampaignSummaries()]).then(results => {
         let [snapshots, summaries] = results;
         const lastDay = common.aggregateSeries(_.values(snapshots).map(common.convertSnapshotsToDeltas)).pop();
 
@@ -185,7 +187,7 @@ function addChartButtons(rows) {
 
         renderButtons(false, true);
 
-        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getAllCampaignsTwoDaySnapshot()])
+        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), twoDaySnapshotPromise])
         .then(results => {
             const [allowed, user, snapshots] = results;
             renderButtons(allowed, user.isAnon, snapshots[campaignId]);
