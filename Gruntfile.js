@@ -23,6 +23,11 @@ module.exports = function(grunt) {
         env.NODE_ENV = 'production';
     }
 
+    const local = grunt.option('local') || process.env.MACHETE_LOCAL;
+    if (local) {
+        env.MACHETE_LOCAL = 1;
+    }
+
     let vendorTransforms = [];
     if (releaseTag == 'release') {
         vendorTransforms = [

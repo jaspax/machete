@@ -10,6 +10,9 @@ function isBackgroundPage() {
 // Execute a function in the context of the hosting page. For Chrome extension
 // scripts, we execute directly.
 function inpage(fn, args) {
+    if (process.env.MACHETE_LOCAL)
+        return;
+
     args = args || [];
     if (isBackgroundPage()) {
         fn(...args);
