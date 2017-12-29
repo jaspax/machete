@@ -43,6 +43,8 @@ module.exports = function(grunt) {
         ];
     }
 
+    const pkgPath = `machete-${product}-${releaseTag}.zip`;
+
     const gruntConfig = {
         pkg,
         execute: {
@@ -100,7 +102,13 @@ module.exports = function(grunt) {
             /* Targets created programatically */
         },
         zip: {
-            [`machete-${product}-${releaseTag}.zip`]: [`out/${product}/**`],
+            [pkgPath]: [`out/${product}/**`],
+        },
+        run: {
+            publish: {
+                cmd: 'node',
+                args: ['upload-package.js', env.APP_ID, pkgPath],
+            }
         },
     };
 
@@ -134,7 +142,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-zip');
     grunt.loadNpmTasks('grunt-execute');
+    grunt.loadNpmTasks('grunt-run');
 
     grunt.registerTask('app', ['execute', ...sourceDirs[product].map(x => `browserify:${x}`)]);
     grunt.registerTask('default', ['execute', 'eslint', 'browserify', 'copy', 'zip']);
+    grunt.registerTask('publish', ['default', 'run:publish']);
 };
