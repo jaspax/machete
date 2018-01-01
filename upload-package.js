@@ -81,4 +81,5 @@ function* publishPackage(appId, token) {
     const status = JSON.parse(response);
     if (status.status[0] != 'OK')
         throw new Error(status.statusDetail.join('. '));
+    return status;
 }
