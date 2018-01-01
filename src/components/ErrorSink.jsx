@@ -25,9 +25,9 @@ function ErrorSink(props) {
             Please report this error by copying the error information below
             and sending it to <a href="mailto:support@machete-app.com?subject=Bug%20report">support@machete-app.com</a>.
         </div>
-        <pre>
+        <textbox style={{ width: "100%", height: "100%" }} readOnly>
             {ga.errorToString(error)}
-        </pre>
+        </textbox>
     </div>;
 }
 
