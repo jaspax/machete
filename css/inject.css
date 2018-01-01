@@ -105,19 +105,19 @@
 }
 
 .machete-warning {
-    border: 2px solid #f0c14b;
-    box-shadow: 2px 2px 3px rgb(166, 166, 166);
-    border-radius: 4px;
-    padding: 4px;
+    border: 1px solid #f0c14b;
+    box-shadow: 1px 1px 2px rgb(166, 166, 166);
+    border-radius: 2px;
+    padding: 4px 8px;
     width: 75%;
     margin: 10px;
 }
 
 .machete-error {
-    border: 2px solid red;
-    box-shadow: 2px 2px 3px rgb(166, 166, 166);
-    border-radius: 4px;
-    padding: 4px;
+    border: 1px solid red;
+    box-shadow: 1px 1px 2px rgb(166, 166, 166);
+    border-radius: 2px;
+    padding: 4px 8px;
     width: 75%;
     margin: 10px;
 }
@@ -269,4 +269,21 @@
     font-weight: normal;
     color: #b1aaaa;
     margin-right: 2px;
+}
+
+.machete-optimize-choice button {
+    padding: 2px 4px;
+    margin: 2px 4px;
+    height: 2em;
+    background: linear-gradient(to bottom,#f7dfa5,#f0c14b);
+    border: 1px solid rgb(166, 166, 166);
+}
+
+.machete-optimize-choice button:disabled {
+    background: linear-gradient(to bottom, rgb(231,233,236), rgb(141, 144, 150));
+}
+
+.a-box-inner section {
+    margin-top: 20px;
+    margin-bottom: 10px;
 }

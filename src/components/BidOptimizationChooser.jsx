@@ -32,7 +32,7 @@ class BidOptimizationChooser extends React.Component {
                 </section>
             </form>
             <div>
-                <div style={{ display: 'inline-block' }} className={this.state.loading ? 'loading-small' : ''}>&nbsp;</div>
+                <div style={{ display: 'inline-block', marginRight: '10px' }} className={this.state.loading ? 'loading-small' : ''}>&nbsp;</div>
                 <span className={this.state.error ? 'machete-error' : ''}>
                     {this.state.message}
                 </span>
