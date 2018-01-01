@@ -29,14 +29,14 @@ class KeywordAnalysis extends React.Component {
 
     after(data) {
         let totalImpressions = data.reduce((acc, val) => acc + val.impressions, 0);
-        let minImpressions = totalImpressions / (data.length * 10);
+        let minImpressions = totalImpressions / (data.length * 20);
 
         for (let kw of data) {
-            kw.hasEnoughImpressions = kw.clicks && kw.impressions > minImpressions;
+            kw.significant = kw.impressions > minImpressions || kw.spend > 1;
         }
 
         let salesTopQuartile = data.sort((a, b) => b.sales - a.sales)[Math.round(data.length / 4)];
-        let ctrSort = data.filter(x => x.hasEnoughImpressions).sort((a, b) => a.ctr - b.ctr);
+        let ctrSort = data.filter(x => x.significant).sort((a, b) => a.ctr - b.ctr);
         let ctrBottomQuartile = 0;
         let ctrTopQuartile = 0;
         if (ctrSort.length) {
@@ -67,7 +67,7 @@ class KeywordAnalysis extends React.Component {
             }]
         }, {
             title: 'Keywords with low click-through rate (CTR)',
-            filterFn: x => x.hasEnoughImpressions && x.ctr <= ctrBottomQuartile,
+            filterFn: x => x.significant && x.ctr <= ctrBottomQuartile,
             columns: [{
                 title: 'CTR',
                 sort: 'asc',
@@ -117,7 +117,7 @@ class KeywordAnalysis extends React.Component {
         
         const bestKwTables = [{
             title: 'Keywords with high click-through rate (CTR)',
-            filterFn: x => x.hasEnoughImpressions && x.ctr >= ctrTopQuartile,
+            filterFn: x => x.significant && x.ctr >= ctrTopQuartile,
             columns: [{
                 title: 'CTR',
                 sort: 'desc',
