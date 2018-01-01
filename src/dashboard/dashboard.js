@@ -73,6 +73,8 @@ function addTotalsRow(wrapper) {
     Promise.all([twoDaySnapshotPromise, spdata.getCampaignSummaries()]).then(results => {
         let [snapshots, summaries] = results;
         const lastDay = common.aggregateSeries(_.values(snapshots).map(common.convertSnapshotsToDeltas)).pop();
+        if (!lastDay)
+            return; // sorry, no data
 
         const latest = _.chain(snapshots).mapValues(x => x[x.length - 1]).values().value();
         const totals = common.aggregateSeries([latest])[0];
