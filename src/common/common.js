@@ -276,7 +276,7 @@ function aggregateSeries(series, opt = { chunk: 'day' }) {
                 }
             }
             else {
-                a[timestamp] = item;
+                a[timestamp] = Object.assign({}, item);
             }
         }
     }

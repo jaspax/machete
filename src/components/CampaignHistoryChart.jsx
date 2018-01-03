@@ -98,14 +98,15 @@ function aggregateSeriesAllMetrics(data) {
 function componentSeriesForMetric(aggregate, campaigns, metric) {
     return [aggregate, ...campaigns].map(data => {
         const parallel = common.parallelizeSeries(data);
-        const name = data == aggregate ? "Total" : data[0].campaignName;
+        const isAggregate = data == aggregate;
         return {
             data: parallel[metric] || [],
             timestamp: parallel.timestamp,
-            name,
+            name: isAggregate ? "Total" : data[0].campaignName,
             format: common.roundFmt, // TODO: bad for things! switch based on metric!
             options: {
                 mode: 'lines',
+                fill: isAggregate ? 'tozeroy' : null,
                 connetctgaps: true,
             },
         };
