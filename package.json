@@ -33,6 +33,7 @@
     "react-dom": "^16.2.0",
     "react-element-portal": "^2.0.0-0",
     "react-promise": "^2.0.0",
+    "react-radio-group": "^3.0.2",
     "react-select": "^1.0.0-rc.10",
     "react-table": "^6.5.3"
   },

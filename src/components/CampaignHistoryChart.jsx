@@ -8,7 +8,7 @@ class CampaignHistoryChart extends React.Component {
     render() {
         const width = this.state ? this.state.width : 800;
         const dataPromise = this.props.dataPromise.then(createHistoryData);
-        const layoutPromise = dataPromise.then(createLayout);
+        const layoutPromise = dataPromise.then(data => createLayout(data));
 
         return (
             <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
@@ -38,9 +38,16 @@ class CampaignHistoryChart extends React.Component {
 }
 
 function createHistoryData(data) {
-    const parallel = common.parallelizeSeries(data);
+    const { aggregate, campaigns, metric } = data;
+    this.metric = metric;
+    if (metric == 'all')
+        return aggregateSeriesAllMetrics(aggregate);
+    return componentSeriesForMetric(aggregate, campaigns, metric);
+}
 
-    let series = [
+function aggregateSeriesAllMetrics(data) {
+    const parallel = common.parallelizeSeries(data);
+    return [
         {
             data: parallel.impressions || [],
             timestamp: parallel.timestamp,
@@ -86,57 +93,90 @@ function createHistoryData(data) {
             }, 
         },
     ];
-
-    return series;
 }
 
-function createLayout(series) {
+function componentSeriesForMetric(aggregate, campaigns, metric) {
+    return [aggregate, ...campaigns].map(data => {
+        const parallel = common.parallelizeSeries(data);
+        const name = data == aggregate ? "Total" : data[0].campaignName;
+        return {
+            data: parallel[metric] || [],
+            timestamp: parallel.timestamp,
+            name,
+            format: common.roundFmt, // TODO: bad for things! switch based on metric!
+            options: {
+                mode: 'lines',
+                connetctgaps: true,
+            },
+        };
+    });
+}
+
+function createLayout(series, metric = this.metric) {
+    if (metric == 'all')
+        return layoutAllMetrics(series);
+    return layoutMetric(series);
+}
+
+const baseLayout = {
+  margin: { l: 20, b: 40, t: 20, r: 20 },
+  legend: {x: 0, y: 1},
+  xaxis: {
+      autorange: true,
+      showgrid: true,
+      zeroline: false,
+      showline: false,
+      autotick: true,
+      showticklabels: true
+  },
+};
+
+function layoutMetric(series) {
+    return Object.assign({}, baseLayout, {
+        yaxis: {
+            showgrid: false,
+            zeroline: true,
+            showline: true,
+            showticklabels: true,
+            range: [0, Math.max(...series[0].data)],
+        },
+    });
+}
+
+function layoutAllMetrics(series) {
     const impressions = series.find(x => x.name == 'Impressions').data;
     const clicks = series.find(x => x.name == 'Clicks').data;
     const spend = series.find(x => x.name == 'Spend').data;
     const sales = series.find(x => x.name == 'Sales').data;
     const money = [].concat(...spend).concat(...sales);
 
-    var layout = {
-      margin: { l: 20, b: 40, t: 20, r: 20 },
-      legend: {x: 0, y: 1},
-      xaxis: {
-          autorange: true,
-          showgrid: true,
-          zeroline: false,
-          showline: false,
-          autotick: true,
-          showticklabels: true
-      },
-      yaxis: { // impressions
-        showgrid: false,
-        zeroline: true,
-        showline: true,
-        showticklabels: false,
-        range: [0, Math.max(...impressions)],
-      },
-      yaxis2: { // clicks
-        showgrid: false,
-        zeroline: false,
-        showline: true,
-        showticklabels: false,
-        overlaying: 'y',
-        range: [0, Math.max(...clicks) * 1.2]
-      },
-      yaxis3: { // sales & spend
-        showgrid: false,
-        zeroline: false,
-        showline: true,
-        showticklabels: false,
-        overlaying: 'y',
-        range: [0, Math.max(...money) * 1.5]
-      },
-    };
-
-    return layout;
+    return Object.assign({}, baseLayout, {
+        yaxis: { // impressions
+            showgrid: false,
+            zeroline: true,
+            showline: true,
+            showticklabels: false,
+            range: [0, Math.max(...impressions)],
+        },
+        yaxis2: { // clicks
+            showgrid: false,
+            zeroline: false,
+            showline: true,
+            showticklabels: false,
+            overlaying: 'y',
+            range: [0, Math.max(...clicks) * 1.2]
+        },
+        yaxis3: { // sales & spend
+            showgrid: false,
+            zeroline: false,
+            showline: true,
+            showticklabels: false,
+            overlaying: 'y',
+            range: [0, Math.max(...money) * 1.5]
+        }
+    });
 }
 
-CampaignHistoryChart.propTypes = { dataPromise: PropTypes.object.isRequired };
+CampaignHistoryChart.propTypes = { dataPromise: PropTypes.object.isRequired, };
 
 module.exports = CampaignHistoryChart;
-
