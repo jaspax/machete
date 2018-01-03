@@ -48,9 +48,6 @@ function* synchronizeCampaignData() {
             }
         }
     }
-    catch (ex) {
-        ga.mex(ex, false);
-    }
     finally {
         console.log('synchronizeCampaignData finish at', new Date());
     }
