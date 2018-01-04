@@ -356,12 +356,12 @@ function accumulateKeywordSeries(data) {
     return values;
 }
 
-function formatParallelData(data, name) {
+function formatParallelData(data, metric, name = metric) {
     return {
         timestamp: data.timestamp || [],
-        data: data[name] || [],
-        format: formatMetric[name] || roundFmt,
-        name,
+        data: data[metric] || [],
+        format: formatMetric[metric] || roundFmt,
+        name
     };
 }
 
