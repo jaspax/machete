@@ -288,11 +288,6 @@
     margin-bottom: 10px;
 }
 
-.machete-radio-group-wrapper {
-    position: relative;
-    display: inline-block;
-}
-
 .machete-radio-group-wrapper .machete-radio-group-label {
     font-weight: bold;
 }
@@ -331,3 +326,13 @@
     border-left: solid 1px #a2a6ac;
 }
 
+.machete-campaign-history-controlbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.machete-campaign-history-controlbar > * {
+    box-sizing: border-box;
+    margin: 0;
+}

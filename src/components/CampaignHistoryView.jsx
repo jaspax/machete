@@ -23,9 +23,13 @@ class CampaignHistoryView extends React.Component {
 
     render() {
         return <div>
-            <DownloadButton title="Download complete history" onClick={this.generateDownloadCsv.bind(this)} />
-            <TimeSeriesGranularitySelector value={this.state.granularity} onChange={this.granularityChange.bind(this)} />
-            <MetricSelector selected={this.state.metric} onChange={this.metricSelectionChange.bind(this)} />
+            <div className="machete-campaign-history-controlbar">
+                <div style={{ padding: '5px' }}>
+                    <DownloadButton title="Download complete history" onClick={this.generateDownloadCsv.bind(this)} />
+                </div>
+                <MetricSelector selected={this.state.metric} onChange={this.metricSelectionChange.bind(this)} />
+                <TimeSeriesGranularitySelector value={this.state.granularity} onChange={this.granularityChange.bind(this)} />
+            </div>
             <CampaignDateRangeTable
                 startDate={this.state.startDate} startMetrics={this.state.startMetrics}
                 endDate={this.state.endDate} endMetrics={this.state.endMetrics}
