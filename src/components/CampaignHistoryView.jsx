@@ -22,12 +22,14 @@ class CampaignHistoryView extends React.Component {
     }
 
     render() {
+        const metricSelector = this.props.showMetricFocus ? <MetricSelector selected={this.state.metric} onChange={this.metricSelectionChange.bind(this)} /> : null;
+
         return <div>
             <div className="machete-campaign-history-controlbar">
                 <div style={{ padding: '5px' }}>
                     <DownloadButton title="Download complete history" onClick={this.generateDownloadCsv.bind(this)} />
                 </div>
-                <MetricSelector selected={this.state.metric} onChange={this.metricSelectionChange.bind(this)} />
+                {metricSelector}
                 <TimeSeriesGranularitySelector value={this.state.granularity} onChange={this.granularityChange.bind(this)} />
             </div>
             <CampaignDateRangeTable
@@ -121,6 +123,10 @@ class CampaignHistoryView extends React.Component {
     }
 }
 
-CampaignHistoryView.propTypes = { dataPromise: PropTypes.object.isRequired };
+CampaignHistoryView.propTypes = { 
+    dataPromise: PropTypes.object.isRequired,
+    showMetricFocus: PropTypes.bool,
+};
+CampaignHistoryView.defaultProps = { showMetricFocus: false }; 
 
 module.exports = CampaignHistoryView;
