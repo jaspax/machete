@@ -288,10 +288,19 @@
     margin-bottom: 10px;
 }
 
+.machete-radio-group-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.machete-radio-group-wrapper .machete-radio-group-label {
+    font-weight: bold;
+}
+
 .machete-radio-horizontal {
     border: solid 1px black;
     display: inline-block;
-    margin: 20px;
+    margin: 0;
     overflow: hidden;
     border-color: #adb1b8 #a2a6ac #8d9096;
     border-radius: 3px;
@@ -321,3 +330,4 @@
 .machete-radio-horizontal label + input[type=radio] + label {
     border-left: solid 1px #a2a6ac;
 }
+
