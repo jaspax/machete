@@ -2,7 +2,6 @@ const co = require('co');
 
 const constants = require('../common/constants.js');
 const bg = require('../common/background.js');
-const ga = require('../common/ga.js');
 
 bg.messageListener(function*(req, sender) {
     if (req.action == 'setSession')
