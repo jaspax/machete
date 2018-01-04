@@ -29,7 +29,7 @@
 }
 
 .machete-chart-btn-disabled {
-    background: linear-gradient(to bottom, rgb(231,233,236), rgb(141, 144, 150));
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
 }
 
 .machete-report section {
@@ -280,10 +280,44 @@
 }
 
 .machete-optimize-choice button:disabled {
-    background: linear-gradient(to bottom, rgb(231,233,236), rgb(141, 144, 150));
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
 }
 
 .a-box-inner section {
     margin-top: 20px;
     margin-bottom: 10px;
+}
+
+.machete-radio-horizontal {
+    border: solid 1px black;
+    display: inline-block;
+    margin: 20px;
+    overflow: hidden;
+    border-color: #adb1b8 #a2a6ac #8d9096;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.machete-radio-horizontal input[type=radio] {
+    position: absolute;
+    visibility: hidden;
+    display: none;
+}
+
+.machete-radio-horizontal label {
+    display: inline-block;
+    cursor: pointer;
+    padding: 5px 20px;
+    font-weight: normal;
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
+}
+
+.machete-radio-horizontal input[type=radio]:checked + label{
+    font-weight: bold;
+    background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+}
+
+.machete-radio-horizontal label + input[type=radio] + label {
+    border-left: solid 1px #a2a6ac;
 }

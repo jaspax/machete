@@ -4,7 +4,7 @@ const PropTypes = require('prop-types');
 const { RadioGroup, Radio } = require('react-radio-group');
 
 function MetricSelector(props) {
-    return <RadioGroup name="metricSelection" selectedValue={props.selected} onChange={props.onChange}>
+    return <RadioGroup className="machete-radio-horizontal" name="metricSelection" selectedValue={props.selected} onChange={props.onChange}>
         <Radio id="metric-selector-all" value="all" /><label htmlFor="metric-selector-all">All</label>
         <Radio id="metric-selector-impressions" value="impressions" /><label htmlFor="metric-selector-impressions">Impressions</label>
         <Radio id="metric-selector-clicks" value="clicks" /><label htmlFor="metric-selector-clicks">Clicks</label>
