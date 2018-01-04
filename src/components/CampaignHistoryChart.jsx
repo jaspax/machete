@@ -10,8 +10,7 @@ class CampaignHistoryChart extends React.Component {
         const dataPromise = this.props.dataPromise.then(createHistoryData);
         const layoutPromise = dataPromise.then(data => createLayout(data));
 
-        return (
-            <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
+        return <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
                 <TimeSeriesChart
                     width={width} height={600}
                     layout={layoutPromise}
@@ -28,8 +27,7 @@ class CampaignHistoryChart extends React.Component {
 
                     <p><b>Drag</b> along the x-axis to select a date range.</p>
                 </div>
-            </div>
-        );
+        </div>;
     }
 
     componentDidMount() {

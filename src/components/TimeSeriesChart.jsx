@@ -27,31 +27,34 @@ class TimeSeriesChart extends React.Component {
         super(props);
         chartCounter++;
         this.id = 'TimeSeriesChart' + chartCounter;
+        this.loadingId = this.id + 'Loading';
     }
 
-    render() {
-        const containerStyle = {
+    containerStyle() {
+        return {
             height: this.props.height + 'px',
             width: this.props.width + 'px',
         };
+    }
 
+    render() {
         const layoutPromise = Promise.resolve(this.props.layout);
         const dataPromise = Promise.all([layoutPromise, this.props.dataPromise]);
 
-        return <div id={this.id} style={containerStyle}>
-            <Async promise={dataPromise} pending={this.pending(containerStyle)}
+        return <div id={this.id} style={this.containerStyle()}>
+            <Async promise={dataPromise} pending={this.pending()}
                 then={this.then.bind(this)} catch={this.catch.bind(this)} />
         </div>;
     }
 
-    pending(style) {
-        return <div className="loading-large" style={style}></div>;
+    pending() {
+        return <div id={this.loadingId} className="loading-large" style={this.containerStyle()}></div>;
     }
 
     then(results) {
         let [layout, data] = results;
         window.setTimeout(ga.mcatch(() => this.drawGraph(layout, data)));
-        return <div>Drawing graph...</div>;
+        return this.pending();
     }
 
     catch(error) {
@@ -88,6 +91,11 @@ class TimeSeriesChart extends React.Component {
         }
 
         Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
+        target.on('plotly_afterplot', () => {
+            const loading = document.getElementById(this.loadingId);
+            if (loading)
+                loading.parentNode.removeChild(loading);
+        });
     }
 }
 

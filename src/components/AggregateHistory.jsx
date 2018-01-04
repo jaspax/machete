@@ -22,7 +22,7 @@ class AggregateHistory extends React.Component {
         if (this.state.dataPromise) {
              display = <section className="machete-report">
                 <h1>History</h1>
-                <CampaignHistoryView dataPromise={this.state.dataPromise} showMetricFocus={true} />;
+                <CampaignHistoryView dataPromise={this.state.dataPromise} showMetricFocus={true} />
             </section>;
         }
 
