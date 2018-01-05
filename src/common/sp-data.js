@@ -157,6 +157,10 @@ function updateKeywordBid(keywordIdList, bid) {
     return updateKeyword(keywordIdList, 'UPDATE', {bid});
 }
 
+function isRunning(campaignSummary) {
+    return ['RUNNING', 'OUT_OF_BUDGET'].includes(campaignSummary.status);
+}
+
 common.bgMessage({
     action: 'setSession', 
     entityId: getEntityId(), 
@@ -207,4 +211,5 @@ module.exports = {
     getCampaignSummaries,
     updateKeywordStatus,
     updateKeywordBid,
+    isRunning,
 };

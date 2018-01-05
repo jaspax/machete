@@ -79,7 +79,7 @@ function addTotalsRow(wrapper) {
         const latest = _.chain(snapshots).mapValues(x => x[x.length - 1]).values().value();
         const totals = common.aggregateSeries([latest])[0];
 
-        const activeCampaigns = summaries.filter(x => ['RUNNING', 'OUT_OF_BUDGET'].includes(x.status));
+        const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
         totals.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
 
         const totalRow = React.createElement(AmsCampaignRow, { 
@@ -94,7 +94,7 @@ function addTotalsRow(wrapper) {
 function campaignSelectOptions(campaigns) {
     let options = [
         { value: campaigns, label: 'All Campaigns' },
-        { value: campaigns.filter(c => c.status == 'RUNNING'), label: 'All Active Campaigns' }
+        { value: campaigns.filter(c => spdata.isRunning(c)), label: 'All Active Campaigns' }
     ].concat(...campaigns.map(c => ({ value: [c], label: 'Campaign: ' + c.name })));
 
     for (const asin of _.uniq(campaigns.map(c => c.asin).filter(a => a))) {
