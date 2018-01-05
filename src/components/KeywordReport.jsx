@@ -8,7 +8,7 @@ const ga = require('../common/ga.js');
 
 class KeywordReport extends React.Component {
     render() {
-        return <Collapsible trigger={this.props.title} lazyRender={true}>
+        return <Collapsible trigger={this.props.title} lazyRender={true} transitionTime={200}>
             <KeywordBulkUpdate
                 data={this.props.data}
                 onEnabledChange={this.props.onKeywordEnabledChange}

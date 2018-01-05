@@ -21,7 +21,7 @@
 .machete-chart-btn {
 	display: inline-block;
 	text-align: right;
-    background: linear-gradient(to bottom,#f7dfa5,#f0c14b);
+    background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
     width: 18px;
     height: 18px;
     margin: 2px 4px;
@@ -351,4 +351,29 @@
 
 .machete-campaign-select .Select-option.is-focused {
     background-color: #f7dfa5;
+}
+
+.Collapsible__trigger {
+    display: block;
+    background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+    font-size: 18px;
+    padding: 10px;
+    margin: 6px 0px;
+    border-bottom: 1px solid #8d9096;
+}
+
+.Collapsible__trigger.is-closed:before {
+    content: '\25BC';
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+.Collapsible__trigger.is-open:before {
+    content: '\25B2';
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+.Collapsible__trigger.is-disabled {
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
 }
