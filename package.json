@@ -29,6 +29,7 @@
     "prop-types": "^15.5.10",
     "qw": "^1.0.1",
     "react": "^16.2.0",
+    "react-collapsible": "^2.0.3",
     "react-datepicker": "^0.52.0",
     "react-dom": "^16.2.0",
     "react-element-portal": "^2.0.0-0",

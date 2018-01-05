@@ -2,29 +2,27 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const KeywordTable = require('./KeywordTable.jsx');
 const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
+const Collapsible = require('react-collapsible').default;
 
 const ga = require('../common/ga.js');
 
 class KeywordReport extends React.Component {
     render() {
-        return (
-            <section>
-                <h3>{this.props.title}</h3>
-                <KeywordBulkUpdate
+        return <Collapsible trigger={this.props.title} lazyRender={true}>
+            <KeywordBulkUpdate
+                data={this.props.data}
+                onEnabledChange={this.props.onKeywordEnabledChange}
+                onBidChange={this.props.onKeywordBidChange}
+            />
+            <div style={{clear: 'both'}}>
+                <KeywordTable
                     data={this.props.data}
-                    onEnabledChange={this.props.onKeywordEnabledChange}
-                    onBidChange={this.props.onKeywordBidChange}
+                    columns={this.props.columns}
+                    onKeywordEnabledChange={singleKeywordChange(this.props.onKeywordEnabledChange)}
+                    onKeywordBidChange={singleKeywordChange(this.props.onKeywordBidChange)}
                 />
-                <div style={{clear: 'both'}}>
-                    <KeywordTable
-                        data={this.props.data}
-                        columns={this.props.columns}
-                        onKeywordEnabledChange={singleKeywordChange(this.props.onKeywordEnabledChange)}
-                        onKeywordBidChange={singleKeywordChange(this.props.onKeywordBidChange)}
-                    />
-                </div>
-            </section>
-        );
+            </div>
+        </Collapsible>;
     }
 
     shouldComponentUpdate(nextProps) {

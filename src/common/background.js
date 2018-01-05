@@ -52,7 +52,7 @@ function messageListener(handler) {
                     message: 'Machete cannot be used in incognito mode',
                 }
             });
-            return;
+            return true;
         }
 
         chrome.pageAction.show(sender.tab.id);
