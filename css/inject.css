@@ -88,8 +88,7 @@
 .machete-kwupdate-bulk {
     display: block;
     float: right;
-    position: relative;
-    top: -25px;
+    margin-bottom: 6px;
 }
 
 #machete-bulk-all {
@@ -364,13 +363,13 @@
 
 .Collapsible__trigger.is-closed:before {
     content: '\25BC';
-    font-size: 12px;
+    font-size: 14px;
     margin-right: 8px;
 }
 
 .Collapsible__trigger.is-open:before {
     content: '\25B2';
-    font-size: 12px;
+    font-size: 14px;
     margin-right: 8px;
 }
 

@@ -19,7 +19,7 @@ class KeywordBubbleChart extends React.Component {
             width: this.props.width,
             height: this.props.height,
         };
-        return <div style={chartStyle} className="loading-large" id={this.id}></div>;
+        return <div style={chartStyle} className="loading-large" id={this.id}>Preparing keyword chart...</div>;
     }
 
     shouldComponentUpdate() {
