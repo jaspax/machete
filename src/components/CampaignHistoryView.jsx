@@ -33,6 +33,7 @@ class CampaignHistoryView extends React.Component {
                 <TimeSeriesGranularitySelector value={this.state.granularity} onChange={this.granularityChange.bind(this)} />
             </div>
             <CampaignDateRangeTable
+                totalMetrics={this.state.totalMetrics}
                 startDate={this.state.startDate} startMetrics={this.state.startMetrics}
                 endDate={this.state.endDate} endMetrics={this.state.endMetrics}
                 onRangeChange={this.rangeChange} />
@@ -48,8 +49,9 @@ class CampaignHistoryView extends React.Component {
             startMetrics: { timestamp: Date.now() },
             endDate: moment(),
             endMetrics: { timestamp: Date.now() },
+            totalMetrics: { timestamp: Date.now() },
             dataPromise: props.dataPromise.then(data => {
-                this.setState({ data });
+                this.setState({ originalData: data });
                 return this.chartDataChanged(data, this.state.granularity, this.state.metric);
             })
         };
@@ -63,19 +65,23 @@ class CampaignHistoryView extends React.Component {
         this.chartDataChanged(this.state.data, granularity, this.state.metric);
     }
 
-    rangeChange(range) {
-        const filtered = this.state.data.filter(item => item.timestamp >= +range.start && item.timestamp < +range.end);
-        this.chartDataChanged(filtered, this.state.granularity, this.state.metric);
-    }
-
     metricSelectionChange(selection) {
         this.chartDataChanged(this.state.data, this.state.granularity, selection);
+    }
+
+    rangeChange(range) {
+        if (!this.state.originalData)
+            return;
+
+        const filtered = this.state.originalData.filter(item => item.timestamp >= +range.start && item.timestamp < +range.end);
+        this.chartDataChanged(filtered, this.state.granularity, this.state.metric);
     }
 
     chartDataChanged(data, granularity, metric) {
         const groupedData = _.groupBy(data, x => x.campaignId);
         const campaigns = _.values(groupedData).map(series => common.chunkSeries(series, granularity));
         const aggregate = common.aggregateSeries(campaigns, granularity);
+        const totalMetrics = common.accumulateCampaignSeries(data);
 
         const startMetrics = aggregate[0] || { timestamp: Date.now() };
         const endMetrics = aggregate[aggregate.length - 1] || { timestamp: Date.now() };
@@ -87,6 +93,7 @@ class CampaignHistoryView extends React.Component {
             startMetrics,
             endDate: moment(endMetrics.timestamp),
             endMetrics,
+            totalMetrics,
             dataPromise: Promise.resolve({ aggregate, campaigns, metric }),
         });
         return { aggregate, campaigns, metric };

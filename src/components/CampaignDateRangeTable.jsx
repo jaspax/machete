@@ -12,6 +12,7 @@ class CampaignDateRangeTable extends React.Component {
     render() {
         const startMetrics = this.props.startMetrics;
         const endMetrics = this.props.endMetrics;
+        const totalMetrics = this.props.totalMetrics;
         const diffMetrics = {
             impressions: endMetrics.impressions - startMetrics.impressions,
             clicks: endMetrics.clicks - startMetrics.clicks,
@@ -22,26 +23,25 @@ class CampaignDateRangeTable extends React.Component {
             acos: endMetrics.acos - startMetrics.acos,
         };
 
-        return (
-            <table className="machete-metrics-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Impressions</th>
-                        <th>Clicks</th>
-                        <th>Average CPC</th>
-                        <th>Spend</th>
-                        <th>Sales</th>
-                        <th>ACOS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <CampaignDateRow date={this.props.startDate} onDateChange={this.startDateChange} metrics={startMetrics} />
-                    <CampaignDateRow date={this.props.endDate} onDateChange={this.endDateChange} metrics={endMetrics} />
-                    <CampaignDateRow showDatePicker={false} firstColumnText="Change between dates" metrics={diffMetrics} />
-                </tbody>
-            </table>
-        );
+        return <table className="machete-metrics-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Impressions</th>
+                    <th>Clicks</th>
+                    <th>Average CPC</th>
+                    <th>Spend</th>
+                    <th>Sales</th>
+                    <th>ACOS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <CampaignDateRow date={this.props.startDate} onDateChange={this.startDateChange} metrics={startMetrics} />
+                <CampaignDateRow date={this.props.endDate} onDateChange={this.endDateChange} metrics={endMetrics} />
+                <CampaignDateRow showDatePicker={false} firstColumnText="Difference from start to end" metrics={diffMetrics} />
+                <CampaignDateRow showDatePicker={false} firstColumnText="Total in date range" metrics={totalMetrics} />
+            </tbody>
+        </table>;
     }
 
     startDateChange(date) {
@@ -58,6 +58,7 @@ CampaignDateRangeTable.propTypes = {
     startMetrics: PropTypes.object.isRequired,
     endDate: PropTypes.object.isRequired,
     endMetrics: PropTypes.object.isRequired,
+    totalMetrics: PropTypes.object.isRequired,
     onRangeChange: PropTypes.func.isRequired,
 };
 
