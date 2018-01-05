@@ -337,3 +337,18 @@
     box-sizing: border-box;
     margin: 0;
 }
+
+.machete-campaign-select .Select-value {
+    border-color: #adb1b8 #a2a6ac #8d9096 !important;
+    color: rgba(0, 0, 0, 0.74) !important;
+    background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+}
+
+.machete-campaign-select .Select-value-icon:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+    color: black !important;
+}
+
+.machete-campaign-select .Select-option.is-focused {
+    background-color: #f7dfa5;
+}

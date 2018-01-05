@@ -20,7 +20,7 @@ class CampaignSelector extends React.Component {
         this.rawOptions = rawOptions;
         const options = rawOptions.map((x, index) => ({ value: index, label: x.label }));
         const value = this.state ? this.state.value : null;
-        return <Select name="campaign-select" 
+        return <Select name="campaign-select" className="machete-campaign-select"
             options={options} 
             onChange={this.onChange.bind(this)} 
             multi={true} 
