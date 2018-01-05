@@ -36,6 +36,12 @@ function DataNotAvailable(props) {
 
         </div>;
     }
+    else if (props.reason == 'incognito') {
+        return <div className="machete-upgrade-required">
+            <p>Machete does not work in incognito mode. Try reloading your AMS
+                page in a regular browser window.</p>
+        </div>;
+    }
 
     return <div className="machete-upgrade-required">
         <p>Machete cannot display this data right now.</p>

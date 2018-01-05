@@ -44,8 +44,18 @@ function coMemo(fn, opts = {}) {
 function messageListener(handler) {
     chrome.runtime.onMessage.addListener(ga.mcatch((req, sender, sendResponse) => {
         console.log('Handling message:', req);
-        chrome.pageAction.show(sender.tab.id); // Do this for all actions
+        if (sender.tab.incognito) {
+            sendResponse({ 
+                error: {
+                    handled: true,
+                    authError: 'incognito',
+                    message: 'Machete cannot be used in incognito mode',
+                }
+            });
+            return;
+        }
 
+        chrome.pageAction.show(sender.tab.id);
         ga.mga('event', 'background-message', req.action);
         const begin = performance.now();
 
