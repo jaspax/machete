@@ -19,7 +19,7 @@ class KeywordBubbleChart extends React.Component {
             width: this.props.width,
             height: this.props.height,
         };
-        return <div style={chartStyle} id={this.id}></div>;
+        return <div style={chartStyle} className="loading-large" id={this.id}></div>;
     }
 
     shouldComponentUpdate() {
@@ -64,7 +64,7 @@ class KeywordBubbleChart extends React.Component {
             hovermode: 'closest',
             showlegend: false,
         };
-        Plotly.newPlot(this.id, [chartData], layout, {showLink: false});
+        window.setTimeout(ga.mcatch(() => Plotly.newPlot(this.id, [chartData], layout, {showLink: false})));
     }
 }
 
