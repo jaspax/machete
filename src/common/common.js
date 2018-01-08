@@ -83,7 +83,7 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummar
     const now = moment();
     const campaignDays = now.diff(campaignSummary.startDate, 'days');
     const campaignSalesPerDay = campaign.salesValue / campaignDays;
-    const campaignSellthru = campaign.salesValue / campaign.clicks;
+    const campaignSalesPerClick = campaign.salesValue / campaign.clicks;
     let ratio = targetSalesPerDay / campaignSalesPerDay;
     let maxRatio = ratio;
 
@@ -95,9 +95,12 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummar
 
     return kws.map(x => {
         const kw = Object.assign({}, x);
-        const kwSellthru = kw.sales / kw.clicks;
+        const kwSalesPerClick = kw.sales / kw.clicks;
+        let suggestBid = kw.bid;
         if (kw.avgCpc)
-            kw.bid = kw.avgCpc * Math.min(maxRatio, ratio * (kwSellthru / campaignSellthru));
+            suggestBid = kw.avgCpc * Math.min(maxRatio, ratio * (kwSalesPerClick / campaignSalesPerClick));
+        if ((ratio > 1 && suggestBid > kw.bid) || (ratio < 1 && suggestBid < kw.bid))
+            kw.bid = suggestBid;
         return kw;
     });
 }

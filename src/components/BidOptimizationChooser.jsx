@@ -55,7 +55,7 @@ class BidOptimizationChooser extends React.Component {
         value = Number(value);
         if (value && !isNaN(value) && value > 0) {
             this.setState({ loading: true, error: false, message: "Analyzing keywords..." });
-            callback(value).then(this.updateKeywords.bind(this), err => this.setState({ loading: false, error: true, message: err }));
+            callback(value).then(this.updateKeywords.bind(this), err => this.setState({ loading: false, error: true, message: err.toString() }));
         }
         else {
             this.setState({ error: true, message: "Please enter a value greater than 0" });
