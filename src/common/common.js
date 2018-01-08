@@ -42,32 +42,29 @@ function bgMessage(opts) {
     });
 }
 
-function renormKeywordStats(kws) {
-    // Get the total impressions, sales, etc. for the thing
-    const totalImpressions = _.sumBy(kws, kw => kw.impressions);
-    const totalClicks = _.sumBy(kws, kw => kw.clicks);
-    const totalSales = _.sumBy(kws, kw => kw.sales);
-    const totalSpend = _.sumBy(kws, kw => kw.spend);
-
-    const avgImpressions = totalImpressions / kws.length;
-    const avgClicks = totalClicks / kws.length;
-    const avgSales = totalSales / kws.length;
-    const avgSpend = totalSpend / kws.length;
-
-    // We add 10% to maxImpressions to avoid over-fitting to whatever keyword
-    // happens to have the most impressions. This number is a good target for
-    // optimization.
-    const maxImpressions = Math.max(...kws.map(x => x.impressions));
+function renormKeywordStats(latestCampaignSnapshot, kws) {
+    const campaignValueOfSale = latestCampaignSnapshot.salesValue / latestCampaignSnapshot.salesCount;
 
     return kws.map(kw => {
         const x = Object.assign({}, kw);
-        const selfNormRatio = Math.sqrt(x.impressions / maxImpressions);
-        const avgNormRatio = 1 - selfNormRatio;
 
-        x.impressions = (x.impressions * selfNormRatio) + (avgImpressions * avgNormRatio);
-        x.clicks = (x.clicks * selfNormRatio) + (avgClicks * avgNormRatio);
-        x.sales = (x.sales * selfNormRatio) + (avgSales * avgNormRatio);
-        x.spend = (x.spend * selfNormRatio) + (avgSpend * avgNormRatio);
+        // The rule of succession states that the actual count of a the
+        // instances in a distribution can be estimated by (F + 1)/(N + 2).
+        // However, for small values of N this gives wild over-estimates, so we
+        // use a fudge factor scaled to 1000 events to avoid over-fitting small
+        // numbers.
+
+        const clickFudge = Math.min(1, x.impressions / 1000);
+        const estCtr = (x.clicks + clickFudge)/(x.impressions + 2);
+        x.clicks = x.impressions * estCtr;
+
+        const salesFudge = Math.min(1, x.clicks / 100);
+        const salesCount = x.sales / campaignValueOfSale;
+        const estSellthru = (salesCount + salesFudge)/(x.clicks + 2);
+        x.sales = x.clicks * estSellthru * campaignValueOfSale;
+
+        x.spend = (x.avgCpc || x.bid) * x.clicks;
+
         calculateItemStats(x);
 
         return x;
@@ -86,21 +83,21 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummar
     const now = moment();
     const campaignDays = now.diff(campaignSummary.startDate, 'days');
     const campaignSalesPerDay = campaign.salesValue / campaignDays;
-    const campaignSalesPerClick = campaign.salesValue / campaign.clicks;
+    const campaignSellthru = campaign.salesValue / campaign.clicks;
     let ratio = targetSalesPerDay / campaignSalesPerDay;
+    let maxRatio = ratio;
 
     if (campaignSummary.budgetType == 'DAILY') {
         const targetSpendPerDay = campaignSummary.budget;
         const campaignSpendPerDay = campaign.spend / campaignDays;
-        const spendRatio = targetSpendPerDay / campaignSpendPerDay;
-        if (spendRatio < ratio)
-            ratio = spendRatio;
+        maxRatio = targetSpendPerDay / campaignSpendPerDay;
     }
 
     return kws.map(x => {
         const kw = Object.assign({}, x);
-        const kwSalesPerClick = kw.sales / kw.clicks;
-        kw.bid = ratio * kw.avgCpc * (kwSalesPerClick / campaignSalesPerClick);
+        const kwSellthru = kw.sales / kw.clicks;
+        if (kw.avgCpc)
+            kw.bid = kw.avgCpc * Math.min(maxRatio, ratio * (kwSellthru / campaignSellthru));
         return kw;
     });
 }

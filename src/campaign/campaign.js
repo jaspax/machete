@@ -122,8 +122,9 @@ function generateBidOptimizer(container) {
         const campaignSummary = summaries.find(x => x.campaignId == campaignId);
         const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
         const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
-        const renormedKws = common.renormKeywordStats(aggrKws);
-        return { renormedKws, campaignSummary };
+        const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
+        const renormedKws = common.renormKeywordStats(campaignData, aggrKws);
+        return { renormedKws, campaignSummary, campaignData };
     }
 
     const tabContent = React.createElement(BidOptimizerTab, {
@@ -135,8 +136,7 @@ function generateBidOptimizer(container) {
         }),
         optimizeSales: value => co(function*() {
             const prep = yield* prepareKwData();
-            const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
-            return common.optimizeKeywordsSalesPerDay(value, campaignData, prep.campaignSummary, prep.renormedKws);
+            return common.optimizeKeywordsSalesPerDay(value, prep.campaignData, prep.campaignSummary, prep.renormedKws);
         }),
         updateKeyword: kw => co(function*() {
             const origKws = yield spdata.getKeywordData(entityId, yield adGroupPromise);

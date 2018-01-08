@@ -274,8 +274,11 @@
     padding: 2px 4px;
     margin: 2px 4px;
     height: 2em;
+    border-color: #adb1b8 #a2a6ac #8d9096;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
     background: linear-gradient(to bottom,#f7dfa5,#f0c14b);
-    border: 1px solid rgb(166, 166, 166);
 }
 
 .machete-optimize-choice button:disabled {
@@ -292,7 +295,6 @@
 }
 
 .machete-radio-horizontal {
-    border: solid 1px black;
     display: inline-block;
     margin: 0;
     overflow: hidden;

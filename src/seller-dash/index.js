@@ -183,10 +183,16 @@ common.getUser().then(user => {
 
         function* prepareKwData() {
             const kwSeries = yield keywordDataPromise(campaignKey, ninetyDaysAgo, now);
-            const renormedKws = common.renormKeywordStats(kwSeries);
             const summaries = yield sdata.getCampaignSummaries();
+
+            // Hack: since we get campaign data from the last 90 days, we need to adjust the campaign info to cover the same period.
             const campaignSummary = summaries.find(x => x.campaignId == campaignKey.campaignId);
-            return { renormedKws, campaignSummary };
+            campaignSummary.startDate = new Date(Math.max(ninetyDaysAgo, new Date(campaignSummary.startDate).getTime()));
+
+            const campaignData = common.accumulateCampaignSeries(yield fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
+            const renormedKws = common.renormKeywordStats(campaignData, kwSeries);
+
+            return { renormedKws, campaignSummary, campaignData };
         }
 
         const tabContent = React.createElement(BidOptimizerTab, {
@@ -198,10 +204,7 @@ common.getUser().then(user => {
             }),
             optimizeSales: value => co(function*() {
                 const prep = yield* prepareKwData();
-                const campaignData = common.accumulateCampaignSeries(yield fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
-                // Hack: since we get campaign data from the last 90 days, we need to adjust the campaign info to cover the same period.
-                prep.campaignSummary.startDate = new Date(Math.max(ninetyDaysAgo, new Date(prep.campaignSummary.startDate).getTime()));
-                return common.optimizeKeywordsSalesPerDay(value, campaignData, prep.campaignSummary, prep.renormedKws);
+                return common.optimizeKeywordsSalesPerDay(value, prep.campaignData, prep.campaignSummary, prep.renormedKws);
             }),
             updateKeyword: kw => co(function*() {
                 const origKws = yield getKeywordDataAggregate();
