@@ -96,11 +96,11 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummar
     return kws.map(x => {
         const kw = Object.assign({}, x);
         const kwSalesPerClick = kw.sales / kw.clicks;
-        let suggestBid = kw.bid;
+
+        // constrain ratios to a 2x change in either direction to avoid wild swings
+        const finalRatio = Math.max(0.5, Math.min(2, maxRatio, ratio * (kwSalesPerClick / campaignSalesPerClick)));
         if (kw.avgCpc)
-            suggestBid = kw.avgCpc * Math.min(maxRatio, ratio * (kwSalesPerClick / campaignSalesPerClick));
-        if ((ratio > 1 && suggestBid > kw.bid) || (ratio < 1 && suggestBid < kw.bid))
-            kw.bid = suggestBid;
+            kw.bid = kw.avgCpc * finalRatio;
         return kw;
     });
 }
