@@ -18,7 +18,13 @@ function numberFmt(val, digits = 2) {
     if (Number.isNaN(+val)) {
         return ' -- ';
     }
-    return (+val).toFixed(digits);
+    let start = (+val).toFixed(digits); 
+    while (true) { // eslint-disable-line no-constant-condition
+        const next = start.replace(/(\d)(\d\d\d([,.]|$))/, "$1,$2");
+        if (start == next)
+            return next;
+        start = next;
+    }
 }
 
 function roundFmt(val) {
