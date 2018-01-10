@@ -157,7 +157,7 @@ function* requestCampaignData(entityId) {
         });
     }
     catch (ex) {
-        if (bg.handleAuthErrors(ex) && lastRequestSucceeded) {
+        if (bg.handleServerErrors(ex) && lastRequestSucceeded) {
             localStorage.setItem('lastRequestSucceeded', false);
             notifyNeedCredentials(entityId);
             return null;

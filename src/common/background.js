@@ -74,7 +74,7 @@ function messageListener(handler) {
             }
 
             const response = { status: error.message, error: ga.errorToObject(error) };
-            const authError = handleAuthErrors(error, req.action);
+            const authError = handleServerErrors(error, req.action);
             if (authError) {
                 response.error.handled = true;
                 response.error.authError = authError;
@@ -102,7 +102,7 @@ function* getUser() {
     });
 }
 
-function handleAuthErrors(ex, desc) {
+function handleServerErrors(ex, desc) {
     if (ex.message.match(/^401/)) {
         ga.mga('event', 'error-handled', 'auth-error-401', desc);
         return 'notLoggedIn';
@@ -114,6 +114,10 @@ function handleAuthErrors(ex, desc) {
     if (ex.message.match(/^403/)) {
         ga.mga('event', 'error-handled', 'auth-error-403', desc);
         return 'notOwned';
+    }
+    if (ex.message.match(/^50/)) {
+        ga.mga('event', 'error-handled', 'server-error', desc);
+        return 'serverError';
     }
     return null;
 }
@@ -137,7 +141,7 @@ module.exports = {
     serviceUrl,
     messageListener,
     getUser: coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
-    handleAuthErrors,
+    handleServerErrors,
     ajax,
     coMemo,
 };

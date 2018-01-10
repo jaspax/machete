@@ -36,6 +36,11 @@ function DataNotAvailable(props) {
 
         </div>;
     }
+    else if (props.reason == 'serverError') {
+        return <div className="machete-upgrade-required">
+            <p>The Machete server encountered an error trying to handle this request. Try again in a few minutes.</p>
+        </div>;
+    }
     else if (props.reason == 'incognito') {
         return <div className="machete-upgrade-required">
             <p>Machete does not work in incognito mode. Try reloading your AMS
