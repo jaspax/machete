@@ -116,7 +116,7 @@ module.exports = function(grunt) {
                     tag: manifest.version_name,
                 }
             }
-        }
+        },
         gitpush: {
             github: {
                 options: {
@@ -169,7 +169,7 @@ module.exports = function(grunt) {
     grunt.registerTask('app', ['execute', ...sourceDirs[product].map(x => `browserify:${x}`)]);
     grunt.registerTask('default', ['execute', 'eslint', 'browserify', 'copy', 'zip']);
 
-    const publishTasks = ['default', 'run:publish', 'gittag:publish', 'gitpush:origin']
+    const publishTasks = ['default', 'run:publish', 'gittag:publish', 'gitpush:origin'];
     if (releaseTag == 'release')
         pushTasks.push('gitpush:github');
     grunt.registerTask('publish', publishTasks);
