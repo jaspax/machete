@@ -53,6 +53,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-eslint": "^20.0.0",
     "grunt-execute": "^0.2.2",
+    "grunt-git": "^1.0.9",
     "grunt-run": "^0.8.0",
     "grunt-zip": "^0.17.1",
     "readline-sync": "^1.4.7",

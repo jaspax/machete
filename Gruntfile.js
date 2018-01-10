@@ -22,6 +22,7 @@ module.exports = function(grunt) {
     if (grunt.option('noDebug')) {
         env.NODE_ENV = 'production';
     }
+    const manifest = grunt.file.readJSON(`${product}-manifest.json`);
 
     const local = grunt.option('local') || process.env.MACHETE_LOCAL;
     if (local) {
@@ -50,7 +51,6 @@ module.exports = function(grunt) {
         execute: {
             manifest: {
                 call: (grunt, options) => {
-                    const manifest = grunt.file.readJSON(`${product}-manifest.json`);
                     manifest.name = env.NAME;
                     manifest.permissions.push(`https://${env.HOSTNAME}/*`);
                     grunt.file.write(`out/${product}/manifest.json`, JSON.stringify(manifest));
@@ -110,6 +110,27 @@ module.exports = function(grunt) {
                 args: ['upload-package.js', env.APP_ID, pkgPath],
             }
         },
+        gittag: {
+            release: {
+                options: {
+                    tag: manifest.version_name,
+                }
+            }
+        }
+        gitpush: {
+            github: {
+                options: {
+                    remote: 'github',
+                    tags: true,
+                }
+            },
+            origin: {
+                options: {
+                    remote: 'origin',
+                    tags: true,
+                }
+            }
+        }
     };
 
     // Handle JS source directories. For each such directory aside from
@@ -143,6 +164,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-zip');
     grunt.loadNpmTasks('grunt-execute');
     grunt.loadNpmTasks('grunt-run');
+    grunt.loadNpmTasks('grunt-git');
 
     grunt.registerTask('app', ['execute', ...sourceDirs[product].map(x => `browserify:${x}`)]);
     grunt.registerTask('default', ['execute', 'eslint', 'browserify', 'copy', 'zip']);
