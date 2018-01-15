@@ -13,16 +13,6 @@ chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {
         chrome.tabs.create({ url: `${serviceUrl}/${process.env.PRODUCT}/welcome` });
     }
-    else if (details.reason == 'update') {
-        const lastVersion = localStorage.getItem(lastVersionKey);
-        const currentVersion = manifest.version;
-
-        // the following comparison implicitly ignores the C in A.B.C, due to
-        // the way that parseFloat works
-        if (!lastVersion || parseFloat(currentVersion) > parseFloat(lastVersion)) {
-            chrome.tabs.create({ url: chrome.runtime.getURL(`html/changelog.html`) });
-        }
-    }
     localStorage.setItem(lastVersionKey, manifest.version);
 });
 
