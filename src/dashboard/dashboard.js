@@ -72,12 +72,10 @@ function addTotalsRow(wrapper) {
 
     Promise.all([twoDaySnapshotPromise, spdata.getCampaignSummaries()]).then(results => {
         let [snapshots, summaries] = results;
-        const lastDay = common.aggregateSeries(_.values(snapshots).map(common.convertSnapshotsToDeltas)).pop();
-        if (!lastDay)
-            return; // sorry, no data
+        const lastDay = common.aggregateSeries(_.values(snapshots).map(common.convertSnapshotsToDeltas)).pop() || {};
 
         const latest = _.chain(snapshots).mapValues(x => x[x.length - 1]).values().value();
-        const totals = common.aggregateSeries([latest])[0];
+        const totals = common.aggregateSeries([latest])[0] || {};
 
         const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
         totals.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
@@ -150,7 +148,7 @@ function addChartButtons(rows) {
 
         const renderButtons = ga.mcatch((allowed, anonymous, snapshot) => {
             const deltas = common.convertSnapshotsToDeltas(snapshot || []);
-            const lastDay = common.chunkSeries(deltas, 'day').pop();
+            const lastDay = common.chunkSeries(deltas, 'day').pop() || {};
 
             for (let chart of charts) {
                 let target = cells[chart.column];
@@ -179,10 +177,9 @@ function addChartButtons(rows) {
                 });
                 ReactDOM.render(btn, container[0]);
 
-                if (allowed && lastDay && !$(target).find('.machete-ghost').length) {
+                if (allowed && !$(target).find('.machete-ghost').length) {
                     const value = chart.format(lastDay[chart.metric]);
-                    if (lastDay && lastDay.timestamp > Date.now() - (2 * constants.timespan.day))
-                        $(target).append(`<div><span class="machete-ghost">24h:</span>${value}</div>`);
+                    $(target).append(`<div><span class="machete-ghost">24h:</span>${value}</div>`);
                 }
             }
         });
