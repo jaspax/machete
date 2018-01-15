@@ -113,23 +113,23 @@ module.exports = function(grunt) {
         gittag: {
             publish: {
                 options: {
-                    tag: manifest.version,
+                    tag: `${product}-${manifest.version}`,
                 }
             }
         },
         gitpush: {
             github: {
-                options: {
-                    remote: 'github',
-                    tags: true,
-                }
+                options: { remote: 'github' }
+            },
+            githubTags: {
+                options: { remote: 'github', tags: true, }
             },
             origin: {
-                options: {
-                    remote: 'origin',
-                    tags: true,
-                }
-            }
+                options: { remote: 'origin' }
+            },
+            originTags: {
+                options: { remote: 'origin' }
+            },
         }
     };
 
@@ -169,8 +169,8 @@ module.exports = function(grunt) {
     grunt.registerTask('app', ['execute', ...sourceDirs[product].map(x => `browserify:${x}`)]);
     grunt.registerTask('default', ['execute', 'eslint', 'browserify', 'copy', 'zip']);
 
-    const publishTasks = ['default', 'run:publish', 'gittag:publish', 'gitpush:origin'];
+    const publishTasks = ['default', 'run:publish', 'gittag:publish', 'gitpush:origin', 'gitpush:originTags'];
     if (releaseTag == 'release')
-        publishTasks.push('gitpush:github');
+        publishTasks.push('gitpush:github', 'gitpush:githubTags');
     grunt.registerTask('publish', publishTasks);
 };
