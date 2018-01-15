@@ -20,13 +20,13 @@ class BidOptimizationChooser extends React.Component {
             <form name="optimizeOptions">
                 <section className="machete-optimize-choice">
                     <h2>Target ACOS</h2>
-                    <input type="text" name="targetAcos" defaultValue={common.numberFmt(this.props.targetAcos)} />%&nbsp;
+                    <input size="7" type="text" name="targetAcos" defaultValue={common.numberFmt(this.props.targetAcos)} />%&nbsp;
                     <button onClick={this.clickOptimizeAcos} disabled={btnDisabled}>Optimize ACOS</button>
                     <p>Analyze your current ACOS and adjust bids to bring each keyword as close to the target ACOS as possible.</p>
                 </section>
                 <section className="machete-optimize-choice">
                     <h2>Target Sales</h2>
-                    $<input type="text" name="targetSales" defaultValue={common.numberFmt(this.props.targetSales)} />&nbsp;
+                    $<input size="7" type="text" name="targetSales" defaultValue={common.numberFmt(this.props.targetSales)} />&nbsp;
                     <button onClick={this.clickOptimizeSales} disabled={btnDisabled}>Optimize Sales</button>
                     <p>Analyze your historical sales and adjust bids to attempt to hit the target sales per day.</p>
                 </section>
