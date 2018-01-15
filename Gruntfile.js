@@ -171,6 +171,6 @@ module.exports = function(grunt) {
 
     const publishTasks = ['default', 'run:publish', 'gittag:publish', 'gitpush:origin'];
     if (releaseTag == 'release')
-        pushTasks.push('gitpush:github');
+        publishTasks.push('gitpush:github');
     grunt.registerTask('publish', publishTasks);
 };
