@@ -93,14 +93,21 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             requestParams.filters = JSON.stringify(filters);
         }
 
-        const data = yield bg.ajax(`https://sellercentral.amazon.com/hz/cm/${subRoute}/fetch`, {
-            method: 'GET',
-            data: requestParams,
-            dataType: 'json',
-        });
+        try {
+            const data = yield bg.ajax(`https://sellercentral.amazon.com/hz/cm/${subRoute}/fetch`, {
+                method: 'GET',
+                data: requestParams,
+                dataType: 'json',
+            });
 
-        yield* dataCallback(data);
-        return data;
+            yield* dataCallback(data);
+            return data;
+        }
+        catch (ex) {
+            if (bg.handleServerErrors(ex, `requestSellerDataRange ${subRoute}`))
+                return null;
+            throw ex;
+        }
     });
 }
 
