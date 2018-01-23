@@ -66,7 +66,7 @@ function* uploadPackage(appId, token, pkgPath) {
 
     const status = JSON.parse(response);
     if (status.uploadState != 'SUCCESS')
-        throw new Error(uploadState.error_detail);
+        throw new Error(status.error);
 
     return status;
 }
