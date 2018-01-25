@@ -94,21 +94,31 @@ function* getUser() {
 }
 
 function handleServerErrors(ex, desc) {
-    if (ex.message.match(/^401/)) {
-        ga.mga('event', 'error-handled', 'auth-error-401', desc);
-        return 'notLoggedIn';
+    if (ex.url && ex.url.match(/machete-app.com/)) {
+        if (ex.message.match(/^401/)) {
+            ga.mga('event', 'error-handled', 'auth-error-401', desc);
+            return 'notLoggedIn';
+        }
+        if (ex.message.match(/^402/)) {
+            ga.mga('event', 'error-handled', 'auth-error-402', desc);
+            return 'notAllowed';
+        }
+        if (ex.message.match(/^403/)) {
+            ga.mga('event', 'error-handled', 'auth-error-403', desc);
+            return 'notOwned';
+        }
     }
-    if (ex.message.match(/^402/)) {
-        ga.mga('event', 'error-handled', 'auth-error-402', desc);
-        return 'notAllowed';
-    }
-    if (ex.message.match(/^403/)) {
-        ga.mga('event', 'error-handled', 'auth-error-403', desc);
-        return 'notOwned';
+    if (ex.message.match(/^404/)) {
+        ga.mga('event', 'error-handled', 'network-error-404', desc);
+        return 'notFound';
     }
     if (ex.message.match(/^50/)) {
         ga.mga('event', 'error-handled', 'server-error', desc);
         return 'serverError';
+    }
+    if (ex.message.match(/0 error/)) {
+        ga.mga('event', 'error-handled', 'network-error-unknown', desc);
+        return 'networkError';
     }
     return null;
 }

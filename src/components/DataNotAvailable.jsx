@@ -47,6 +47,14 @@ function DataNotAvailable(props) {
                 page in a regular browser window.</p>
         </div>;
     }
+    else if (props.reason == 'networkError') {
+        return <div className="machete-upgrade-required">
+            <p>Machete could not display this data due to a network error. Check
+                that there is no ad-blocking or privacy software which is
+                blocking amazon.com or machete-app.com, then try reloading your
+                browser page.</p>
+        </div>;
+    }
 
     return <div className="machete-upgrade-required">
         <p>Machete cannot display this data right now.</p>
