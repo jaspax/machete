@@ -239,6 +239,7 @@ function convertSnapshotsToDeltas(data, opt) {
     opt = opt || {};
 
     let lastItem = null;
+    let prevDecreased = false;
     data = data.sort(timestampSort);
     for (let item of data) {
         // Filter out things by date range
@@ -254,9 +255,12 @@ function convertSnapshotsToDeltas(data, opt) {
             if (item.timestamp == lastItem.timestamp)
                 continue;
 
-            // Skip this point if any metric decreased
-            if (cumulativeMetrics.some(metric => item[metric] < lastItem[metric]))
+            // Skip this if any metric decreased, but don't skip multiple rows
+            if (!prevDecreased && cumulativeMetrics.some(metric => item[metric] < lastItem[metric])) {
+                prevDecreased = true;
                 continue;
+            }
+            prevDecreased = false;
 
             const delta = Object.assign({}, item);
             for (let metric of cumulativeMetrics) {

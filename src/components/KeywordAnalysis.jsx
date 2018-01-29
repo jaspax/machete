@@ -130,6 +130,10 @@ class KeywordAnalysis extends React.Component {
                 title: 'Clicks',
                 metric: x => x.clicks
             }, {
+                title: 'Avg CPC',
+                metric: x => x.avgCpc,
+                format: common.moneyFmt,
+            }, {
                 title: 'ACOS', 
                 metric: x => x.acos,
                 format: common.pctFmt,
@@ -145,6 +149,10 @@ class KeywordAnalysis extends React.Component {
             }, {
                 title: 'Spend',
                 metric: x => x.spend,
+                format: common.moneyFmt,
+            }, {
+                title: 'Avg CPC',
+                metric: x => x.avgCpc,
                 format: common.moneyFmt,
             }, {
                 title: 'Sales',
@@ -172,6 +180,10 @@ class KeywordAnalysis extends React.Component {
                 metric: x => x.sales,
                 format: common.moneyFmt,
             }, {
+                title: 'Avg CPC',
+                metric: x => x.avgCpc,
+                format: common.moneyFmt,
+            }, {
                 title: 'ACOS', 
                 metric: x => x.acos,
                 format: common.pctFmt,
@@ -183,6 +195,10 @@ class KeywordAnalysis extends React.Component {
                 title: 'Sales',
                 sort: 'desc',
                 metric: x => x.sales,
+                format: common.moneyFmt,
+            }, {
+                title: 'Avg CPC',
+                metric: x => x.avgCpc,
                 format: common.moneyFmt,
             }, {
                 title: 'ACOS',
@@ -201,6 +217,10 @@ class KeywordAnalysis extends React.Component {
                 sort: 'desc',
                 metric: x => x.acos,
                 format: common.pctFmt,
+            }, {
+                title: 'Avg CPC',
+                metric: x => x.avgCpc,
+                format: common.moneyFmt,
             }, {
                 title: 'Impressions',
                 metric: x => x.impressions,
