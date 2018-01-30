@@ -100,11 +100,14 @@ function* setSession(req) {
         });
     });
 
+    yield* alarmHandler(req.entityId);
+
+    /*
     // Request data on login if it's stale
     let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
     if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
-        yield* alarmHandler(req.entityId);
     }
+    */
 }
 
 const getAllowedCampaigns = bg.coMemo(function*(entityId) {
@@ -139,22 +142,28 @@ function* requestCampaignData(entityId) {
     checkEntityId(entityId);
     const lastRequestSucceeded = JSON.parse(localStorage.getItem('lastRequestSucceeded'));
 
-    let timestamp = Date.now();
-    let data = null;
+    const missingDates = yield* getMissingDates(entityId);
+
+    let earliestData = null;
     try {
         console.log('requesting campaign data for', entityId);
-        data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
-            method: 'GET',
-            data: {
-                entityId,
-                /* TODO: use these once Amazon actually supports them
-                status: null,
-                startDate: null,
-                endDate: null,
-                */
-            },
-            dataType: 'json',
-        });
+        for (const date of missingDates) {
+            const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
+                method: 'GET',
+                data: {
+                    entityId,
+                    status: 'Customized',
+                    reportStartDate: date,
+                    reportEndDate: date,
+                },
+                dataType: 'json',
+            });
+
+            if (!earliestData)
+                earliestData = data;
+
+            yield* storeDataCloud(entityId, date, data);
+        }
     }
     catch (ex) {
         if (bg.handleServerErrors(ex) && lastRequestSucceeded) {
@@ -165,15 +174,15 @@ function* requestCampaignData(entityId) {
         throw ex;
     }
     localStorage.setItem('lastRequestSucceeded', true);
-    yield* storeDataCloud(entityId, timestamp, data);
 
-    if (data && data.aaData && data.aaData.length) {
-        let campaignIds = data.aaData.map(x => x.campaignId);
+    let timestamp = Date.now();
+    if (earliestData && earliestData.aaData && earliestData.aaData.length) {
+        let campaignIds = earliestData.aaData.map(x => x.campaignId);
         yield* requestCampaignStatus(entityId, campaignIds, timestamp);
     }
 
     localStorage.setItem(getCampaignDataKey(entityId), timestamp);
-    return data;
+    return earliestData;
 }
 
 function* requestCampaignStatus(entityId, campaignIds, timestamp) {
@@ -221,7 +230,7 @@ function* requestKeywordData(entityId, adGroupId) {
 }
 
 function* storeDataCloud(entityId, timestamp, data) {
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -246,6 +255,13 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
             contentType: 'application/json',
         });
     }
+}
+
+function* getMissingDates(entityId) {
+    return yield bg.ajax(`https://${constants.hostname}/api/campaignData/${entityId}/missingDates`, {
+        method: 'GET',
+        dataType: 'json',
+    });
 }
 
 const getCampaignHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
