@@ -250,6 +250,19 @@ function convertSnapshotsToDeltas(data, opt) {
             continue;
         }
 
+        if (item.measurementType == 'daily') {
+            c.push(Object.assign({}, item));
+            if (lastItem) {
+                lastItem = Object.assign({}, lastItem);
+                for (const metric of cumulativeMetrics) {
+                    lastItem[metric] += item[metric];
+                }
+                lastItem.timestamp = item.timestamp;
+                prevDecreased = false;
+            }
+            continue;
+        }
+
         if (lastItem) {
             // identical timestamps are probably server-side duplicates
             if (item.timestamp == lastItem.timestamp)
