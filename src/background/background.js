@@ -1,14 +1,15 @@
-const co = require('co');
-const ga = require('../common/ga.js');
-const constants = require('../common/constants.js');
 const bg = require('../common/background.js');
+const co = require('co');
 const common = require('../common/common.js');
+const constants = require('../common/constants.js');
+const ga = require('../common/ga.js');
+const moment = require('moment');
 
 const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 
-const alarmPeriodMinutes = 12 * 60;
+const alarmPeriodMinutes = 24 * 60;
 
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
@@ -147,7 +148,22 @@ function* requestCampaignData(entityId) {
     let earliestData = null;
     try {
         console.log('requesting campaign data for', entityId);
-        for (const date of missingDates) {
+
+        // Every 15 days we take a lifetime campaign snapshot, which makes
+        // calculating lifetime campaign totals easier and more accurate
+        if (moment().dayOfYear() % 15 == 0) {
+            const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
+                method: 'GET',
+                data: {
+                    entityId,
+                    status: 'Lifetime',
+                },
+                dataType: 'json',
+            });
+            yield* storeDataCloud(entityId, Date.now(), data);
+        }
+
+        yield bg.parallelQueue(missingDates, function*(date) {
             const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
                 method: 'GET',
                 data: {
@@ -163,7 +179,7 @@ function* requestCampaignData(entityId) {
                 earliestData = data;
 
             yield* storeDataCloud(entityId, date, data);
-        }
+        });
     }
     catch (ex) {
         if (bg.handleServerErrors(ex) && lastRequestSucceeded) {

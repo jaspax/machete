@@ -1,6 +1,7 @@
 const $ = require('jquery');
 const co = require('co');
 const memoize = require('memoizee');
+const qu = require('async/queue');
 
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
@@ -146,11 +147,25 @@ function ajax(...args) {
     });
 }
 
+function parallelQueue(items, fn) {
+    return new Promise((resolve, reject) => {
+        const queue = qu((item, callback) => {
+            co(fn(item))
+            .then((...results) => callback(null, ...results), callback);
+        }, 3);
+
+        queue.drain = resolve;
+        queue.error = reject;
+        queue.push(items);
+    });
+}
+
 module.exports = {
     serviceUrl,
     messageListener,
     getUser: coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
     handleServerErrors,
     ajax,
+    parallelQueue,
     coMemo,
 };
