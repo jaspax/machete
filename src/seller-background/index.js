@@ -64,6 +64,9 @@ function* requestAllPages(getCurrentPage) {
 
     do {
         data = yield* getCurrentPage(pageSize, currentPage * pageSize);
+        if (!data)
+            break;
+
         totalRecords = data.iTotalRecords;
         currentPage++;
     }
