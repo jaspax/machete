@@ -77,10 +77,15 @@ function renormKeywordStats(latestCampaignSnapshot, kws) {
     });
 }
 
+function boundRatiox2(ratio, maxRatio = 2) {
+    return Math.max(0.5, Math.min(2, maxRatio, ratio));
+}
+
 function optimizeKeywordsAcos(targetAcos, kws) {
     return kws.map(x => {
         const kw = Object.assign({}, x);
-        kw.bid *= targetAcos / kw.acos;
+        const ratio = boundRatiox2(targetAcos / kw.acos);
+        kw.bid *= ratio;
         return kw;
     });
 }
@@ -104,7 +109,7 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummar
         const kwSalesPerClick = kw.sales / kw.clicks;
 
         // constrain ratios to a 2x change in either direction to avoid wild swings
-        const finalRatio = Math.max(0.5, Math.min(2, maxRatio, ratio * (kwSalesPerClick / campaignSalesPerClick)));
+        const finalRatio = boundRatiox2(ratio * (kwSalesPerClick / campaignSalesPerClick), maxRatio);
         if (kw.avgCpc)
             kw.bid = kw.avgCpc * finalRatio;
         return kw;
