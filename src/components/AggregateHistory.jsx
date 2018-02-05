@@ -2,6 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const _ = require('lodash');
 
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const CampaignSelector = require('./CampaignSelector.jsx');
 const CampaignHistoryView = require('./CampaignHistoryView.jsx');
 
@@ -27,12 +28,14 @@ class AggregateHistory extends React.Component {
         }
 
         return <div className="a-box-inner">
-            <section className="machete-campaign-selector">
-                <h1>Aggregate Campaign History</h1>
-                <b>Select campaigns:</b>
-                <CampaignSelector campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
-            </section>
-            {display}
+            <ErrorBoundary>
+                <section className="machete-campaign-selector">
+                    <h1>Aggregate Campaign History</h1>
+                    <b>Select campaigns:</b>
+                    <CampaignSelector campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
+                </section>
+                {display}
+            </ErrorBoundary>
         </div>;
     }
 

@@ -1,12 +1,15 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const Popup = require('./Popup.jsx');
 const ThumbnailChart = require('./ThumbnailChart.jsx');
 
 function HistoryChartPopup(props) {
-    return <Popup anchorId={props.anchorId} show={props.show} onDismiss={props.onDismiss}>
-        <ThumbnailChart title={props.title} dataPromise={props.dataPromise} />
-    </Popup>;
+    return <ErrorBoundary>
+        <Popup anchorId={props.anchorId} show={props.show} onDismiss={props.onDismiss}>
+            <ThumbnailChart title={props.title} dataPromise={props.dataPromise} />
+        </Popup>
+    </ErrorBoundary>;
 }
 
 HistoryChartPopup.propTypes = {

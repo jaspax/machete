@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const KeywordEnableToggle = require('./KeywordEnableToggle.jsx');
 const KeywordBidUpdate = require('./KeywordBidUpdate.jsx');
 
@@ -14,13 +15,13 @@ class KeywordBulkUpdate extends React.Component {
     render() {
         const enabled = this.props.data.length ? this.props.data[0].enabled : false;
         const bid = this.props.data.length ? Number(this.props.data[0].bid) : 0;
-        return (
+        return <ErrorBoundary>
             <div className="machete-kwupdate-bulk">
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
                 <KeywordEnableToggle enabled={enabled} onChange={this.handleEnabledChange} />
                 <KeywordBidUpdate bid={bid} onChange={this.handleBidChange} />
             </div>
-        );
+        </ErrorBoundary>;
     }
 
     handleEnabledChange(enabled) {

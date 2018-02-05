@@ -8,6 +8,7 @@ const _ = require('lodash');
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const DownloadButton = require('./DownloadButton.jsx');
 const CampaignDateRangeTable = require('./CampaignDateRangeTable.jsx');
 const CampaignHistoryChart = require('./CampaignHistoryChart.jsx');
@@ -24,7 +25,7 @@ class CampaignHistoryView extends React.Component {
     render() {
         const metricSelector = this.props.showMetricFocus ? <MetricSelector selected={this.state.metric} onChange={this.metricSelectionChange.bind(this)} /> : null;
 
-        return <div>
+        return <ErrorBoundary>
             <div className="machete-campaign-history-controlbar">
                 <div style={{ padding: '5px' }}>
                     <DownloadButton title="Download complete history" onClick={this.generateDownloadCsv.bind(this)} />
@@ -38,7 +39,7 @@ class CampaignHistoryView extends React.Component {
                 endDate={this.state.endDate} endMetrics={this.state.endMetrics}
                 onRangeChange={this.rangeChange} />
             <CampaignHistoryChart dataPromise={this.state.dataPromise} />
-        </div>;
+        </ErrorBoundary>;
     }
 
     baseState(props) {

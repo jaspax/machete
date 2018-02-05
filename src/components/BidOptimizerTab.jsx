@@ -2,6 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 
 const BidOptimizationChooser = require('./BidOptimizationChooser.jsx');
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 
 function BidOptimizerTab(props) {
     return <div className="a-box-inner">
@@ -30,13 +31,15 @@ function BidOptimizerTab(props) {
                 periodically as new data comes in.</p>
         </section>
 
-        <BidOptimizationChooser
-            targetSales={props.targetSales}
-            targetAcos={props.targetAcos}
-            optimizeAcos={props.optimizeAcos}
-            optimizeSales={props.optimizeSales}
-            updateKeyword={props.updateKeyword}
-        />
+        <ErrorBoundary>
+            <BidOptimizationChooser
+                targetSales={props.targetSales}
+                targetAcos={props.targetAcos}
+                optimizeAcos={props.optimizeAcos}
+                optimizeSales={props.optimizeSales}
+                updateKeyword={props.updateKeyword}
+            />
+        </ErrorBoundary>
     </div>;
 }
 
