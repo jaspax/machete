@@ -314,6 +314,18 @@ function aggregateSeries(series, opt = { chunk: 'day' }) {
     return agg;
 }
 
+function sumCampaignSnapshots(series) {
+    const sum = {};
+    for (const item of series) {
+        for (const key of cumulativeMetrics) {
+            sum[key] = item[key] + (sum[key] || 0);
+        }
+    }
+    calculateItemStats(sum);
+    return sum;
+}
+
+
 function aggregateKeywords(kwSets) {
     // Aggregate the cumulative metrics
     const a = {};
@@ -422,6 +434,7 @@ module.exports = {
     chunkSeries,
     convertSnapshotsToDeltas,
     aggregateSeries,
+    sumCampaignSnapshots,
     aggregateKeywords,
     accumulateKeywordSeries,
     accumulateCampaignSeries,

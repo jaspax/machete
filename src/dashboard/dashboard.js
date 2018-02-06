@@ -25,8 +25,6 @@ const charts = [
     { column: 11, label: "ACOS", metric: 'acos', format: common.pctFmt },
 ];
 
-const twoDaySnapshotPromise = spdata.getAllCampaignsTwoDaySnapshot();
-
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
     addChartButtons(tableRows);
@@ -70,12 +68,9 @@ function addTotalsRow(wrapper) {
     const body = $('<tbody id="machete-totals"></tbody>');
     head.after(body);
 
-    Promise.all([twoDaySnapshotPromise, spdata.getCampaignSummaries()]).then(results => {
-        let [snapshots, summaries] = results;
-        const lastDay = common.aggregateSeries(_.values(snapshots).map(common.convertSnapshotsToDeltas)).pop() || {};
-
-        const latest = _.chain(snapshots).mapValues(x => x[x.length - 1]).values().value();
-        const totals = common.aggregateSeries([latest])[0] || {};
+    spdata.getCampaignSummaries().then(summaries => {
+        const lastDay = common.sumCampaignSnapshots(summaries.map(x => x.latestData));
+        const totals = common.sumCampaignSnapshots(summaries.map(x => x.lifetimeData));
 
         const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
         totals.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
@@ -146,10 +141,7 @@ function addChartButtons(rows) {
         let href = link.href;
         let campaignId = spdata.getCampaignId(href);
 
-        const renderButtons = ga.mcatch((allowed, anonymous, snapshot) => {
-            const deltas = common.convertSnapshotsToDeltas(snapshot || []);
-            const lastDay = common.chunkSeries(deltas, 'day').pop() || {};
-
+        const renderButtons = ga.mcatch((allowed, anonymous, lastDay) => {
             for (let chart of charts) {
                 let target = cells[chart.column];
                 if (!target)
@@ -184,12 +176,14 @@ function addChartButtons(rows) {
             }
         });
 
-        renderButtons(false, true);
+        renderButtons(false, true, {});
 
-        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), twoDaySnapshotPromise])
+        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()])
         .then(results => {
-            const [allowed, user, snapshots] = results;
-            renderButtons(allowed, user.isAnon, snapshots[campaignId]);
+            const [allowed, user, summaries] = results;
+            const summary = summaries.find(x => x.campaignId == campaignId);
+            const lastDay = (summary && summary.latestData) || {};
+            renderButtons(allowed, user.isAnon, lastDay);
         });
     }
 }

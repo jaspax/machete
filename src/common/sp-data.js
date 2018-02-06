@@ -51,17 +51,6 @@ function getQueryArgs(str) {
     return args;
 }
 
-function getAllCampaignsTwoDaySnapshot(entityId = getEntityId()) {
-    const now = Date.now();
-    const start = now - (2 * constants.timespan.day);
-    return common.bgMessage({
-        action: 'getAllCampaignData',
-        entityId,
-        start,
-        end: now
-    }).then(data => _.groupBy(data, 'campaignId'));
-}
-
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
     return common.bgMessage({
         action: 'getCurrentCampaignSnapshot',
@@ -200,7 +189,6 @@ module.exports = {
     getEntityId,
     getCampaignId,
     getQueryArgs,
-    getAllCampaignsTwoDaySnapshot,
     getCurrentCampaignSnapshot,
     getCampaignHistory,
     getAggregateCampaignHistory,
