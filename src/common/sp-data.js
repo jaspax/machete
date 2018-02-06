@@ -52,10 +52,9 @@ function getQueryArgs(str) {
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
-    return common.bgMessage({
-        action: 'getCurrentCampaignSnapshot',
-        entityId: entityId,
-        campaignId: campaignId,
+    return getCampaignSummaries(entityId).then(summaries => {
+        const summary = summaries.find(x => x.campaignId == campaignId);
+        return summary.lifetimeData;
     });
 }
 

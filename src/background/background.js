@@ -28,8 +28,6 @@ bg.messageListener(function*(req) {
         return yield getCampaignSummaries(req.entityId);
     else if (req.action == 'getAllCampaignData')
         return yield getAllCampaignData(req.entityId, req.start, req.end);
-    else if (req.action == 'getCurrentCampaignSnapshot')
-        return yield getCurrentCampaignSnapshot(req.entityId, req.campaignId);
     else if (req.action == 'getDataHistory')
         return yield getDataHistory(req.entityId, req.campaignId);
     else if (req.action == 'getAggregateCampaignHistory')
@@ -294,11 +292,6 @@ const getAllCampaignData = bg.coMemo(function*(entityId, startTimestamp, endTime
         method: 'GET',
         dataType: 'json'
     });
-});
-
-const getCurrentCampaignSnapshot = bg.coMemo(function*(entityId, campaignId) {
-    const snapshots = yield getCampaignHistory(entityId, campaignId);
-    return snapshots.pop();
 });
 
 const getDataHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
