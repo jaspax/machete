@@ -60,10 +60,9 @@ function* requestAllPages(getCurrentPage) {
     const pageSize = 50;
     let currentPage = 0;
     let totalRecords = 0;
-    let data = null;
 
     do {
-        data = yield* getCurrentPage(pageSize, currentPage * pageSize);
+        const data = yield* getCurrentPage(pageSize, currentPage * pageSize);
         if (!data)
             break;
 
@@ -71,12 +70,10 @@ function* requestAllPages(getCurrentPage) {
         currentPage++;
     }
     while (currentPage * pageSize < totalRecords);
-
-    return data;
 }
 
 function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp, dataCallback) {
-    return yield* requestAllPages(function*(pageSize, currentRecord) {
+    yield* requestAllPages(function*(pageSize, currentRecord) {
         const requestParams = {
             sEcho: 1,
             parentCreationDate: 0,
@@ -163,7 +160,7 @@ function* requestAdGroupDataRange(campaignId, startTimestamp, endTimestamp) {
 function* requestAdDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
     console.log('requesting ad data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
     const filters = {campaign: { id: { eq: [campaignId] } }, adGroup: { id: { eq: [adGroupId] } } };
-    return yield* requestSellerDataRange('ad', filters, startTimestamp, endTimestamp, function*(data) { 
+    yield* requestSellerDataRange('ad', filters, startTimestamp, endTimestamp, function*(data) { 
         // Don't bother storing if nothing happened in this range
         if (!data.aggrStatData.impressions)
             return;
@@ -180,7 +177,7 @@ function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTime
         campaign: { id: { eq: [campaignId] } }, 
         adGroup: { id: { eq: [adGroupId] } } 
     };
-    return yield* requestSellerDataRange('keyword', filters, startTimestamp, endTimestamp, function*(data) {
+    yield* requestSellerDataRange('keyword', filters, startTimestamp, endTimestamp, function*(data) {
         // Don't bother storing if nothing happened in this range
         if (!data.aggrStatData.impressions)
             return;

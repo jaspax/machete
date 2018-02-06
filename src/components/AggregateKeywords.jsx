@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const CampaignSelector = require('./CampaignSelector.jsx');
 const KeywordAnalysis = require('./KeywordAnalysis.jsx');
 
@@ -25,11 +26,13 @@ class AggregateKeywords extends React.Component {
 
         return <div className="a-box-inner">
             <h1>Aggregate Keywords</h1>
-            <section className="machete-campaign-selector">
-                <b>Select campaigns:</b>
-                <CampaignSelector campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
-            </section>
-            {display}
+            <ErrorBoundary>
+                <section className="machete-campaign-selector">
+                    <b>Select campaigns:</b>
+                    <CampaignSelector campaignPromise={this.props.campaignPromise} onChange={this.campaignSelectionChange} />
+                </section>
+                {display}
+            </ErrorBoundary>
         </div>;
     }
 

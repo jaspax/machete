@@ -1,5 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const KeywordBubbleChart = require('./KeywordBubbleChart.jsx');
 const KeywordReport = require('./KeywordReport.jsx');
 
@@ -8,15 +9,17 @@ function KeywordAnalyticsView(props) {
         const filterFn = table.filterFn ? table.filterFn : () => true;
         const tableData = props.keywordData.filter(filterFn);
 
-        return <KeywordReport
-            key={table.title}
-            title={table.title}
-            data={tableData}
-            modifiedData={props.modifiedData}
-            columns={table.columns}
-            onKeywordEnabledChange={props.onKeywordEnabledChange}
-            onKeywordBidChange={props.onKeywordBidChange}
-        />;
+        return <ErrorBoundary>
+            <KeywordReport
+                key={table.title}
+                title={table.title}
+                data={tableData}
+                modifiedData={props.modifiedData}
+                columns={table.columns}
+                onKeywordEnabledChange={props.onKeywordEnabledChange}
+                onKeywordBidChange={props.onKeywordBidChange}
+            />
+        </ErrorBoundary>;
     };
 
     const bestTables = props.bestKeywordTables.map(keywordMapper);
