@@ -1,15 +1,17 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const AmsCampaignTitleCell = require('./AmsCampaignTitleCell.jsx');
 
 const common = require('../common/common.js');
 
 function AmsCampaignRow(props) {
     const campaign = props.totals;
     const lastDay = props.lastDay;
-
     return <tr>
         <td className="status-cell"></td>
-        <td className="name-cell">{props.label}</td>
+        <td className="name-cell">
+            <AmsCampaignTitleCell title={props.label} syncPromise={props.syncPromise} />
+        </td>
         <td></td>
         <td></td>
         <td></td>
@@ -67,6 +69,7 @@ AmsCampaignRow.propTypes = {
     label: PropTypes.string.isRequired,
     totals: PropTypes.object.isRequired,
     lastDay: PropTypes.object.isRequired,
+    syncPromise: PropTypes.object.isRequired,
 };
 
 module.exports = AmsCampaignRow;

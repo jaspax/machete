@@ -78,7 +78,8 @@ function addTotalsRow(wrapper) {
         const totalRow = React.createElement(AmsCampaignRow, { 
             label: "All Active Campaigns",
             totals,
-            lastDay
+            lastDay,
+            syncPromise: spdata.setSessionPromise,
         });
         ReactDOM.render(totalRow, body[0]);
     });

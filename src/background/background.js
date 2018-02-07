@@ -55,9 +55,7 @@ chrome.alarms.onAlarm.addListener(ga.mcatch(session => {
         return;
     }
 
-    co(function*() { 
-        yield* alarmHandler(entityId);
-    });
+    co(dataSync(entityId));
 }));
 
 function* pageArray(array, step) {
@@ -66,19 +64,40 @@ function* pageArray(array, step) {
     }
 }
 
-function* alarmHandler(entityId) {
-    console.log('Alarm handler start at', new Date());
+function* dataSync(entityId) {
+    console.log('Data sync start at', new Date());
 
-    // This will throw if we can't get through, effectively calling the whole
-    // thing off.
-    yield* requestCampaignData(entityId);
-
-    const adGroups = yield* getAdGroups(entityId);
-    for (const item of adGroups) {
-        yield* requestKeywordData(entityId, item.adGroupId);
+    const lastDataSync = moment(Number(localStorage.getItem(getCampaignDataKey(entityId))));
+    console.log('Last data sync was', lastDataSync.format());
+    if (moment().diff(lastDataSync, 'days') == 0) {
+        console.log('Data sync is up-to-date');
+        return lastDataSync.valueOf();
     }
 
-    console.log('Alarm handler finish at', new Date());
+    const lastRequestSucceeded = JSON.parse(localStorage.getItem('lastRequestSucceeded'));
+    try {
+        yield* requestCampaignData(entityId);
+
+        const adGroups = yield* getAdGroups(entityId);
+        for (const item of adGroups) {
+            yield* requestKeywordData(entityId, item.adGroupId);
+        }
+    }
+    catch (ex) {
+        if (bg.handleServerErrors(ex) && lastRequestSucceeded) {
+            localStorage.setItem('lastRequestSucceeded', false);
+            notifyNeedCredentials(entityId);
+            return null;
+        }
+        throw ex;
+    }
+    localStorage.setItem('lastRequestSucceeded', true);
+
+    const now = Date.now();
+    localStorage.setItem(getCampaignDataKey(entityId), now);
+    console.log('Data sync finish at', moment(now).format());
+
+    return now;
 }
 
 function* setSession(req) {
@@ -99,14 +118,8 @@ function* setSession(req) {
         });
     });
 
-    yield* alarmHandler(req.entityId);
-
-    /*
-    // Request data on login if it's stale
-    let lastCampaignData = localStorage.getItem(getCampaignDataKey(req.entityId));
-    if (!lastCampaignData || Date.now() - lastCampaignData >= constants.timespan.minute * alarmPeriodMinutes) {
-    }
-    */
+    const lastDataSync = yield* dataSync(req.entityId);
+    return lastDataSync;
 }
 
 const getAllowedCampaigns = bg.coMemo(function*(entityId) {
@@ -139,55 +152,42 @@ const getCampaignSummaries = bg.coMemo(function*(entityId) {
 
 function* requestCampaignData(entityId) {
     checkEntityId(entityId);
-    const lastRequestSucceeded = JSON.parse(localStorage.getItem('lastRequestSucceeded'));
 
+    console.log('requesting campaign data for', entityId);
     const missingDates = yield* getMissingDates(entityId);
 
-    let earliestData = null;
-    try {
-        console.log('requesting campaign data for', entityId);
-
-        // Every 15 days we take a lifetime campaign snapshot, which makes
-        // calculating lifetime campaign totals easier and more accurate
-        if (moment().dayOfYear() % 15 == 0) {
-            const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
-                method: 'GET',
-                data: {
-                    entityId,
-                    status: 'Lifetime',
-                },
-                dataType: 'json',
-            });
-            yield* storeDataCloud(entityId, Date.now(), data);
-        }
-
-        yield bg.parallelQueue(missingDates, function*(date) {
-            const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
-                method: 'GET',
-                data: {
-                    entityId,
-                    status: 'Customized',
-                    reportStartDate: date,
-                    reportEndDate: date,
-                },
-                dataType: 'json',
-            });
-
-            if (!earliestData)
-                earliestData = data;
-
-            yield* storeDataCloud(entityId, date, data);
+    // Every 15 days we take a lifetime campaign snapshot, which makes
+    // calculating lifetime campaign totals easier and more accurate
+    if (moment().dayOfYear() % 15 == 0) {
+        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
+            method: 'GET',
+            data: {
+                entityId,
+                status: 'Lifetime',
+            },
+            dataType: 'json',
         });
+        yield* storeDataCloud(entityId, Date.now(), data);
     }
-    catch (ex) {
-        if (bg.handleServerErrors(ex) && lastRequestSucceeded) {
-            localStorage.setItem('lastRequestSucceeded', false);
-            notifyNeedCredentials(entityId);
-            return null;
-        }
-        throw ex;
-    }
-    localStorage.setItem('lastRequestSucceeded', true);
+
+    let earliestData = null;
+    yield bg.parallelQueue(missingDates, function*(date) {
+        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
+            method: 'GET',
+            data: {
+                entityId,
+                status: 'Customized',
+                reportStartDate: date,
+                reportEndDate: date,
+            },
+            dataType: 'json',
+        });
+
+        if (!earliestData)
+            earliestData = data;
+
+        yield* storeDataCloud(entityId, date, data);
+    });
 
     let timestamp = Date.now();
     if (earliestData && earliestData.aaData && earliestData.aaData.length) {
@@ -195,7 +195,6 @@ function* requestCampaignData(entityId) {
         yield* requestCampaignStatus(entityId, campaignIds, timestamp);
     }
 
-    localStorage.setItem(getCampaignDataKey(entityId), timestamp);
     return earliestData;
 }
 

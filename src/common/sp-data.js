@@ -149,12 +149,10 @@ function isRunning(campaignSummary) {
     return ['RUNNING', 'OUT_OF_BUDGET'].includes(campaignSummary.status);
 }
 
-common.bgMessage({
+const setSessionPromise = common.bgMessage({
     action: 'setSession', 
     entityId: getEntityId(), 
-})
-.then(() => console.info('setSession success'))
-.catch(() => console.warn('setSession failure'));
+});
 
 common.getUser().then(ga.mcatch(user => {
     const desc = user.activeSubscription.name;
@@ -199,4 +197,5 @@ module.exports = {
     updateKeywordStatus,
     updateKeywordBid,
     isRunning,
+    setSessionPromise,
 };
