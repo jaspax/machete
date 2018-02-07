@@ -113,7 +113,7 @@ module.exports = function(grunt) {
         gittag: {
             publish: {
                 options: {
-                    tag: `${product}-${manifest.version}`,
+                    tag: `${product}-${releaseTag}-${manifest.version}`,
                 }
             }
         },
