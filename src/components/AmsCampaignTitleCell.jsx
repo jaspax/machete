@@ -24,9 +24,18 @@ class AmsCampaignTitleCell extends React.Component {
             statusText = this.state.error;
         }
 
+        const statusStyle = {
+            display: 'inline-block',
+            marginLeft: '4px',
+            verticalAlign: 'middle',
+        };
+
         return <div>
             <div className="machete-title-cell-title">{this.props.title}</div>
-            <div className={statusClass + " machete-ghost"}>{statusText}</div>
+            <div className="machete-title-cell-status">
+                <div className={statusClass} style={statusStyle}></div>
+                <div className="machete-ghost" style={statusStyle}>{statusText}</div>
+            </div>
         </div>;
     }
 }
