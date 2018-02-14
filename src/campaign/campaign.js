@@ -122,7 +122,7 @@ function generateBidOptimizer(container) {
         const campaignSummary = summaries.find(x => x.campaignId == campaignId);
         const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
         const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
-        const campaignData = yield spdata.getCurrentCampaignSnapshot(entityId, campaignId);
+        const campaignData = common.accumulateCampaignSeries(yield spdata.getCampaignHistory(entityId, campaignId));
         const renormedKws = common.renormKeywordStats(campaignData, aggrKws);
         return { renormedKws, campaignSummary, campaignData };
     }
