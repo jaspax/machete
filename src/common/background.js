@@ -1,10 +1,10 @@
 const $ = require('jquery');
-const co = require('co');
-const memoize = require('memoizee');
 const qu = require('async/queue');
+const co = require('co');
 
-const constants = require('../common/constants.js');
-const ga = require('../common/ga.js');
+const constants = require('./constants.js');
+const ga = require('./ga.js');
+const cache = require('./data-cache.js')();
 
 const lastVersionKey = 'lastVersion';
 const serviceUrl = `https://${constants.hostname}`;
@@ -20,17 +20,6 @@ chrome.runtime.onInstalled.addListener(details => {
 chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
     chrome.tabs.create({ url: `${serviceUrl}/profile` });
 }));
-
-const memoOptsDefault = {
-    promise: true,
-    length: false,
-    primitive: true,
-    maxAge: 6 * constants.timespan.hour,
-};
-function coMemo(fn, opts = {}) {
-    return memoize((...args) => co(fn(...args)), 
-                   Object.assign({}, memoOptsDefault, opts));
-}
 
 function messageListener(handler) {
     chrome.runtime.onMessage.addListener(ga.mcatch((req, sender, sendResponse) => {
@@ -151,7 +140,8 @@ function parallelQueue(items, fn) {
     return new Promise((resolve, reject) => {
         const queue = qu((item, callback) => {
             co(fn(item))
-            .then((...results) => callback(null, ...results), callback);
+            .then((...results) => callback(null, ...results))
+            .catch(callback);
         }, 3);
 
         queue.drain = resolve;
@@ -163,9 +153,9 @@ function parallelQueue(items, fn) {
 module.exports = {
     serviceUrl,
     messageListener,
-    getUser: coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
+    getUser: cache.coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
     handleServerErrors,
     ajax,
     parallelQueue,
-    coMemo,
+    cache,
 };

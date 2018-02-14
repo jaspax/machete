@@ -52,7 +52,7 @@ function* synchronizeCampaignData() {
     }
 }
 
-const setSession = bg.coMemo(function*() {
+const setSession = bg.cache.coMemo(function*() {
     yield* synchronizeCampaignData();
 });
 
@@ -193,7 +193,7 @@ function* getMissingRanges() {
     });
 }
 
-const getSummaries = bg.coMemo(function*() {
+const getSummaries = bg.cache.coMemo(function*() {
     return yield bg.ajax(`https://${constants.hostname}/api/seller/summary`, {
         method: 'GET',
         dataType: 'json'
@@ -219,7 +219,7 @@ function* storeCampaignDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('campaignData', data, startTimestamp, endTimestamp);
 }
 
-const getCampaignDataRange = bg.coMemo(function*(campaignId, startTimestamp, endTimestamp) {
+const getCampaignDataRange = bg.cache.coMemo(function*(campaignId, startTimestamp, endTimestamp) {
     return yield* getSellerDataRange(`campaignData/${campaignId}`, startTimestamp, endTimestamp);
 });
 
@@ -227,7 +227,7 @@ function* storeAdGroupDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('adGroupData', data, startTimestamp, endTimestamp);
 }
 
-const getAdGroupDataRange = bg.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
+const getAdGroupDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
     return yield* getSellerDataRange(`adGroupData/${campaignId}/${adGroupId}`, startTimestamp, endTimestamp);
 });
 
@@ -235,11 +235,11 @@ function* storeAdDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('adData', data, startTimestamp, endTimestamp);
 }
 
-const getAdDataRange = bg.coMemo(function*(campaignId, adGroupId, adId, startTimestamp, endTimestamp) {
+const getAdDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, adId, startTimestamp, endTimestamp) {
     return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/ad=${adId}`, startTimestamp, endTimestamp);
 });
 
-const getAdDataRangeByAsin = bg.coMemo(function*(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {
+const getAdDataRangeByAsin = bg.cache.coMemo(function*(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {
     return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/asin=${asin}`, startTimestamp, endTimestamp);
 });
 
@@ -247,6 +247,6 @@ function* storeKeywordDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('keywordData', data, startTimestamp, endTimestamp);
 }
 
-const getKeywordDataRange = bg.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
+const getKeywordDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
     return yield* getSellerDataRange(`keywordData/${campaignId}/${adGroupId}`, startTimestamp, endTimestamp);
 });

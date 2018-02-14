@@ -1,5 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const moment = require('moment');
 
 class AmsCampaignTitleCell extends React.Component {
@@ -21,7 +22,7 @@ class AmsCampaignTitleCell extends React.Component {
         }
         else if (this.state.error) {
             statusClass = 'machete-title-cell-error';
-            statusText = this.state.error;
+            statusText = this.state.error.message;
         }
 
         const statusStyle = {
@@ -30,13 +31,13 @@ class AmsCampaignTitleCell extends React.Component {
             verticalAlign: 'middle',
         };
 
-        return <div>
+        return <ErrorBoundary>
             <div className="machete-title-cell-title">{this.props.title}</div>
             <div className="machete-title-cell-status">
                 <div className={statusClass} style={statusStyle}></div>
                 <div className="machete-ghost" style={statusStyle}>{statusText}</div>
             </div>
-        </div>;
+        </ErrorBoundary>;
     }
 }
 

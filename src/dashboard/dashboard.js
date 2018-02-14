@@ -70,14 +70,11 @@ function addTotalsRow(wrapper) {
 
     spdata.getCampaignSummaries().then(summaries => {
         const lastDay = common.sumCampaignSnapshots(summaries.map(x => x.latestData));
-        const totals = common.sumCampaignSnapshots(summaries.map(x => x.lifetimeData));
-
         const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
-        totals.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
+        lastDay.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
 
         const totalRow = React.createElement(AmsCampaignRow, { 
             label: "All Active Campaigns",
-            totals,
             lastDay,
             syncPromise: spdata.setSessionPromise,
         });

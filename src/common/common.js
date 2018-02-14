@@ -318,7 +318,7 @@ function sumCampaignSnapshots(series) {
     const sum = {};
     for (const item of series) {
         for (const key of cumulativeMetrics) {
-            sum[key] = item[key] + (sum[key] || 0);
+            sum[key] = ((item && item[key]) || 0) + (sum[key] || 0);
         }
     }
     calculateItemStats(sum);

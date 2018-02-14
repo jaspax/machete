@@ -82,6 +82,7 @@ function* dataSync(entityId) {
         for (const item of adGroups) {
             yield* requestKeywordData(entityId, item.adGroupId);
         }
+        bg.cache.clear();
     }
     catch (ex) {
         if (bg.handleServerErrors(ex) && lastRequestSucceeded) {
@@ -122,7 +123,7 @@ function* setSession(req) {
     return lastDataSync;
 }
 
-const getAllowedCampaigns = bg.coMemo(function*(entityId) {
+const getAllowedCampaigns = bg.cache.coMemo(function*(entityId) {
     checkEntityId(entityId);
     const allowed = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
@@ -142,7 +143,7 @@ const getAllowedCampaigns = bg.coMemo(function*(entityId) {
     });
 }, { maxAge: 30000 });
 
-const getCampaignSummaries = bg.coMemo(function*(entityId) {
+const getCampaignSummaries = bg.cache.coMemo(function*(entityId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
         method: 'GET',
@@ -154,11 +155,9 @@ function* requestCampaignData(entityId) {
     checkEntityId(entityId);
 
     console.log('requesting campaign data for', entityId);
-    const missingDates = yield* getMissingDates(entityId);
+    const missing = yield* getMissingDates(entityId);
 
-    // Every 15 days we take a lifetime campaign snapshot, which makes
-    // calculating lifetime campaign totals easier and more accurate
-    if (moment().dayOfYear() % 15 == 0) {
+    if (missing.needLifetime) {
         const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
             method: 'GET',
             data: {
@@ -171,7 +170,7 @@ function* requestCampaignData(entityId) {
     }
 
     let earliestData = null;
-    yield bg.parallelQueue(missingDates, function*(date) {
+    yield bg.parallelQueue(missing.missingDays, function*(date) {
         const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
             method: 'GET',
             data: {
@@ -277,7 +276,7 @@ function* getMissingDates(entityId) {
     });
 }
 
-const getCampaignHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
+const getCampaignHistory = bg.cache.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
         method: 'GET',
@@ -285,7 +284,7 @@ const getCampaignHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: 
     });
 });
 
-const getAllCampaignData = bg.coMemo(function*(entityId, startTimestamp, endTimestamp) {
+const getAllCampaignData = bg.cache.coMemo(function*(entityId, startTimestamp, endTimestamp) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`, { 
         method: 'GET',
@@ -293,12 +292,12 @@ const getAllCampaignData = bg.coMemo(function*(entityId, startTimestamp, endTime
     });
 });
 
-const getDataHistory = bg.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
+const getDataHistory = bg.cache.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
     const snapshots = yield getCampaignHistory(entityId, campaignId);
     return common.convertSnapshotsToDeltas(snapshots);
 });
 
-const getAggregateCampaignHistory = bg.coMemo(function*(entityId, campaignIds) {
+const getAggregateCampaignHistory = bg.cache.coMemo(function*(entityId, campaignIds) {
     let aggregate = [];
     for (const page of pageArray(campaignIds, 6)) {
         const promises = [];
@@ -314,7 +313,7 @@ const getAggregateCampaignHistory = bg.coMemo(function*(entityId, campaignIds) {
     return aggregate.sort((a, b) => a.timestamp - b.timestamp);
 });
 
-const getKeywordData = bg.coMemo(function*(entityId, adGroupId) {
+const getKeywordData = bg.cache.coMemo(function*(entityId, adGroupId) {
     checkEntityId(entityId);
     const ajaxOptions = {
         url: `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
@@ -334,7 +333,7 @@ const getKeywordData = bg.coMemo(function*(entityId, adGroupId) {
     return data;
 });
 
-const getAggregateKeywordData = bg.coMemo(function*(entityId, adGroupIds) {
+const getAggregateKeywordData = bg.cache.coMemo(function*(entityId, adGroupIds) {
     let keywordSets = [];
 
     for (const page of pageArray(adGroupIds, 6)) {

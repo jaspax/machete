@@ -9,8 +9,7 @@ function KeywordAnalyticsView(props) {
         const filterFn = table.filterFn ? table.filterFn : () => true;
         const tableData = props.keywordData.filter(filterFn);
 
-        return <ErrorBoundary>
-            <KeywordReport
+        return <KeywordReport
                 key={table.title}
                 title={table.title}
                 data={tableData}
@@ -18,31 +17,32 @@ function KeywordAnalyticsView(props) {
                 columns={table.columns}
                 onKeywordEnabledChange={props.onKeywordEnabledChange}
                 onKeywordBidChange={props.onKeywordBidChange}
-            />
-        </ErrorBoundary>;
+        />;
     };
 
     const bestTables = props.bestKeywordTables.map(keywordMapper);
     const worstTables = props.worstKeywordTables.map(keywordMapper);
 
     return <div className="machete-report">
-        <section>
-            <KeywordBubbleChart width={800} height={600}
-                keywordData={transformKeywordData(props.keywordData)} />
-            <div className="machete-explanation">
-                <h3 id="machete-explanation-title">Understanding this chart</h3>
-                <p><b>X-axis</b>: number of impressions</p>
-                <p><b>Y-axis</b>: number of clicks</p>
-                <p><b>Bubble size</b>: total spend</p>
-                <p><b>Bubble color</b>: ACOS (green is lower, red is higher, gray has no recorded sales)</p>
-                <p><b>Drag</b> to zoom in on a region</p>
-            </div>
-        </section>
-        <section>
-            <h1>Keyword Detail Reports</h1>
-            {worstTables}
-            {bestTables}
-        </section>
+        <ErrorBoundary>
+            <section>
+                <KeywordBubbleChart width={800} height={600}
+                    keywordData={transformKeywordData(props.keywordData)} />
+                <div className="machete-explanation">
+                    <h3 id="machete-explanation-title">Understanding this chart</h3>
+                    <p><b>X-axis</b>: number of impressions</p>
+                    <p><b>Y-axis</b>: number of clicks</p>
+                    <p><b>Bubble size</b>: total spend</p>
+                    <p><b>Bubble color</b>: ACOS (green is lower, red is higher, gray has no recorded sales)</p>
+                    <p><b>Drag</b> to zoom in on a region</p>
+                </div>
+            </section>
+            <section>
+                <h1>Keyword Detail Reports</h1>
+                {worstTables}
+                {bestTables}
+            </section>
+        </ErrorBoundary>
     </div>;
 }
 

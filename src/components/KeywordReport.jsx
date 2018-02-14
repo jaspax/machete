@@ -1,5 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const ErrorBoundary = require('./ErrorBoundary.jsx');
 const KeywordTable = require('./KeywordTable.jsx');
 const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
 const Collapsible = require('react-collapsible').default;
@@ -9,19 +10,21 @@ const ga = require('../common/ga.js');
 class KeywordReport extends React.Component {
     render() {
         return <Collapsible trigger={this.props.title} lazyRender={true} transitionTime={200}>
-            <KeywordBulkUpdate
-                data={this.props.data}
-                onEnabledChange={this.props.onKeywordEnabledChange}
-                onBidChange={this.props.onKeywordBidChange}
-            />
-            <div style={{clear: 'both'}}>
-                <KeywordTable
+            <ErrorBoundary>
+                <KeywordBulkUpdate
                     data={this.props.data}
-                    columns={this.props.columns}
-                    onKeywordEnabledChange={singleKeywordChange(this.props.onKeywordEnabledChange)}
-                    onKeywordBidChange={singleKeywordChange(this.props.onKeywordBidChange)}
+                    onEnabledChange={this.props.onKeywordEnabledChange}
+                    onBidChange={this.props.onKeywordBidChange}
                 />
-            </div>
+                <div style={{clear: 'both'}}>
+                    <KeywordTable
+                        data={this.props.data}
+                        columns={this.props.columns}
+                        onKeywordEnabledChange={singleKeywordChange(this.props.onKeywordEnabledChange)}
+                        onKeywordBidChange={singleKeywordChange(this.props.onKeywordBidChange)}
+                    />
+                </div>
+            </ErrorBoundary>
         </Collapsible>;
     }
 
