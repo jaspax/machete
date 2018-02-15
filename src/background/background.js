@@ -9,7 +9,7 @@ const getSessionKey = entityId => `session_${entityId}`;
 const getCampaignDataKey = entityId => `campaignData_${entityId}`;
 const getEntityIdFromSession = session => session.replace('session_', '');
 
-const alarmPeriodMinutes = 24 * 60;
+const alarmPeriodMinutes = 12 * 60;
 
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
