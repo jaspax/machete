@@ -167,7 +167,7 @@ function addChartButtons(rows) {
                 });
                 ReactDOM.render(btn, container[0]);
 
-                if (allowed && !$(target).find('.machete-ghost').length) {
+                if (lastDay && allowed && !$(target).find('.machete-ghost').length) {
                     const value = chart.format(lastDay[chart.metric]);
                     $(target).append(`<div><span class="machete-ghost">24h:</span>${value}</div>`);
                 }
@@ -180,7 +180,7 @@ function addChartButtons(rows) {
         .then(results => {
             const [allowed, user, summaries] = results;
             const summary = summaries.find(x => x.campaignId == campaignId);
-            const lastDay = (summary && summary.latestData) || {};
+            const lastDay = summary && summary.latestData;
             renderButtons(allowed, user.isAnon, lastDay);
         });
     }
