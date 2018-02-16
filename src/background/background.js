@@ -65,11 +65,11 @@ function* pageArray(array, step) {
 }
 
 function* dataSync(entityId) {
-    console.log('Data sync start at', new Date());
+    console.log('Data sync start at', moment().format());
 
     const lastDataSync = moment(Number(localStorage.getItem(getCampaignDataKey(entityId))));
     console.log('Last data sync was', lastDataSync.format());
-    if (moment().diff(lastDataSync, 'days') == 0) {
+    if (moment().isSame(lastDataSync, 'day')) {
         console.log('Data sync is up-to-date');
         return lastDataSync.valueOf();
     }
@@ -94,9 +94,9 @@ function* dataSync(entityId) {
     }
     localStorage.setItem('lastRequestSucceeded', true);
 
-    const now = Date.now();
-    localStorage.setItem(getCampaignDataKey(entityId), now);
-    console.log('Data sync finish at', moment(now).format());
+    const now = moment();
+    localStorage.setItem(getCampaignDataKey(entityId), now.toDate().getTime());
+    console.log('Data sync finish at', now.format());
 
     return now;
 }
