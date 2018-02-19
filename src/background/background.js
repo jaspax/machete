@@ -85,9 +85,10 @@ function* dataSync(entityId) {
         bg.cache.clear();
     }
     catch (ex) {
-        if (bg.handleServerErrors(ex) && lastRequestSucceeded) {
+        if (bg.handleServerErrors(ex)) {
             localStorage.setItem('lastRequestSucceeded', false);
-            notifyNeedCredentials(entityId);
+            if (lastRequestSucceeded)
+                notifyNeedCredentials(entityId);
             return null;
         }
         throw ex;

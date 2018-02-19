@@ -48,6 +48,8 @@ function messageListener(handler) {
         .catch(error => {
             if (handlePortDisconnected(error, req.action))
                 return;
+            if (handleMessageTooLong(error, req.action))
+                return;
 
             const response = { status: error.message, error: ga.errorToObject(error) };
             const authError = handleServerErrors(error, req.action);
@@ -116,6 +118,14 @@ function handleServerErrors(ex, desc) {
 function handlePortDisconnected(ex, desc) {
     if (ex.message.match(/disconnected port object/)) {
         ga.mga('event', 'error-handled', 'port-disconnected', desc);
+        return true;
+    }
+    return false;
+}
+
+function handleMessageTooLong(ex, req) {
+    if (ex.message.match(/exceeded maximum allowed length/)) {
+        ga.merror(ex.message, req);
         return true;
     }
     return false;
