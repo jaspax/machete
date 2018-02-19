@@ -74,7 +74,7 @@ function addTotalsRow(wrapper) {
         lastDay.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
 
         const totalRow = React.createElement(AmsCampaignRow, { 
-            label: "All Active Campaigns",
+            label: "Yesterday's Totals",
             lastDay,
             syncPromise: spdata.setSessionPromise,
         });
