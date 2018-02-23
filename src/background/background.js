@@ -85,7 +85,7 @@ function* dataSync(entityId) {
         bg.cache.clear();
     }
     catch (ex) {
-        if (bg.handleServerErrors(ex)) {
+        if (bg.handleServerErrors(ex, 'dataSync')) {
             localStorage.setItem('lastRequestSucceeded', false);
             if (lastRequestSucceeded)
                 notifyNeedCredentials(entityId);
