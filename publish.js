@@ -5,24 +5,32 @@ const readline = require('readline-sync');
 
 if (require.main === module) {
     const argv = process.argv.slice(2);
-    const appId = argv.shift();
-    const pkgPath = argv.shift();
+    const releaseTag = argv.shift();
+
+    let pkgPath = 'out/beta/machete-beta.zip';
+    let appIds = ["adccehneljpgedjokmmbofllidphnjel", "ekcgmjhleflmfemjpeomblomcbhfnfcj"];
+    if (releaseTag == 'release') {
+        pkgPath = 'out/release/machete-release.zip';
+        appIds = ["doggogocakpiacfoebkjgjolmpklkeha", "linbfabhpielmegmeckbhfadhnnjoack"];
+    }
 
     co(function*() {
         try {
-            console.log(`Publishing ${pkgPath} to app ${appId}`);
+            console.log(`Publishing ${pkgPath} to apps ${appIds}`);
             const codes = yield* accessCode();
 
             console.log('Requesting access token...');
             const token = yield* accessToken(codes);
 
-            console.log('Uploading...');
-            const uploadResult = yield* uploadPackage(appId, token, pkgPath);
-            console.log('Upload result:', uploadResult);
+            for (const appId of appIds) {
+                console.log(`Uploading to ${appId}...`);
+                const uploadResult = yield* uploadPackage(appId, token, pkgPath);
+                console.log('Upload result:', uploadResult);
 
-            console.log('Publishing...');
-            const publishResult = yield* publishPackage(appId, token);
-            console.log('Publish result:', publishResult);
+                console.log(`Publishing ${appId}...`);
+                const publishResult = yield* publishPackage(appId, token);
+                console.log('Publish result:', publishResult);
+            }
 
             process.exit(0);
         }

@@ -4,7 +4,8 @@
   "description": "Your tool for cutting through Amazon Marketing Services",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "publish beta": "webpack -p --env.beta && node publish.js beta",
+    "publish release": "webpack -p --env.release && node publish.js release"
   },
   "repository": {
     "type": "git",
