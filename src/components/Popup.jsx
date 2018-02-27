@@ -2,7 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const $ = require('jquery');
 const ga = require('../common/ga.js');
-const ElementPortal = require('react-element-portal').default;
+const Portal = require('react-portal');
 
 /* For now, we are assuming that the popup is anchored on something which is NOT
  * itself a React element. If this assumption becomes false in the future, we
@@ -62,9 +62,9 @@ class Popup extends React.Component {
         */
 
         return (
-            <ElementPortal id={popupId}>
+            <Portal id={popupId}>
                 {this.props.children}
-            </ElementPortal>
+            </Portal>
         );
     }
 }
