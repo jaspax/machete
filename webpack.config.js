@@ -5,7 +5,7 @@ const ZipWebpackPlugin = require('zip-webpack-plugin');
 
 const defaultEnv = {
     release: false,
-    local: true,
+    local: false,
 };
 
 module.exports = (env = defaultEnv) => {
@@ -18,6 +18,7 @@ module.exports = (env = defaultEnv) => {
             'process.env.ANALYTICS_ID': JSON.stringify("UA-98724833-1"),
             'process.env.HOSTNAME': JSON.stringify(hostname),
             'process.env.PRODUCT': JSON.stringify('sp'),
+            'process.env.NODE_ENV': JSON.stringify('production'),
         });
     }
     else {
@@ -27,6 +28,7 @@ module.exports = (env = defaultEnv) => {
             'process.env.ANALYTICS_ID': JSON.stringify("UA-98724833-2"),
             'process.env.HOSTNAME': JSON.stringify(hostname),
             'process.env.PRODUCT': JSON.stringify('sp'),
+            'process.env.NODE_ENV': JSON.stringify('development'),
         });
     }
 
@@ -97,17 +99,13 @@ module.exports = (env = defaultEnv) => {
             fs: "empty"
         },
         plugins: [
+            new ManifestPlugin({ file: './sp-manifest.json' }),
             new CopyWebpackPlugin([
                 { from: './css/**', to: `./out/${versionTag}` },
                 { from: './images/**', to: `./out/${versionTag}` },
             ]),
             define,
-            new ZipWebpackPlugin({
-                filename: `machete-${versionTag}.zip`,
-            }),
-            new ManifestPlugin({
-                file: './sp-manifest.json'
-            }),
-        ]
+            new ZipWebpackPlugin({ filename: `machete-${versionTag}.zip`, }),
+        ],
     };
 };
