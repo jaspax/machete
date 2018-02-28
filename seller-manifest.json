@@ -21,7 +21,6 @@
     }
   },
   "permissions": [
-    "https://sellercentral.amazon.com/*"
   ],
   "background": {
       "scripts": ["src/vendor.js", "src/seller-background.js"],

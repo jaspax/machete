@@ -56,10 +56,31 @@ module.exports = (env = defaultEnv) => {
                     callback();
                 });
             });
+
+            compiler.plugin('after-emit', (compilation, callback) => {
+                compilation.fileDependencies.push(this.manifest);
+                callback();
+            });
         }
     };
 
+    const plugins = [
+        new ManifestPlugin({ file: './manifest.json' }),
+        new CopyWebpackPlugin([
+            { from: './css/**' },
+            { from: './images/**' },
+        ]),
+        define,
+    ];
+    if (!env.local) {
+        plugins.push(new ZipWebpackPlugin({ filename: `machete-${versionTag}.zip` }));
+    }
+
     return {
+        watchOptions: {
+            aggregateTimeout: 100,
+            ignored: /node_modules/,
+        },
         entry: {
             dashboard: './src/dashboard/dashboard.js',
             campaign: './src/campaign/campaign.js',
@@ -77,11 +98,12 @@ module.exports = (env = defaultEnv) => {
                 exclude: /node_modules/,
                 enforce: 'pre',
                 loader: 'eslint-loader',
-                options: {
-                    cache: true,
-                    failOnWarning: true,
-                    failOnError: true,
-                }
+                options: { cache: true }
+            },
+            {
+                test: /mapbox-gl.*\.js$/,
+                enforce: 'post',
+                loader: 'transform-loader/cacheable?brfs'
             },
             {
                 test: /\.jsx?$/,
@@ -98,14 +120,6 @@ module.exports = (env = defaultEnv) => {
         node: {
             fs: "empty"
         },
-        plugins: [
-            new ManifestPlugin({ file: './sp-manifest.json' }),
-            new CopyWebpackPlugin([
-                { from: './css/**', to: `./out/${versionTag}` },
-                { from: './images/**', to: `./out/${versionTag}` },
-            ]),
-            define,
-            new ZipWebpackPlugin({ filename: `machete-${versionTag}.zip`, }),
-        ],
+        plugins,
     };
 };

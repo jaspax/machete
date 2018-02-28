@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "!! PLACEHOLDER NAME !!",
+  "name": "Machete for Amazon",
   "short_name": "Machete",
   "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
   "version": "1.4.7.1",
@@ -11,7 +11,6 @@
       "48": "images/machete-48.png",
       "128": "images/machete-128.png" 
   },
-
   "page_action": {
     "default_name": "Machete for AMS",
     "default_icon": {
@@ -24,22 +23,28 @@
     "alarms",
     "background", 
     "notifications",
-    "https://ams.amazon.com/*"
+    "https://ams.amazon.com/*",
+    "https://sellercentral.amazon.com/*"
   ],
   "background": {
-      "scripts": ["src/vendor.js", "src/background.js"],
+      "scripts": ["src/background.js"],
       "persistent": false
   },
   "content_scripts": [
       {
           "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
-          "js": ["src/vendor.js", "src/dashboard.js"],
-          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css", "css/react-select.css"]
+          "js": ["src/dashboard.js"],
+          "css": ["css/inject.css"]
       },
       {
           "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
-          "js": ["src/vendor.js", "src/campaign.js"],
-          "css": ["css/inject.css", "css/react-datepicker.css", "css/react-table.css", "css/react-select.css"]
+          "js": ["src/campaign.js"],
+          "css": ["css/inject.css"]
+      },
+      {
+          "matches": ["https://sellercentral.amazon.com/hz/cm/*"],
+          "js": ["src/seller-dash.js"],
+          "css": ["css/inject.css"]
       }
   ],
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
