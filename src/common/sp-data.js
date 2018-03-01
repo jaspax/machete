@@ -60,7 +60,7 @@ function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCa
 
 function getCampaignHistory(entityId = getEntityId(), campaignId = getCampaignId()) {
     return common.bgMessage({
-        action: 'getDataHistory',
+        action: 'sp.getDataHistory',
         entityId: entityId,
         campaignId: campaignId,
     });
@@ -68,7 +68,7 @@ function getCampaignHistory(entityId = getEntityId(), campaignId = getCampaignId
 
 function getAggregateCampaignHistory(entityId = getEntityId(), campaignIds) {
     return common.bgMessage({
-        action: 'getAggregateCampaignHistory', 
+        action: 'sp.getAggregateCampaignHistory', 
         entityId,
         campaignIds,
     });
@@ -76,7 +76,7 @@ function getAggregateCampaignHistory(entityId = getEntityId(), campaignIds) {
 
 function getKeywordData(entityId = getEntityId(), adGroupId) {
     return common.bgMessage({
-        action: 'getKeywordData',
+        action: 'sp.getKeywordData',
         entityId,
         adGroupId,
     });
@@ -84,7 +84,7 @@ function getKeywordData(entityId = getEntityId(), adGroupId) {
 
 function getAggregateKeywordData(entityId = getEntityId(), adGroupIds) {
     return common.bgMessage({
-        action: 'getAggregateKeywordData',
+        action: 'sp.getAggregateKeywordData',
         entityId,
         adGroupIds
     });
@@ -94,7 +94,7 @@ let allowedPromise = null;
 function getAllCampaignsAllowed(entityId = getEntityId()) {
     if (!allowedPromise) {
         allowedPromise = common.bgMessage({
-            action: 'getAllowedCampaigns', 
+            action: 'sp.getAllowedCampaigns', 
             entityId
         });
     }
@@ -118,7 +118,7 @@ let summaryPromise = null;
 function getCampaignSummaries(entityId = getEntityId()) {
     if (!summaryPromise) {
         summaryPromise = common.bgMessage({
-            action: 'getCampaignSummaries',
+            action: 'sp.getCampaignSummaries',
             entityId: entityId,
         });
     }
@@ -127,7 +127,7 @@ function getCampaignSummaries(entityId = getEntityId()) {
 
 function updateKeyword(keywordIdList, operation, dataValues) {
     return common.bgMessage({
-        action: 'updateKeyword',
+        action: 'sp.updateKeyword',
         entityId: getEntityId(),
         keywordIdList,
         operation,
@@ -150,7 +150,7 @@ function isRunning(campaignSummary) {
 }
 
 const setSessionPromise = common.bgMessage({
-    action: 'setSession', 
+    action: 'sp.setSession', 
     entityId: getEntityId(), 
 });
 

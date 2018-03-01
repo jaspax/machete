@@ -1,4 +1,4 @@
-const bg = require('../common/background.js');
+const bg = require('./common.js');
 const co = require('co');
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
@@ -16,34 +16,6 @@ function checkEntityId(entityId) {
         throw new Error(`invalid entityId={${entityId}}`);
     }
 }
-
-bg.messageListener(function*(req) {
-    if (req.action == 'setSession')
-        return yield setSession(req);
-    else if (req.action == 'getUser')
-        return yield bg.getUser();
-    else if (req.action == 'getAllowedCampaigns') 
-        return yield getAllowedCampaigns(req.entityId);
-    else if (req.action == 'getCampaignSummaries') 
-        return yield getCampaignSummaries(req.entityId);
-    else if (req.action == 'getAllCampaignData')
-        return yield getAllCampaignData(req.entityId, req.start, req.end);
-    else if (req.action == 'getDataHistory')
-        return yield getDataHistory(req.entityId, req.campaignId);
-    else if (req.action == 'getAggregateCampaignHistory')
-        return yield getAggregateCampaignHistory(req.entityId, req.campaignIds);
-    else if (req.action == 'getKeywordData')
-        return yield getKeywordData(req.entityId, req.adGroupId);
-    else if (req.action == 'getAggregateKeywordData')
-        return yield getAggregateKeywordData(req.entityId, req.adGroupIds);
-    else if (req.action == 'setCampaignMetadata')
-        return yield setCampaignMetadata(req.entityId, req.campaignId, req.asin);
-    else if (req.action == 'setAdGroupMetadata')
-        return yield setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
-    else if (req.action == 'updateKeyword')
-        return yield updateKeyword(req.entityId, req.keywordIdList, req.operation, req.dataValues);
-    throw new Error('unknown action');
-});
 
 chrome.alarms.onAlarm.addListener(ga.mcatch(session => {
     let entityId = getEntityIdFromSession(session.name);
@@ -438,3 +410,17 @@ function notifyNeedCredentials(entityId) {
         }));
     }
 }
+
+module.exports = {
+    setSession,
+    getAllowedCampaigns, 
+    getCampaignSummaries, 
+    getAllCampaignData,
+    getDataHistory,
+    getAggregateCampaignHistory,
+    getKeywordData,
+    getAggregateKeywordData,
+    setCampaignMetadata,
+    setAdGroupMetadata,
+    updateKeyword,
+};

@@ -38,7 +38,7 @@ const charts = [
     { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
 
-const setSessionPromise = common.bgMessage({ action: 'setSession' });
+const setSessionPromise = common.bgMessage({ action: 'seller.setSession' });
 
 let loadingInterval = window.setInterval(ga.mcatch(() => {
     const navbar = $('.sspa-navigation-bar');
@@ -141,19 +141,19 @@ common.getUser().then(user => {
         if (adGroupId && campaignId) {
             // We're on the campaign detail page looking at a link to a particular
             // ad group.
-            args = Object.assign(args, { action: 'getAdGroupDataRange', campaignId, adGroupId });
+            args = Object.assign(args, { action: 'seller.getAdGroupDataRange', campaignId, adGroupId });
         }
         else if (campaignId) {
             // We're on the overall campaign page, looking at a link to a campaign
             // detail page.
-            args = Object.assign(args, { action: 'getCampaignDataRange', campaignId });
+            args = Object.assign(args, { action: 'seller.getCampaignDataRange', campaignId });
         }
         else {
             // We're on the adGroup page, looking at a link to the product. The
             // current location has the campaignId and the adGroupId.
             ({ campaignId, adGroupId } = sdata.getCampaignId(locationHref));
             const asin = sdata.getAsin(linkHref);
-            args = Object.assign(args, { action: 'getAdDataRangeByAsin', campaignId, adGroupId, asin });
+            args = Object.assign(args, { action: 'seller.getAdDataRangeByAsin', campaignId, adGroupId, asin });
         }
 
         return common.bgMessage(args).then(data => data.sort(common.timestampSort));
@@ -268,7 +268,7 @@ common.getUser().then(user => {
 
     function adDataPromise(summary, startTimestamp, endTimestamp) {
         return common.bgMessage({
-            action: 'getAdDataRange',
+            action: 'seller.getAdDataRange',
             campaignId: summary.campaignId,
             adGroupId: summary.adGroupId,
             adId: summary.adId,
@@ -279,7 +279,7 @@ common.getUser().then(user => {
 
     function keywordDataPromise(summary, startTimestamp, endTimestamp) {
         return common.bgMessage({
-            action: 'getKeywordDataRange',
+            action: 'seller.getKeywordDataRange',
             campaignId: summary.campaignId,
             adGroupId: summary.adGroupId,
             startTimestamp,

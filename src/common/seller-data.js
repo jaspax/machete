@@ -41,7 +41,7 @@ function getAsin(url) {
 let summaryPromise = null;
 function getCampaignSummaries() {
     if (!summaryPromise) {
-        summaryPromise = common.bgMessage({ action: 'getSummaries' });
+        summaryPromise = common.bgMessage({ action: 'seller.getSummaries' });
     }
     return summaryPromise;
 }

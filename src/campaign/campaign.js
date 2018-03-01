@@ -31,7 +31,7 @@ let adGroupPromise = ga.mpromise(resolve => {
         window.clearInterval(adGroupInterval);
 
         common.bgMessage({
-            action: 'setAdGroupMetadata',
+            action: 'sp.setAdGroupMetadata',
             entityId: spdata.getEntityId(),
             campaignId: spdata.getCampaignId(),
             adGroupId,
@@ -65,7 +65,7 @@ let metadataInterval = window.setInterval(ga.mcatch(() => {
         return;
 
     common.bgMessage({
-        action: 'setCampaignMetadata',
+        action: 'sp.setCampaignMetadata',
         entityId: spdata.getEntityId(),
         campaignId: spdata.getCampaignId(),
         asin: match[1],

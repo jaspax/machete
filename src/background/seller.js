@@ -1,27 +1,7 @@
 const co = require('co');
 
 const constants = require('../common/constants.js');
-const bg = require('../common/background.js');
-
-bg.messageListener(function*(req, sender) {
-    if (req.action == 'setSession')
-        return yield setSession(req, sender);
-    if (req.action == 'getUser')
-        return yield bg.getUser();
-    if (req.action == 'getSummaries')
-        return yield getSummaries();
-    if (req.action == 'getCampaignDataRange')
-        return yield getCampaignDataRange(req.campaignId, req.startTimestamp, req.endTimestamp);
-    if (req.action == 'getAdGroupDataRange')
-        return yield getAdGroupDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
-    if (req.action == 'getAdDataRange')
-        return yield getAdDataRange(req.campaignId, req.adGroupId, req.adId, req.startTimestamp, req.endTimestamp);
-    if (req.action == 'getAdDataRangeByAsin')
-        return yield getAdDataRangeByAsin(req.campaignId, req.adGroupId, req.asin, req.startTimestamp, req.endTimestamp);
-    if (req.action == 'getKeywordDataRange')
-        return yield getKeywordDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
-    throw new Error('unknown action');
-});
+const bg = require('./common.js');
 
 function* synchronizeCampaignData() {
     console.log('synchronizeCampaignData start at', new Date());
@@ -250,3 +230,13 @@ function* storeKeywordDataRange(data, startTimestamp, endTimestamp) {
 const getKeywordDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
     return yield* getSellerDataRange(`keywordData/${campaignId}/${adGroupId}`, startTimestamp, endTimestamp);
 });
+
+module.exports = {
+    setSession,
+    getSummaries,
+    getCampaignDataRange,
+    getAdGroupDataRange,
+    getAdDataRange,
+    getAdDataRangeByAsin,
+    getKeywordDataRange,
+};

@@ -84,9 +84,8 @@ module.exports = (env = defaultEnv) => {
         entry: {
             dashboard: './src/dashboard/dashboard.js',
             campaign: './src/campaign/campaign.js',
-            background: './src/background/background.js',
+            background: './src/background/index.js',
             'seller-dash': './src/seller-dash/index.js',
-            'seller-background': './src/seller-background/index.js',
         },
         output: {
             path: __dirname + `/out/${versionTag}`,

@@ -2,9 +2,9 @@ const $ = require('jquery');
 const qu = require('async/queue');
 const co = require('co');
 
-const constants = require('./constants.js');
-const ga = require('./ga.js');
-const cache = require('./data-cache.js')();
+const constants = require('../common/constants.js');
+const ga = require('../common/ga.js');
+const cache = require('../common/data-cache.js')();
 
 const lastVersionKey = 'lastVersion';
 const serviceUrl = `https://${constants.hostname}`;
