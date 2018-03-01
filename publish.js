@@ -114,7 +114,7 @@ function* uploadPackage(appId, token, pkgPath) {
 
     const status = JSON.parse(response);
     if (status.uploadState != 'SUCCESS')
-        throw new Error(status.error);
+        throw new Error(JSON.stringify(status));
 
     return status;
 }
