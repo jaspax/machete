@@ -17,17 +17,13 @@ if (require.main === module) {
 
     co(function*() {
         try {
-            console.log('Pushing and tagging current changes in git');
-            yield* gitTag(releaseTag);
-            yield* gitPush(releaseTag);
-
             console.log(`Publishing ${pkgPath} to apps ${appIds}`);
             const codes = yield* accessCode();
 
-            console.log('Requesting access token...');
-            const token = yield* accessToken(codes);
-
             for (const appId of appIds) {
+                console.log('Requesting access token...');
+                const token = yield* accessToken(codes);
+
                 console.log(`Uploading to ${appId}...`);
                 const uploadResult = yield* uploadPackage(appId, token, pkgPath);
                 console.log('Upload result:', uploadResult);
@@ -36,6 +32,10 @@ if (require.main === module) {
                 const publishResult = yield* publishPackage(appId, token);
                 console.log('Publish result:', publishResult);
             }
+
+            console.log('Pushing and tagging current changes in git');
+            yield* gitTag(releaseTag);
+            yield* gitPush(releaseTag);
 
             process.exit(0);
         }
