@@ -1,7 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const Plotly = require('plotly.js');
-const Async = require('react-promise');
+const Async = require('react-promise').default;
 const ErrorSink = require('./ErrorSink.jsx');
 
 const common = require('../common/common.js');

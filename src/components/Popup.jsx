@@ -2,7 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const $ = require('jquery');
 const ga = require('../common/ga.js');
-const Portal = require('react-portal');
+const Portal = require('react-portal').Portal;
 
 /* For now, we are assuming that the popup is anchored on something which is NOT
  * itself a React element. If this assumption becomes false in the future, we
@@ -13,22 +13,12 @@ const width = 420;
 const gutter = 6;
 const dismissEvent = 'click.machete.popup-dismiss';
 
-let popupCounter = 0;
-
 class Popup extends React.Component {
     render() {
         if (!this.props.show) {
             $(document).off(dismissEvent);
-            if (this.target) {
-                this.target.remove();
-            }
             return null;
         }
-
-        popupCounter++;
-        const popupId = 'machete-popup-' + popupCounter;
-        this.target = $(`<div id="${popupId}" class="machete-popup"></div>`);
-        $(document.body).append(this.target);
 
         const anchor = $('#'+this.props.anchorId);
         let anchorPos = anchor.offset();
@@ -36,7 +26,6 @@ class Popup extends React.Component {
         if (anchorPos.left + width > $(document).width()) { 
             pos = {top: anchorPos.top + anchor.height() + gutter, left: anchorPos.left + anchor.width() - width + gutter};
         }
-        this.target.css(pos);
 
         // Clicking anywhere outside the popup dismisses the chart. We bind the
         // event here, and unbind it when we're actually re-rendered with
@@ -51,21 +40,11 @@ class Popup extends React.Component {
             }
         }));
 
-        /* TODO: animate this shit
-        const bodyTop = $('body').scrollTop();
-        const bodyLeft = $('body').scrollLeft();
-
-        popup.slideDown(200, function() {
-            $('body').scrollTop(bodyTop);
-            $('body').scrollLeft(bodyLeft);
-        });
-        */
-
-        return (
-            <Portal id={popupId}>
+        return <Portal>
+            <div className="machete-popup" style={pos}>
                 {this.props.children}
-            </Portal>
-        );
+            </div>
+        </Portal>;
     }
 }
 

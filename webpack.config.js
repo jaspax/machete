@@ -121,5 +121,6 @@ module.exports = (env = defaultEnv) => {
             fs: "empty"
         },
         plugins,
+        devtool: 'cheap-module-source-map',
     };
 };
