@@ -139,7 +139,7 @@ function* requestCampaignData(entityId) {
             },
             dataType: 'json',
         });
-        yield* storeDataCloud(entityId, Date.now(), data);
+        yield* storeLifetimeCampaignData(entityId, Date.now(), data);
     }
 
     let earliestData = null;
@@ -158,7 +158,7 @@ function* requestCampaignData(entityId) {
         if (!earliestData)
             earliestData = data;
 
-        yield* storeDataCloud(entityId, date, data);
+        yield* storeDailyCampaignData(entityId, date, data);
     });
 
     let timestamp = Date.now();
@@ -214,8 +214,16 @@ function* requestKeywordData(entityId, adGroupId) {
     yield* storeKeywordDataCloud(entityId, adGroupId, timestamp, data);
 }
 
-function* storeDataCloud(entityId, timestamp, data) {
+function* storeDailyCampaignData(entityId, timestamp, data) {
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+    });
+}
+
+function* storeLifetimeCampaignData(entityId, timestamp, data) {
+    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         data: JSON.stringify(data),
         contentType: 'application/json',
