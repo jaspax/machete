@@ -2,6 +2,7 @@ const co = require('co');
 const fs = require('fs');
 const requestp = require('request-promise-native');
 const readline = require('readline-sync');
+const { spawn } = require('child_process');
 
 if (require.main === module) {
     const argv = process.argv.slice(2);
@@ -16,6 +17,10 @@ if (require.main === module) {
 
     co(function*() {
         try {
+            console.log('Pushing and tagging current changes in git');
+            yield* gitTag(releaseTag);
+            yield* gitPush(releaseTag);
+
             console.log(`Publishing ${pkgPath} to apps ${appIds}`);
             const codes = yield* accessCode();
 
@@ -39,6 +44,33 @@ if (require.main === module) {
             process.exit(1);
         }
     });
+}
+
+function* asyncSpawn(cmd, args) {
+    return yield new Promise((resolve, reject) => {
+        console.log(cmd, args.join(' '));
+        const child = spawn(cmd, args, { stdio: 'inherit' });
+        child.on('close', code => {
+            if (code == 0)
+                return resolve();
+            return reject('Error code: ' + code);
+        });
+    });
+}
+
+function* gitTag(releaseTag) {
+    const manifest = require('./manifest.json');
+    return yield* asyncSpawn('git', ['tag', '-f', `${releaseTag}-${manifest.version}`]);
+}
+
+function* gitPush(releaseTag) {
+    yield* asyncSpawn('git', ['push', 'origin']);
+    yield* asyncSpawn('git', ['push', 'origin', '--tags']);
+
+    if (releaseTag == 'release') {
+        yield* asyncSpawn('git', ['push', 'github']);
+        yield* asyncSpawn('git', ['push', 'github', '--tags']);
+    }
 }
 
 function* accessCode() {
