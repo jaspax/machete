@@ -3,7 +3,7 @@
 
   "name": "Machete for Amazon",
   "short_name": "Machete",
-  "description": "Make your AMS reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
+  "description": "Make your Amazon Marketing reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
   "version": "1.4.7.1",
   "version_name": "1.4.7 beta 1",
   "icons": { 
@@ -12,7 +12,7 @@
       "128": "images/machete-128.png" 
   },
   "page_action": {
-    "default_name": "Machete for AMS",
+    "default_name": "Machete for Amazon",
     "default_icon": {
         "16": "images/machete-16.png",
         "48": "images/machete-48.png",
@@ -23,6 +23,7 @@
     "alarms",
     "background", 
     "notifications",
+    "https://machete-app.com/*",
     "https://ams.amazon.com/*",
     "https://sellercentral.amazon.com/*"
   ],
