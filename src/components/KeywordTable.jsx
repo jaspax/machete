@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ReactTable = require('react-table').default;
+require('react-table/react-table.css');
 
 const ga = require('../common/ga.js');
 

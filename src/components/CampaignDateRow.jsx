@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const DatePicker = require('react-datepicker').default;
+require('react-datepicker/dist/react-datepicker.css');
 
 const common = require('../common/common.js');
 

@@ -1,8 +1,9 @@
 const React = require('react');
 const PropTypes = require('prop-types');
-const Select = require('react-select').default;
-const Async = require('react-promise');
 const ErrorSink = require('./ErrorSink.jsx');
+const Select = require('react-select').default;
+require('react-select/dist/react-select.css');
+const Async = require('react-promise').default;
 
 const ga = require('../common/ga.js');
 

@@ -2,7 +2,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const KeywordAnalyticsView = require('./KeywordAnalyticsView.jsx');
 const ErrorSink = require('./ErrorSink.jsx');
-const Async = require('react-promise');
+const Async = require('react-promise').default;
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
