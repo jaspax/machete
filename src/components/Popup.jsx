@@ -41,7 +41,7 @@ class Popup extends React.Component {
         }));
 
         return <Portal>
-            <div className="machete-popup" style={pos}>
+            <div className="machete-popup" style={pos} ref={target => self.target = target}>
                 {this.props.children}
             </div>
         </Portal>;
