@@ -18,9 +18,11 @@ if (require.main === module) {
     co(function*() {
         try {
             console.log(`Publishing ${pkgPath} to apps ${appIds}`);
-            const codes = yield* accessCode();
 
             for (const appId of appIds) {
+                console.log('Require access code...');
+                const codes = yield* accessCode();
+
                 console.log('Requesting access token...');
                 const token = yield* accessToken(codes);
 
