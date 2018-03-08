@@ -312,8 +312,16 @@ const getAggregateCampaignHistory = bg.cache.coMemo(function*(entityId, campaign
         const promises = [];
         for (const campaignId of page) {
             promises.push(co(function*() {
-                let history = yield getDataHistory(entityId, campaignId);
-                aggregate = aggregate.concat(...history);
+                try {
+                    let history = yield getDataHistory(entityId, campaignId);
+                    aggregate = aggregate.concat(...history);
+                }
+                catch (ex) {
+                    if (bg.handleServerErrors(ex) == 'notAllowed') {
+                        // swallow this
+                    }
+                    throw ex;
+                }
             }));
         }
         yield Promise.all(promises);
@@ -346,7 +354,17 @@ const getAggregateKeywordData = bg.cache.coMemo(function*(entityId, adGroupIds) 
     let keywordSets = [];
 
     for (const page of pageArray(adGroupIds, 6)) {
-        const kwSets = yield Promise.all(page.map(adGroupId => co(getKeywordData(entityId, adGroupId))));
+        const kwSets = yield Promise.all(page.map(adGroupId => co(function*() {
+            try {
+                yield getKeywordData(entityId, adGroupId);
+            }
+            catch (ex) {
+                if (bg.handleServerErrors(ex) == 'notAllowed') {
+                    // swallow this
+                }
+                throw ex;
+            }
+        })));
         keywordSets = keywordSets.concat(kwSets);
     }
 
