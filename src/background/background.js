@@ -356,11 +356,11 @@ const getAggregateKeywordData = bg.cache.coMemo(function*(entityId, adGroupIds) 
     for (const page of pageArray(adGroupIds, 6)) {
         const kwSets = yield Promise.all(page.map(adGroupId => co(function*() {
             try {
-                yield getKeywordData(entityId, adGroupId);
+                return yield getKeywordData(entityId, adGroupId);
             }
             catch (ex) {
                 if (bg.handleServerErrors(ex) == 'notAllowed') {
-                    // swallow this
+                    return []; // don't destroy the whole thing when only one item is unavailable
                 }
                 throw ex;
             }
