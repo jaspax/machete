@@ -158,18 +158,6 @@ function* requestCampaignData(entityId) {
     console.log('requesting campaign data for', entityId);
     const missing = yield* getMissingDates(entityId);
 
-    if (missing.needLifetime) {
-        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
-            method: 'GET',
-            data: {
-                entityId,
-                status: 'Lifetime',
-            },
-            dataType: 'json',
-        });
-        yield* storeLifetimeCampaignData(entityId, Date.now(), data);
-    }
-
     let earliestData = null;
     yield bg.parallelQueue(missing.missingDays, function*(date) {
         const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
@@ -193,6 +181,18 @@ function* requestCampaignData(entityId) {
     if (earliestData && earliestData.aaData && earliestData.aaData.length) {
         let campaignIds = earliestData.aaData.map(x => x.campaignId);
         yield* requestCampaignStatus(entityId, campaignIds, timestamp);
+    }
+
+    if (missing.needLifetime) {
+        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
+            method: 'GET',
+            data: {
+                entityId,
+                status: 'Lifetime',
+            },
+            dataType: 'json',
+        });
+        yield* storeLifetimeCampaignData(entityId, Date.now(), data);
     }
 
     return earliestData;
