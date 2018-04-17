@@ -130,18 +130,6 @@ function* requestCampaignData(entityId) {
     console.log('requesting campaign data for', entityId);
     const missing = yield* getMissingDates(entityId);
 
-    if (missing.needLifetime) {
-        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
-            method: 'GET',
-            data: {
-                entityId,
-                status: 'Lifetime',
-            },
-            dataType: 'json',
-        });
-        yield* storeLifetimeCampaignData(entityId, Date.now(), data);
-    }
-
     let earliestData = null;
     yield bg.parallelQueue(missing.missingDays, function*(date) {
         const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
@@ -165,6 +153,18 @@ function* requestCampaignData(entityId) {
     if (earliestData && earliestData.aaData && earliestData.aaData.length) {
         let campaignIds = earliestData.aaData.map(x => x.campaignId);
         yield* requestCampaignStatus(entityId, campaignIds, timestamp);
+    }
+
+    if (missing.needLifetime) {
+        const data = yield bg.ajax('https://ams.amazon.com/api/rta/campaigns', {
+            method: 'GET',
+            data: {
+                entityId,
+                status: 'Lifetime',
+            },
+            dataType: 'json',
+        });
+        yield* storeLifetimeCampaignData(entityId, Date.now(), data);
     }
 
     return earliestData;
@@ -284,8 +284,16 @@ const getAggregateCampaignHistory = bg.cache.coMemo(function*(entityId, campaign
         const promises = [];
         for (const campaignId of page) {
             promises.push(co(function*() {
-                let history = yield getDataHistory(entityId, campaignId);
-                aggregate = aggregate.concat(...history);
+                try {
+                    let history = yield getDataHistory(entityId, campaignId);
+                    aggregate = aggregate.concat(...history);
+                }
+                catch (ex) {
+                    if (bg.handleServerErrors(ex) == 'notAllowed') {
+                        // swallow this
+                    }
+                    throw ex;
+                }
             }));
         }
         yield Promise.all(promises);
@@ -318,7 +326,17 @@ const getAggregateKeywordData = bg.cache.coMemo(function*(entityId, adGroupIds) 
     let keywordSets = [];
 
     for (const page of pageArray(adGroupIds, 6)) {
-        const kwSets = yield Promise.all(page.map(adGroupId => co(getKeywordData(entityId, adGroupId))));
+        const kwSets = yield Promise.all(page.map(adGroupId => co(function*() {
+            try {
+                return yield getKeywordData(entityId, adGroupId);
+            }
+            catch (ex) {
+                if (bg.handleServerErrors(ex) == 'notAllowed') {
+                    return []; // don't destroy the whole thing when only one item is unavailable
+                }
+                throw ex;
+            }
+        })));
         keywordSets = keywordSets.concat(kwSets);
     }
 

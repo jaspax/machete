@@ -16,9 +16,9 @@ const KeywordBulkUpdate = require('../components/KeywordBulkUpdate.jsx');
 const tabClass = `machete-tab`;
 
 const ourTabs = [
-    { label: "Keyword Analytics", activate: generateKeywordReports, matching: /ads\/campaign/, insertIndex: 1 },
+    { label: "Keyword Analytics", activate: generateKeywordReports, matching: /./, insertIndex: 1 },
     { label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
-    { label: "Bid Optimizer", activate: generateBidOptimizer, matching: /ads\/campaign/, insertIndex: 3 },
+    { label: "Bid Optimizer", activate: generateBidOptimizer, matching: /./, insertIndex: 3 },
 ];
 
 let adGroupPromise = ga.mpromise(resolve => {
