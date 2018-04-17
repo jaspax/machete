@@ -23,9 +23,19 @@
     "alarms",
     "background", 
     "notifications",
-    "https://machete-app.com/*",
+    "https://ams.amazon.ca/*",
+    "https://ams.amazon.co.uk/*",
     "https://ams.amazon.com/*",
-    "https://sellercentral.amazon.com/*"
+    "https://ams.amazon.de/*",
+    "https://ams.amazon.fr/*",
+    "https://sellercentral.amazon.ca/*",
+    "https://sellercentral.amazon.co.uk/*",
+    "https://sellercentral.amazon.com/*",
+    "https://sellercentral.amazon.de/*",
+    "https://sellercentral.amazon.fr/*"
+  ],
+  "optional_permissions": [
+    "https://kdp.amazon.com/*"
   ],
   "background": {
       "scripts": ["src/background.js"],
@@ -33,17 +43,35 @@
   },
   "content_scripts": [
       {
-          "matches": ["https://ams.amazon.com/ads/campaigns*", "https://ams.amazon.com/ads/dashboard*"],
+          "matches": [
+              "https://ams.amazon.ca/ads/campaigns*",       "https://ams.amazon.ca/ads/dashboard*",
+              "https://ams.amazon.co.uk/ads/campaigns*",    "https://ams.amazon.co.uk/ads/dashboard*",
+              "https://ams.amazon.com/ads/campaigns*",      "https://ams.amazon.com/ads/dashboard*",
+              "https://ams.amazon.de/ads/campaigns*",       "https://ams.amazon.de/ads/dashboard*",
+              "https://ams.amazon.fr/ads/campaigns*",       "https://ams.amazon.fr/ads/dashboard*"
+          ],
           "js": ["src/dashboard.js"],
           "css": ["css/inject.css"]
       },
       {
-          "matches": ["https://ams.amazon.com/ads/campaign/*", "https://ams.amazon.com/rta/campaign/*"],
+          "matches": [
+              "https://ams.amazon.ca/ads/campaign/*",       "https://ams.amazon.ca/rta/campaign/*",
+              "https://ams.amazon.co.uk/ads/campaign/*",    "https://ams.amazon.co.uk/rta/campaign/*",
+              "https://ams.amazon.com/ads/campaign/*",      "https://ams.amazon.com/rta/campaign/*",
+              "https://ams.amazon.de/ads/campaign/*",       "https://ams.amazon.de/rta/campaign/*",
+              "https://ams.amazon.fr/ads/campaign/*",       "https://ams.amazon.fr/rta/campaign/*"
+          ],
           "js": ["src/campaign.js"],
           "css": ["css/inject.css"]
       },
       {
-          "matches": ["https://sellercentral.amazon.com/hz/cm/*"],
+          "matches": [
+              "https://sellercentral.amazon.ca/hz/cm/*",
+              "https://sellercentral.amazon.co.uk/hz/cm/*",
+              "https://sellercentral.amazon.com/hz/cm/*",
+              "https://sellercentral.amazon.de/hz/cm/*",
+              "https://sellercentral.amazon.fr/hz/cm/*"
+          ],
           "js": ["src/seller-dash.js"],
           "css": ["css/inject.css"]
       }
