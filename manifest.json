@@ -74,6 +74,11 @@
           ],
           "js": ["src/seller-dash.js"],
           "css": ["css/inject.css"]
+      },
+      {
+          "matches": ["https://kdp.amazon.com/*"],
+          "js": ["src/kdp.js"],
+          "css": ["css/inject.css"]
       }
   ],
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
