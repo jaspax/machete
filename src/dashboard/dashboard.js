@@ -12,6 +12,7 @@ const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx
 const AggregateHistory = require('../components/AggregateHistory.jsx');
 const AggregateKeywords = require('../components/AggregateKeywords.jsx');
 const AmsCampaignRow = require('../components/AmsCampaignRow.jsx');
+const KdpTab = require('../components/KdpTab.jsx');
 const tabber = require('../components/tabber.js');
 
 const twoWeeks = 15 * constants.timespan.day;
@@ -54,6 +55,11 @@ function addTabs(wrapper) {
     tabber(tabs, {
         label: 'Aggregate Keywords',
         activate: activateAggregateKeywordTab,
+    });
+
+    tabber(tabs, {
+        label: "Enable KDP",
+        activate: activateKdpTab,
     });
 }
 
@@ -124,6 +130,11 @@ function activateAggregateKeywordTab(container) {
         }),
     });
     ReactDOM.render(aggContent, container[0]);
+}
+
+function activateKdpTab(container) {
+    let kdpContent = React.createElement(KdpTab, {});
+    ReactDOM.render(kdpContent, container[0]);
 }
 
 function addChartButtons(rows) {

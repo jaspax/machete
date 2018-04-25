@@ -15,6 +15,16 @@ function* setSession() {
     console.log('sales', sales, 'KU', ku);
 }
 
+function requestPermission() {
+    return new Promise((resolve, reject) => {
+        chrome.permissions.request({ origins: ['https://kdp.amazon.com/*'] }, granted => {
+            if (granted)
+                return resolve();
+            return reject(new Error('user refused'));
+        });
+    });
+}
+
 function baseRequest() {
     const todayFmt = moment().format('YYYY-MM-DD');
     const past90DaysFmt = moment().subtract(90, 'days').format('YYYY-MM-DD');
@@ -66,6 +76,7 @@ function fetchKuData() {
 
 module.exports = {
     setSession,
+    requestPermission,
     fetchSalesData,
     fetchKuData,
 };

@@ -86,6 +86,7 @@ module.exports = (env = defaultEnv) => {
             campaign: './src/campaign/campaign.js',
             background: './src/background/index.js',
             'seller-dash': './src/seller-dash/index.js',
+            kdp: './src/kdp/index.js',
         },
         output: {
             path: __dirname + `/out/${versionTag}`,
