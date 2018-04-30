@@ -1,15 +1,19 @@
 const bg = require('./common.js');
 const moment = require('moment');
-const _ = require('lodash');
 
 function* setSession() {
     const time = Date.now();
     const asins = yield* fetchAsins(time);
-    yield bg.parallelQueue(asins, function* (asin) {
-        const sales = yield* fetchSalesData(time, asin);
-        const ku = yield* fetchKuData(time, asin);
-        
-        console.log('asin', asin, 'sales', sales, 'ku', ku);
+    yield bg.parallelQueue(asins, function* (asinArray) {
+        const asin = asinArray[0].substring(0, 10);
+        const sales = yield* fetchSalesData(time, asinArray);
+        const ku = yield* fetchKuData(time, asinArray);
+
+        bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
+            method: 'PUT',
+            data: JSON.stringify({ sales, ku }),
+            contentType: 'application/json',
+        });
     });
 }
 
@@ -24,8 +28,8 @@ function requestPermission() {
 }
 
 function baseRequest(time) {
-    const todayFmt = moment().format('YYYY-MM-DD');
-    const past90DaysFmt = moment().subtract(90, 'days').format('YYYY-MM-DD');
+    const todayFmt = moment(time).format('YYYY-MM-DD');
+    const past90DaysFmt = moment(time).subtract(90, 'days').format('YYYY-MM-DD');
     return {
         requesttype: 'render',
         customer: '',
@@ -72,8 +76,7 @@ function* fetchSalesData(time, asin) {
     });
     
     const response = yield kdpAjax(reportRequest);
-    const data = JSON.parse(response.data);
-    return _.zip(data.chart.xvalues, data.chart.line1);
+    return response.data;
 }
 
 function* fetchKuData(time, asin) {
@@ -85,8 +88,7 @@ function* fetchKuData(time, asin) {
     });
 
     const response = yield kdpAjax(reportRequest);
-    const data = JSON.parse(response.data);
-    return _.zip(data.chart.xvalues, data.chart.line1);
+    return response.data;
 }
 
 module.exports = {
