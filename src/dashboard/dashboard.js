@@ -82,7 +82,7 @@ function addTotalsRow(wrapper) {
         const totalRow = React.createElement(AmsCampaignRow, { 
             label: "Yesterday's Totals",
             lastDay,
-            syncPromise: spdata.setSessionPromise,
+            syncPromise: spdata.startSessionPromise,
         });
         ReactDOM.render(totalRow, body[0]);
     });

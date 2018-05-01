@@ -149,8 +149,8 @@ function isRunning(campaignSummary) {
     return ['RUNNING', 'OUT_OF_BUDGET'].includes(campaignSummary.status);
 }
 
-const setSessionPromise = common.bgMessage({
-    action: 'sp.setSession', 
+const startSessionPromise = common.bgMessage({
+    action: 'startSession', 
     entityId: getEntityId(), 
 });
 
@@ -197,5 +197,5 @@ module.exports = {
     updateKeywordStatus,
     updateKeywordBid,
     isRunning,
-    setSessionPromise,
+    startSessionPromise,
 };

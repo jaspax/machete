@@ -3,15 +3,15 @@ const sp = require('./sp.js');
 const seller = require('./seller.js');
 const kdp = require('./kdp.js');
 
-bg.messageListener(function*(req, sender) { // eslint-disable-line complexity
+bg.messageListener(function*(req) { // eslint-disable-line complexity
     switch (req.action) {
         // Valid for every page
         case 'getUser':
             return yield bg.getUser();
+        case 'startSession':
+            return yield bg.startSession(req);
 
         // AMS actions
-        case 'sp.setSession':
-            return yield sp.setSession(req);
         case 'sp.getAllowedCampaigns': 
             return yield sp.getAllowedCampaigns(req.entityId);
         case 'sp.getCampaignSummaries': 
@@ -34,8 +34,6 @@ bg.messageListener(function*(req, sender) { // eslint-disable-line complexity
             return yield sp.updateKeyword(req.entityId, req.keywordIdList, req.operation, req.dataValues);
 
         // Seller actions
-        case 'seller.setSession':
-            return yield seller.setSession(req, sender);
         case 'seller.getSummaries':
             return yield seller.getSummaries();
         case 'seller.getCampaignDataRange':
@@ -50,8 +48,6 @@ bg.messageListener(function*(req, sender) { // eslint-disable-line complexity
             return yield seller.getKeywordDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
 
         // KDP actions
-        case 'kdp.setSession':
-            return yield kdp.setSession(req, sender);
         case 'kdp.requestPermission':
             return yield kdp.requestPermission();
 

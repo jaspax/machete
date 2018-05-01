@@ -1,40 +1,21 @@
-const co = require('co');
-
 const constants = require('../common/constants.js');
 const bg = require('./common.js');
 
-function* synchronizeCampaignData() {
-    console.log('synchronizeCampaignData start at', new Date());
+function* dataGather() {
+    const ranges = yield* getMissingRanges();
+    for (const range of ranges) {
+        const campaignIds = yield* requestCampaignDataRange(range.start, range.end);
 
-    try {
-        const ranges = yield* getMissingRanges();
-        for (const range of ranges) {
-            const campaignIds = yield* requestCampaignDataRange(range.start, range.end);
+        for (const campaignId of campaignIds) {
+            const adGroupIds = yield* requestAdGroupDataRange(campaignId, range.start, range.end);
 
-            for (const campaignId of campaignIds) {
-                const adGroupIds = yield* requestAdGroupDataRange(campaignId, range.start, range.end);
-
-                // This innermost loop we can parallelize for speed without
-                // blowing things up too much, hopefully
-                const promises = [];
-
-                for (const adGroupId of adGroupIds) {
-                    promises.push(co(requestAdDataRange(campaignId, adGroupId, range.start, range.end)));
-                    promises.push(co(requestKeywordDataRange(campaignId, adGroupId, range.start, range.end)));
-                }
-
-                yield Promise.all(promises);
-            }
+            yield bg.parallelQueue(adGroupIds, function*(adGroupId) {
+                yield* requestAdDataRange(campaignId, adGroupId, range.start, range.end);
+                yield* requestKeywordDataRange(campaignId, adGroupId, range.start, range.end);
+            });
         }
     }
-    finally {
-        console.log('synchronizeCampaignData finish at', new Date());
-    }
 }
-
-const setSession = bg.cache.coMemo(function*() {
-    yield* synchronizeCampaignData();
-});
 
 function* requestAllPages(getCurrentPage) {
     const pageSize = 50;
@@ -232,7 +213,8 @@ const getKeywordDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, sta
 });
 
 module.exports = {
-    setSession,
+    name: 'seller',
+    dataGather,
     getSummaries,
     getCampaignDataRange,
     getAdGroupDataRange,

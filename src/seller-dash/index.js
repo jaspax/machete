@@ -38,7 +38,7 @@ const charts = [
     { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
 ];
 
-const setSessionPromise = common.bgMessage({ action: 'seller.setSession' });
+const startSessionPromise = common.bgMessage({ action: 'startSession' });
 
 let loadingInterval = window.setInterval(ga.mcatch(() => {
     const navbar = $('.sspa-navigation-bar');
@@ -54,7 +54,7 @@ let loadingInterval = window.setInterval(ga.mcatch(() => {
     const loading = React.createElement(LoadingNotice, {});
     ReactDOM.render(loading, container[0]);
 
-    setSessionPromise.then(ga.mcatch(() => container.remove()));
+    startSessionPromise.then(ga.mcatch(() => container.remove()));
     window.clearInterval(loadingInterval);
 }), 100);
 

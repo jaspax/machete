@@ -1,11 +1,13 @@
 const bg = require('./common.js');
 const moment = require('moment');
 
-function* setSession() {
+function* dataGather() {
     const time = Date.now();
     const asins = yield* fetchAsins(time);
-    yield bg.parallelQueue(asins, function* (asinArray) {
+    yield bg.parallelQueue(asins, function*(asinArray) {
         const asin = asinArray[0].substring(0, 10);
+        console.log('Fetch sales data for ASIN', asin);
+
         const sales = yield* fetchSalesData(time, asinArray);
         const ku = yield* fetchKuData(time, asinArray);
 
@@ -92,7 +94,8 @@ function* fetchKuData(time, asin) {
 }
 
 module.exports = {
-    setSession,
+    name: 'kdp',
+    dataGather,
     requestPermission,
     fetchSalesData,
     fetchKuData,

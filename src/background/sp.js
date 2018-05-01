@@ -3,13 +3,6 @@ const co = require('co');
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
-const moment = require('moment');
-
-const getSessionKey = entityId => `session_${entityId}`;
-const getCampaignDataKey = entityId => `campaignData_${entityId}`;
-const getEntityIdFromSession = session => session.replace('session_', '');
-
-const alarmPeriodMinutes = 12 * 60;
 
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
@@ -17,83 +10,27 @@ function checkEntityId(entityId) {
     }
 }
 
-chrome.alarms.onAlarm.addListener(ga.mcatch(session => {
-    let entityId = getEntityIdFromSession(session.name);
-    try {
-        checkEntityId(entityId);
-    }
-    catch (ex) {
-        chrome.alarms.clear(session.name, cleared => console.log("cleared useless alarm", cleared));
-        return;
-    }
-
-    co(dataSync(entityId));
-}));
-
 function* pageArray(array, step) {
     for (let index = 0; index < array.length; index += step) {
         yield array.slice(index, index + step);
     }
 }
 
-function* dataSync(entityId) {
-    console.log('Data sync start at', moment().format());
+function* dataGather() {
+    for (const entityId of bg.getEntityIds()) {
+        try {
+            yield* requestCampaignData(entityId);
 
-    const lastDataSync = moment(Number(localStorage.getItem(getCampaignDataKey(entityId))));
-    console.log('Last data sync was', lastDataSync.format());
-    if (moment().isSame(lastDataSync, 'day')) {
-        console.log('Data sync is up-to-date');
-        return lastDataSync.valueOf();
-    }
-
-    const lastRequestSucceeded = JSON.parse(localStorage.getItem('lastRequestSucceeded'));
-    try {
-        yield* requestCampaignData(entityId);
-
-        const adGroups = yield* getAdGroups(entityId);
-        for (const item of adGroups) {
-            yield* requestKeywordData(entityId, item.adGroupId);
+            const adGroups = yield* getAdGroups(entityId);
+            yield bg.parallelQueue(adGroups, function*(item) {
+                yield* requestKeywordData(entityId, item.adGroupId);
+            });
         }
-        bg.cache.clear();
-    }
-    catch (ex) {
-        if (bg.handleServerErrors(ex, 'dataSync')) {
-            localStorage.setItem('lastRequestSucceeded', false);
-            if (lastRequestSucceeded)
-                notifyNeedCredentials(entityId);
-            return null;
+        catch (ex) {
+            if (!bg.handleServerErrors(ex, 'sp.dataSync:' + entityId))
+                ga.mex(ex);
         }
-        throw ex;
     }
-    localStorage.setItem('lastRequestSucceeded', true);
-
-    const now = moment();
-    localStorage.setItem(getCampaignDataKey(entityId), now.toDate().getTime());
-    console.log('Data sync finish at', now.format());
-
-    return now;
-}
-
-function* setSession(req) {
-    console.log('page session startup for', req);
-    let sessionKey = getSessionKey(req.entityId);
-    
-    yield ga.mpromise(resolve => {
-        chrome.alarms.get(sessionKey, alarm => {
-            if (!alarm) {
-                chrome.alarms.create(sessionKey, {
-                    when: Date.now() + 500,
-                    periodInMinutes: alarmPeriodMinutes,
-                });
-                console.log('set alarm for', sessionKey);
-                resolve(true);
-            }
-            resolve(false);
-        });
-    });
-
-    const lastDataSync = yield* dataSync(req.entityId);
-    return lastDataSync;
 }
 
 const getAllowedCampaigns = bg.cache.coMemo(function*(entityId) {
@@ -105,10 +42,6 @@ const getAllowedCampaigns = bg.cache.coMemo(function*(entityId) {
 
     if (allowed.length)
         return allowed;
-
-    // nb: setSession is memoized so this should never actually rerun, it just
-    // makes us wait until setSession is done
-    yield setSession({ entityId });
 
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
@@ -405,40 +338,9 @@ function* updateKeyword(entityId, keywordIdList, operation, dataValues) {
     return { success: results.every(x => x.success) };
 }
 
-
-let notificationExists = false;
-function notifyNeedCredentials(entityId) {
-    if (!notificationExists) {
-        let notificationId = `machete-${entityId}-need-credentials`;
-        chrome.notifications.create(notificationId, {
-            type: "basic",
-            iconUrl: "images/machete-128.png",
-            title: "Sign in to AMS",
-            message: "Machete needs you to sign in to AMS so it can keep your campaign history up-to-date.",
-            contextMessage: "Click to sign in at https://ams.amazon.com/",
-            isClickable: true,
-            requireInteraction: true,
-        });
-
-        notificationExists = true;
-        ga.mga('event', 'credential-popup', 'show');
-        chrome.notifications.onClicked.addListener(ga.mcatch(clickId => {
-            if (clickId == notificationId) {
-                ga.mga('event', 'credential-popup', 'click');
-                chrome.tabs.create({ url: "https://ams.amazon.com/ads/dashboard" });
-                chrome.notifications.clear(notificationId);
-                notificationExists = false;
-            }
-        }));
-        chrome.notifications.onClosed.addListener(ga.mcatch(() => {
-            notificationExists = false;
-            ga.mga('event', 'credential-popup', 'dismiss');
-        }));
-    }
-}
-
 module.exports = {
-    setSession,
+    name: 'sp',
+    dataGather,
     getAllowedCampaigns, 
     getCampaignSummaries, 
     getAllCampaignData,
