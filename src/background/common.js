@@ -12,6 +12,7 @@ const serviceUrl = `https://${constants.hostname}`;
 const alarmPeriodMinutes = 12 * 60;
 const alarmKey = 'macheteSync';
 const entityIdKey = 'spEntityIds';
+const sellerDomainKey = 'sellerDomains';
 const lastVersionKey = 'lastVersion';
 
 chrome.runtime.onInstalled.addListener(details => {
@@ -99,15 +100,19 @@ function* dataGather(req) {
     console.log('Data sync start at', moment().format());
     const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
 
+    // Store entityIds and domains for further use
+    if (req.entityId) {
+        addEntityId(req.domain, req.entityId);
+    }
+    else if (req.domain) {
+        addSellerDomain(req.domain);
+    }
+    
     /* These requires MUST go here to avoid a circular require */
     const kdp = require('./kdp.js'); // eslint-disable-line global-require
     const seller = require('./seller.js'); // eslint-disable-line global-require
     const sp = require('./sp.js'); // eslint-disable-line global-require
 
-    if (req.entityId) {
-        addEntityId(req.entityId);
-    }
-    
     const oldSync = Math.max(..._.values(lastSync));
     let newSync = 0;
     for (const mod of [sp, seller, kdp]) {
@@ -130,7 +135,7 @@ function* dataGather(req) {
 
         try {
             console.log('Data sync', mod.name, 'start at', moment().format());
-            yield* mod.dataGather();
+            yield* mod.dataGather(req);
             newSync = Date.now();
             lastSync[mod.name] = newSync;
         }
@@ -148,10 +153,15 @@ function* dataGather(req) {
     return Math.max(newSync, oldSync);
 }
 
-function addEntityId(entityId) {
+function addEntityId(domain, entityId) {
+    if (!domain || !entityId) {
+        ga.merror("bad arguments to addEntityId:", JSON.stringify([domain, entityId]));
+        return;
+    }
+
     const ids = JSON.parse(localStorage.getItem(entityIdKey)) || [];
-    if (!ids.includes(entityId)) {
-        ids.push(entityId);
+    if (!ids.find(x => x.entityId == entityId || x == entityId)) {
+        ids.push({ domain, entityId });
         localStorage.setItem(entityIdKey, JSON.stringify(ids));
     }
 }
@@ -159,7 +169,8 @@ function addEntityId(entityId) {
 function getEntityIds() {
     const entityIds = JSON.parse(localStorage.getItem(entityIdKey)) || [];
 
-    // TODO: eventually delete this once all users have been updated
+    // TODO: This moves old-style entityIds to the new system. Eventually delete
+    // this once all users have been updated.
     const toDelete = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -168,7 +179,7 @@ function getEntityIds() {
 
             const entityId = key.replace('campaignData_', '');
             if (entityId) {
-                entityIds.push(entityId);
+                entityIds.push({ entityId });
             }
         }
     }
@@ -176,13 +187,44 @@ function getEntityIds() {
         localStorage.removeItem(key);
     }
 
-    return entityIds;
+    // Fix up entityIds to ensure that every one has a stored domain
+    let ids = entityIds.map(item => {
+        if (typeof item == 'string') {
+            return { domain: 'ams.amazon.com', entityId: item };
+        }
+        else if (!item.domain) {
+            item.domain = 'ams.amazon.com';
+        }
+        return item;
+    });
+
+    ids = _.uniqBy(ids, 'entityId');
+    localStorage.setItem(entityIdKey, JSON.stringify(ids));
+
+    return ids;
+}
+
+function addSellerDomain(domain) {
+    if (!domain) {
+        ga.merror("bad arguments to addEntityId:", JSON.stringify(domain));
+        return;
+    }
+
+    const ids = JSON.parse(localStorage.getItem(sellerDomainKey)) || [];
+    if (!ids.includes(domain)) {
+        ids.push(domain);
+        localStorage.setItem(sellerDomainKey, JSON.stringify(ids));
+    }
+}
+
+function getSellerDomains() {
+    return JSON.parse(localStorage.getItem(sellerDomainKey)) || [];
 }
 
 function setAlarm() {
     chrome.alarms.onAlarm.addListener(ga.mcatch(alarm => {
         if (alarm.name == alarmKey) {
-            co(dataGather()).catch(ga.mex);
+            co(dataGather({})).catch(ga.mex);
         }
     }));
     return ga.mpromise(resolve => {
@@ -287,4 +329,6 @@ module.exports = {
     startSession,
     addEntityId,
     getEntityIds,
+    addSellerDomain,
+    getSellerDomains,
 };

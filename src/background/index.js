@@ -7,49 +7,49 @@ bg.messageListener(function*(req) { // eslint-disable-line complexity
     switch (req.action) {
         // Valid for every page
         case 'getUser':
-            return yield bg.getUser();
+            return yield bg.getUser(req);
         case 'startSession':
             return yield bg.startSession(req);
 
         // AMS actions
         case 'sp.getAllowedCampaigns': 
-            return yield sp.getAllowedCampaigns(req.entityId);
+            return yield sp.getAllowedCampaigns(req);
         case 'sp.getCampaignSummaries': 
-            return yield sp.getCampaignSummaries(req.entityId);
+            return yield sp.getCampaignSummaries(req);
         case 'sp.getAllCampaignData':
-            return yield sp.getAllCampaignData(req.entityId, req.start, req.end);
+            return yield sp.getAllCampaignData(req);
         case 'sp.getDataHistory':
-            return yield sp.getDataHistory(req.entityId, req.campaignId);
+            return yield sp.getDataHistory(req);
         case 'sp.getAggregateCampaignHistory':
-            return yield sp.getAggregateCampaignHistory(req.entityId, req.campaignIds);
+            return yield sp.getAggregateCampaignHistory(req);
         case 'sp.getKeywordData':
-            return yield sp.getKeywordData(req.entityId, req.adGroupId);
+            return yield sp.getKeywordData(req);
         case 'sp.getAggregateKeywordData':
-            return yield sp.getAggregateKeywordData(req.entityId, req.adGroupIds);
+            return yield sp.getAggregateKeywordData(req);
         case 'sp.setCampaignMetadata':
-            return yield sp.setCampaignMetadata(req.entityId, req.campaignId, req.asin);
+            return yield sp.setCampaignMetadata(req);
         case 'sp.setAdGroupMetadata':
-            return yield sp.setAdGroupMetadata(req.entityId, req.adGroupId, req.campaignId);
+            return yield sp.setAdGroupMetadata(req);
         case 'sp.updateKeyword':
-            return yield sp.updateKeyword(req.entityId, req.keywordIdList, req.operation, req.dataValues);
+            return yield sp.updateKeyword(req);
 
         // Seller actions
         case 'seller.getSummaries':
-            return yield seller.getSummaries();
+            return yield seller.getSummaries(req);
         case 'seller.getCampaignDataRange':
-            return yield seller.getCampaignDataRange(req.campaignId, req.startTimestamp, req.endTimestamp);
+            return yield seller.getCampaignDataRange(req);
         case 'seller.getAdGroupDataRange':
-            return yield seller.getAdGroupDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
+            return yield seller.getAdGroupDataRange(req);
         case 'seller.getAdDataRange':
-            return yield seller.getAdDataRange(req.campaignId, req.adGroupId, req.adId, req.startTimestamp, req.endTimestamp);
+            return yield seller.getAdDataRange(req);
         case 'seller.getAdDataRangeByAsin':
-            return yield seller.getAdDataRangeByAsin(req.campaignId, req.adGroupId, req.asin, req.startTimestamp, req.endTimestamp);
+            return yield seller.getAdDataRangeByAsin(req);
         case 'seller.getKeywordDataRange':
-            return yield seller.getKeywordDataRange(req.campaignId, req.adGroupId, req.startTimestamp, req.endTimestamp);
+            return yield seller.getKeywordDataRange(req);
 
         // KDP actions
         case 'kdp.requestPermission':
-            return yield kdp.requestPermission();
+            return yield kdp.requestPermission(req);
 
         default:
             throw new Error('unknown action: ' + req.action);

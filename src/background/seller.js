@@ -3,15 +3,24 @@ const bg = require('./common.js');
 
 function* dataGather() {
     const ranges = yield* getMissingRanges();
-    for (const range of ranges) {
-        const campaignIds = yield* requestCampaignDataRange(range.start, range.end);
+    const domains = bg.getSellerDomains();
 
-        for (const campaignId of campaignIds) {
-            const adGroupIds = yield* requestAdGroupDataRange(campaignId, range.start, range.end);
+    if (!domains || !domains.length)
+        throw new Error('no known seller domains');
 
-            yield bg.parallelQueue(adGroupIds, function*(adGroupId) {
-                yield* requestAdDataRange(campaignId, adGroupId, range.start, range.end);
-                yield* requestKeywordDataRange(campaignId, adGroupId, range.start, range.end);
+    for (const domain of domains) {
+        for (const range of ranges) {
+            const startTimestamp = range.start;
+            const endTimestamp = range.end;
+            const campaignIds = yield* requestCampaignDataRange({ domain, startTimestamp, endTimestamp });
+
+            yield bg.parallelQueue(campaignIds, function*(campaignId) {
+                const adGroupIds = yield* requestAdGroupDataRange({ domain, campaignId, startTimestamp, endTimestamp });
+
+                for (const adGroupId of adGroupIds) {
+                    yield* requestAdDataRange({ domain, campaignId, adGroupId, startTimestamp, endTimestamp });
+                    yield* requestKeywordDataRange({ domain, campaignId, adGroupId, startTimestamp, endTimestamp });
+                }
             });
         }
     }
@@ -33,7 +42,7 @@ function* requestAllPages(getCurrentPage) {
     while (currentPage * pageSize < totalRecords);
 }
 
-function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp, dataCallback) {
+function* requestSellerDataRange({ domain, subRoute, filters, startTimestamp, endTimestamp, dataCallback }) {
     yield* requestAllPages(function*(pageSize, currentRecord) {
         const requestParams = {
             sEcho: 1,
@@ -54,8 +63,9 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             requestParams.filters = JSON.stringify(filters);
         }
 
+        const route = `https://${domain}/hz/cm/${subRoute}/fetch`;
         try {
-            const data = yield bg.ajax(`https://sellercentral.amazon.com/hz/cm/${subRoute}/fetch`, {
+            const data = yield bg.ajax(route, {
                 method: 'GET',
                 data: requestParams,
                 dataType: 'json',
@@ -65,7 +75,7 @@ function* requestSellerDataRange(subRoute, filters, startTimestamp, endTimestamp
             return data;
         }
         catch (ex) {
-            if (bg.handleServerErrors(ex, `requestSellerDataRange ${subRoute}`))
+            if (bg.handleServerErrors(ex, `requestSellerDataRange ${route}`))
                 return null;
             throw ex;
         }
@@ -78,59 +88,65 @@ function dataIdsWithImpressions(data) {
     return data.aaData.filter(x => x[idIndex] && x[impressionsIndex]).map(x => x[idIndex]);
 }
 
-function* requestCampaignDataRange(startTimestamp, endTimestamp) {
+function* requestCampaignDataRange({ domain, startTimestamp, endTimestamp }) {
     const campaignIds = new Set();
     console.log('requesting campaign data in range', startTimestamp, endTimestamp);
 
-    yield* requestSellerDataRange('campaign', null, startTimestamp, endTimestamp, function*(data) {
-        // We always store campaign data ranges, because that acts as a signal
-        // that we've synced data for this range.
-        yield* storeCampaignDataRange(data, startTimestamp, endTimestamp);
+    yield* requestSellerDataRange({ domain, subRoute: 'campaign', filters: null, startTimestamp, endTimestamp, // eslint-disable-line object-curly-newline,object-property-newline
+        dataCallback: function*(data) {
+            // We always store campaign data ranges, because that acts as a signal
+            // that we've synced data for this range.
+            yield* storeCampaignDataRange(data, startTimestamp, endTimestamp);
 
-        // Don't bother doing anything else if nothing happened in this range
-        if (!data.aggrStatData.impressions)
-            return;
+            // Don't bother doing anything else if nothing happened in this range
+            if (!data.aggrStatData.impressions)
+                return;
 
-        // Gather the IDs of the campaigns discovered in this data range which
-        // have non-zero impressions
-        dataIdsWithImpressions(data).forEach(x => campaignIds.add(x));
+            // Gather the IDs of the campaigns discovered in this data range which
+            // have non-zero impressions
+            dataIdsWithImpressions(data).forEach(x => campaignIds.add(x));
+        }
     });
 
     return Array.from(campaignIds);
 }
 
-function* requestAdGroupDataRange(campaignId, startTimestamp, endTimestamp) {
+function* requestAdGroupDataRange({ domain, campaignId, startTimestamp, endTimestamp }) {
     const adGroupIds = new Set();
     console.log('requesting adGroupData data in range', startTimestamp, endTimestamp, 'campaignId', campaignId);
 
     const filters = {campaign: { id: { eq: [campaignId] } } };
-    yield* requestSellerDataRange('adgroup', filters, startTimestamp, endTimestamp, function*(data) {
-        // Don't bother storing if nothing happened in this range
-        if (!data.aggrStatData.impressions)
-            return;
+    yield* requestSellerDataRange({ domain, subRoute: 'adgroup', filters, startTimestamp, endTimestamp, // eslint-disable-line object-curly-newline,object-property-newline
+        dataCallback: function*(data) {
+            // Don't bother storing if nothing happened in this range
+            if (!data.aggrStatData.impressions)
+                return;
 
-        yield* storeAdGroupDataRange(data, startTimestamp, endTimestamp);
+            yield* storeAdGroupDataRange(data, startTimestamp, endTimestamp);
 
-        // Gather the adGroupIds of the ad groups discovered in this data range
-        dataIdsWithImpressions(data).forEach(x => adGroupIds.add(x));
+            // Gather the adGroupIds of the ad groups discovered in this data range
+            dataIdsWithImpressions(data).forEach(x => adGroupIds.add(x));
+        }
     });
 
     return Array.from(adGroupIds);
 }
 
-function* requestAdDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
+function* requestAdDataRange({ domain, campaignId, adGroupId, startTimestamp, endTimestamp }) {
     console.log('requesting ad data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
     const filters = {campaign: { id: { eq: [campaignId] } }, adGroup: { id: { eq: [adGroupId] } } };
-    yield* requestSellerDataRange('ad', filters, startTimestamp, endTimestamp, function*(data) { 
-        // Don't bother storing if nothing happened in this range
-        if (!data.aggrStatData.impressions)
-            return;
+    yield* requestSellerDataRange({ domain, subRoute: 'ad', filters, startTimestamp, endTimestamp, // eslint-disable-line object-curly-newline,object-property-newline
+        dataCallback: function*(data) {
+            // Don't bother storing if nothing happened in this range
+            if (!data.aggrStatData.impressions)
+                return;
 
-        yield* storeAdDataRange(data, startTimestamp, endTimestamp); 
+            yield* storeAdDataRange(data, startTimestamp, endTimestamp); 
+        }
     });
 }
 
-function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTimestamp) {
+function* requestKeywordDataRange({ domain, campaignId, adGroupId, startTimestamp, endTimestamp }) {
     console.log('requesting keyword data in range', startTimestamp, endTimestamp, 'campaignId', campaignId, 'adGroupId', adGroupId);
     const filters = { 
         statusFilter: 'ENABLED|PAUSED',
@@ -138,12 +154,14 @@ function* requestKeywordDataRange(campaignId, adGroupId, startTimestamp, endTime
         campaign: { id: { eq: [campaignId] } }, 
         adGroup: { id: { eq: [adGroupId] } } 
     };
-    yield* requestSellerDataRange('keyword', filters, startTimestamp, endTimestamp, function*(data) {
-        // Don't bother storing if nothing happened in this range
-        if (!data.aggrStatData.impressions)
-            return;
+    yield* requestSellerDataRange({ domain, subRoute: 'keyword', filters, startTimestamp, endTimestamp, // eslint-disable-line object-curly-newline,object-property-newline
+        dataCallback: function*(data) {
+            // Don't bother storing if nothing happened in this range
+            if (!data.aggrStatData.impressions)
+                return;
 
-        yield* storeKeywordDataRange(data, startTimestamp, endTimestamp);
+            yield* storeKeywordDataRange(data, startTimestamp, endTimestamp);
+        }
     });
 }
 
@@ -180,7 +198,7 @@ function* storeCampaignDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('campaignData', data, startTimestamp, endTimestamp);
 }
 
-const getCampaignDataRange = bg.cache.coMemo(function*(campaignId, startTimestamp, endTimestamp) {
+const getCampaignDataRange = bg.cache.coMemo(function*({ campaignId, startTimestamp, endTimestamp }) {
     return yield* getSellerDataRange(`campaignData/${campaignId}`, startTimestamp, endTimestamp);
 });
 
@@ -188,7 +206,7 @@ function* storeAdGroupDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('adGroupData', data, startTimestamp, endTimestamp);
 }
 
-const getAdGroupDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
+const getAdGroupDataRange = bg.cache.coMemo(function*({ campaignId, adGroupId, startTimestamp, endTimestamp }) {
     return yield* getSellerDataRange(`adGroupData/${campaignId}/${adGroupId}`, startTimestamp, endTimestamp);
 });
 
@@ -196,11 +214,11 @@ function* storeAdDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('adData', data, startTimestamp, endTimestamp);
 }
 
-const getAdDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, adId, startTimestamp, endTimestamp) {
+const getAdDataRange = bg.cache.coMemo(function*({ campaignId, adGroupId, adId, startTimestamp, endTimestamp }) {
     return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/ad=${adId}`, startTimestamp, endTimestamp);
 });
 
-const getAdDataRangeByAsin = bg.cache.coMemo(function*(campaignId, adGroupId, asin, startTimestamp, endTimestamp) {
+const getAdDataRangeByAsin = bg.cache.coMemo(function*({ campaignId, adGroupId, asin, startTimestamp, endTimestamp }) {
     return yield* getSellerDataRange(`adData/${campaignId}/${adGroupId}/asin=${asin}`, startTimestamp, endTimestamp);
 });
 
@@ -208,7 +226,7 @@ function* storeKeywordDataRange(data, startTimestamp, endTimestamp) {
     return yield* storeSellerDataRange('keywordData', data, startTimestamp, endTimestamp);
 }
 
-const getKeywordDataRange = bg.cache.coMemo(function*(campaignId, adGroupId, startTimestamp, endTimestamp) {
+const getKeywordDataRange = bg.cache.coMemo(function*({ campaignId, adGroupId, startTimestamp, endTimestamp }) {
     return yield* getSellerDataRange(`keywordData/${campaignId}/${adGroupId}`, startTimestamp, endTimestamp);
 });
 

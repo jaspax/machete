@@ -39,6 +39,7 @@ function timestampSort(a, b) {
 }
 
 function bgMessage(opts) {
+    opts.domain = window.location.hostname;
     return ga.mpromise((resolve, reject) => {
         chrome.runtime.sendMessage(opts, response => {
             if (response.error)
