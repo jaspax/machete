@@ -9,6 +9,7 @@ module.exports = function() {
         promise: true,
         length: false,
         primitive: true,
+        normalizer: JSON.stringify,
         maxAge: 6 * constants.timespan.hour,
     };
 
