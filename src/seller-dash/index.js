@@ -323,12 +323,10 @@ common.getUser().then(user => {
     }
 
     function updateKeyword(data) {
-        return $.ajax({
-            url: 'https://sellercentral.amazon.com/hz/cm/keyword/update',
+        return $.ajax('https://sellercentral.amazon.com/hz/cm/keyword/update', {
             method: 'POST',
-            data: JSON.stringify(data),
-            contentType: 'application/json',
-            dataType: 'json',
+            jsonData: data,
+            responseType: 'json',
         })
         .then(() => ({ success: true }))
         .catch(error => ({ error }));

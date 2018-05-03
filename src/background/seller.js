@@ -67,8 +67,8 @@ function* requestSellerDataRange({ domain, subRoute, filters, startTimestamp, en
         try {
             const data = yield bg.ajax(route, {
                 method: 'GET',
-                data: requestParams,
-                dataType: 'json',
+                queryData: requestParams,
+                responseType: 'json',
             });
 
             yield* dataCallback(data);
@@ -168,29 +168,28 @@ function* requestKeywordDataRange({ domain, campaignId, adGroupId, startTimestam
 function* getMissingRanges() {
     return yield bg.ajax(`https://${constants.hostname}/api/seller/campaignData/missingRanges`, {
         method: 'GET',
-        dataType: 'json',
+        responseType: 'json',
     });
 }
 
 const getSummaries = bg.cache.coMemo(function*() {
     return yield bg.ajax(`https://${constants.hostname}/api/seller/summary`, {
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 });
 
 function* storeSellerDataRange(subRoute, data, startTimestamp, endTimestamp) {
     return yield bg.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
         method: 'PUT',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
+        jsonData: data,
     });
 }
 
 function* getSellerDataRange(subRoute, startTimestamp, endTimestamp) {
     return yield bg.ajax(`https://${constants.hostname}/api/seller/${subRoute}/${startTimestamp}-${endTimestamp}`, {
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 }
 

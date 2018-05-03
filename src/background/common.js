@@ -1,4 +1,3 @@
-const $ = require('jquery');
 const qu = require('async/queue');
 const co = require('co');
 const moment = require('moment');
@@ -289,19 +288,37 @@ function handleMessageTooLong(ex, req) {
     return false;
 }
 
-function ajax(...args) {
-    const err = new Error(); // capture more informative stack trace here
+function* ajax(url, opts) {
+    const init = { method: opts.method, headers: new Headers() };
 
-    return new Promise((resolve, reject) => {
-        $.ajax(...args)
-        .done(resolve)
-        .fail(function (errorXhr) {
-            err.method = this.method; // eslint-disable-line no-invalid-this
-            err.url = this.url; // eslint-disable-line no-invalid-this
-            err.message = `${errorXhr.status} ${errorXhr.statusText}`;
-            reject(err);
-        });
-    });
+    if (opts.queryData) {
+        const q = Object.keys(opts.queryData).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(opts.queryData[key]));
+        url += '?' + q.join('&');
+    }
+
+    if (opts.formData) {
+        init.body = new FormData();
+        for (const key of Object.keys(opts.formData)) {
+            init.body.append(key, opts.formData[key]);
+        }
+        init.headers.set('Content-Type', 'multipart/form-data');
+    }
+    else if (opts.jsonData) {
+        init.body = JSON.stringify(opts.jsonData);
+        init.headers.set('Content-Type', 'application/json');
+    }
+
+    const response = yield window.fetch(url, init);
+    if (!response.ok) {
+        const err = new Error(`${response.status} ${response.statusText}`);
+        err.method = opts.method;
+        err.url = url;
+        throw err;
+    }
+
+    if (opts.responseType == 'json')
+        return yield response.json();
+    return yield response.text();
 }
 
 function parallelQueue(items, fn) {

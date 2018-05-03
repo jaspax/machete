@@ -12,10 +12,9 @@ function* dataGather() {
         const sales = yield* fetchSalesData(time, asinArray);
         const ku = yield* fetchKuData(time, asinArray);
 
-        bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
+        yield bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
             method: 'PUT',
-            data: JSON.stringify({ sales, ku }),
-            contentType: 'application/json',
+            jsonData: { sales, ku },
         });
     });
 }
@@ -50,11 +49,10 @@ function baseRequest(time) {
 }
 
 function kdpAjax(request) {
-    return bg.ajax({
-        url: 'https://kdp.amazon.com/en_US/reports-new/data',
+    return bg.ajax('https://kdp.amazon.com/en_US/reports-new/data', {
         method: 'POST',
-        data: request,
-        dataType: 'json',
+        jsonData: request,
+        responseType: 'json',
     });
 }
 
@@ -94,10 +92,10 @@ function* fetchKuData(time, asin) {
     return response.data;
 }
 
-const getSalesHistory = bg.coMemo(function*({ asin, startDate, endDate }) {
+const getSalesHistory = bg.coMemo(function*({ asin }) {
     return yield bg.ajax(`https://${constants.hostname}/api/kdp/${asin}/history`, {
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 });
 

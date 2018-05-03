@@ -37,7 +37,7 @@ const getAllowedCampaigns = bg.cache.coMemo(function*({ entityId }) {
     checkEntityId(entityId);
     const allowed = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 
     if (allowed.length)
@@ -45,7 +45,7 @@ const getAllowedCampaigns = bg.cache.coMemo(function*({ entityId }) {
 
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 }, { maxAge: 30000 });
 
@@ -53,7 +53,7 @@ const getCampaignSummaries = bg.cache.coMemo(function*({ entityId }) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 }, { maxAge: 30000 });
 
@@ -67,13 +67,13 @@ function* requestCampaignData(domain, entityId) {
     yield bg.parallelQueue(missing.missingDays, function*(date) {
         const data = yield bg.ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
-            data: {
+            queryData: {
                 entityId,
                 status: 'Customized',
                 reportStartDate: date,
                 reportEndDate: date,
             },
-            dataType: 'json',
+            responseType: 'json',
         });
 
         if (!earliestData)
@@ -91,11 +91,11 @@ function* requestCampaignData(domain, entityId) {
     if (missing.needLifetime) {
         const data = yield bg.ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
-            data: {
+            queryData: {
                 entityId,
                 status: 'Lifetime',
             },
-            dataType: 'json',
+            responseType: 'json',
         });
         yield* storeLifetimeCampaignData(entityId, Date.now(), data);
     }
@@ -110,11 +110,11 @@ function* requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
     for (const chunk of pageArray(campaignIds, 20)) {
         const data = yield bg.ajax(`https://${domain}/api/rta/campaign-status`, {
             method: 'GET',
-            data: { 
+            queryData: {
                 entityId, 
                 campaignIds: chunk.join(','),
             },
-            dataType: 'json',
+            responseType: 'json',
         });
 
         yield* storeStatusCloud(entityId, timestamp, data);
@@ -128,7 +128,7 @@ function* requestKeywordData(domain, entityId, adGroupId) {
     console.log('requesting keyword data for', entityId, adGroupId);
     const data = yield bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
         method: 'POST',
-        data: {
+        formData: {
             entityId, adGroupId,
             /* TODO: use these once Amazon actually supports them
             status: null,
@@ -136,7 +136,7 @@ function* requestKeywordData(domain, entityId, adGroupId) {
             endDate: null,
             */
         },
-        dataType: 'json',
+        responseType: 'json',
     });
 
     if (data.message) {
@@ -150,7 +150,7 @@ function* requestKeywordData(domain, entityId, adGroupId) {
 function* storeDailyCampaignData(entityId, timestamp, data) {
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        data: JSON.stringify(data),
+        jsonData: data,
         contentType: 'application/json',
     });
 }
@@ -158,7 +158,7 @@ function* storeDailyCampaignData(entityId, timestamp, data) {
 function* storeLifetimeCampaignData(entityId, timestamp, data) {
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        data: JSON.stringify(data),
+        jsonData: data,
         contentType: 'application/json',
     });
 }
@@ -166,7 +166,7 @@ function* storeLifetimeCampaignData(entityId, timestamp, data) {
 function* storeStatusCloud(entityId, timestamp, data) {
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        data: JSON.stringify(data),
+        jsonData: data,
         contentType: 'application/json',
     });
 }
@@ -177,7 +177,7 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
     for (const chunk of pageArray(data.aaData, 50)) {
         yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
-            data: JSON.stringify({ aaData: chunk }),
+            jsonData: { aaData: chunk },
             contentType: 'application/json',
         });
     }
@@ -186,7 +186,7 @@ function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
 function* getMissingDates(entityId) {
     return yield bg.ajax(`https://${constants.hostname}/api/campaignData/${entityId}/missingDates`, {
         method: 'GET',
-        dataType: 'json',
+        responseType: 'json',
     });
 }
 
@@ -194,7 +194,7 @@ const getCampaignHistory = bg.cache.coMemo(function*(entityId, campaignId) { // 
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 });
 
@@ -202,7 +202,7 @@ const getAllCampaignData = bg.cache.coMemo(function*({ entityId, startTimestamp,
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`, { 
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 });
 
@@ -237,19 +237,19 @@ const getAggregateCampaignHistory = bg.cache.coMemo(function*({ entityId, campai
 
 const getKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupId }) {
     checkEntityId(entityId);
-    const ajaxOptions = {
-        url: `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`,
+    const url = `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`;
+    const opts = {
         method: 'GET',
-        dataType: 'json',
+        responseType: 'json',
     };
-    let data = yield bg.ajax(ajaxOptions);
+    let data = yield bg.ajax(url, opts);
 
     if (!data || data.length == 0) {
         // Possibly this is the first time we've ever seen this campaign. If so,
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
         yield* requestKeywordData(domain, entityId, adGroupId);
-        data = yield bg.ajax(ajaxOptions);
+        data = yield bg.ajax(url, opts);
     }
 
     return data;
@@ -280,8 +280,7 @@ function* setCampaignMetadata({ entityId, campaignId, asin }) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
-        data: JSON.stringify({ asin }),
-        contentType: 'application/json',
+        jsonData: { asin },
     });
 }
 
@@ -289,8 +288,7 @@ function* setAdGroupMetadata({ entityId, adGroupId, campaignId }) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
-        data: JSON.stringify({ campaignId }),
-        contentType: 'application/json',
+        jsonData: { campaignId },
     });
 }
 
@@ -298,7 +296,7 @@ function* getAdGroups(entityId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/adGroups/${entityId}`, {
         method: 'GET',
-        dataType: 'json',
+        responseType: 'json',
     });
 }
 
@@ -312,12 +310,11 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
     for (const chunk of pageArray(keywordIdList, 6)) {
         let requests = [];
         for (let id of chunk) {
-            let postData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
-            requests.push(bg.ajax({
-                url: `https://${domain}/api/sponsored-products/updateKeywords/`,
+            let formData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
+            requests.push(bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
                 method: 'POST',
-                data: postData,
-                dataType: 'json',
+                formData,
+                responseType: 'json',
             }));
         }
 
@@ -325,9 +322,8 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
         const successes = chunk.filter((x, index) => responses[index].success);
         yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
             method: 'PATCH',
-            dataType: 'json',
-            data: JSON.stringify({ operation, dataValues, keywordIds: successes }),
-            contentType: 'application/json',
+            responseType: 'json',
+            jsonData: { operation, dataValues, keywordIds: successes },
         });
 
         results.concat(...responses);
