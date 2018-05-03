@@ -1,5 +1,6 @@
 const bg = require('./common.js');
 const moment = require('moment');
+const constants = require('../common/constants.js');
 
 function* dataGather() {
     const time = Date.now();
@@ -93,10 +94,16 @@ function* fetchKuData(time, asin) {
     return response.data;
 }
 
+const getSalesHistory = bg.coMemo(function*({ asin, startDate, endDate }) {
+    return yield bg.ajax(`https://${constants.hostname}/api/kdp/${asin}/history`, {
+        method: 'GET',
+        dataType: 'json'
+    });
+});
+
 module.exports = {
     name: 'kdp',
     dataGather,
     requestPermission,
-    fetchSalesData,
-    fetchKuData,
+    getSalesHistory,
 };
