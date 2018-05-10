@@ -299,8 +299,11 @@ function* ajax(url, opts) {
     };
 
     if (opts.queryData) {
-        const q = Object.keys(opts.queryData).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(opts.queryData[key]));
-        url += '?' + q.join('&');
+        const q = new URLSearchParams();
+        for (const key of Object.keys(opts.queryData)) {
+            q.append(key, opts.queryData[key]);
+        }
+        url += '?' + q.toString();
     }
 
     if (opts.formData) {
@@ -318,8 +321,7 @@ function* ajax(url, opts) {
     try {
         const response = yield window.fetch(url, init);
         if (!response.ok) {
-            const err = new Error(`${response.status} ${response.statusText}`);
-            throw err;
+            throw new Error(`${response.status} ${response.statusText}`);
         }
 
         if (opts.responseType == 'json')
