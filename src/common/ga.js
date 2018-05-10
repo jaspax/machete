@@ -112,7 +112,14 @@ function mcatch(fn) {
 }
 
 function mpromise(executor) {
-    return new Promise(executor).catch(error => {
+    let promise = null;
+    if (executor.then && executor.catch) {
+        promise = executor;
+    }
+    else {
+        promise = new Promise(executor);
+    }
+    return promise.catch(error => {
         if (error.handled) {
             console.warn(error);
         }

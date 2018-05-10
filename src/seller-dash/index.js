@@ -290,7 +290,7 @@ common.getUser().then(user => {
     function activateAggregateHistoryTab(container) {
         let aggContent = React.createElement(AggregateHistory, {
             campaignPromise: sdata.getCampaignSummaries().then(campaignSelectOptions),
-            loadDataPromise: (summaries) => co(function*() {
+            loadDataPromise: summaries => co(function*() {
                 const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
                 const aggregate = histories
                                   .reduce((array, deltas) => array.concat(...deltas), [])
@@ -304,7 +304,7 @@ common.getUser().then(user => {
     function activateAggregateKeywordTab(container) {
         let aggContent = React.createElement(AggregateKeywords, {
             campaignPromise: sdata.getCampaignSummaries().then(keywordSelectOptions),
-            loadDataPromise: (summaries) => co(function*() {
+            loadDataPromise: summaries => co(function*() {
                 const adGroups = _.uniqBy(summaries, x => x.adGroupId);
                 const kwSeries = yield Promise.all(adGroups.map(x => keywordDataPromise(x, ninetyDaysAgo, now)));
                 const aggregate = common.aggregateKeywords(kwSeries);

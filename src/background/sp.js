@@ -1,5 +1,4 @@
 const bg = require('./common.js');
-const co = require('co');
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
@@ -213,24 +212,18 @@ const getDataHistory = bg.cache.coMemo(function*({ entityId, campaignId }) { // 
 
 const getAggregateCampaignHistory = bg.cache.coMemo(function*({ entityId, campaignIds }) {
     let aggregate = [];
-    for (const page of pageArray(campaignIds, 6)) {
-        const promises = [];
-        for (const campaignId of page) {
-            promises.push(co(function*() {
-                try {
-                    let history = yield getDataHistory({ entityId, campaignId });
-                    aggregate = aggregate.concat(...history);
-                }
-                catch (ex) {
-                    if (bg.handleServerErrors(ex) == 'notAllowed') {
-                        // swallow this
-                    }
-                    throw ex;
-                }
-            }));
+    yield bg.parallelQueue(campaignIds, function*(campaignId) {
+        try {
+            let history = yield getDataHistory({ entityId, campaignId });
+            aggregate = aggregate.concat(...history);
         }
-        yield Promise.all(promises);
-    }
+        catch (ex) {
+            if (bg.handleServerErrors(ex) == 'notAllowed') {
+                // swallow this
+            }
+            throw ex;
+        }
+    });
 
     return aggregate.sort((a, b) => a.timestamp - b.timestamp);
 });
@@ -258,20 +251,17 @@ const getKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupId }
 const getAggregateKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupIds }) {
     let keywordSets = [];
 
-    for (const page of pageArray(adGroupIds, 6)) {
-        const kwSets = yield Promise.all(page.map(adGroupId => co(function*() {
-            try {
-                return yield getKeywordData({ domain, entityId, adGroupId });
+    yield bg.parallelArray(adGroupIds, function*(adGroupId) {
+        try {
+            keywordSets = keywordSets.concat(...yield getKeywordData({ domain, entityId, adGroupId }));
+        }
+        catch (ex) {
+            if (bg.handleServerErrors(ex) == 'notAllowed') {
+                // swallow this
             }
-            catch (ex) {
-                if (bg.handleServerErrors(ex) == 'notAllowed') {
-                    return []; // don't destroy the whole thing when only one item is unavailable
-                }
-                throw ex;
-            }
-        })));
-        keywordSets = keywordSets.concat(kwSets);
-    }
+            throw ex;
+        }
+    });
 
     return keywordSets;
 });
@@ -306,32 +296,28 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
     // an error. So we do it the stupid way instead, with a loop.
     const timestamp = Date.now();
 
-    const results = [];
-    for (const chunk of pageArray(keywordIdList, 6)) {
-        let requests = [];
-        for (let id of chunk) {
-            let formData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
-            requests.push(bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
-                method: 'POST',
-                formData,
-                responseType: 'json',
-            }));
-        }
-
-        const responses = yield Promise.all(requests);
-        const successes = chunk.filter((x, index) => responses[index].success);
-        yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
-            method: 'PATCH',
+    const successes = [];
+    yield bg.parallelArray(keywordIdList, function*(id) {
+        let formData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
+        const response = yield bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
+            method: 'POST',
+            formData,
             responseType: 'json',
-            jsonData: { operation, dataValues, keywordIds: successes },
         });
+        if (response.success) {
+            successes.push(id);
+        }
+    });
 
-        results.concat(...responses);
-    }
+    yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
+        method: 'PATCH',
+        responseType: 'json',
+        jsonData: { operation, dataValues, keywordIds: successes },
+    });
 
     // TODO: in the case that we have a lot of these (bulk update), implement
     // progress feedback.
-    return { success: results.every(x => x.success) };
+    return { success: successes.length == keywordIdList.length };
 }
 
 module.exports = {

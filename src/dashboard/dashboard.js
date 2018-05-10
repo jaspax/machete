@@ -187,7 +187,7 @@ function addChartButtons(rows) {
 
         renderButtons(false, true, {});
 
-        Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()])
+        ga.mpromise(Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()]))
         .then(results => {
             const [allowed, user, summaries] = results;
             const summary = summaries.find(x => x.campaignId == campaignId);
