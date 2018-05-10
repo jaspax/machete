@@ -89,7 +89,7 @@ function messageListener(handler) {
 function* getUser() {
     return yield ajax(`${serviceUrl}/api/user`, {
         method: 'GET',
-        dataType: 'json'
+        responseType: 'json'
     });
 }
 
