@@ -45,7 +45,9 @@ function messageListener(handler) {
         ga.mga('event', 'background-message', req.action);
         const begin = performance.now();
 
-        co(handler(req, sender))
+        co(function*() {
+            yield* handler(req, sender);
+        })
         .then(data => {
             const response = { data };
             console.log('Success handling message:', req, "response", response);
@@ -308,17 +310,22 @@ function* ajax(url, opts) {
         init.headers.set('Content-Type', 'application/json');
     }
 
-    const response = yield window.fetch(url, init);
-    if (!response.ok) {
-        const err = new Error(`${response.status} ${response.statusText}`);
-        err.method = opts.method;
-        err.url = url;
-        throw err;
-    }
+    try {
+        const response = yield window.fetch(url, init);
+        if (!response.ok) {
+            const err = new Error(`${response.status} ${response.statusText}`);
+            throw err;
+        }
 
-    if (opts.responseType == 'json')
-        return yield response.json();
-    return yield response.text();
+        if (opts.responseType == 'json')
+            return yield response.json();
+        return yield response.text();
+    }
+    catch (ex) {
+        ex.method = opts.method;
+        ex.url = url;
+        throw ex;
+    }
 }
 
 function parallelQueue(items, fn) {

@@ -92,7 +92,7 @@ function* fetchKuData(time, asin) {
     return response.data;
 }
 
-const getSalesHistory = bg.coMemo(function*({ asin }) {
+const getSalesHistory = bg.cache.coMemo(function*({ asin }) {
     return yield bg.ajax(`https://${constants.hostname}/api/kdp/${asin}/history`, {
         method: 'GET',
         responseType: 'json'
