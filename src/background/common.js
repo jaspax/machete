@@ -304,11 +304,11 @@ function* ajax(url, opts) {
     }
 
     if (opts.formData) {
-        init.body = new FormData();
+        init.body = new URLSearchParams();
         for (const key of Object.keys(opts.formData)) {
             init.body.append(key, opts.formData[key]);
         }
-        init.headers.set('Content-Type', 'multipart/form-data');
+        init.headers.set('Content-Type', 'application/x-www-form-urlencoded');
     }
     else if (opts.jsonData) {
         init.body = JSON.stringify(opts.jsonData);
