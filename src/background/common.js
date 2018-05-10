@@ -46,7 +46,7 @@ function messageListener(handler) {
         const begin = performance.now();
 
         co(function*() {
-            yield* handler(req, sender);
+            return yield* handler(req, sender);
         })
         .then(data => {
             const response = { data };
@@ -291,7 +291,12 @@ function handleMessageTooLong(ex, req) {
 }
 
 function* ajax(url, opts) {
-    const init = { method: opts.method, headers: new Headers() };
+    const init = {
+        method: opts.method,
+        headers: new Headers(),
+        mode: 'cors',
+        credentials: 'include',
+    };
 
     if (opts.queryData) {
         const q = Object.keys(opts.queryData).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(opts.queryData[key]));
