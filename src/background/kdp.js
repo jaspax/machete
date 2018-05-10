@@ -51,7 +51,7 @@ function baseRequest(time) {
 function kdpAjax(request) {
     return bg.ajax('https://kdp.amazon.com/en_US/reports-new/data', {
         method: 'POST',
-        jsonData: request,
+        formData: request,
         responseType: 'json',
     });
 }
