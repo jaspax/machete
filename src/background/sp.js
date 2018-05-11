@@ -294,10 +294,9 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
 
     const successes = [];
     yield bg.parallelQueue(keywordIdList, function*(id) {
-        let formData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
         const response = yield bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
             method: 'POST',
-            formData,
+            formData: Object.assign({operation, entityId, keywordIds: id}, dataValues),
             responseType: 'json',
         });
         if (response.success) {
@@ -307,8 +306,8 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
 
     yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
         method: 'PATCH',
-        responseType: 'json',
         jsonData: { operation, dataValues, keywordIds: successes },
+        responseType: 'json',
     });
 
     // TODO: in the case that we have a lot of these (bulk update), implement

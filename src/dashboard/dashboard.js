@@ -150,7 +150,7 @@ function addChartButtons(rows) {
         let href = link.href;
         let campaignId = spdata.getCampaignId(href);
 
-        const renderButtons = ga.mcatch((allowed, anonymous, lastDay) => {
+        const renderButtons = ga.mcatch((allowed, anonymous, summary) => {
             for (let chart of charts) {
                 let target = cells[chart.column];
                 if (!target)
@@ -178,8 +178,8 @@ function addChartButtons(rows) {
                 });
                 ReactDOM.render(btn, container[0]);
 
-                if (lastDay && allowed && !$(target).find('.machete-ghost').length) {
-                    const value = chart.format(lastDay[chart.metric]);
+                if (summary && summary.latestData && allowed && !$(target).find('.machete-ghost').length) {
+                    const value = chart.format(summary.latestData[chart.metric]);
                     $(target).append(`<div><span class="machete-ghost">24h:</span>${value}</div>`);
                 }
             }
@@ -191,8 +191,7 @@ function addChartButtons(rows) {
         .then(results => {
             const [allowed, user, summaries] = results;
             const summary = summaries.find(x => x.campaignId == campaignId);
-            const lastDay = summary && summary.latestData;
-            renderButtons(allowed, user.isAnon, lastDay);
+            renderButtons(allowed, user.isAnon, summary);
         });
     }
 }

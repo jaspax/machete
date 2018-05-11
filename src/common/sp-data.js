@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const $ = require('jquery');
 const _ = require('lodash');
+const moment = require('moment');
 const ga = require('./ga.js');
 const common = require('./common.js');
 const constants = require('./constants.js');
@@ -149,6 +150,36 @@ function isRunning(campaignSummary) {
     return ['RUNNING', 'OUT_OF_BUDGET'].includes(campaignSummary.status);
 }
 
+function calculateKnpIncome(amsSales, kdpSales) {
+    return amsSales.map(item => {
+        const salesWindow = salesWindowFilter(moment(item.timestamp).subtract(15, 'days').startOf('day'), moment(item.timestamp).startOf('day'));
+        const kdpWindow = kdpSales.filter(salesWindow);
+        const amsWindow = amsSales.filter(salesWindow);
+        const kdpSalesCount = kdpWindow.reduce((sum, item) => sum + item.paidEbook + item.paidPaperback, 0);
+        const amsSalesCount = amsWindow.reduce((sum, item) => sum + (item.salesCount || 0), 0);
+        const ratio = amsSalesCount ? kdpSalesCount / amsSalesCount : 0;
+
+        const rv = Object.assign({}, item);
+        const kdpOnDate = kdpSales.find(x => moment(x.date).isSame(item.timestamp));
+        if (kdpOnDate) {
+            const sales = item.salesValue || item.sales || 0; // salesValue for campaigns, sales for keywords
+            rv.knpeCount = kdpOnDate.knp * ratio;
+            rv.knpeValue = item.knpeCount * 0.005;
+            rv.knpeTotalSales = sales + item.knpeValue;
+            rv.knpeAcos = item.knpeTotalSales ? 100 * (item.spend / item.knpeTotalSales) : null;
+        }
+        
+        return rv;
+    });
+}
+
+function salesWindowFilter(startDate, endDate) {
+    return item => {
+        const date = moment(item.date || item.timestamp);
+        return date.isSameOrBefore(endDate) && date.isAfter(startDate);
+    };
+}
+
 const startSessionPromise = common.bgMessage({
     action: 'startSession', 
     entityId: getEntityId(), 
@@ -198,4 +229,5 @@ module.exports = {
     updateKeywordBid,
     isRunning,
     startSessionPromise,
+    calculateKnpIncome,
 };

@@ -326,7 +326,6 @@ function sumCampaignSnapshots(series) {
     return sum;
 }
 
-
 function aggregateKeywords(kwSets) {
     // Aggregate the cumulative metrics
     const a = {};
