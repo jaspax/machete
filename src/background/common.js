@@ -337,13 +337,17 @@ function* ajax(url, opts) {
 
 function parallelQueue(items, fn) {
     return new Promise((resolve, reject) => {
+        const results = [];
         const queue = qu((item, callback) => {
             co(fn(item))
-            .then((...results) => callback(null, ...results))
+            .then(value => {
+                results.push(value);
+                callback(null, value);
+            })
             .catch(callback);
         }, 3);
 
-        queue.drain = resolve;
+        queue.drain = () => resolve(results);
         queue.error = reject;
         queue.push(items);
     });

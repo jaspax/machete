@@ -249,11 +249,9 @@ const getKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupId }
 });
 
 const getAggregateKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupIds }) {
-    let keywordSets = [];
-
-    yield bg.parallelArray(adGroupIds, function*(adGroupId) {
+    return yield bg.parallelQueue(adGroupIds, function*(adGroupId) {
         try {
-            keywordSets = keywordSets.concat(...yield getKeywordData({ domain, entityId, adGroupId }));
+            return yield getKeywordData({ domain, entityId, adGroupId });
         }
         catch (ex) {
             if (bg.handleServerErrors(ex) == 'notAllowed') {
@@ -262,8 +260,6 @@ const getAggregateKeywordData = bg.cache.coMemo(function*({ domain, entityId, ad
             throw ex;
         }
     });
-
-    return keywordSets;
 });
 
 function* setCampaignMetadata({ entityId, campaignId, asin }) {
@@ -297,7 +293,7 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
     const timestamp = Date.now();
 
     const successes = [];
-    yield bg.parallelArray(keywordIdList, function*(id) {
+    yield bg.parallelQueue(keywordIdList, function*(id) {
         let formData = Object.assign({operation, entityId, keywordIds: id}, dataValues);
         const response = yield bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
             method: 'POST',
