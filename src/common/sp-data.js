@@ -165,7 +165,7 @@ function calculateKnpIncome(amsSales, kdpSales) {
             const sales = item.salesValue || item.sales || 0; // salesValue for campaigns, sales for keywords
             rv.knpeCount = kdpOnDate.knp * ratio;
             rv.knpeValue = rv.knpeCount * 0.005;
-            rv.knpeTotalSales = sales + rv.knpeValue;
+            rv.knpeTotalValue = sales + rv.knpeValue;
             rv.knpeAcos = rv.knpeTotalSales ? 100 * (rv.spend / rv.knpeTotalSales) : null;
         }
         

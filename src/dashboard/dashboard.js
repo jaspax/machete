@@ -18,12 +18,12 @@ const tabber = require('../components/tabber.js');
 const twoWeeks = 15 * constants.timespan.day;
 const startTimestamp = Date.now() - twoWeeks;
 const charts = [
-    { column: 6, label: "Impressions / day", metric: 'impressions', format: x => common.numberFmt(x, 0) },
-    { column: 7, label: "Clicks / day", metric: 'clicks', format: x => common.numberFmt(x, 0) },
-    { column: 8, label: "Avg CPC", metric: 'avgCpc', format: common.moneyFmt },
-    { column: 9, label: "Spend / day", metric: 'spend', format: common.moneyFmt },
-    { column: 10, label: "Sales ($) / day", metric: 'salesValue', format: common.moneyFmt },
-    { column: 11, label: "ACOS", metric: 'acos', format: common.pctFmt },
+    { column: 6, label: "Impressions / day", metric: ['impressions'], format: x => common.numberFmt(x, 0) },
+    { column: 7, label: "Clicks / day", metric: ['clicks'], format: x => common.numberFmt(x, 0) },
+    { column: 8, label: "Avg CPC", metric: ['avgCpc'], format: common.moneyFmt },
+    { column: 9, label: "Spend / day", metric: ['spend'], format: common.moneyFmt },
+    { column: 10, label: "Sales ($) / day", metric: ['salesValue', 'knpeValue', 'knpeTotalValue'], format: common.moneyFmt },
+    { column: 11, label: "ACOS", metric: ['acos', 'knpeAcos'], format: common.pctFmt },
 ];
 
 window.setInterval(ga.mcatch(() => {
@@ -163,8 +163,8 @@ function addChartButtons(rows) {
                     const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
                     console.log(knpe);
 
-                    const campaignData = common.parallelizeSeries(deltas);
-                    return [common.formatParallelData(campaignData, chart.metric)];
+                    const campaignData = common.parallelizeSeries(knpe);
+                    return chart.metric.map(metric => common.formatParallelData(campaignData, metric));
                 });
 
                 let container = $(target).find('.machete-dash-container');
