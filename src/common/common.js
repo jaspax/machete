@@ -3,36 +3,10 @@ const qw = require('qw');
 const ga = require('./ga.js');
 const moment = require('moment');
 
+const constants = require('./constants.js');
+
 const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
 const cumulativeKeywordMetrics = qw`impressions clicks sales spend`;
-
-function moneyFmt(val) {
-    return '$' + numberFmt(val, 2);
-}
-
-function pctFmt(val) {
-    return numberFmt(val, 1) + '%';
-}
-
-function numberFmt(val, digits = 2) {
-    if (Number.isNaN(+val)) {
-        return ' -- ';
-    }
-    let start = (+val).toFixed(digits); 
-    while (true) { // eslint-disable-line no-constant-condition
-        const next = start.replace(/(\d)(\d\d\d([,.]|$))/, "$1,$2");
-        if (start == next)
-            return next;
-        start = next;
-    }
-}
-
-function roundFmt(val) {
-    if (Number.isNaN(+val)) {
-        return ' -- ';
-    }
-    return Math.round(val);
-}
 
 function timestampSort(a, b) {
     return a.timestamp - b.timestamp;
@@ -117,32 +91,6 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummar
     });
 }
 
-const round = {
-    whole: Math.round,
-    money: x => Math.round(x * 100)/100,
-};
-
-const roundMetrics = {
-    impressions: round.whole,
-    clicks: round.whole,
-    sales: round.money,
-    salesCount: round.whole,
-    salesValue: round.money,
-    spend: round.money,
-};
-
-const formatMetric = {
-    impressions: roundFmt,
-    clicks: roundFmt,
-    sales: moneyFmt,
-    salesCount: roundFmt,
-    salesValue: moneyFmt,
-    spend: moneyFmt,
-    acos: pctFmt,
-    avgCpc: moneyFmt,
-    ctr: pctFmt,
-};
-
 // Calculate the statistical measures for a delta at a particular time
 function calculateItemStats(item) {
     const sales = item.salesValue || item.sales; // salesValue for campaigns, sales for keywords
@@ -211,8 +159,9 @@ function chunkSeries(data, chunk) {
                 const thisChunkRatio = (origItem.timestamp - item.timestamp) / span;
                 const lastChunkRatio = (moment(lastItem.timestamp).endOf(chunk).valueOf() - lastOrigItem.timestamp) / span;
                 for (const metric of cumulativeMetrics) {
-                    lastItem[metric] += roundMetrics[metric](item[metric] * lastChunkRatio);
-                    item[metric] = roundMetrics[metric](item[metric] * thisChunkRatio);
+                    const m = constants.metric[metric];
+                    lastItem[metric] += m.round(item[metric] * lastChunkRatio);
+                    item[metric] = m.round(item[metric] * thisChunkRatio);
                 }
             }
 
@@ -396,12 +345,12 @@ function accumulateKeywordSeries(data) {
     return values;
 }
 
-function formatParallelData(data, metric, name = metric) {
+function formatParallelData(data, metric) {
     return {
         timestamp: data.timestamp || [],
-        data: data[metric] || [],
-        format: formatMetric[metric] || roundFmt,
-        name
+        data: data[metric.prop] || [],
+        format: metric.format,
+        name: metric.name,
     };
 }
 
@@ -424,10 +373,10 @@ function getUser() {
 
 module.exports = {
     getUser,
-    moneyFmt,
-    pctFmt,
-    numberFmt,
-    roundFmt,
+    moneyFmt: constants.moneyFmt,
+    pctFmt: constants.pctFmt,
+    numberFmt: constants.numberFmt,
+    roundFmt: constants.roundFmt,
     timestampSort,
     bgMessage,
     parallelizeSeries,
