@@ -105,5 +105,29 @@ module.exports = {
             format: pctFmt,
             round: round.none,
         },
+        knpeCount: {
+            prop: 'knpeCount',
+            title: 'KNP Estimate',
+            format: roundFmt,
+            round: round.whole,
+        },
+        knpeValue: {
+            prop: 'knpeValue',
+            title: 'KU Income Estimate ($)',
+            format: moneyFmt,
+            round: round.money,
+        },
+        knpeTotalValue: {
+            prop: 'knpeTotalValue',
+            title: 'Total KDP Income Estimate ($)',
+            format: moneyFmt,
+            round: round.money,
+        },
+        knpeAcos: {
+            prop: 'knpeAcos',
+            title: 'Total KDP ACOS Estimate',
+            format: pctFmt,
+            round: round.none,
+        },
     },
 };

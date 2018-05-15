@@ -37,7 +37,7 @@ class DashboardHistoryButton extends React.Component {
             btnClasses += ' ' + chartClassDisabled;
             mclick = 'thumbnail-disabled';
         }
-        mclick += ' ' + this.props.metric;
+        mclick += ' ' + this.props.metric[0].prop;
 
         return <span>
             <a id={this.btnId} className={btnClasses} data-mclick={mclick} onClick={this.onChartClick}>

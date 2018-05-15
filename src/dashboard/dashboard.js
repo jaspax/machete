@@ -22,8 +22,8 @@ const charts = [
     { column: 7, label: "Clicks / day", metric: [constants.metric.clicks] },
     { column: 8, label: "Avg CPC", metric: [constants.metric.avgCpc] },
     { column: 9, label: "Spend / day", metric: [constants.metric.spend] },
-    { column: 10, label: "Sales ($) / day", metric: _.pick(constants.metric, ['salesValue', 'knpeValue', 'knpeTotalValue']) },
-    { column: 11, label: "ACOS", metric: _.pick(constants.metric, ['acos', 'knpeAcos']) },
+    { column: 10, label: "Sales ($) / day", metric: [constants.metric.salesValue, constants.metric.knpeValue, constants.metric.knpeTotalValue] },
+    { column: 11, label: "ACOS", metric: [constants.metric.acos, constants.metric.knpeAcos] },
 ];
 
 window.setInterval(ga.mcatch(() => {
@@ -176,14 +176,15 @@ function addChartButtons(rows) {
                 let btn = React.createElement(DashboardHistoryButton, {
                     allowed,
                     anonymous,
-                    metric: chart.metric,
+                    metric: chart.metric[0].prop,
                     title: chart.label,
                     dataPromiseFactory,
                 });
                 ReactDOM.render(btn, container[0]);
 
                 if (summary && summary.latestData && allowed && !$(target).find('.machete-ghost').length) {
-                    const value = chart.format(summary.latestData[chart.metric]);
+                    const metric = chart.metric[0];
+                    const value = metric.format(summary.latestData[metric.prop]);
                     $(target).append(`<div><span class="machete-ghost">New:</span>${value}</div>`);
                 }
             }
