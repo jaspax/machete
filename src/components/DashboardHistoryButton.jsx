@@ -3,7 +3,7 @@ const PropTypes = require('prop-types');
 
 const ErrorBoundary = require('./ErrorBoundary.jsx');
 const Popup = require('./Popup.jsx');
-const ThumbnailChart = require('./ThumbnailChart.jsx');
+const TimeSeriesChart = require('./TimeSeriesChart.jsx');
 
 const chartPng = chrome.runtime.getURL('images/chart-16px.png');
 const chartClass = `machete-chart-btn`;
@@ -45,7 +45,10 @@ class DashboardHistoryButton extends React.Component {
             </a>
             <ErrorBoundary>
                 <Popup anchorId={this.btnId} show={this.state.show} onDismiss={this.onPopupDismissed}>
-                    <ThumbnailChart title={this.props.title} dataPromise={this.state.dataPromise} />
+                    <TimeSeriesChart 
+                        width={400} height={300} title={this.props.title} 
+                        displayModeBar={false}
+                        dataPromise={this.state.dataPromise} />
                 </Popup>
             </ErrorBoundary>
         </span>;
