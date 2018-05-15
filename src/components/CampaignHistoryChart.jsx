@@ -3,6 +3,7 @@ const PropTypes = require('prop-types');
 const TimeSeriesChart = require('./TimeSeriesChart.jsx');
 
 const common = require('../common/common.js');
+const constants = require('../common/constants.js');
 
 class CampaignHistoryChart extends React.Component {
     render() {
@@ -40,7 +41,7 @@ function createHistoryData(data) {
     this.metric = metric;
     if (metric == 'all')
         return aggregateSeriesAllMetrics(aggregate);
-    return componentSeriesForMetric(aggregate, campaigns, metric);
+    return componentSeriesForMetric(aggregate, campaigns, constants.metric[metric]);
 }
 
 function aggregateSeriesAllMetrics(data) {
@@ -96,7 +97,7 @@ function aggregateSeriesAllMetrics(data) {
 function componentSeriesForMetric(aggregate, campaigns, metric) {
     return [aggregate, ...campaigns].map(data => {
         const parallel = common.parallelizeSeries(data);
-        const series = common.formatParallelData(parallel, metric, data[0].campaignName);
+        const series = common.formatParallelData(parallel, Object.assign({ name: data[0].campaignName }, metric));
         series.options = {
             mode: 'lines',
             connetctgaps: true,

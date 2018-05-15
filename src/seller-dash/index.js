@@ -124,7 +124,7 @@ common.getUser().then(user => {
                     title: chart.label,
                     dataPromiseFactory: ga.mcatch(() => fetchDataPromise(window.location.href, link.href).then(data => {
                         const campaignData = common.parallelizeSeries(data);
-                        return [common.formatParallelData(campaignData, chart.metric)];
+                        return [common.formatParallelData(campaignData, constants.metric[chart.metric])];
                     })),
                 });
                 const container = $('<span></span>');
