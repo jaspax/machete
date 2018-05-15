@@ -159,6 +159,10 @@ function addChartButtons(rows) {
                 const dataPromiseFactory = () => co(function*() {
                     const data = yield spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
                     const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
+
+                    const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
+                    console.log(knpe);
+
                     const campaignData = common.parallelizeSeries(deltas);
                     return common.formatParallelData(campaignData, chart.metric);
                 });
@@ -180,7 +184,7 @@ function addChartButtons(rows) {
 
                 if (summary && summary.latestData && allowed && !$(target).find('.machete-ghost').length) {
                     const value = chart.format(summary.latestData[chart.metric]);
-                    $(target).append(`<div><span class="machete-ghost">24h:</span>${value}</div>`);
+                    $(target).append(`<div><span class="machete-ghost">New:</span>${value}</div>`);
                 }
             }
         });

@@ -20,37 +20,37 @@ function AmsCampaignRow(props) {
         </td>
         <td className="right">
             <div>
-                <span className="machete-ghost">24h:</span>
+                <span className="machete-ghost">New:</span>
                 {common.numberFmt(lastDay.impressions, 0)}
             </div>
         </td>
         <td className="right">
             <div>
-                <span className="machete-ghost">24h:</span>
+                <span className="machete-ghost">New:</span>
                 {common.numberFmt(lastDay.clicks, 0)}
             </div>
         </td>
         <td className="right">
             <div>
-                <span className="machete-ghost">24h:</span>
+                <span className="machete-ghost">New:</span>
                 {common.moneyFmt(lastDay.avgCpc)}
             </div>
         </td>
         <td className="right">
             <div>
-                <span className="machete-ghost">24h:</span>
+                <span className="machete-ghost">New:</span>
                 {common.moneyFmt(lastDay.spend)}
             </div>
         </td>
         <td className="right">
             <div>
-                <span className="machete-ghost">24h:</span>
+                <span className="machete-ghost">New:</span>
                 {common.moneyFmt(lastDay.salesValue)}
             </div>
         </td>
         <td className="right">
             <div>
-                <span className="machete-ghost">24h:</span>
+                <span className="machete-ghost">New:</span>
                 {common.pctFmt(lastDay.acos)}
             </div>
         </td>
