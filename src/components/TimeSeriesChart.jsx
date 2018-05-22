@@ -72,7 +72,7 @@ class TimeSeriesChart extends React.Component {
             text: series.data.map(series.format || common.roundFmt),
             hoverinfo: 'text',
             name: series.name,
-            mode: 'lines+markers',
+            mode: 'lines',
             connectgaps: true
         }, series.options));
 
