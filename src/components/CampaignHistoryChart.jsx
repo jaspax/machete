@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const React = require('react');
 const PropTypes = require('prop-types');
 const TimeSeriesChart = require('./TimeSeriesChart.jsx');
@@ -47,51 +48,12 @@ function createHistoryData(data) {
 function aggregateSeriesAllMetrics(data) {
     const parallel = common.parallelizeSeries(data);
     return [
-        {
-            data: parallel.impressions || [],
-            timestamp: parallel.timestamp,
-            name: 'Impressions',
-            options: {
-                mode: 'lines',
-                fill: 'tozeroy',
-                yaxis: 'y',
-                connectgaps: true,
-            }
-        },
-        {
-            data: parallel.clicks || [],
-            timestamp: parallel.timestamp,
-            name: 'Clicks',
-            options: {
-                mode: 'lines',
-                line: { dash: 'dot', width: 2 },
-                yaxis: 'y2',
-                connectgaps: true,
-            },
-        },
-        {
-            data: parallel.salesValue || [],
-            timestamp: parallel.timestamp,
-            format: common.moneyFmt,
-            name: 'Sales',
-            options: {
-                mode: 'lines',
-                yaxis: 'y3',
-                connectgaps: true,
-            }, 
-        },
-        {
-            data: parallel.spend || [],
-            timestamp: parallel.timestamp,
-            format: common.moneyFmt,
-            name: 'Spend',
-            options: {
-                mode: 'lines',
-                yaxis: 'y3',
-                connectgaps: true,
-            }, 
-        },
-    ];
+        _.merge({ options: { yaxis: 'y' } }, constants.metric.impressions),
+        _.merge({ options: { yaxis: 'y2' } }, constants.metric.clicks),
+        _.merge({ options: { yaxis: 'y3' } }, constants.metric.salesValue),
+        _.merge({ options: { yaxis: 'y3' } }, constants.metric.spend),
+        _.merge({ options: { yaxis: 'y4' } }, constants.metric.acos),
+    ].map(metric => common.formatParallelData(parallel, metric));
 }
 
 function componentSeriesForMetric(aggregate, campaigns, metric) {
@@ -145,10 +107,11 @@ function layoutMetric(series) {
 }
 
 function layoutAllMetrics(series) {
-    const impressions = series.find(x => x.name == 'Impressions').data;
-    const clicks = series.find(x => x.name == 'Clicks').data;
-    const spend = series.find(x => x.name == 'Spend').data;
-    const sales = series.find(x => x.name == 'Sales').data;
+    const impressions = series.find(x => x.name == constants.metric.impressions.title).data;
+    const clicks = series.find(x => x.name == constants.metric.clicks.title).data;
+    const spend = series.find(x => x.name == constants.metric.spend.title).data;
+    const sales = series.find(x => x.name == constants.metric.salesValue.title).data;
+    const acos = series.find(x => x.name == constants.metric.acos.title).data;
     const money = [].concat(...spend).concat(...sales);
 
     return Object.assign({}, baseLayout, {
@@ -174,6 +137,14 @@ function layoutAllMetrics(series) {
             showticklabels: false,
             overlaying: 'y',
             range: [0, Math.max(...money) * 1.5]
+        },
+        yaxis4: { // acos
+            showgrid: false,
+            zeroline: false,
+            showline: true,
+            showticklabels: false,
+            overlaying: 'y',
+            range: [0, Math.max(...acos)]
         }
     });
 }

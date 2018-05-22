@@ -350,7 +350,8 @@ function formatParallelData(data, metric) {
         timestamp: data.timestamp || [],
         data: data[metric.prop] || [],
         format: metric.format,
-        name: metric.name,
+        name: metric.title,
+        options: metric.options,
     };
 }
 
