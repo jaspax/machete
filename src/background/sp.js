@@ -16,6 +16,10 @@ function* pageArray(array, step) {
 }
 
 function* dataGather() {
+    // We want to make sure that we at least attempt to sync every single
+    // domain, but any exceptions we encounter should be propagated so that we
+    // don't record this as a success.
+    const deferredException = null;
     for (const { domain, entityId } of bg.getEntityIds()) {
         try {
             yield* requestCampaignData(domain, entityId);
@@ -26,9 +30,12 @@ function* dataGather() {
             });
         }
         catch (ex) {
-            if (!bg.handleServerErrors(ex, 'sp.dataSync:' + entityId))
-                ga.mex(ex);
+            ga.mex(ex);
+            deferredException = ex;
         }
+    }
+    if (deferredException) {
+        throw deferredException;
     }
 }
 
