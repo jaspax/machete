@@ -161,8 +161,6 @@ function addChartButtons(rows) {
                     const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
 
                     const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
-                    console.log(knpe);
-
                     const campaignData = common.parallelizeSeries(knpe);
                     return chart.metric.map(metric => common.formatParallelData(campaignData, metric));
                 });
