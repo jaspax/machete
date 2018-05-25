@@ -152,6 +152,7 @@ function isRunning(campaignSummary) {
 
 function calculateKnpIncome(amsSales, kdpSales) {
     return amsSales.map(item => {
+        const itemDate = moment(item.timestamp).startOf('day');
         const salesWindow = salesWindowFilter(moment(item.timestamp).subtract(15, 'days').startOf('day'), moment(item.timestamp).startOf('day'));
         const kdpWindow = kdpSales.filter(salesWindow);
         const amsWindow = amsSales.filter(salesWindow);
@@ -160,7 +161,7 @@ function calculateKnpIncome(amsSales, kdpSales) {
         const ratio = amsSalesCount ? kdpSalesCount / amsSalesCount : 0;
 
         const rv = Object.assign({}, item);
-        const kdpOnDate = kdpSales.find(x => moment(x.date).isSame(item.timestamp));
+        const kdpOnDate = kdpSales.find(x => moment(x.date).isSame(itemDate, 'day'));
         if (kdpOnDate) {
             const sales = item.salesValue || item.sales || 0; // salesValue for campaigns, sales for keywords
             rv.knpeCount = kdpOnDate.knp * ratio;

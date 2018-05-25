@@ -19,7 +19,7 @@ function* dataGather() {
     // We want to make sure that we at least attempt to sync every single
     // domain, but any exceptions we encounter should be propagated so that we
     // don't record this as a success.
-    const deferredException = null;
+    let deferredException = null;
     for (const { domain, entityId } of bg.getEntityIds()) {
         try {
             yield* requestCampaignData(domain, entityId);
