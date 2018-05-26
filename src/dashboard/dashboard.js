@@ -103,10 +103,10 @@ function campaignSelectOptions(campaigns) {
 function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
         campaignPromise: spdata.getCampaignSummaries().then(campaignSelectOptions),
-        loadDataPromise: (summaries) => co(function*() {
+        loadDataPromise: (summaries) => ga.mpromise(co(function*() {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
             return yield spdata.getAggregateCampaignHistory(spdata.getEntityId(), campaignIds);
-        }),
+        })),
     });
     ReactDOM.render(aggContent, container[0]);
 }
@@ -114,12 +114,12 @@ function activateAggregateHistoryTab(container) {
 function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: spdata.getCampaignSummaries(spdata.getEntityId()).then(campaignSelectOptions),
-        loadDataPromise: (summaries) => co(function*() {
+        loadDataPromise: (summaries) => ga.mpromise(co(function*() {
             const adGroupIds = _.uniq(summaries.map(x => x.adGroupId).filter(x => x && x != 'null'));
             const kwData = yield spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
-        }),
+        })),
         updateStatus: ga.mcatch((ids, enabled, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
             spdata.updateKeywordStatus(idList, enabled).then(callback);
@@ -156,14 +156,14 @@ function addChartButtons(rows) {
                 if (!target)
                     continue;
 
-                const dataPromiseFactory = () => co(function*() {
+                const dataPromiseFactory = () => ga.mpromise(co(function*() {
                     const data = yield spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
                     const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
 
                     const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
                     const campaignData = common.parallelizeSeries(knpe);
                     return chart.metric.map(metric => common.formatParallelData(campaignData, metric));
-                });
+                }));
 
                 let container = $(target).find('.machete-dash-container');
                 if (!container.length) {

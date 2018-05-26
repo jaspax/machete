@@ -130,15 +130,15 @@ function generateBidOptimizer(container) {
     const tabContent = React.createElement(BidOptimizerTab, {
         targetAcos: 70,
         targetSales: 0,
-        optimizeAcos: value => co(function*() {
+        optimizeAcos: value => ga.mpromise(co(function*() {
             const prep = yield* prepareKwData();
             return common.optimizeKeywordsAcos(value, prep.renormedKws);
-        }),
-        optimizeSales: value => co(function*() {
+        })),
+        optimizeSales: value => ga.mpromise(co(function*() {
             const prep = yield* prepareKwData();
             return common.optimizeKeywordsSalesPerDay(value, prep.campaignData, prep.campaignSummary, prep.renormedKws);
-        }),
-        updateKeyword: kw => co(function*() {
+        })),
+        updateKeyword: kw => ga.mpromise(co(function*() {
             const origKws = yield spdata.getKeywordData(entityId, yield adGroupPromise);
             const origKw = origKws.find(orig => kw.id.includes(orig.id));
             if (!origKw)
@@ -146,7 +146,7 @@ function generateBidOptimizer(container) {
             if (origKw.bid === kw.bid)
                 return;
             yield spdata.updateKeywordBid([origKw.id], kw.bid);
-        }),
+        })),
     });
     ReactDOM.render(tabContent, container[0]);
 }
