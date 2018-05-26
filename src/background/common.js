@@ -259,6 +259,10 @@ function handleServerErrors(ex, desc) {
             return 'notOwned';
         }
     }
+    if (ex.message.match(/^401/)) {
+        ga.mga('event', 'error-handled', 'network-error-401', desc);
+        return 'amazonNotLoggedIn';
+    }
     if (ex.message.match(/^404/)) {
         ga.mga('event', 'error-handled', 'network-error-404', desc);
         return 'notFound';
