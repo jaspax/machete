@@ -335,6 +335,15 @@ function* ajax(url, opts) {
     catch (ex) {
         ex.method = opts.method;
         ex.url = url;
+        if (!ex.stack) {
+            // hoo boy this is a nasty way to get a stack
+            try {
+                throw new Error(ex.message);
+            }
+            catch (innerEx) {
+                ex.stack = innerEx.stack;
+            }
+        }
         throw ex;
     }
 }
