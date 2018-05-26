@@ -120,7 +120,7 @@ module.exports = {
             options: {
                 line: {
                     color: 'F15854',
-                    dash: 'longdash',
+                    dash: 'dash',
                 }
             },
         },
