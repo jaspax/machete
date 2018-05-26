@@ -151,6 +151,9 @@ function isRunning(campaignSummary) {
 }
 
 function calculateKnpIncome(amsSales, kdpSales) {
+    if (!kdpSales)
+        return amsSales;
+
     return amsSales.map(item => {
         const itemDate = moment(item.timestamp).startOf('day');
         const salesWindow = salesWindowFilter(moment(item.timestamp).subtract(15, 'days').startOf('day'), moment(item.timestamp).startOf('day'));
