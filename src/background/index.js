@@ -50,6 +50,8 @@ bg.messageListener(function*(req) { // eslint-disable-line complexity
         // KDP actions
         case 'kdp.requestPermission':
             return yield kdp.requestPermission(req);
+        case 'kdp.hasPermission':
+            return yield kdp.hasPermission(req);
 
         default:
             throw new Error('unknown action: ' + req.action);

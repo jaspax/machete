@@ -1,6 +1,7 @@
 const bg = require('./common.js');
 const moment = require('moment');
 const constants = require('../common/constants.js');
+const ga = require('../common/ga.js');
 
 function* dataGather() {
     const time = Date.now();
@@ -19,14 +20,20 @@ function* dataGather() {
     });
 }
 
+const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
+
 function requestPermission() {
-    return new Promise((resolve, reject) => {
-        chrome.permissions.request({ origins: ['https://kdp.amazon.com/*'] }, granted => {
+    return ga.mpromise((resolve, reject) => {
+        chrome.permissions.request(kdpPermissions, granted => {
             if (granted)
                 return resolve();
             return reject(new Error('user refused'));
         });
     });
+}
+
+function hasPermission() {
+    return ga.mpromise(resolve => chrome.permissions.contains(kdpPermissions, resolve));
 }
 
 function baseRequest(time) {
@@ -103,5 +110,6 @@ module.exports = {
     name: 'kdp',
     dataGather,
     requestPermission,
+    hasPermission,
     getSalesHistory,
 };

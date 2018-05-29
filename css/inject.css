@@ -270,7 +270,7 @@
     margin-right: 2px;
 }
 
-.machete-optimize-choice button {
+.machete-optimize-choice button, .machete-highlight-button {
     padding: 2px 4px;
     margin: 2px 4px;
     height: 2em;
