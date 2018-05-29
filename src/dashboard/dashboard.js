@@ -61,7 +61,7 @@ function addTabs(wrapper) {
     });
 
     tabber(tabs, {
-        label: "Enable KDP",
+        label: "KDP Integration",
         activate: activateKdpTab,
     });
 }

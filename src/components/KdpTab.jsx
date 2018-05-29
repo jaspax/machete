@@ -27,8 +27,7 @@ function showDescription(enabled) {
 
 function enabledDescription() {
     return <div>
-        <p>KDP Integration is enabled! You should have sweet, sweet KDP
-            data.</p>
+        <p>KDP Integration is enabled! Soon some simple reports of your historical KDP data will be available on this tab.</p>
     </div>;
 }
 
