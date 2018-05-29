@@ -245,6 +245,14 @@ function amsPageInit() {
     }));
 }
 
+function requestKdpIntegration() {
+    return common.bgMessage({ action: 'kdp.requestPermission' });
+}
+
+function hasKdpIntegration() {
+    return common.bgMessage({ action: 'kdp.hasPermission' });
+}
+
 module.exports = {
     amsPageInit,
     getEntityId,
@@ -264,4 +272,6 @@ module.exports = {
     isRunning,
     startSession,
     calculateKnpIncome,
+    requestKdpIntegration,
+    hasKdpIntegration,
 };

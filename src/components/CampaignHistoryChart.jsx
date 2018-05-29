@@ -4,13 +4,14 @@ const PropTypes = require('prop-types');
 const TimeSeriesChart = require('./TimeSeriesChart.jsx');
 
 const common = require('../common/common.js');
+const spData = require('../common/sp-data.js');
 const constants = require('../common/constants.js');
 
 class CampaignHistoryChart extends React.Component {
     render() {
         const width = this.state ? this.state.width : 800;
-        const dataPromise = this.props.dataPromise.then(createHistoryData);
-        const layoutPromise = dataPromise.then(data => createLayout(data));
+        const dataPromise = this.props.dataPromise.then(this.createHistoryData.bind(this));
+        const layoutPromise = dataPromise.then(this.createLayout.bind(this));
 
         return <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
                 <TimeSeriesChart
@@ -35,25 +36,41 @@ class CampaignHistoryChart extends React.Component {
     componentDidMount() {
         this.setState({ width: this.containerDiv.offsetWidth });
     }
+
+    createHistoryData(data) {
+        return spData.hasKdpIntegration().then(kdpIntegration => {
+            const { aggregate, campaigns, metric } = data;
+            this.metric = metric;
+            if (metric == 'all')
+                return aggregateSeriesAllMetrics(aggregate, kdpIntegration);
+            return componentSeriesForMetric(aggregate, campaigns, constants.metric[metric]);
+        });
+    }
+
+    createLayout(series, metric = this.metric) {
+        if (metric == 'all')
+            return layoutAllMetrics(series);
+        return layoutMetric(series);
+    }
 }
 
-function createHistoryData(data) {
-    const { aggregate, campaigns, metric } = data;
-    this.metric = metric;
-    if (metric == 'all')
-        return aggregateSeriesAllMetrics(aggregate);
-    return componentSeriesForMetric(aggregate, campaigns, constants.metric[metric]);
-}
-
-function aggregateSeriesAllMetrics(data) {
-    const parallel = common.parallelizeSeries(data);
-    return [
+function aggregateSeriesAllMetrics(data, kdpIntegration) {
+    const metrics = [
         _.merge({ options: { yaxis: 'y' } }, constants.metric.impressions),
         _.merge({ options: { yaxis: 'y2' } }, constants.metric.clicks),
         _.merge({ options: { yaxis: 'y3' } }, constants.metric.salesValue),
         _.merge({ options: { yaxis: 'y3' } }, constants.metric.spend),
         _.merge({ options: { yaxis: 'y4' } }, constants.metric.acos),
-    ].map(metric => common.formatParallelData(parallel, metric));
+    ];
+
+    if (kdpIntegration) {
+        metrics.push(_.merge({ options: { yaxis: 'y3' } }, constants.metric.knpeValue));
+        metrics.push(_.merge({ options: { yaxis: 'y3' } }, constants.metric.knpeTotalValue));
+        metrics.push(_.merge({ options: { yaxis: 'y4' } }, constants.metric.knpeAcos));
+    }
+
+    const parallel = common.parallelizeSeries(data);
+    return metrics.map(metric => common.formatParallelData(parallel, metric));
 }
 
 function componentSeriesForMetric(aggregate, campaigns, metric) {
@@ -73,12 +90,6 @@ function componentSeriesForMetric(aggregate, campaigns, metric) {
 
         return series;
     });
-}
-
-function createLayout(series, metric = this.metric) {
-    if (metric == 'all')
-        return layoutAllMetrics(series);
-    return layoutMetric(series);
 }
 
 const baseLayout = {

@@ -1,11 +1,11 @@
 const React = require('react');
 const Async = require('react-promise').default;
-const common = require('../common/common.js');
+const spData = require('../common/sp-data.js');
 
 function KdpTab() {
     return <div className="a-box-inner">
         <h1>KDP Integration</h1>
-        <Async promise={hasPermissions()} pending={pending()} then={showDescription} />
+        <Async promise={spData.hasKdpIntegration()} pending={pending()} then={showDescription} />
     </div>;
 }
 
@@ -14,11 +14,7 @@ function pending() {
 }
 
 function request() {
-    common.bgMessage({ action: 'kdp.requestPermission' });
-}
-
-function hasPermissions() {
-    return common.bgMessage({ action: 'kdp.hasPermission' });
+    return spData.requestKdpIntegration().then(window.location.reload);
 }
 
 function showDescription(enabled) {
