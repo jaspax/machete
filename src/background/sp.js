@@ -2,6 +2,7 @@ const bg = require('./common.js');
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
+const spData = require('../common/sp-data.js');
 
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
@@ -22,11 +23,29 @@ function* dataGather() {
     let deferredException = null;
     for (const { domain, entityId } of bg.getEntityIds()) {
         try {
-            yield* requestCampaignData(domain, entityId);
-
+            const campaignIds = yield* requestCampaignData(domain, entityId);
             const adGroups = yield* getAdGroups(entityId);
-            yield bg.parallelQueue(adGroups, function*(item) {
-                yield* requestKeywordData(domain, entityId, item.adGroupId);
+            const summaries = yield getCampaignSummaries({ entityId });
+
+            yield bg.parallelQueue(campaignIds, function*(campaignId) {
+                const summary = summaries.find(x => x.campaignId == campaignId);
+                if (summary && !spData.isRunning(summary)) {
+                    return;
+                }
+
+                const adGroupItem = adGroups.find(x => x.campaignId == campaignId);
+                let adGroupId = null;
+                if (adGroupItem) {
+                    adGroupId = adGroupItem.adGroupId;
+                }
+                else {
+                    const meta = yield* findMetadata(domain, entityId, campaignId);
+                    adGroupId = meta.adGroupId;
+                }
+
+                if (adGroupId) {
+                    yield* requestKeywordData(domain, entityId, adGroupId);
+                }
             });
         }
         catch (ex) {
@@ -36,6 +55,23 @@ function* dataGather() {
     }
     if (deferredException) {
         throw deferredException;
+    }
+}
+
+function* findMetadata(domain, entityId, campaignId) {
+    const html = yield bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
+        method: 'GET',
+        responseType: 'text'
+    });
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const meta = spData.getCampaignMetadataFromDOM(template.content);
+
+    if (meta.adGroupId) {
+        yield setAdGroupMetadata({ entityId, adGroupId: meta.adGroupId, campaignId });
+    }
+    if (meta.asin) {
+        yield setCampaignMetadata({ entityId, campaignId, asin: meta.asin });
     }
 }
 
@@ -89,8 +125,9 @@ function* requestCampaignData(domain, entityId) {
     });
 
     let timestamp = Date.now();
+    let campaignIds = [];
     if (earliestData && earliestData.aaData && earliestData.aaData.length) {
-        let campaignIds = earliestData.aaData.map(x => x.campaignId);
+        campaignIds = earliestData.aaData.map(x => x.campaignId);
         yield* requestCampaignStatus(domain, entityId, campaignIds, timestamp);
     }
 
@@ -106,7 +143,7 @@ function* requestCampaignData(domain, entityId) {
         yield* storeLifetimeCampaignData(entityId, Date.now(), data);
     }
 
-    return earliestData;
+    return campaignIds;
 }
 
 function* requestCampaignStatus(domain, entityId, campaignIds, timestamp) {

@@ -52,6 +52,26 @@ function getQueryArgs(str) {
     return args;
 }
 
+function getCampaignMetadataFromDOM(dom) {
+    const adGroupIdInput = dom.querySelector('input[name=adGroupId]');
+    const adGroupId = adGroupIdInput.value;
+
+    const bookRow = dom.getElementById('advertisedBookRow');
+    let asin = null;
+    if (bookRow && bookRow.children) {
+        const bookLink = new Array(bookRow.children).find(element => element.tagName == 'A');
+        if (bookLink) {
+            let href = bookLink[0].href;
+            let match = href.match(/product\/(\w+)/);
+            if (match && match.length >= 2) {
+                asin = match[1];
+            }
+        }
+    }
+
+    return { adGroupId, asin };
+}
+
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
     return getCampaignSummaries(entityId).then(summaries => {
         const summary = summaries.find(x => x.campaignId == campaignId);
@@ -147,7 +167,7 @@ function updateKeywordBid(keywordIdList, bid) {
 }
 
 function isRunning(campaignSummary) {
-    return ['RUNNING', 'OUT_OF_BUDGET'].includes(campaignSummary.status);
+    return ['RUNNING', 'OUT_OF_BUDGET', null].includes(campaignSummary.status || null);
 }
 
 function calculateKnpIncome(amsSales, kdpSales) {
@@ -184,43 +204,53 @@ function salesWindowFilter(startDate, endDate) {
     };
 }
 
-const startSessionPromise = common.bgMessage({
-    action: 'startSession', 
-    entityId: getEntityId(), 
-});
+let startSessionPromise = null; 
+function startSession() {
+    if (!startSessionPromise) {
+        startSessionPromise = common.bgMessage({
+            action: 'startSession', 
+            entityId: getEntityId(), 
+        });
+    }
+    return startSessionPromise;
+}
 
-common.getUser().then(ga.mcatch(user => {
-    const desc = user.activeSubscription.name;
-    let email = user.email;
-    let profileText = "Your Profile";
-    let label = 'view-profile';
-    if (user.isAnon) {
-        email = '';
-        profileText = 'Login/Register';
-        label = 'login';
-    }
-    let links = $('.userBarLinksRight');
-    if (links[0]) {
-        let chunks = links[0].innerHTML.split(' | ');
-        chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://${constants.hostname}/profile" target="_blank">${profileText}</a>)`);
-        links[0].innerHTML = chunks.join(' | ');
-    }
-    let logout = links.find('a');
-    if (logout[1]) {
-        $(logout[1]).click(ga.mcatch(() => {
-            const result = confirm(
-                `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
-                    
-                Continue logging out?`);
-            return result;
-        }));
-    }
-}));
+function amsPageInit() {
+    common.getUser().then(ga.mcatch(user => {
+        const desc = user.activeSubscription.name;
+        let email = user.email;
+        let profileText = "Your Profile";
+        let label = 'view-profile';
+        if (user.isAnon) {
+            email = '';
+            profileText = 'Login/Register';
+            label = 'login';
+        }
+        let links = $('.userBarLinksRight');
+        if (links[0]) {
+            let chunks = links[0].innerHTML.split(' | ');
+            chunks.splice(-1, 0, `${desc} (<a data-mclick="machete-status ${label}" title="${email}" href="https://${constants.hostname}/profile" target="_blank">${profileText}</a>)`);
+            links[0].innerHTML = chunks.join(' | ');
+        }
+        let logout = links.find('a');
+        if (logout[1]) {
+            $(logout[1]).click(ga.mcatch(() => {
+                const result = confirm(
+                    `Logging out of AMS will prevent Machete from monitoring your campaigns. Instead, you may close this tab without logging out.
+                        
+                    Continue logging out?`);
+                return result;
+            }));
+        }
+    }));
+}
 
 module.exports = {
+    amsPageInit,
     getEntityId,
     getCampaignId,
     getQueryArgs,
+    getCampaignMetadataFromDOM,
     getCurrentCampaignSnapshot,
     getCampaignHistory,
     getAggregateCampaignHistory,
@@ -232,6 +262,6 @@ module.exports = {
     updateKeywordStatus,
     updateKeywordBid,
     isRunning,
-    startSessionPromise,
+    startSession,
     calculateKnpIncome,
 };

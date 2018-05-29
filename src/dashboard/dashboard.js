@@ -26,6 +26,9 @@ const charts = [
     { column: 11, label: "ACOS", metric: [constants.metric.acos, constants.metric.knpeAcos] },
 ];
 
+spdata.startSession();
+spdata.amsPageInit();
+
 window.setInterval(ga.mcatch(() => {
     let tableRows = $('#campaignTable tbody tr');
     addChartButtons(tableRows);
@@ -82,7 +85,7 @@ function addTotalsRow(wrapper) {
         const totalRow = React.createElement(AmsCampaignRow, { 
             label: "Yesterday's Totals",
             lastDay,
-            syncPromise: spdata.startSessionPromise,
+            syncPromise: spdata.startSession(),
         });
         ReactDOM.render(totalRow, body[0]);
     });

@@ -21,26 +21,11 @@ const ourTabs = [
     { label: "Bid Optimizer", activate: generateBidOptimizer, matching: /./, insertIndex: 3 },
 ];
 
-let adGroupPromise = ga.mpromise(resolve => {
-    let adGroupInterval = window.setInterval(ga.mcatch(() => {
-        let adGroupIdInput = $('input[name=adGroupId]');
-        if (!adGroupIdInput.length)
-            return;
+const { adGroupId } = spdata.getCampaignMetadataFromDOM(document);
+const keywordDataPromise = spdata.getKeywordData(spdata.getEntityId(), adGroupId);
 
-        let adGroupId = adGroupIdInput[0].value;
-        window.clearInterval(adGroupInterval);
-
-        common.bgMessage({
-            action: 'sp.setAdGroupMetadata',
-            entityId: spdata.getEntityId(),
-            campaignId: spdata.getCampaignId(),
-            adGroupId,
-        });
-        resolve(adGroupId);
-    }), 100);
-});
-
-let keywordDataPromise = adGroupPromise.then(adGroupId => spdata.getKeywordData(spdata.getEntityId(), adGroupId));
+spdata.startSession();
+spdata.amsPageInit();
 
 let makeTabsInterval = window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
@@ -48,30 +33,6 @@ let makeTabsInterval = window.setInterval(ga.mcatch(() => {
         addCampaignTabs(campaignTabs);
         window.clearInterval(makeTabsInterval);
     }
-}), 100);
-
-let metadataInterval = window.setInterval(ga.mcatch(() => {
-    let campaignDataTab = $('#campaign_settings_tab_content');
-    if (campaignDataTab.length == 0)
-        return;
-
-    let bookLink = campaignDataTab.find('#advertisedBookRow').find('a');
-    if (bookLink.length == 0)
-        return;
-
-    let href = bookLink[0].href;
-    let match = href.match(/product\/(\w+)/);
-    if (!match || match.length < 2)
-        return;
-
-    common.bgMessage({
-        action: 'sp.setCampaignMetadata',
-        entityId: spdata.getEntityId(),
-        campaignId: spdata.getCampaignId(),
-        asin: match[1],
-    });
-
-    window.clearInterval(metadataInterval);
 }), 100);
 
 function addCampaignTabs(tabs) {
@@ -139,7 +100,7 @@ function generateBidOptimizer(container) {
             return common.optimizeKeywordsSalesPerDay(value, prep.campaignData, prep.campaignSummary, prep.renormedKws);
         })),
         updateKeyword: kw => ga.mpromise(co(function*() {
-            const origKws = yield spdata.getKeywordData(entityId, yield adGroupPromise);
+            const origKws = yield spdata.getKeywordData(entityId, adGroupId);
             const origKw = origKws.find(orig => kw.id.includes(orig.id));
             if (!origKw)
                 return;
