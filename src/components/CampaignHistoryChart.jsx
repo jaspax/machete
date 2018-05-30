@@ -4,7 +4,6 @@ const PropTypes = require('prop-types');
 const TimeSeriesChart = require('./TimeSeriesChart.jsx');
 
 const common = require('../common/common.js');
-const spData = require('../common/sp-data.js');
 const constants = require('../common/constants.js');
 
 class CampaignHistoryChart extends React.Component {
@@ -38,13 +37,11 @@ class CampaignHistoryChart extends React.Component {
     }
 
     createHistoryData(data) {
-        return spData.hasKdpIntegration().then(kdpIntegration => {
-            const { aggregate, campaigns, metric } = data;
-            this.metric = metric;
-            if (metric == 'all')
-                return aggregateSeriesAllMetrics(aggregate, kdpIntegration);
-            return componentSeriesForMetric(aggregate, campaigns, constants.metric[metric]);
-        });
+        const { aggregate, campaigns, metric } = data;
+        this.metric = metric;
+        if (metric == 'all')
+            return aggregateSeriesAllMetrics(aggregate);
+        return componentSeriesForMetric(aggregate, campaigns, constants.metric[metric]);
     }
 
     createLayout(series, metric = this.metric) {
@@ -54,20 +51,17 @@ class CampaignHistoryChart extends React.Component {
     }
 }
 
-function aggregateSeriesAllMetrics(data, kdpIntegration) {
+function aggregateSeriesAllMetrics(data) {
     const metrics = [
         _.merge({ options: { yaxis: 'y' } }, constants.metric.impressions),
         _.merge({ options: { yaxis: 'y2' } }, constants.metric.clicks),
         _.merge({ options: { yaxis: 'y3' } }, constants.metric.salesValue),
+        _.merge({ options: { yaxis: 'y3' } }, constants.metric.knpeValue),
+        _.merge({ options: { yaxis: 'y3' } }, constants.metric.knpeTotalValue),
         _.merge({ options: { yaxis: 'y3' } }, constants.metric.spend),
         _.merge({ options: { yaxis: 'y4' } }, constants.metric.acos),
+        _.merge({ options: { yaxis: 'y4' } }, constants.metric.knpeAcos),
     ];
-
-    if (kdpIntegration) {
-        metrics.push(_.merge({ options: { yaxis: 'y3' } }, constants.metric.knpeValue));
-        metrics.push(_.merge({ options: { yaxis: 'y3' } }, constants.metric.knpeTotalValue));
-        metrics.push(_.merge({ options: { yaxis: 'y4' } }, constants.metric.knpeAcos));
-    }
 
     const parallel = common.parallelizeSeries(data);
     return metrics.map(metric => common.formatParallelData(parallel, metric));

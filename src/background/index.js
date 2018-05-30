@@ -52,6 +52,8 @@ bg.messageListener(function*(req) { // eslint-disable-line complexity
             return yield kdp.requestPermission(req);
         case 'kdp.hasPermission':
             return yield kdp.hasPermission(req);
+        case 'kdp.getSalesHistory':
+            return yield kdp.getSalesHistory(req);
 
         default:
             throw new Error('unknown action: ' + req.action);

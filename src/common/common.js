@@ -5,7 +5,7 @@ const moment = require('moment');
 
 const constants = require('./constants.js');
 
-const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend`;
+const cumulativeMetrics = qw`impressions clicks salesCount salesValue spend knpeCount knpeValue knpeTotalValue`;
 const cumulativeKeywordMetrics = qw`impressions clicks sales spend`;
 
 function timestampSort(a, b) {
@@ -97,6 +97,7 @@ function calculateItemStats(item) {
     item.acos = sales ? 100 * (item.spend / sales) : null;
     item.avgCpc = item.spend / item.clicks;
     item.ctr = item.impressions ? 100 * (item.clicks / item.impressions) : null;
+    item.knpeAcos = item.knpeTotalSales ? 100 * (item.spend / item.knpeTotalSales) : null;
     return item;
 }
 

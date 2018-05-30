@@ -70,7 +70,17 @@ function generateKeywordReports(container) {
 function generateHistoryReports(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
-    let tabContent = React.createElement(CampaignHistoryTab, { dataPromise: spdata.getCampaignHistory(entityId, campaignId) });
+    let tabContent = React.createElement(CampaignHistoryTab, { 
+        dataPromise: co(function*() {
+            const amsData = yield spdata.getCampaignHistory(entityId, campaignId);
+            if (yield spdata.hasKdpIntegration()) {
+                const summary = yield* spdata.getCampaignSummary(entityId, campaignId);
+                const kdpData = yield spdata.getKdpSalesHistory(summary.asin);
+                return spdata.calculateKnpIncome(amsData, kdpData);
+            }
+            return amsData;
+        }),
+    });
     ReactDOM.render(tabContent, container[0]);
 }
 

@@ -146,6 +146,18 @@ function getCampaignSummaries(entityId = getEntityId()) {
     return summaryPromise;
 }
 
+function* getCampaignSummary(entityId = getEntityId(), campaignId = getCampaignId()) {
+    const summaries = yield getCampaignSummaries(entityId);
+    return summaries.find(x => x.campaignId == campaignId);
+}
+
+function getKdpSalesHistory(asin) {
+    return common.bgMessage({
+        action: 'kdp.getSalesHistory',
+        asin,
+    });
+}
+
 function updateKeyword(keywordIdList, operation, dataValues) {
     return common.bgMessage({
         action: 'sp.updateKeyword',
@@ -191,6 +203,12 @@ function calculateKnpIncome(amsSales, kdpSales) {
             rv.knpeValue = rv.knpeCount * 0.005;
             rv.knpeTotalValue = sales + rv.knpeValue;
             rv.knpeAcos = rv.knpeTotalSales ? 100 * (rv.spend / rv.knpeTotalSales) : null;
+        }
+        else {
+            rv.knpeCount = null;
+            rv.knpeValue = null;
+            rv.knpeTotalValue = null;
+            rv.knpeAcos = null;
         }
         
         return rv;
@@ -267,6 +285,8 @@ module.exports = {
     getAllCampaignsAllowed,
     getCampaignAllowed,
     getCampaignSummaries,
+    getCampaignSummary,
+    getKdpSalesHistory,
     updateKeywordStatus,
     updateKeywordBid,
     isRunning,

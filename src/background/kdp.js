@@ -1,6 +1,5 @@
 const bg = require('./common.js');
 const moment = require('moment');
-const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 
 function* dataGather() {
@@ -100,7 +99,7 @@ function* fetchKuData(time, asin) {
 }
 
 const getSalesHistory = bg.cache.coMemo(function*({ asin }) {
-    return yield bg.ajax(`https://${constants.hostname}/api/kdp/${asin}/history`, {
+    return yield bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
         method: 'GET',
         responseType: 'json'
     });
