@@ -160,7 +160,7 @@ function* requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
             responseType: 'json',
         });
 
-        yield* storeStatusCloud(entityId, timestamp, data);
+        yield* storeStatus(entityId, timestamp, data);
     }
 }
 
@@ -187,7 +187,7 @@ function* requestKeywordData(domain, entityId, adGroupId) {
         return;
     }
 
-    yield* storeKeywordDataCloud(entityId, adGroupId, timestamp, data);
+    yield* storeKeywordData(entityId, adGroupId, timestamp, data);
 }
 
 function* storeDailyCampaignData(entityId, timestamp, data) {
@@ -206,7 +206,7 @@ function* storeLifetimeCampaignData(entityId, timestamp, data) {
     });
 }
 
-function* storeStatusCloud(entityId, timestamp, data) {
+function* storeStatus(entityId, timestamp, data) {
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
@@ -214,7 +214,7 @@ function* storeStatusCloud(entityId, timestamp, data) {
     });
 }
 
-function* storeKeywordDataCloud(entityId, adGroupId, timestamp, data) {
+function* storeKeywordData(entityId, adGroupId, timestamp, data) {
     // Chop the large keyword list into small, bite-sized chunks for easier
     // digestion on the server.
     for (const chunk of pageArray(data.aaData, 50)) {
