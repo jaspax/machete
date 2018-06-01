@@ -21,7 +21,7 @@ const ourTabs = [
     { label: "Bid Optimizer", activate: generateBidOptimizer, matching: /./, insertIndex: 3 },
 ];
 
-const { adGroupId } = spdata.getCampaignMetadataFromDOM(document);
+const adGroupId = spdata.getAdGroupIdFromDOM(document);
 const keywordDataPromise = spdata.getKeywordData(spdata.getEntityId(), adGroupId);
 
 spdata.startSession();

@@ -1,4 +1,5 @@
 const bg = require('./common.js');
+const _ = require('lodash');
 const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
@@ -29,7 +30,7 @@ function* dataGather() {
 
             yield bg.parallelQueue(campaignIds, function*(campaignId) {
                 const summary = summaries.find(x => x.campaignId == campaignId);
-                if (summary && !spData.isRunning(summary)) {
+                if (!spData.isRunning(summary)) {
                     return;
                 }
 
@@ -39,11 +40,13 @@ function* dataGather() {
                     adGroupId = adGroupItem.adGroupId;
                 }
                 else {
-                    const meta = yield* findMetadata(domain, entityId, campaignId);
-                    adGroupId = meta.adGroupId;
+                    adGroupId = yield* findAdGroupId(domain, entityId, campaignId);
                 }
 
                 if (adGroupId) {
+                    if (!(summary && summary.asin)) {
+                        yield* requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
+                    }
                     yield* requestKeywordData(domain, entityId, adGroupId);
                 }
             });
@@ -58,21 +61,20 @@ function* dataGather() {
     }
 }
 
-function* findMetadata(domain, entityId, campaignId) {
+function* findAdGroupId(domain, entityId, campaignId) {
     const html = yield bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
         method: 'GET',
         responseType: 'text'
     });
     const template = document.createElement('template');
     template.innerHTML = html;
-    const meta = spData.getCampaignMetadataFromDOM(template.content);
+    const adGroupId = spData.getAdGroupIdFromDOM(template.content);
 
-    if (meta.adGroupId) {
-        yield setAdGroupMetadata({ entityId, adGroupId: meta.adGroupId, campaignId });
+    if (adGroupId) {
+        yield* storeAdGroupMetadata(entityId, adGroupId, campaignId);
     }
-    if (meta.asin) {
-        yield setCampaignMetadata({ entityId, campaignId, asin: meta.asin });
-    }
+
+    return adGroupId;
 }
 
 const getAllowedCampaigns = bg.cache.coMemo(function*({ entityId }) {
@@ -164,6 +166,32 @@ function* requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
     }
 }
 
+function* requestCampaignMetadata(domain, entityId, campaignId, adGroupId) {
+    const data = yield bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
+        method: 'POST',
+        formData: {
+            entityId, 
+            adGroupId,
+            status: 'Lifetime',
+        },
+        responseType: 'json',
+    });
+
+    if (data.message) {
+        ga.mga('event', 'error-handled', 'asin-query-failure', `${adGroupId}: ${data.message}`);
+        return;
+    }
+
+    /* In principle it looks like this response can contain multiple ad groups,
+     * but in practice that doesn't seem to happen on AMS, so we only track the
+     * one.
+     */
+    const asin = _.get(data, 'aaData[0].asin');
+    if (asin) {
+        yield* storeCampaignMetadata(entityId, campaignId, asin);
+    }
+}
+
 function* requestKeywordData(domain, entityId, adGroupId) {
     checkEntityId(entityId);
 
@@ -172,12 +200,9 @@ function* requestKeywordData(domain, entityId, adGroupId) {
     const data = yield bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
         method: 'POST',
         formData: {
-            entityId, adGroupId,
-            /* TODO: use these once Amazon actually supports them
-            status: null,
-            startDate: null,
-            endDate: null,
-            */
+            entityId, 
+            adGroupId,
+            status: 'Lifetime',
         },
         responseType: 'json',
     });
@@ -306,7 +331,7 @@ const getAggregateKeywordData = bg.cache.coMemo(function*({ domain, entityId, ad
     });
 });
 
-function* setCampaignMetadata({ entityId, campaignId, asin }) {
+function* storeCampaignMetadata(entityId, campaignId, asin) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
@@ -314,7 +339,7 @@ function* setCampaignMetadata({ entityId, campaignId, asin }) {
     });
 }
 
-function* setAdGroupMetadata({ entityId, adGroupId, campaignId }) {
+function* storeAdGroupMetadata(entityId, adGroupId, campaignId) {
     checkEntityId(entityId);
     return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
@@ -369,7 +394,5 @@ module.exports = {
     getAggregateCampaignHistory,
     getKeywordData,
     getAggregateKeywordData,
-    setCampaignMetadata,
-    setAdGroupMetadata,
     updateKeyword,
 };

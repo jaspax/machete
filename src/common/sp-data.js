@@ -52,24 +52,9 @@ function getQueryArgs(str) {
     return args;
 }
 
-function getCampaignMetadataFromDOM(dom) {
+function getAdGroupIdFromDOM(dom) {
     const adGroupIdInput = dom.querySelector('input[name=adGroupId]');
-    const adGroupId = adGroupIdInput.value;
-
-    const bookRow = dom.getElementById('advertisedBookRow');
-    let asin = null;
-    if (bookRow && bookRow.children) {
-        const bookLink = new Array(bookRow.children).find(element => element.tagName == 'A');
-        if (bookLink) {
-            let href = bookLink[0].href;
-            let match = href.match(/product\/(\w+)/);
-            if (match && match.length >= 2) {
-                asin = match[1];
-            }
-        }
-    }
-
-    return { adGroupId, asin };
+    return adGroupIdInput.value;
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
@@ -179,7 +164,7 @@ function updateKeywordBid(keywordIdList, bid) {
 }
 
 function isRunning(campaignSummary) {
-    return ['RUNNING', 'OUT_OF_BUDGET', null].includes(campaignSummary.status || null);
+    return campaignSummary && ['RUNNING', 'OUT_OF_BUDGET', null].includes(campaignSummary.status || null);
 }
 
 function calculateKnpIncome(amsSales, kdpSales) {
@@ -276,7 +261,7 @@ module.exports = {
     getEntityId,
     getCampaignId,
     getQueryArgs,
-    getCampaignMetadataFromDOM,
+    getAdGroupIdFromDOM,
     getCurrentCampaignSnapshot,
     getCampaignHistory,
     getAggregateCampaignHistory,

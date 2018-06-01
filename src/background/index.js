@@ -26,10 +26,6 @@ bg.messageListener(function*(req) { // eslint-disable-line complexity
             return yield sp.getKeywordData(req);
         case 'sp.getAggregateKeywordData':
             return yield sp.getAggregateKeywordData(req);
-        case 'sp.setCampaignMetadata':
-            return yield sp.setCampaignMetadata(req);
-        case 'sp.setAdGroupMetadata':
-            return yield sp.setAdGroupMetadata(req);
         case 'sp.updateKeyword':
             return yield sp.updateKeyword(req);
 
