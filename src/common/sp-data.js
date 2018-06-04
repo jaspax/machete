@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 const $ = require('jquery');
 const _ = require('lodash');
-const moment = require('moment');
+const moment = require('frozen-moment');
 const ga = require('./ga.js');
 const common = require('./common.js');
 const constants = require('./constants.js');
@@ -172,13 +172,13 @@ function calculateKnpIncome(amsSales, kdpSales) {
         return amsSales;
 
     return amsSales.map(item => {
-        const itemDate = moment(item.timestamp).startOf('day');
-        const salesWindow = salesWindowFilter(moment(item.timestamp).subtract(15, 'days').startOf('day'), moment(item.timestamp).startOf('day'));
+        const itemDate = moment(item.timestamp).startOf('day').freeze();
+        const salesWindow = salesWindowFilter(itemDate.subtract(15, 'days'), itemDate);
         const kdpWindow = kdpSales.filter(salesWindow);
         const amsWindow = amsSales.filter(salesWindow);
         const kdpSalesCount = kdpWindow.reduce((sum, item) => sum + item.paidEbook + item.paidPaperback, 0);
         const amsSalesCount = amsWindow.reduce((sum, item) => sum + (item.salesCount || 0), 0);
-        const ratio = amsSalesCount ? kdpSalesCount / amsSalesCount : 0;
+        const ratio = kdpSalesCount ? amsSalesCount / kdpSalesCount : 0;
 
         const rv = Object.assign({}, item);
         const kdpOnDate = kdpSales.find(x => moment(x.date).isSame(itemDate, 'day'));
