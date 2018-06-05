@@ -3,34 +3,25 @@ const PropTypes = require('prop-types');
 const qu = require('async/queue');
 
 const common = require('../common/common.js');
-const ga = require('../common/ga.js');
+
+const BidOptimizationTargetPicker = require('./BidOptimizationTargetPicker.jsx');
 
 class BidOptimizationChooser extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { loading: false, error: false, message: '' };
-        this.clickOptimizeAcos = ga.mcatch(this.clickOptimizeAcos.bind(this));
-        this.clickOptimizeSales = ga.mcatch(this.clickOptimizeSales.bind(this));
+        this.state = {
+            loading: false,
+            error: false,
+            message: '',
+            target: 'acos',
+            targetValue: 70,
+        };
     }
 
     render() {
-        const btnDisabled = this.state.loading || this.state.error;
-
-        return <div className="machete-optimization-chooser">
-            <form name="optimizeOptions">
-                <section className="machete-optimize-choice">
-                    <h2>Target ACOS</h2>
-                    <input size="7" type="text" name="targetAcos" defaultValue={common.numberFmt(this.props.targetAcos)} />%&nbsp;
-                    <button onClick={this.clickOptimizeAcos} disabled={btnDisabled}>Optimize ACOS</button>
-                    <p>Analyze your current ACOS and adjust bids to bring each keyword as close to the target ACOS as possible.</p>
-                </section>
-                <section className="machete-optimize-choice">
-                    <h2>Target Sales</h2>
-                    $<input size="7" type="text" name="targetSales" defaultValue={common.numberFmt(this.props.targetSales)} />&nbsp;
-                    <button onClick={this.clickOptimizeSales} disabled={btnDisabled}>Optimize Sales</button>
-                    <p>Analyze your historical sales and adjust bids to attempt to hit the target sales per day.</p>
-                </section>
-            </form>
+        return <div>
+            <BidOptimizationTargetPicker target={this.state.target} targetValue={this.state.targetValue} onChange={this.targetChanged.bind(this)} />
+            <button className="machete-highlight-button" onClick={this.optimize.bind(this)}>Optimize</button>
             <div>
                 <div style={{ display: 'inline-block', marginRight: '10px' }} className={this.state.loading ? 'loading-small' : ''}>&nbsp;</div>
                 <span className={this.state.error ? 'machete-error' : ''}>
@@ -40,22 +31,20 @@ class BidOptimizationChooser extends React.Component {
         </div>;
     }
 
-    clickOptimizeAcos(evt) {
-        const form = document.forms.optimizeOptions;
-        return this.optimize(evt, form.targetAcos.value, this.props.optimizeAcos);
+    targetChanged(opts) {
+        const state = this.state;
+        state.target = opts.target;
+        state.targetValue = opts.targetValue;
+        this.setState(state);
     }
 
-    clickOptimizeSales(evt) {
-        const form = document.forms.optimizeOptions;
-        return this.optimize(evt, form.targetSales.value, this.props.optimizeSales);
-    }
-
-    optimize(evt, value, callback) {
+    optimize(evt) {
         evt.preventDefault();
-        value = Number(value);
+        const value = Number(this.state.targetValue);
+        const optimizer = this.state.target == 'acos' ? this.props.optimizeAcos : this.props.optimizeSales;
         if (value && !isNaN(value) && value > 0) {
             this.setState({ loading: true, error: false, message: "Analyzing keywords..." });
-            callback(value).then(this.updateKeywords.bind(this), err => this.setState({ loading: false, error: true, message: err.stack }));
+            optimizer(value).then(this.updateKeywords.bind(this), err => this.setState({ loading: false, error: true, message: err.stack }));
         }
         else {
             this.setState({ error: true, message: "Please enter a value greater than 0" });
