@@ -25,6 +25,8 @@ function bgMessage(opts) {
 
 function renormKeywordStats(latestCampaignSnapshot, kws) {
     const campaignValueOfSale = latestCampaignSnapshot.salesValue / latestCampaignSnapshot.salesCount;
+    const campaignCtr = latestCampaignSnapshot.ctr;
+    const campaignSalesPerClick = latestCampaignSnapshot.salesCount / latestCampaignSnapshot.clicks;
 
     return kws.map(kw => {
         const x = Object.assign({}, kw);
@@ -32,19 +34,18 @@ function renormKeywordStats(latestCampaignSnapshot, kws) {
         // The rule of succession states that the actual count of a the
         // instances in a distribution can be estimated by (F + 1)/(N + 2).
         // However, for small values of N this gives wild over-estimates, so we
-        // use a fudge factor scaled to 1000 events to avoid over-fitting small
-        // numbers.
+        // use a fudge factor scaled to the campaign average in order to smooth
+        // out small values.
 
-        const clickFudge = Math.min(1, x.impressions / 1000);
+        const clickFudge = Math.min(1, x.impressions * campaignCtr);
         const estCtr = (x.clicks + clickFudge)/(x.impressions + 2);
         x.clicks = x.impressions * estCtr;
-
-        const salesFudge = Math.min(1, x.clicks / 100);
-        const salesCount = x.sales / campaignValueOfSale;
-        const estSellthru = (salesCount + salesFudge)/(x.clicks + 2);
-        x.sales = x.clicks * estSellthru * campaignValueOfSale;
-
         x.spend = (x.avgCpc || x.bid) * x.clicks;
+
+        const salesFudge = Math.min(1, x.clicks * campaignSalesPerClick);
+        const salesCount = x.sales / campaignValueOfSale;
+        const estSalesPerClick = (salesCount + salesFudge)/(x.clicks + 2);
+        x.sales = x.clicks * estSalesPerClick * campaignValueOfSale;
 
         calculateItemStats(x);
 
@@ -52,43 +53,64 @@ function renormKeywordStats(latestCampaignSnapshot, kws) {
     });
 }
 
+const defaultOptimizeOpts = {
+    minImpressions: 1000,
+    minClicks: 100,
+    minSales: 0,
+};
+
+function filterKw(kw, opts, optimize) {
+    kw = Object.assign({}, kw);
+    if (kw.impressions < opts.minImpressions) {
+        kw.optimizeResult = 'lowImpressions';
+    }
+    else if (kw.clicks < opts.minClicks) {
+        kw.optimizeResult = 'lowClicks';
+    }
+    else if (kw.sales < opts.minSales) {
+        kw.optimizeResult = 'lowSales';
+    }
+    else {
+        kw.optimizeResult = 'optimized';
+        optimize(kw);
+    }
+    return kw;
+}
+
 function boundRatiox2(ratio, maxRatio = 2) {
     return Math.max(0.5, Math.min(2, maxRatio, ratio));
 }
 
-function optimizeKeywordsAcos(targetAcos, kws) {
-    return kws.map(x => {
-        const kw = Object.assign({}, x);
+
+function optimizeKeywordsAcos(targetAcos, kws, opts = defaultOptimizeOpts) {
+    return kws.map(x => filterKw(x, opts, kw => {
         const ratio = boundRatiox2(targetAcos / kw.acos);
         kw.bid *= ratio;
-        return kw;
-    });
+    }));
 }
 
-function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaign, campaignSummary, kws) {
+function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaignLifetime, campaignSummary, kws, opts = defaultOptimizeOpts) {
     const now = moment();
     const campaignDays = now.diff(campaignSummary.startDate, 'days');
-    const campaignSalesPerDay = campaign.salesValue / campaignDays;
-    const campaignSalesPerClick = campaign.salesValue / campaign.clicks;
+    const campaignSalesPerDay = campaignLifetime.salesValue / campaignDays;
+    const campaignSalesPerClick = campaignLifetime.salesValue / campaignLifetime.clicks;
     let ratio = targetSalesPerDay / campaignSalesPerDay;
     let maxRatio = ratio;
 
     if (campaignSummary.budgetType == 'DAILY') {
         const targetSpendPerDay = campaignSummary.budget;
-        const campaignSpendPerDay = campaign.spend / campaignDays;
+        const campaignSpendPerDay = campaignLifetime.spend / campaignDays;
         maxRatio = targetSpendPerDay / campaignSpendPerDay;
     }
 
-    return kws.map(x => {
-        const kw = Object.assign({}, x);
+    return kws.map(x => filterKw(x, opts, kw => {
         const kwSalesPerClick = kw.sales / kw.clicks;
 
         // constrain ratios to a 2x change in either direction to avoid wild swings
         const finalRatio = boundRatiox2(ratio * (kwSalesPerClick / campaignSalesPerClick), maxRatio);
         if (kw.avgCpc)
             kw.bid = kw.avgCpc * finalRatio;
-        return kw;
-    });
+    }));
 }
 
 // Calculate the statistical measures for a delta at a particular time

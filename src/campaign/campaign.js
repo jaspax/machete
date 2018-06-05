@@ -116,7 +116,8 @@ function generateBidOptimizer(container) {
                 return;
             if (origKw.bid === kw.bid)
                 return;
-            yield spdata.updateKeywordBid([origKw.id], kw.bid);
+            console.log('updated', origKw, 'to', kw);
+            // yield spdata.updateKeywordBid([origKw.id], kw.bid);
         })),
     });
     ReactDOM.render(tabContent, container[0]);
