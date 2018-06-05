@@ -25,15 +25,17 @@ class KeywordTable extends React.Component {
             });
         }
 
-        columns.push({
-            Header: 'Update', 
-            Cell: row =>
-                <div>
-                    <KeywordEnableToggle enabled={row.original.enabled} onChange={bindKeywordChange(row.original, this.props.onKeywordEnabledChange)} />
-                    <KeywordBidUpdate bid={parseFloat(row.original.bid)} onChange={bindKeywordChange(row.original, this.props.onKeywordBidChange)} />
-                </div>,
-            minWidth: 190,
-        });
+        if (this.props.showUpdateColumn) {
+            columns.push({
+                Header: 'Update', 
+                Cell: row =>
+                    <div>
+                        <KeywordEnableToggle enabled={row.original.enabled} onChange={bindKeywordChange(row.original, this.props.onKeywordEnabledChange)} />
+                        <KeywordBidUpdate bid={parseFloat(row.original.bid)} onChange={bindKeywordChange(row.original, this.props.onKeywordBidChange)} />
+                    </div>,
+                minWidth: 190,
+            });
+        }
 
         const sortColumn = this.props.columns.filter(col => col.sort).map(col => ({
             id: col.title.toLowerCase(),
@@ -57,8 +59,9 @@ function bindKeywordChange(item, callback) {
 KeywordTable.propTypes = {
     data: PropTypes.array.isRequired,
     columns: PropTypes.array.isRequired,
-    onKeywordEnabledChange: PropTypes.func.isRequired,
-    onKeywordBidChange: PropTypes.func.isRequired,
+    showUpdateColumn: PropTypes.bool,
+    onKeywordEnabledChange: PropTypes.func,
+    onKeywordBidChange: PropTypes.func,
 };
 
 module.exports = KeywordTable;

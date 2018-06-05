@@ -24,14 +24,14 @@ function BidOptimizationTargetPicker(props) {
             <Radio id="machete-optimize-sales" value="sales" /><label htmlFor="machete-optimize-sales">Sales per day</label>
         </RadioGroup>
         <div>
-            {preMarker}<input size="7" type="text" name="machete-target-value" onChanged={targetValueChanged} defaultValue={props.targetValue} />{postMarker}&nbsp;
+            {preMarker}<input size="7" type="text" name="machete-target-value" onChange={targetValueChanged} defaultValue={props.targetValue} />{postMarker}&nbsp;
         </div>
     </div>;
 }
 
 BidOptimizationTargetPicker.propTypes = {
     target: PropTypes.string.isRequired,
-    targetValue: PropTypes.number.isRequired,
+    targetValue: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
 };
 

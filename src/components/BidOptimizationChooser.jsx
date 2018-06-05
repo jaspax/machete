@@ -5,6 +5,7 @@ const qu = require('async/queue');
 const common = require('../common/common.js');
 
 const BidOptimizationTargetPicker = require('./BidOptimizationTargetPicker.jsx');
+const BidOptimizationTable = require('./BidOptimizationTable.jsx');
 
 class BidOptimizationChooser extends React.Component {
     constructor(props) {
@@ -15,6 +16,7 @@ class BidOptimizationChooser extends React.Component {
             message: '',
             target: 'acos',
             targetValue: 70,
+            optimizedKws: [],
         };
     }
 
@@ -28,6 +30,7 @@ class BidOptimizationChooser extends React.Component {
                     {this.state.message}
                 </span>
             </div>
+            <BidOptimizationTable data={this.state.optimizedKws} />
         </div>;
     }
 
@@ -44,7 +47,7 @@ class BidOptimizationChooser extends React.Component {
         const optimizer = this.state.target == 'acos' ? this.props.optimizeAcos : this.props.optimizeSales;
         if (value && !isNaN(value) && value > 0) {
             this.setState({ loading: true, error: false, message: "Analyzing keywords..." });
-            optimizer(value).then(this.updateKeywords.bind(this), err => this.setState({ loading: false, error: true, message: err.stack }));
+            optimizer(value).then(kws => this.setState({ optimizedKws: kws }));
         }
         else {
             this.setState({ error: true, message: "Please enter a value greater than 0" });

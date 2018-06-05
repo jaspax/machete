@@ -85,7 +85,7 @@ function boundRatiox2(ratio, maxRatio = 2) {
 function optimizeKeywordsAcos(targetAcos, kws, opts = defaultOptimizeOpts) {
     return kws.map(x => filterKw(x, opts, kw => {
         const ratio = boundRatiox2(targetAcos / kw.acos);
-        kw.bid *= ratio;
+        kw.optimizedBid = kw.bid * ratio;
     }));
 }
 
@@ -109,7 +109,7 @@ function optimizeKeywordsSalesPerDay(targetSalesPerDay, campaignLifetime, campai
         // constrain ratios to a 2x change in either direction to avoid wild swings
         const finalRatio = boundRatiox2(ratio * (kwSalesPerClick / campaignSalesPerClick), maxRatio);
         if (kw.avgCpc)
-            kw.bid = kw.avgCpc * finalRatio;
+            kw.optimizedBid = kw.avgCpc * finalRatio;
     }));
 }
 
