@@ -201,15 +201,7 @@ common.getUser().then(user => {
                 }
                 return common.optimizeKeywordsSalesPerDay(target.value, campaignData, campaignSummary, renormedKws, options);
             })),
-            updateKeyword: kw => ga.mpromise(co(function*() {
-                const origKw = kwSeries.find(orig => kw.id.includes(orig.id));
-                console.log('updating', kw);
-                if (!origKw)
-                    return;
-                if (origKw.bid === kw.bid)
-                    return;
-                yield updateBid([origKw.id], kw.optimizedBid);
-            })),
+            updateKeyword: kw => updateBid(kw.id, kw.optimizedBid),
         });
         ReactDOM.render(tabContent, container[0]);
     }

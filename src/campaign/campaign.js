@@ -118,6 +118,8 @@ function generateBidOptimizer(container) {
                 return; // shouldn't happen
 
             const origKw = origKeywords.find(orig => kw.id.includes(orig.id));
+            if (!origKw)
+                return; // shouldn't happen
             yield spdata.updateKeywordBid([origKw.id], kw.optimizedBid);
         })),
     });
