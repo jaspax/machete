@@ -12,8 +12,13 @@ function BidOptimizationTable(props) {
             format: common.moneyFmt,
         },
         {
-            title: 'Suggested Bid',
-            metric: 'optimizedBid',
+            title: 'Current ACOS',
+            metric: 'acos',
+            format: common.pctFmt,
+        },
+        {
+            title: 'Current sales/day',
+            metric: 'salesPerDay',
             format: common.moneyFmt,
         },
         {
@@ -22,17 +27,17 @@ function BidOptimizationTable(props) {
             format: common.moneyFmt,
         },
         {
-            title: 'Why not optimized?',
-            metric: 'optimizeResult',
-            format: x => {
-                switch (x) {
+            title: 'Suggested Bid',
+            metric: 'optimizedBid',
+            format: (val, kw) => {
+                switch (kw.optimizeResult) {
                     case 'lowImpressions': return "Not enough impressions";
                     case 'lowClicks': return "Not enough clicks";
                     case 'lowSales': return "Not enough sales";
-                    default: return '';
+                    default: return common.moneyFmt(val);
                 }
             },
-        }
+        },
     ];
 
     return <KeywordTable

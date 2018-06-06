@@ -88,26 +88,24 @@ function generateBidOptimizer(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
 
-    function* prepareKwData() {
-        const summaries = yield spdata.getCampaignSummaries(entityId);
-        const campaignSummary = summaries.find(x => x.campaignId == campaignId);
-        const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
-        const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
-        const campaignData = common.accumulateCampaignSeries(yield spdata.getCampaignHistory(entityId, campaignId));
-        const renormedKws = common.renormKeywordStats(campaignData, aggrKws);
-        return { renormedKws, campaignSummary, campaignData };
-    }
-
     const tabContent = React.createElement(BidOptimizerTab, {
-        targetAcos: 70,
-        targetSales: 0,
-        optimizeAcos: value => ga.mpromise(co(function*() {
-            const prep = yield* prepareKwData();
-            return common.optimizeKeywordsAcos(value, prep.renormedKws);
-        })),
-        optimizeSales: value => ga.mpromise(co(function*() {
-            const prep = yield* prepareKwData();
-            return common.optimizeKeywordsSalesPerDay(value, prep.campaignData, prep.campaignSummary, prep.renormedKws);
+        defaultTarget: 'acos',
+        defaultTargetValue: 70,
+        keywordPromiseFactory: (opts) => ga.mpromise(co(function*() {
+            const summaries = yield spdata.getCampaignSummaries(entityId);
+            const campaignSummary = summaries.find(x => x.campaignId == campaignId);
+            const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
+            const aggrKws = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
+            const campaignData = common.accumulateCampaignSeries(yield spdata.getCampaignHistory(entityId, campaignId));
+            const renormedKws = common.renormKeywordStats(campaignData, aggrKws);
+
+            if (opts.target == 'acos') {
+                return common.optimizeKeywordsAcos(opts.value, renormedKws);
+            }
+            else if (opts.target == 'sales') {
+                return common.optimizeKeywordsSalesPerDay(opts.value, campaignData, campaignSummary, renormedKws);
+            }
+            throw new Error("Don't know how to optimize for " + opts.target);
         })),
         updateKeyword: kw => ga.mpromise(co(function*() {
             const origKws = yield spdata.getKeywordData(entityId, adGroupId);

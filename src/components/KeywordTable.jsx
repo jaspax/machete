@@ -19,7 +19,7 @@ class KeywordTable extends React.Component {
             const format = col.format || (x => x);
             columns.push({
                 Header: col.title,
-                Cell: row => <span>{format(row.value)}</span>,
+                Cell: row => <span>{format(row.value, row.original)}</span>,
                 accessor: col.metric,
                 id: col.title.toLowerCase()
             });

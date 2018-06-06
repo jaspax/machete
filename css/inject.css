@@ -270,6 +270,17 @@
     margin-right: 2px;
 }
 
+.machete-button {
+    padding: 2px 4px;
+    margin: 2px 4px;
+    height: 2em;
+    border-color: #adb1b8 #a2a6ac #8d9096;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
+}
+
 .machete-optimize-choice button, .machete-highlight-button {
     padding: 2px 4px;
     margin: 2px 4px;

@@ -55,7 +55,7 @@ function renormKeywordStats(latestCampaignSnapshot, kws) {
 
 const defaultOptimizeOpts = {
     minImpressions: 1000,
-    minClicks: 100,
+    minClicks: 0,
     minSales: 0,
 };
 

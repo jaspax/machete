@@ -4,58 +4,80 @@ const qu = require('async/queue');
 
 const common = require('../common/common.js');
 
+const Async = require('react-promise').default;
 const BidOptimizationTargetPicker = require('./BidOptimizationTargetPicker.jsx');
 const BidOptimizationTable = require('./BidOptimizationTable.jsx');
+const ErrorSink = require('./ErrorSink.jsx');
 
 class BidOptimizationChooser extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            loading: false,
-            error: false,
-            message: '',
-            target: 'acos',
-            targetValue: 70,
-            optimizedKws: [],
+            keywordPromise: this.keywordPromise({ 
+                target: props.defaultTarget,
+                value: props.defaultTargetValue,
+            }),
+            target: props.defaultTarget,
+            targetValue: props.defaultTargetValue,
+            lastKeywords: [],
         };
     }
 
     render() {
         return <div>
-            <BidOptimizationTargetPicker target={this.state.target} targetValue={this.state.targetValue} onChange={this.targetChanged.bind(this)} />
-            <button className="machete-highlight-button" onClick={this.optimize.bind(this)}>Optimize</button>
-            <div>
-                <div style={{ display: 'inline-block', marginRight: '10px' }} className={this.state.loading ? 'loading-small' : ''}>&nbsp;</div>
-                <span className={this.state.error ? 'machete-error' : ''}>
-                    {this.state.message}
-                </span>
-            </div>
-            <BidOptimizationTable data={this.state.optimizedKws} />
+            <BidOptimizationTargetPicker target={this.state.target} targetValue={this.state.targetValue.toString()} onChange={this.targetChanged.bind(this)} />
+            <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
+            <Async promise={this.state.keywordPromise} pending={this.pendingTable()} then={this.tableReady.bind(this)} catch={this.tableCatch.bind(this)} />
+        </div>;
+    }
+
+    keywordPromise(opts) {
+        return this.props.keywordPromiseFactory(opts).then(kws => {
+            this.setState({ lastKeywords: kws });
+            return Promise.resolve(kws);
+        });
+    }
+
+    pendingTable() {
+        return <div>
+            <div className="loading-small" style={{ display: 'inline-block', marginRight: '10px' }} >&nbsp;</div> Analyzing keywords...
+            <BidOptimizationTable data={this.state.lastKeywords} />
+        </div>;
+    }
+
+    tableReady(kws) {
+        return <div>
+            <button className="machete-highlight-button" onClick={this.applyOptimizations.bind(this)}>Apply all</button>
+            <BidOptimizationTable data={kws} />
+        </div>;
+    }
+
+    tableCatch(err) {
+        return <div>
+            <ErrorSink error={err} />
+            <BidOptimizationTable data={this.state.lastKeywords} />
         </div>;
     }
 
     targetChanged(opts) {
         const state = this.state;
-        state.target = opts.target;
-        state.targetValue = opts.targetValue;
+        Object.assign(state, opts);
         this.setState(state);
     }
 
-    optimize(evt) {
+    calcOptimizations(evt) {
         evt.preventDefault();
         const value = Number(this.state.targetValue);
-        const optimizer = this.state.target == 'acos' ? this.props.optimizeAcos : this.props.optimizeSales;
         if (value && !isNaN(value) && value > 0) {
-            this.setState({ loading: true, error: false, message: "Analyzing keywords..." });
-            optimizer(value).then(kws => this.setState({ optimizedKws: kws }));
+            this.setState({ keywordPromise: this.props.keywordPromiseFactory({ target: this.state.target, value }) });
         }
         else {
-            this.setState({ error: true, message: "Please enter a value greater than 0" });
+            this.setState({ keywordPromise: Promise.reject(new Error('Please enter a value greater than 0')) });
         }
         return false;
     }
 
-    updateKeywords(kws) {
+    applyOptimizations() {
         const self = this;
         const kwq = qu((kw, callback) => {
             self.setState({ 
@@ -70,15 +92,14 @@ class BidOptimizationChooser extends React.Component {
             message: "Done."
         });
 
-        kwq.push(kws);
+        kwq.push(this.state.optimizedKws);
     }
 }
 
 BidOptimizationChooser.propTypes = {
-    targetAcos: PropTypes.number.isRequired,
-    targetSales: PropTypes.number.isRequired,
-    optimizeAcos: PropTypes.func.isRequired,
-    optimizeSales: PropTypes.func.isRequired,
+    defaultTarget: PropTypes.string.isRequired,
+    defaultTargetValue: PropTypes.number.isRequired,
+    keywordPromiseFactory: PropTypes.func.isRequired,
     updateKeyword: PropTypes.func.isRequired,
 };
 

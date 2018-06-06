@@ -33,10 +33,9 @@ function BidOptimizerTab(props) {
 
         <ErrorBoundary>
             <BidOptimizationChooser
-                targetSales={props.targetSales}
-                targetAcos={props.targetAcos}
-                optimizeAcos={props.optimizeAcos}
-                optimizeSales={props.optimizeSales}
+                defaultTarget={props.defaultTarget}
+                defaultTargetValue={props.defaultTargetValue}
+                keywordPromiseFactory={props.keywordPromiseFactory}
                 updateKeyword={props.updateKeyword}
             />
         </ErrorBoundary>
@@ -44,10 +43,9 @@ function BidOptimizerTab(props) {
 }
 
 BidOptimizerTab.propTypes = {
-    targetAcos: PropTypes.number.isRequired,
-    targetSales: PropTypes.number.isRequired,
-    optimizeAcos: PropTypes.func.isRequired,
-    optimizeSales: PropTypes.func.isRequired,
+    defaultTarget: PropTypes.string.isRequired,
+    defaultTargetValue: PropTypes.number.isRequired,
+    keywordPromiseFactory: PropTypes.func.isRequired,
     updateKeyword: PropTypes.func.isRequired,
 };
 
