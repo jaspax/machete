@@ -73,9 +73,7 @@ class BidOptimizationChooser extends React.Component {
     }
 
     targetChanged(opts) {
-        const state = this.state;
-        Object.assign(state, opts);
-        this.setState(state);
+        this.setState(opts);
     }
 
     optionsChanged(opts) {
@@ -103,18 +101,16 @@ class BidOptimizationChooser extends React.Component {
 
     applyOptimizations() {
         if (!this.state.lastKeywords)
-            return;
+            console.log('trying to apply optimizations with lastKeywords=null?');
 
-        const self = this;
         const kwq = qu((kw, callback) => {
-            self.setState({ 
+            this.setState({ 
                 keywordPromise: new Promise(() => {}), // eslint-disable-line no-empty-function
                 message: `Change bid on "${kw.keyword}" to ${common.moneyFmt(kw.optimizedBid)}`
             });
-            self.props.updateKeyword(kw).then(callback, callback);
+            this.props.updateKeyword(kw).then(callback, callback);
         }, 3);
-
-        kwq.drain = () => self.setState({ keywordPromise: Promise.resolve(this.state.lastKeywords) });
+        kwq.drain = () => this.setState({ keywordPromise: Promise.resolve(this.state.lastKeywords) });
 
         kwq.push(this.state.lastKeywords.filter(kw => kw.optimizeResult == 'optimized'));
     }

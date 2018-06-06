@@ -180,40 +180,35 @@ common.getUser().then(user => {
 
     function generateBidOptimizer(container) {
         const campaignKey = sdata.getCampaignId(window.location.href);
-
-        function* prepareKwData() {
-            const kwSeries = yield keywordDataPromise(campaignKey, ninetyDaysAgo, now);
-            const summaries = yield sdata.getCampaignSummaries();
-
-            // Hack: since we get campaign data from the last 90 days, we need to adjust the campaign info to cover the same period.
-            const campaignSummary = summaries.find(x => x.campaignId == campaignKey.campaignId);
-            campaignSummary.startDate = new Date(Math.max(ninetyDaysAgo, new Date(campaignSummary.startDate).getTime()));
-
-            const campaignData = common.accumulateCampaignSeries(yield fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
-            const renormedKws = common.renormKeywordStats(campaignData, kwSeries);
-
-            return { renormedKws, campaignSummary, campaignData };
-        }
+        let kwSeries = null;
 
         const tabContent = React.createElement(BidOptimizerTab, {
-            targetAcos: 70,
-            targetSales: 0,
-            optimizeAcos: value => ga.mpromise(co(function*() {
-                const prep = yield* prepareKwData();
-                return common.optimizeKeywordsAcos(value, prep.renormedKws);
-            })),
-            optimizeSales: value => ga.mpromise(co(function*() {
-                const prep = yield* prepareKwData();
-                return common.optimizeKeywordsSalesPerDay(value, prep.campaignData, prep.campaignSummary, prep.renormedKws);
+            defaultTarget: 'acos',
+            defaultTargetValue: 70,
+            keywordPromiseFactory: (target, options) => ga.mpromise(co(function*() {
+                kwSeries = yield getKeywordDataAggregate();
+                const summaries = yield sdata.getCampaignSummaries();
+
+                // Hack: since we get campaign data from the last 90 days, we need to adjust the campaign info to cover the same period.
+                const campaignSummary = summaries.find(x => x.campaignId == campaignKey.campaignId);
+                campaignSummary.startDate = new Date(Math.max(ninetyDaysAgo, new Date(campaignSummary.startDate).getTime()));
+
+                const campaignData = common.accumulateCampaignSeries(yield fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
+                const renormedKws = common.renormKeywordStats(campaignData, kwSeries);
+
+                if (target.target == 'acos') {
+                    return common.optimizeKeywordsAcos(target.value, renormedKws, options);
+                }
+                return common.optimizeKeywordsSalesPerDay(target.value, campaignData, campaignSummary, renormedKws, options);
             })),
             updateKeyword: kw => ga.mpromise(co(function*() {
-                const origKws = yield getKeywordDataAggregate();
-                const origKw = origKws.find(orig => kw.id.includes(orig.id));
+                const origKw = kwSeries.find(orig => kw.id.includes(orig.id));
+                console.log('updating', kw);
                 if (!origKw)
                     return;
                 if (origKw.bid === kw.bid)
                     return;
-                yield updateBid([origKw.id], kw.bid);
+                yield updateBid([origKw.id], kw.optimizedBid);
             })),
         });
         ReactDOM.render(tabContent, container[0]);
