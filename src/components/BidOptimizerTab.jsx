@@ -11,7 +11,7 @@ function BidOptimizerTab(props) {
         <section>
             <p>Machete&rsquo;s bid optimizer will analyze keyword performance
                 for this campaign and suggest an optimum bid for each keyword.
-                Click "Apply all optimizations" to update all bids to their
+                Click <b>Apply all optimizations</b> to update all bids to their
                 recommended value.</p>
         </section>
 

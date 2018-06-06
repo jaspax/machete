@@ -42,6 +42,7 @@ class BidOptimizationChooser extends React.Component {
     }
 
     keywordPromise(target, options) {
+        this.setState({ message: "Analyzing keywords..." });
         return this.props.keywordPromiseFactory(target, options).then(kws => {
             this.setState({ lastKeywords: kws });
             return Promise.resolve(kws);
@@ -51,7 +52,7 @@ class BidOptimizationChooser extends React.Component {
     pendingTable() {
         return <div>
             <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
-            <div className="loading-small" style={{ display: 'inline-block', marginRight: '10px', marginLeft: '10px' }} >&nbsp;</div> Analyzing keywords...
+            <div className="loading-small" style={{ display: 'inline-block', marginRight: '10px', marginLeft: '10px' }} >&nbsp;</div>{this.state.message}
             <BidOptimizationTable data={this.state.lastKeywords} />
         </div>;
     }
@@ -66,6 +67,7 @@ class BidOptimizationChooser extends React.Component {
 
     tableCatch(err) {
         return <div>
+            <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
             <ErrorSink error={err} />
         </div>;
     }
@@ -100,21 +102,21 @@ class BidOptimizationChooser extends React.Component {
     }
 
     applyOptimizations() {
+        if (!this.state.lastKeywords)
+            return;
+
         const self = this;
         const kwq = qu((kw, callback) => {
             self.setState({ 
-                loading: true, 
-                message: `Change bid on "${kw.keyword}" to ${common.moneyFmt(kw.bid)}`
+                keywordPromise: new Promise(() => {}), // eslint-disable-line no-empty-function
+                message: `Change bid on "${kw.keyword}" to ${common.moneyFmt(kw.optimizedBid)}`
             });
             self.props.updateKeyword(kw).then(callback, callback);
-        }, 6);
+        }, 3);
 
-        kwq.drain = () => self.setState({
-            loading: false,
-            message: "Done."
-        });
+        kwq.drain = () => self.setState({ keywordPromise: Promise.resolve(this.state.lastKeywords) });
 
-        kwq.push(this.state.lastKeywords);
+        kwq.push(this.state.lastKeywords.filter(kw => kw.optimizeResult == 'optimized'));
     }
 }
 
