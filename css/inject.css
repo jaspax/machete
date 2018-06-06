@@ -32,6 +32,28 @@
     background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
 }
 
+.machete-3col, .machete-2col {
+    width: 100%;
+}
+
+.machete-3col > * {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 30%;
+    margin: auto;
+    padding: 20px;
+    vertical-align: top;
+}
+
+.machete-2col > * {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 45%;
+    margin: auto;
+    padding: 20px;
+    vertical-align: top;
+}
+
 .machete-report section {
     margin-bottom: 50px;
 }

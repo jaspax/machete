@@ -6,17 +6,25 @@ const common = require('../common/common.js');
 
 const Async = require('react-promise').default;
 const BidOptimizationTargetPicker = require('./BidOptimizationTargetPicker.jsx');
+const BidOptimizationOptions = require('./BidOptimizationOptions.jsx');
 const BidOptimizationTable = require('./BidOptimizationTable.jsx');
 const ErrorSink = require('./ErrorSink.jsx');
 
 class BidOptimizationChooser extends React.Component {
     constructor(props) {
         super(props);
+        const defaultTarget = { 
+            target: props.defaultTarget,
+            value: props.defaultTargetValue,
+        };
+        const defaultOptions = {
+            useSimilarCampaigns: true,
+            excludeLowImpressions: true,
+            minImpressions: 1000,
+        };
         this.state = {
-            keywordPromise: this.keywordPromise({ 
-                target: props.defaultTarget,
-                value: props.defaultTargetValue,
-            }),
+            keywordPromise: this.keywordPromise(defaultTarget, defaultOptions),
+            options: defaultOptions,
             target: props.defaultTarget,
             targetValue: props.defaultTargetValue,
             lastKeywords: [],
@@ -25,14 +33,17 @@ class BidOptimizationChooser extends React.Component {
 
     render() {
         return <div>
-            <BidOptimizationTargetPicker target={this.state.target} targetValue={this.state.targetValue.toString()} onChange={this.targetChanged.bind(this)} />
+            <div className="machete-2col">
+                <BidOptimizationTargetPicker className="machete-2col" target={this.state.target} targetValue={this.state.targetValue.toString()} onChange={this.targetChanged.bind(this)} />
+                <BidOptimizationOptions options={this.state.options} onChange={this.optionsChanged.bind(this)} />
+            </div>
             <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
             <Async promise={this.state.keywordPromise} pending={this.pendingTable()} then={this.tableReady.bind(this)} catch={this.tableCatch.bind(this)} />
         </div>;
     }
 
-    keywordPromise(opts) {
-        return this.props.keywordPromiseFactory(opts).then(kws => {
+    keywordPromise(target, options) {
+        return this.props.keywordPromiseFactory(target, options).then(kws => {
             this.setState({ lastKeywords: kws });
             return Promise.resolve(kws);
         });
@@ -65,11 +76,22 @@ class BidOptimizationChooser extends React.Component {
         this.setState(state);
     }
 
+    optionsChanged(opts) {
+        const state = this.state;
+        state.options = opts;
+        this.setState(state);
+    }
+
     calcOptimizations(evt) {
         evt.preventDefault();
         const value = Number(this.state.targetValue);
         if (value && !isNaN(value) && value > 0) {
-            this.setState({ keywordPromise: this.props.keywordPromiseFactory({ target: this.state.target, value }) });
+            const options = this.state.options;
+            if (options.excludeLowImpressions)
+                options.minImpressions = 1000;
+            else
+                options.minImpressions = 0;
+            this.setState({ keywordPromise: this.keywordPromise({ target: this.state.target, value }, options) });
         }
         else {
             this.setState({ keywordPromise: Promise.reject(new Error('Please enter a value greater than 0')) });
@@ -92,7 +114,7 @@ class BidOptimizationChooser extends React.Component {
             message: "Done."
         });
 
-        kwq.push(this.state.optimizedKws);
+        kwq.push(this.state.lastKeywords);
     }
 }
 

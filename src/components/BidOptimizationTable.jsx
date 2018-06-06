@@ -7,22 +7,17 @@ const common = require('../common/common.js');
 function BidOptimizationTable(props) {
     const columns = [
         {
-            title: 'Current Bid',
+            title: 'Bid',
             metric: 'bid',
             format: common.moneyFmt,
         },
         {
-            title: 'Current ACOS',
+            title: 'ACOS',
             metric: 'acos',
             format: common.pctFmt,
         },
         {
-            title: 'Current sales/day',
-            metric: 'salesPerDay',
-            format: common.moneyFmt,
-        },
-        {
-            title: 'Current CPC',
+            title: 'CPC',
             metric: 'avgCpc',
             format: common.moneyFmt,
         },
