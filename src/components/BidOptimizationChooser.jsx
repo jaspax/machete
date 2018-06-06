@@ -37,7 +37,6 @@ class BidOptimizationChooser extends React.Component {
                 <BidOptimizationTargetPicker className="machete-2col" target={this.state.target} targetValue={this.state.targetValue.toString()} onChange={this.targetChanged.bind(this)} />
                 <BidOptimizationOptions options={this.state.options} onChange={this.optionsChanged.bind(this)} />
             </div>
-            <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
             <Async promise={this.state.keywordPromise} pending={this.pendingTable()} then={this.tableReady.bind(this)} catch={this.tableCatch.bind(this)} />
         </div>;
     }
@@ -51,14 +50,16 @@ class BidOptimizationChooser extends React.Component {
 
     pendingTable() {
         return <div>
-            <div className="loading-small" style={{ display: 'inline-block', marginRight: '10px' }} >&nbsp;</div> Analyzing keywords...
+            <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
+            <div className="loading-small" style={{ display: 'inline-block', marginRight: '10px', marginLeft: '10px' }} >&nbsp;</div> Analyzing keywords...
             <BidOptimizationTable data={this.state.lastKeywords} />
         </div>;
     }
 
     tableReady(kws) {
         return <div>
-            <button className="machete-highlight-button" onClick={this.applyOptimizations.bind(this)}>Apply all</button>
+            <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
+            <button className="machete-highlight-button" onClick={this.applyOptimizations.bind(this)}>Apply all optimizations</button>
             <BidOptimizationTable data={kws} />
         </div>;
     }
@@ -66,7 +67,6 @@ class BidOptimizationChooser extends React.Component {
     tableCatch(err) {
         return <div>
             <ErrorSink error={err} />
-            <BidOptimizationTable data={this.state.lastKeywords} />
         </div>;
     }
 

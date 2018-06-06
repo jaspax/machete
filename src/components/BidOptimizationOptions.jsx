@@ -17,24 +17,26 @@ function BidOptimizationOptions(props) {
 
     return <div>
         <label htmlFor="useSimilarCampaigns">
-            <input id="useSimilarCampaigns" type="checkbox" onChange={checkboxChanged('useSimilarCampaigns')} defaultChecked={props.options.useSimilarCampaigns} />
-            Include keyword data from similar campaigns for analysis
+            <input id="useSimilarCampaigns" type="checkbox" className="machete-checkbox" onChange={checkboxChanged('useSimilarCampaigns')} defaultChecked={props.options.useSimilarCampaigns} />
+            Use data from similar campaigns for analysis
         </label>
 
         <label htmlFor="excludeLowImpressions">
-            <input id="excludeLowImpressions" type="checkbox" onChange={checkboxChanged('excludeLowImpressions')} defaultChecked={props.options.excludeLowImpressions} />
+            <input id="excludeLowImpressions" type="checkbox" className="machete-checkbox" onChange={checkboxChanged('excludeLowImpressions')} defaultChecked={props.options.excludeLowImpressions} />
             Ignore keywords with few impressions
         </label>
 
-        <label htmlFor="minBid">
-            Minimum bid<br />
-            <input id="minBid" type="text" onChange={inputChanged('minBid')} defaultValue={props.options.minBid} />
-        </label>
+        <div className="machete-2col">
+            <label htmlFor="minBid">
+                Minimum bid<br />
+                <input id="minBid" type="text" size="7" className="machete-checkbox" onChange={inputChanged('minBid')} defaultValue={props.options.minBid} />
+            </label>
 
-        <label htmlFor="maxBid">
-            Maximum bid<br />
-            <input id="maxBid" type="text" onChange={inputChanged('maxBid')} defaultValue={props.options.maxBid} />
-        </label>
+            <label htmlFor="maxBid">
+                Maximum bid<br />
+                <input id="maxBid" type="text" size="7" className="machete-checkbox" onChange={inputChanged('maxBid')} defaultValue={props.options.maxBid} />
+            </label>
+        </div>
     </div>;
 }
 

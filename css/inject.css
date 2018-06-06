@@ -411,3 +411,7 @@
 .Collapsible__trigger.is-disabled {
     background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
 }
+
+.machete-checkbox {
+    margin-right: 4px;
+}
