@@ -328,6 +328,8 @@ function* ajax(url, opts) {
             throw new Error(`${response.status} ${response.statusText}`);
         }
 
+        if (response.status == 204)
+            return null;
         if (opts.responseType == 'json')
             return yield response.json();
         return yield response.text();

@@ -18,12 +18,12 @@ class BidOptimizationChooser extends React.Component {
             value: props.defaultTargetValue,
         };
         const defaultOptions = {
-            useSimilarCampaigns: true,
             excludeLowImpressions: true,
             minImpressions: 1000,
         };
         this.state = {
-            keywordPromise: this.keywordPromise(defaultTarget, defaultOptions),
+            keywordPromise: this.keywordPromise(defaultTarget, defaultOptions, true),
+            message: "Analyzing keywords...",
             options: defaultOptions,
             target: props.defaultTarget,
             targetValue: props.defaultTargetValue,
@@ -41,8 +41,9 @@ class BidOptimizationChooser extends React.Component {
         </div>;
     }
 
-    keywordPromise(target, options) {
-        this.setState({ message: "Analyzing keywords..." });
+    keywordPromise(target, options, skipMessage) {
+        if (!skipMessage)
+            this.setState({ message: "Analyzing keywords..." });
         return this.props.keywordPromiseFactory(target, options).then(kws => {
             this.setState({ lastKeywords: kws });
             return Promise.resolve(kws);
