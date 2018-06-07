@@ -17,12 +17,12 @@ function BidOptimizationOptions(props) {
 
     return <div>
         <div className="machete-2col">
-            <label htmlFor="minBid">
+            <label htmlFor="minBid" style={{ padding: "0 20px 20px 0" }}>
                 Minimum bid<br />
                 <input id="minBid" type="text" size="7" className="machete-checkbox" onChange={inputChanged('minBid')} defaultValue={props.options.minBid} />
             </label>
 
-            <label htmlFor="maxBid">
+            <label htmlFor="maxBid" style={{ padding: "0 0 20px 20px" }}>
                 Maximum bid<br />
                 <input id="maxBid" type="text" size="7" className="machete-checkbox" onChange={inputChanged('maxBid')} defaultValue={props.options.maxBid} />
             </label>
