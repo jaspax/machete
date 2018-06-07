@@ -92,7 +92,8 @@ function boundBidMinMax(bid, opts) {
 function optimizeKeywordsAcos(targetAcos, kws, opts = defaultOptimizeOpts) {
     return kws.map(x => filterKw(x, opts, kw => {
         const ratio = boundRatiox2(targetAcos / kw.acos);
-        kw.optimizedBid = boundBidMinMax(kw.bid * ratio, opts);
+        if (kw.avgCpc)
+            kw.optimizedBid = boundBidMinMax(kw.avgCpc * ratio, opts);
     }));
 }
 

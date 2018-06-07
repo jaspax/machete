@@ -25,11 +25,13 @@ function BidOptimizationTable(props) {
         {
             title: 'Suggested Bid',
             format: (val, kw) => { // eslint-disable-line react/display-name
-                if (kw.bid == kw.optimizedBid) {
+                const bidFmt = common.moneyFmt(kw.bid);
+                const optFmt = common.moneyFmt(kw.optimizedBid);
+                if (bidFmt == optFmt) {
                     return <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Optimized</span>;
                 }
                 if (kw.optimizeResult == 'optimized') {
-                    return <span>{common.moneyFmt(kw.optimizedBid)}&nbsp;<SmallButton text="Apply" onClick={() => props.applyOptimization(kw)} /></span>;
+                    return <span>{optFmt}&nbsp;<SmallButton text="Apply" onClick={() => props.applyOptimization(kw)} /></span>;
                 }
                 return <span style={{ fontSize: 'smaller', color: 'gray' }}>Not enough data</span>;
             }

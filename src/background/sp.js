@@ -379,6 +379,9 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
         responseType: 'json',
     });
 
+    if (successes.length)
+        getKeywordData.clear();
+
     // TODO: in the case that we have a lot of these (bulk update), implement
     // progress feedback.
     return { success: successes.length == keywordIdList.length };
