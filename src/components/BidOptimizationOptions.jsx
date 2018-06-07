@@ -16,16 +16,6 @@ function BidOptimizationOptions(props) {
     }
 
     return <div>
-        <label htmlFor="useSimilarCampaigns">
-            <input id="useSimilarCampaigns" type="checkbox" className="machete-checkbox" onChange={checkboxChanged('useSimilarCampaigns')} defaultChecked={props.options.useSimilarCampaigns} />
-            Use data from similar campaigns for analysis
-        </label>
-
-        <label htmlFor="excludeLowImpressions">
-            <input id="excludeLowImpressions" type="checkbox" className="machete-checkbox" onChange={checkboxChanged('excludeLowImpressions')} defaultChecked={props.options.excludeLowImpressions} />
-            Ignore keywords with few impressions
-        </label>
-
         <div className="machete-2col">
             <label htmlFor="minBid">
                 Minimum bid<br />
@@ -37,6 +27,11 @@ function BidOptimizationOptions(props) {
                 <input id="maxBid" type="text" size="7" className="machete-checkbox" onChange={inputChanged('maxBid')} defaultValue={props.options.maxBid} />
             </label>
         </div>
+
+        <label htmlFor="excludeLowImpressions">
+            <input id="excludeLowImpressions" type="checkbox" className="machete-checkbox" onChange={checkboxChanged('excludeLowImpressions')} defaultChecked={props.options.excludeLowImpressions} />
+            Ignore keywords with few impressions
+        </label>
     </div>;
 }
 

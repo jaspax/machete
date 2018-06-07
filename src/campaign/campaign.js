@@ -87,7 +87,6 @@ function generateHistoryReports(container) {
 function generateBidOptimizer(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
-    let origKeywords = null;
 
     const tabContent = React.createElement(BidOptimizerTab, {
         defaultTarget: 'acos',
@@ -96,16 +95,10 @@ function generateBidOptimizer(container) {
             if (!['acos', 'sales'].includes(target.target))
                 throw new Error("Don't know how to optimize for " + target.target);
 
-            const summaries = yield spdata.getCampaignSummaries(entityId);
-            const campaignSummary = summaries.find(x => x.campaignId == campaignId);
+            const campaignSummary = yield spdata.getCampaignSummary(entityId, campaignId);
             const campaignData = common.accumulateCampaignSeries(yield spdata.getCampaignHistory(entityId, campaignId));
 
-            origKeywords = yield spdata.getKeywordData(entityId, adGroupId);
-            let keywords = origKeywords;
-            if (options.useSimilarCampaigns) {
-                const adGroupIds = summaries.filter(x => x.asin == campaignSummary.asin).map(x => x.adGroupId);
-                keywords = common.aggregateKeywords(yield spdata.getAggregateKeywordData(entityId, adGroupIds));
-            }
+            const keywords = yield spdata.getKeywordData(entityId, adGroupId);
             const renormedKws = common.renormKeywordStats(campaignData, keywords);
 
             if (target.target == 'acos') {
@@ -113,15 +106,7 @@ function generateBidOptimizer(container) {
             }
             return common.optimizeKeywordsSalesPerDay(target.value, campaignData, campaignSummary, renormedKws, options);
         })),
-        updateKeyword: kw => ga.mpromise(co(function*() {
-            if (!origKeywords)
-                return; // shouldn't happen
-
-            const origKw = origKeywords.find(orig => kw.id.includes(orig.id));
-            if (!origKw)
-                return; // shouldn't happen
-            yield spdata.updateKeywordBid([origKw.id], kw.optimizedBid);
-        })),
+        updateKeyword: kw => spdata.updateKeywordBid([kw.id], kw.optimizedBid),
     });
     ReactDOM.render(tabContent, container[0]);
 }
