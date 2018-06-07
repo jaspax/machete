@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const KeywordTable = require('./KeywordTable.jsx');
+const SmallButton = require('./SmallButton.jsx');
 
 const common = require('../common/common.js');
 
@@ -23,16 +24,16 @@ function BidOptimizationTable(props) {
         },
         {
             title: 'Suggested Bid',
-            metric: 'optimizedBid',
-            format: (val, kw) => {
-                switch (kw.optimizeResult) {
-                    case 'lowImpressions': return "Not enough impressions";
-                    case 'lowClicks': return "Not enough clicks";
-                    case 'lowSales': return "Not enough sales";
-                    default: return common.moneyFmt(val);
+            format: (val, kw) => { // eslint-disable-line react/display-name
+                if (kw.bid == kw.optimizedBid) {
+                    return <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Optimized</span>;
                 }
-            },
-        },
+                if (kw.optimizeResult == 'optimized') {
+                    return <span>{common.moneyFmt(kw.optimizedBid)}&nbsp;<SmallButton text="Apply" onClick={() => props.applyOptimization(kw)} /></span>;
+                }
+                return <span style={{ fontSize: 'smaller', color: 'gray' }}>Not enough data</span>;
+            }
+        }
     ];
 
     return <KeywordTable
@@ -42,6 +43,9 @@ function BidOptimizationTable(props) {
     />;
 }
 
-BidOptimizationTable.propTypes = { data: PropTypes.array.isRequired, };
+BidOptimizationTable.propTypes = { 
+    data: PropTypes.array.isRequired, 
+    applyOptimization: PropTypes.func.isRequired,
+};
 
 module.exports = BidOptimizationTable;

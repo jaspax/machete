@@ -3,6 +3,8 @@ const PropTypes = require('prop-types');
 
 const common = require('../common/common.js');
 
+const SmallButton = require('./SmallButton.jsx');
+
 class KeywordBidUpdate extends React.Component {
     constructor(props) {
         super(props);
@@ -24,12 +26,7 @@ class KeywordBidUpdate extends React.Component {
                     <input type="text" maxLength="6" value={this.state.bid} onChange={this.handleChange}
                         className="a-input-text machete-small-input"></input>
                 </span>
-                <span className="a-button a-button-primary a-button-small" onClick={this.handleClick}>
-                    <span className="a-button-inner">
-                        <input name="save" className="a-button-input" type="submit" value="Save"></input>
-                        <span className="a-button-text" aria-hidden="true">Save</span>
-                    </span>
-                </span>
+                <SmallButton text="Save" onClick={this.handleClick.bind(this)} />
             </div>
         );
     }

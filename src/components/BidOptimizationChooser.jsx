@@ -1,8 +1,10 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const qu = require('async/queue');
+const co = require('co');
 
 const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 
 const Async = require('react-promise').default;
 const BidOptimizationTargetPicker = require('./BidOptimizationTargetPicker.jsx');
@@ -41,7 +43,7 @@ class BidOptimizationChooser extends React.Component {
         </div>;
     }
 
-    keywordPromise(target, options, skipMessage) {
+    keywordPromise(target = { target: this.state.target, value: this.state.targetValue }, options = this.state.options, skipMessage = false) {
         if (!skipMessage)
             this.setState({ message: "Analyzing keywords..." });
         return this.props.keywordPromiseFactory(target, options).then(kws => {
@@ -54,15 +56,15 @@ class BidOptimizationChooser extends React.Component {
         return <div>
             <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
             <div className="loading-small" style={{ display: 'inline-block', marginRight: '10px', marginLeft: '10px' }} >&nbsp;</div>{this.state.message}
-            <BidOptimizationTable data={this.state.lastKeywords} />
+            <BidOptimizationTable data={this.state.lastKeywords} applyOptimization={kw => this.applyOptimization(kw)} />
         </div>;
     }
 
     tableReady(kws) {
         return <div>
             <button className="machete-button" onClick={this.calcOptimizations.bind(this)}>Calculate optimizations</button>
-            <button className="machete-highlight-button" onClick={this.applyOptimizations.bind(this)}>Apply all optimizations</button>
-            <BidOptimizationTable data={kws} />
+            <button className="machete-highlight-button" onClick={this.applyAllOptimizations.bind(this)}>Apply all optimizations</button>
+            <BidOptimizationTable data={kws} applyOptimization={kw => this.applyOptimization(kw)} />
         </div>;
     }
 
@@ -100,9 +102,22 @@ class BidOptimizationChooser extends React.Component {
         return false;
     }
 
-    applyOptimizations() {
-        if (!this.state.lastKeywords)
+    applyOptimization(kw) {
+        const self = this;
+        this.setState({ 
+            keywordPromise: ga.mpromise(co(function*() {
+                yield self.props.updateKeyword(kw);
+                return yield self.keywordPromise();
+            })),
+            message: 'Updating keyword...',
+        });
+    }
+
+    applyAllOptimizations() {
+        if (!this.state.lastKeywords) {
             console.log('trying to apply optimizations with lastKeywords=null?');
+            return;
+        }
 
         const kwq = qu((kw, callback) => {
             this.setState({ 
@@ -111,7 +126,7 @@ class BidOptimizationChooser extends React.Component {
             });
             this.props.updateKeyword(kw).then(callback, callback);
         }, 3);
-        kwq.drain = () => this.setState({ keywordPromise: Promise.resolve(this.state.lastKeywords) });
+        kwq.drain = () => this.setState({ keywordPromise: this.keywordPromise() });
 
         kwq.push(this.state.lastKeywords.filter(kw => kw.optimizeResult == 'optimized'));
     }
