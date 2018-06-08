@@ -322,6 +322,7 @@ function* ajax(url, opts) {
         init.headers.set('Content-Type', 'application/json');
     }
 
+    const origStack = new Error().stack;
     try {
         const response = yield window.fetch(url, init);
         if (!response.ok) {
@@ -337,15 +338,7 @@ function* ajax(url, opts) {
     catch (ex) {
         ex.method = opts.method;
         ex.url = url;
-        if (!ex.stack) {
-            // hoo boy this is a nasty way to get a stack
-            try {
-                throw new Error(ex.message);
-            }
-            catch (innerEx) {
-                ex.stack = innerEx.stack;
-            }
-        }
+        ex.stack = origStack;
         throw ex;
     }
 }
