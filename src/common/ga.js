@@ -92,7 +92,7 @@ function merror(...msg) {
 
 function mex(ex, fatal) {
     mga('exception', { exDescription: ex.stack, exFatal: fatal });
-    console.error(ex);
+    console.error(ex.handled ? '[handled]' : '', ex);
 }
 
 function mclick(category, label) {

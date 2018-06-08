@@ -142,7 +142,7 @@ function* dataGather(req) {
         }
         catch (ex) {
             if (!handleServerErrors(ex, 'dataGather:'+mod.name))
-                ga.mex(ex);
+                ga.merror(ex);
         }
         console.log('Data sync', mod.name, 'finish at', moment().format());
     }
