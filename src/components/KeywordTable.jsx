@@ -64,4 +64,6 @@ KeywordTable.propTypes = {
     onKeywordBidChange: PropTypes.func,
 };
 
+KeywordTable.defaultProps = { showUpdateColumn: true };
+
 module.exports = KeywordTable;
