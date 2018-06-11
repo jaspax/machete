@@ -271,7 +271,7 @@ function handleServerErrors(ex, desc) {
         ga.mga('event', 'error-handled', 'server-error', desc);
         return 'serverError';
     }
-    if (ex.message.match(/0 error/)) {
+    if (ex.message.match(/0 error/) || ex.message.match(/Failed to fetch/)) {
         ga.mga('event', 'error-handled', 'network-error-unknown', desc);
         return 'networkError';
     }
@@ -338,7 +338,7 @@ function* ajax(url, opts) {
     catch (ex) {
         ex.method = opts.method;
         ex.url = url;
-        ex.stack = origStack;
+        ex.origStack = origStack;
         throw ex;
     }
 }
