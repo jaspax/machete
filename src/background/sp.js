@@ -123,7 +123,10 @@ function* requestCampaignData(domain, entityId) {
         if (!earliestData)
             earliestData = data;
 
-        yield* storeDailyCampaignData(entityId, date, data);
+        for (const campaigns of pageArray(data.aaData, 100)) {
+            yield* storeDailyCampaignData(entityId, date, { aaData: campaigns });
+        }
+
     });
 
     let timestamp = Date.now();
