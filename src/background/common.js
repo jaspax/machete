@@ -331,9 +331,14 @@ function* ajax(url, opts) {
 
         if (response.status == 204)
             return null;
-        if (opts.responseType == 'json')
-            return yield response.json();
-        return yield response.text();
+
+        const body = yield response.text();
+        if (opts.responseType == 'json') {
+            if (!body.length)
+                return {};
+            return JSON.parse(body);
+        }
+        return body;
     }
     catch (ex) {
         ex.method = opts.method;

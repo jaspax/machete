@@ -12,6 +12,8 @@ function checkEntityId(entityId) {
 }
 
 function* pageArray(array, step) {
+    if (!array || !array.length)
+        return;
     for (let index = 0; index < array.length; index += step) {
         yield array.slice(index, index + step);
     }
