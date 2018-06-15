@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ZipWebpackPlugin = require('zip-webpack-plugin');
@@ -98,7 +99,10 @@ module.exports = (env = defaultEnv) => {
                 exclude: /node_modules/,
                 enforce: 'pre',
                 loader: 'eslint-loader',
-                options: { cache: true }
+                options: { 
+                    cache: true,
+                    eslintPath: path.join(__dirname, "node_modules", "eslint")
+                }
             },
             {
                 test: /mapbox-gl.*\.js$/,

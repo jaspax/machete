@@ -2,22 +2,22 @@ const bg = require('./common.js');
 const moment = require('moment');
 const ga = require('../common/ga.js');
 
-function* dataGather() {
+async function dataGather() {
     const time = Date.now();
-    const asins = yield* fetchAsins(time);
-    yield bg.parallelQueue(asins, function*(asinArray) {
+    const asins = await fetchAsins(time);
+    await bg.parallelQueue(asins, async function(asinArray) {
         const asin = asinArray[0].substring(0, 10);
         if (asin[0] != 'B') {
-            ga.mga('event', 'kdp-warning', 'asin-unknown-format', asin);
+            ga.mga('event', 'kdp-warning', 'asin-unknown-format', asinArray.toString());
             return;
         }
 
         console.log('Fetch sales data for ASIN', asin);
 
-        const sales = yield* fetchSalesData(time, asinArray);
-        const ku = yield* fetchKuData(time, asinArray);
+        const sales = await fetchSalesData(time, asinArray);
+        const ku = await fetchKuData(time, asinArray);
 
-        yield bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
+        await bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
             method: 'PUT',
             jsonData: { sales, ku },
         });

@@ -1,7 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 
-class KeywordEnableToggle extends React.Component {
+class KeywordEnableToggle extends React.Component { // eslint-disable-line react/no-deprecated
     constructor(props) {
         super(props);
         this.state = { changing: false };

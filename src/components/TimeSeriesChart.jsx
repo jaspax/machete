@@ -22,7 +22,7 @@ let chartCounter = 0;
  *   name: name of this series
  * }
  */
-class TimeSeriesChart extends React.Component {
+class TimeSeriesChart extends React.Component { // eslint-disable-line react/no-deprecated
     constructor(props) {
         super(props);
         chartCounter++;
