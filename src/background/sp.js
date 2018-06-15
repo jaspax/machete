@@ -5,6 +5,8 @@ const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const spData = require('../common/sp-data.js');
 
+// eslint-disable-file no-await-in-loop
+
 function checkEntityId(entityId) {
     if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
         throw new Error(`invalid entityId={${entityId}}`);
@@ -19,18 +21,18 @@ function* pageArray(array, step) {
     }
 }
 
-function* dataGather() {
+async function dataGather() {
     // We want to make sure that we at least attempt to sync every single
     // domain, but any exceptions we encounter should be propagated so that we
     // don't record this as a success.
     let deferredException = null;
     for (const { domain, entityId } of bg.getEntityIds()) {
         try {
-            const campaignIds = yield* requestCampaignData(domain, entityId);
-            const adGroups = yield* getAdGroups(entityId);
-            const summaries = yield getCampaignSummaries({ entityId });
+            const campaignIds = await requestCampaignData(domain, entityId);
+            const adGroups = await getAdGroups(entityId);
+            const summaries = await getCampaignSummaries({ entityId });
 
-            yield bg.parallelQueue(campaignIds, function*(campaignId) {
+            await bg.parallelQueue(campaignIds, async function(campaignId) {
                 const summary = summaries.find(x => x.campaignId == campaignId);
                 if (!spData.isRunning(summary)) {
                     return;
@@ -42,14 +44,14 @@ function* dataGather() {
                     adGroupId = adGroupItem.adGroupId;
                 }
                 else {
-                    adGroupId = yield* findAdGroupId(domain, entityId, campaignId);
+                    adGroupId = await findAdGroupId(domain, entityId, campaignId);
                 }
 
                 if (adGroupId) {
                     if (!(summary && summary.asin)) {
-                        yield* requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
+                        await requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
                     }
-                    yield* requestKeywordData(domain, entityId, adGroupId);
+                    await requestKeywordData(domain, entityId, adGroupId);
                 }
             });
         }
@@ -63,8 +65,8 @@ function* dataGather() {
     }
 }
 
-function* findAdGroupId(domain, entityId, campaignId) {
-    const html = yield bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
+async function findAdGroupId(domain, entityId, campaignId) {
+    const html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
         method: 'GET',
         responseType: 'text'
     });
@@ -73,15 +75,15 @@ function* findAdGroupId(domain, entityId, campaignId) {
     const adGroupId = spData.getAdGroupIdFromDOM(template.content);
 
     if (adGroupId) {
-        yield* storeAdGroupMetadata(entityId, adGroupId, campaignId);
+        await storeAdGroupMetadata(entityId, adGroupId, campaignId);
     }
 
     return adGroupId;
 }
 
-const getAllowedCampaigns = bg.cache.coMemo(function*({ entityId }) {
+const getAllowedCampaigns = bg.cache.coMemo(async function({ entityId }) {
     checkEntityId(entityId);
-    const allowed = yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
+    const allowed = await bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
         responseType: 'json'
     });
@@ -89,29 +91,29 @@ const getAllowedCampaigns = bg.cache.coMemo(function*({ entityId }) {
     if (allowed.length)
         return allowed;
 
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
+    return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/allowed`, { 
         method: 'GET',
         responseType: 'json'
     });
 }, { maxAge: 30000 });
 
-const getCampaignSummaries = bg.cache.coMemo(function*({ entityId }) {
+const getCampaignSummaries = bg.cache.coMemo(function({ entityId }) {
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
+    return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
         method: 'GET',
         responseType: 'json'
     });
 }, { maxAge: 30000 });
 
-function* requestCampaignData(domain, entityId) {
+async function requestCampaignData(domain, entityId) {
     checkEntityId(entityId);
 
     console.log('requesting campaign data for', entityId);
-    const missing = yield* getMissingDates(entityId);
+    const missing = await getMissingDates(entityId);
 
     let earliestData = null;
-    yield bg.parallelQueue(missing.missingDays, function*(date) {
-        const data = yield bg.ajax(`https://${domain}/api/rta/campaigns`, {
+    await bg.parallelQueue(missing.missingDays, async function(date) {
+        const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
             queryData: {
                 entityId,
@@ -126,7 +128,7 @@ function* requestCampaignData(domain, entityId) {
             earliestData = data;
 
         for (const campaigns of pageArray(data.aaData, 100)) {
-            yield* storeDailyCampaignData(entityId, date, { aaData: campaigns });
+            await storeDailyCampaignData(entityId, date, { aaData: campaigns });
         }
 
     });
@@ -135,11 +137,11 @@ function* requestCampaignData(domain, entityId) {
     let campaignIds = [];
     if (earliestData && earliestData.aaData && earliestData.aaData.length) {
         campaignIds = earliestData.aaData.map(x => x.campaignId);
-        yield* requestCampaignStatus(domain, entityId, campaignIds, timestamp);
+        await requestCampaignStatus(domain, entityId, campaignIds, timestamp);
     }
 
     if (missing.needLifetime) {
-        const data = yield bg.ajax(`https://${domain}/api/rta/campaigns`, {
+        const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
             queryData: {
                 entityId,
@@ -147,18 +149,18 @@ function* requestCampaignData(domain, entityId) {
             },
             responseType: 'json',
         });
-        yield* storeLifetimeCampaignData(entityId, Date.now(), data);
+        await storeLifetimeCampaignData(entityId, Date.now(), data);
     }
 
     return campaignIds;
 }
 
-function* requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
+async function requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
     checkEntityId(entityId); 
 
     // Chop the campaignId list into bite-sized chunks
     for (const chunk of pageArray(campaignIds, 20)) {
-        const data = yield bg.ajax(`https://${domain}/api/rta/campaign-status`, {
+        const data = await bg.ajax(`https://${domain}/api/rta/campaign-status`, {
             method: 'GET',
             queryData: {
                 entityId, 
@@ -167,12 +169,12 @@ function* requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
             responseType: 'json',
         });
 
-        yield* storeStatus(entityId, timestamp, data);
+        await storeStatus(entityId, timestamp, data);
     }
 }
 
-function* requestCampaignMetadata(domain, entityId, campaignId, adGroupId) {
-    const data = yield bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
+async function requestCampaignMetadata(domain, entityId, campaignId, adGroupId) {
+    const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
         method: 'POST',
         formData: {
             entityId, 
@@ -193,16 +195,16 @@ function* requestCampaignMetadata(domain, entityId, campaignId, adGroupId) {
      */
     const asin = _.get(data, 'aaData[0].asin');
     if (asin) {
-        yield* storeCampaignMetadata(entityId, campaignId, asin);
+        await storeCampaignMetadata(entityId, campaignId, asin);
     }
 }
 
-function* requestKeywordData(domain, entityId, adGroupId) {
+async function requestKeywordData(domain, entityId, adGroupId) {
     checkEntityId(entityId);
 
     let timestamp = Date.now();
     console.log('requesting keyword data for', entityId, adGroupId);
-    const data = yield bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
+    const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
         method: 'POST',
         formData: {
             entityId, 
@@ -217,38 +219,38 @@ function* requestKeywordData(domain, entityId, adGroupId) {
         return;
     }
 
-    yield* storeKeywordData(entityId, adGroupId, timestamp, data);
+    await storeKeywordData(entityId, adGroupId, timestamp, data);
 }
 
-function* storeDailyCampaignData(entityId, timestamp, data) {
-    return yield bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
+function storeDailyCampaignData(entityId, timestamp, data) {
+    return bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
         contentType: 'application/json',
     });
 }
 
-function* storeLifetimeCampaignData(entityId, timestamp, data) {
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
+function storeLifetimeCampaignData(entityId, timestamp, data) {
+    return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
         contentType: 'application/json',
     });
 }
 
-function* storeStatus(entityId, timestamp, data) {
-    return yield bg.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
+function storeStatus(entityId, timestamp, data) {
+    return bg.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
         contentType: 'application/json',
     });
 }
 
-function* storeKeywordData(entityId, adGroupId, timestamp, data) {
+async function storeKeywordData(entityId, adGroupId, timestamp, data) {
     // Chop the large keyword list into small, bite-sized chunks for easier
     // digestion on the server.
     for (const chunk of pageArray(data.aaData, 50)) {
-        yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
+        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
             jsonData: { aaData: chunk },
             contentType: 'application/json',
@@ -256,39 +258,39 @@ function* storeKeywordData(entityId, adGroupId, timestamp, data) {
     }
 }
 
-function* getMissingDates(entityId) {
-    return yield bg.ajax(`https://${constants.hostname}/api/campaignData/${entityId}/missingDates`, {
+function getMissingDates(entityId) {
+    return bg.ajax(`https://${constants.hostname}/api/campaignData/${entityId}/missingDates`, {
         method: 'GET',
         responseType: 'json',
     });
 }
 
-const getCampaignHistory = bg.cache.coMemo(function*(entityId, campaignId) { // TODO: date ranges, etc.
+const getCampaignHistory = bg.cache.coMemo(function(entityId, campaignId) { // TODO: date ranges, etc.
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
+    return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/${campaignId}`, { 
         method: 'GET',
         responseType: 'json'
     });
 });
 
-const getAllCampaignData = bg.cache.coMemo(function*({ entityId, startTimestamp, endTimestamp }) {
+const getAllCampaignData = bg.cache.coMemo(function({ entityId, startTimestamp, endTimestamp }) {
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`, { 
+    return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`, { 
         method: 'GET',
         responseType: 'json'
     });
 });
 
-const getDataHistory = bg.cache.coMemo(function*({ entityId, campaignId }) { // TODO: date ranges, etc.
-    const snapshots = yield getCampaignHistory(entityId, campaignId);
+const getDataHistory = bg.cache.coMemo(async function({ entityId, campaignId }) { // TODO: date ranges, etc.
+    const snapshots = await getCampaignHistory(entityId, campaignId);
     return common.convertSnapshotsToDeltas(snapshots);
 });
 
-const getAggregateCampaignHistory = bg.cache.coMemo(function*({ entityId, campaignIds }) {
+const getAggregateCampaignHistory = bg.cache.coMemo(async function({ entityId, campaignIds }) {
     let aggregate = [];
-    yield bg.parallelQueue(campaignIds, function*(campaignId) {
+    await bg.parallelQueue(campaignIds, async function(campaignId) {
         try {
-            let history = yield getDataHistory({ entityId, campaignId });
+            let history = await getDataHistory({ entityId, campaignId });
             aggregate = aggregate.concat(...history);
         }
         catch (ex) {
@@ -302,30 +304,30 @@ const getAggregateCampaignHistory = bg.cache.coMemo(function*({ entityId, campai
     return aggregate.sort((a, b) => a.timestamp - b.timestamp);
 });
 
-const getKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupId }) {
+const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, adGroupId }) {
     checkEntityId(entityId);
     const url = `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`;
     const opts = {
         method: 'GET',
         responseType: 'json',
     };
-    let data = yield bg.ajax(url, opts);
+    let data = await bg.ajax(url, opts);
 
     if (!data || data.length == 0) {
         // Possibly this is the first time we've ever seen this campaign. If so,
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
-        yield* requestKeywordData(domain, entityId, adGroupId);
-        data = yield bg.ajax(url, opts);
+        await requestKeywordData(domain, entityId, adGroupId);
+        data = await bg.ajax(url, opts);
     }
 
     return data;
 });
 
-const getAggregateKeywordData = bg.cache.coMemo(function*({ domain, entityId, adGroupIds }) {
-    return yield bg.parallelQueue(adGroupIds, function*(adGroupId) {
+const getAggregateKeywordData = bg.cache.coMemo(function({ domain, entityId, adGroupIds }) {
+    return bg.parallelQueue(adGroupIds, async function(adGroupId) {
         try {
-            return yield getKeywordData({ domain, entityId, adGroupId });
+            return await getKeywordData({ domain, entityId, adGroupId });
         }
         catch (ex) {
             if (bg.handleServerErrors(ex) == 'notAllowed') {
@@ -336,39 +338,39 @@ const getAggregateKeywordData = bg.cache.coMemo(function*({ domain, entityId, ad
     });
 });
 
-function* storeCampaignMetadata(entityId, campaignId, asin) {
+function storeCampaignMetadata(entityId, campaignId, asin) {
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
+    return bg.ajax(`${bg.serviceUrl}/api/campaignMetadata/${entityId}/${campaignId}`, {
         method: 'PUT',
         jsonData: { asin },
     });
 }
 
-function* storeAdGroupMetadata(entityId, adGroupId, campaignId) {
+function storeAdGroupMetadata(entityId, adGroupId, campaignId) {
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
+    return bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
         jsonData: { campaignId },
     });
 }
 
-function* getAdGroups(entityId) {
+function getAdGroups(entityId) {
     checkEntityId(entityId);
-    return yield bg.ajax(`${bg.serviceUrl}/api/adGroups/${entityId}`, {
+    return bg.ajax(`${bg.serviceUrl}/api/adGroups/${entityId}`, {
         method: 'GET',
         responseType: 'json',
     });
 }
 
-function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues }) {
+async function updateKeyword({ domain, entityId, keywordIdList, operation, dataValues }) {
     // TODO: the parameters to the Amazon API imply that you can pass more than
     // 1 keyword at a time, but testing this shows that doing so just generates
     // an error. So we do it the stupid way instead, with a loop.
     const timestamp = Date.now();
 
     const successes = [];
-    yield bg.parallelQueue(keywordIdList, function*(id) {
-        const response = yield bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
+    await bg.parallelQueue(keywordIdList, async function(id) {
+        const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
             method: 'POST',
             formData: Object.assign({operation, entityId, keywordIds: id}, dataValues),
             responseType: 'json',
@@ -378,7 +380,7 @@ function* updateKeyword({ domain, entityId, keywordIdList, operation, dataValues
         }
     });
 
-    yield bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
+    await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
         method: 'PATCH',
         jsonData: { operation, dataValues, keywordIds: successes },
         responseType: 'json',

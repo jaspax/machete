@@ -131,8 +131,8 @@ function getCampaignSummaries(entityId = getEntityId()) {
     return summaryPromise;
 }
 
-function* getCampaignSummary(entityId = getEntityId(), campaignId = getCampaignId()) {
-    const summaries = yield getCampaignSummaries(entityId);
+async function getCampaignSummary(entityId = getEntityId(), campaignId = getCampaignId()) {
+    const summaries = await getCampaignSummaries(entityId);
     return summaries.find(x => x.campaignId == campaignId);
 }
 

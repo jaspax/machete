@@ -3,53 +3,53 @@ const sp = require('./sp.js');
 const seller = require('./seller.js');
 const kdp = require('./kdp.js');
 
-bg.messageListener(function*(req) { // eslint-disable-line complexity
+bg.messageListener(function(req) { // eslint-disable-line complexity
     switch (req.action) {
         // Valid for every page
         case 'getUser':
-            return yield bg.getUser(req);
+            return bg.getUser(req);
         case 'startSession':
-            return yield bg.startSession(req);
+            return bg.startSession(req);
 
         // AMS actions
         case 'sp.getAllowedCampaigns': 
-            return yield sp.getAllowedCampaigns(req);
+            return sp.getAllowedCampaigns(req);
         case 'sp.getCampaignSummaries': 
-            return yield sp.getCampaignSummaries(req);
+            return sp.getCampaignSummaries(req);
         case 'sp.getAllCampaignData':
-            return yield sp.getAllCampaignData(req);
+            return sp.getAllCampaignData(req);
         case 'sp.getDataHistory':
-            return yield sp.getDataHistory(req);
+            return sp.getDataHistory(req);
         case 'sp.getAggregateCampaignHistory':
-            return yield sp.getAggregateCampaignHistory(req);
+            return sp.getAggregateCampaignHistory(req);
         case 'sp.getKeywordData':
-            return yield sp.getKeywordData(req);
+            return sp.getKeywordData(req);
         case 'sp.getAggregateKeywordData':
-            return yield sp.getAggregateKeywordData(req);
+            return sp.getAggregateKeywordData(req);
         case 'sp.updateKeyword':
-            return yield sp.updateKeyword(req);
+            return sp.updateKeyword(req);
 
         // Seller actions
         case 'seller.getSummaries':
-            return yield seller.getSummaries(req);
+            return seller.getSummaries(req);
         case 'seller.getCampaignDataRange':
-            return yield seller.getCampaignDataRange(req);
+            return seller.getCampaignDataRange(req);
         case 'seller.getAdGroupDataRange':
-            return yield seller.getAdGroupDataRange(req);
+            return seller.getAdGroupDataRange(req);
         case 'seller.getAdDataRange':
-            return yield seller.getAdDataRange(req);
+            return seller.getAdDataRange(req);
         case 'seller.getAdDataRangeByAsin':
-            return yield seller.getAdDataRangeByAsin(req);
+            return seller.getAdDataRangeByAsin(req);
         case 'seller.getKeywordDataRange':
-            return yield seller.getKeywordDataRange(req);
+            return seller.getKeywordDataRange(req);
 
         // KDP actions
         case 'kdp.requestPermission':
-            return yield kdp.requestPermission(req);
+            return kdp.requestPermission(req);
         case 'kdp.hasPermission':
-            return yield kdp.hasPermission(req);
+            return kdp.hasPermission(req);
         case 'kdp.getSalesHistory':
-            return yield kdp.getSalesHistory(req);
+            return kdp.getSalesHistory(req);
 
         default:
             throw new Error('unknown action: ' + req.action);

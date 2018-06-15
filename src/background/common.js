@@ -1,5 +1,4 @@
 const qu = require('async/queue');
-const co = require('co');
 const moment = require('moment');
 const _ = require('lodash');
 
@@ -41,63 +40,63 @@ function messageListener(handler) {
             return true;
         }
 
-        chrome.pageAction.show(sender.tab.id);
-        ga.mga('event', 'background-message', req.action);
-        const begin = performance.now();
-
-        co(function*() {
-            return yield* handler(req, sender);
-        })
-        .then(data => {
-            const response = { data };
-            console.log('Success handling message:', req, "response", response);
-            sendResponse(response);
-        })
-        .catch(error => {
-            if (handlePortDisconnected(error, req.action))
-                return;
-            if (handleMessageTooLong(error, req.action))
-                return;
-
-            const response = { status: error.message, error: ga.errorToObject(error) };
-            const authError = handleServerErrors(error, req.action);
-            if (authError) {
-                response.error.handled = true;
-                response.error.authError = authError;
-                console.warn(error);
-            }
-            else {
-                ga.merror(req, error);
-            }
+        async function f() {
+            chrome.pageAction.show(sender.tab.id);
+            ga.mga('event', 'background-message', req.action);
+            const begin = performance.now();
 
             try {
+                const data = await handler(req, sender);
+                const response = { data };
+                console.log('Success handling message:', req, "response", response);
                 sendResponse(response);
             }
-            catch (ex) {
-                handlePortDisconnected(ex, req.action);
+            catch (error) {
+                if (handlePortDisconnected(error, req.action))
+                    return;
+                if (handleMessageTooLong(error, req.action))
+                    return;
+
+                const response = { status: error.message, error: ga.errorToObject(error) };
+                const authError = handleServerErrors(error, req.action);
+                if (authError) {
+                    response.error.handled = true;
+                    response.error.authError = authError;
+                    console.warn(error);
+                }
+                else {
+                    ga.merror(req, error);
+                }
+
+                try {
+                    sendResponse(response);
+                }
+                catch (ex) {
+                    handlePortDisconnected(ex, req.action);
+                }
             }
-        })
-        .then(() => {
+
             const end = performance.now();
             ga.mga('timing', 'Background Task', req.action, Math.round(end - begin));
-        });
+        }
+        f();
 
         return true;
     }));
 }
 
-function* getUser() {
-    return yield ajax(`${serviceUrl}/api/user`, {
+function getUser() {
+    return ajax(`${serviceUrl}/api/user`, {
         method: 'GET',
         responseType: 'json'
     });
 }
 
 function startSession(req) {
-    return co(dataGather(req));
+    return dataGather(req);
 }
 
-function* dataGather(req) {
+async function dataGather(req) {
     console.log('Data sync start at', moment().format());
     const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
 
@@ -136,7 +135,7 @@ function* dataGather(req) {
 
         try {
             console.log('Data sync', mod.name, 'start at', moment().format());
-            yield* mod.dataGather(req);
+            await mod.dataGather(req);
             newSync = Date.now();
             lastSync[mod.name] = newSync;
         }
@@ -225,7 +224,7 @@ function getSellerDomains() {
 function setAlarm() {
     chrome.alarms.onAlarm.addListener(ga.mcatch(alarm => {
         if (alarm.name == alarmKey) {
-            co(dataGather({})).catch(ga.mex);
+            dataGather({}).catch(ga.mex);
         }
     }));
     return ga.mpromise(resolve => {
@@ -294,7 +293,7 @@ function handleMessageTooLong(ex, req) {
     return false;
 }
 
-function* ajax(url, opts) {
+async function ajax(url, opts) {
     const init = {
         method: opts.method,
         headers: new Headers(),
@@ -324,7 +323,7 @@ function* ajax(url, opts) {
 
     const origStack = new Error().stack;
     try {
-        const response = yield window.fetch(url, init);
+        const response = await window.fetch(url, init);
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
         }
@@ -332,7 +331,7 @@ function* ajax(url, opts) {
         if (response.status == 204)
             return null;
 
-        const body = yield response.text();
+        const body = await response.text();
         if (opts.responseType == 'json') {
             if (!body.length)
                 return {};
@@ -352,8 +351,7 @@ function parallelQueue(items, fn) {
     return new Promise((resolve, reject) => {
         const results = [];
         const queue = qu((item, callback) => {
-            co(fn(item))
-            .then(value => {
+            fn(item).then(value => {
                 results.push(value);
                 callback(null, value);
             })

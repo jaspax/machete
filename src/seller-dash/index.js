@@ -1,6 +1,5 @@
 const $ = require('jquery');
 const _ = require('lodash');
-const co = require('co');
 const React = require('react');
 const ReactDOM = require('react-dom');
 
@@ -184,22 +183,22 @@ common.getUser().then(user => {
         const tabContent = React.createElement(BidOptimizerTab, {
             defaultTarget: 'acos',
             defaultTargetValue: 70,
-            keywordPromiseFactory: (target, options) => ga.mpromise(co(function*() {
-                const keywords = yield getKeywordDataAggregate();
-                const summaries = yield sdata.getCampaignSummaries();
+            keywordPromiseFactory: ga.mpromise(async function(target, options) {
+                const keywords = await getKeywordDataAggregate();
+                const summaries = await sdata.getCampaignSummaries();
 
                 // Hack: since we get campaign data from the last 90 days, we need to adjust the campaign info to cover the same period.
                 const campaignSummary = summaries.find(x => x.campaignId == campaignKey.campaignId);
                 campaignSummary.startDate = new Date(Math.max(ninetyDaysAgo, new Date(campaignSummary.startDate).getTime()));
 
-                const campaignData = common.accumulateCampaignSeries(yield fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
+                const campaignData = common.accumulateCampaignSeries(await fetchDataPromise(window.location.href, window.location.href, ninetyDaysAgo, now));
                 const renormedKws = common.renormKeywordStats(campaignData, keywords);
 
                 if (target.target == 'acos') {
                     return common.optimizeKeywordsAcos(target.value, renormedKws, options);
                 }
                 return common.optimizeKeywordsSalesPerDay(target.value, campaignData, campaignSummary, renormedKws, options);
-            })),
+            }),
             updateKeyword: kw => updateBid([kw.id], kw.optimizedBid),
         });
         ReactDOM.render(tabContent, container[0]);
@@ -276,13 +275,13 @@ common.getUser().then(user => {
     function activateAggregateHistoryTab(container) {
         let aggContent = React.createElement(AggregateHistory, {
             campaignPromise: sdata.getCampaignSummaries().then(campaignSelectOptions),
-            loadDataPromise: summaries => ga.mpromise(co(function*() {
-                const histories = yield Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
+            loadDataPromise: ga.mpromise(async function(summaries) {
+                const histories = await Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
                 const aggregate = histories
                                   .reduce((array, deltas) => array.concat(...deltas), [])
                                   .sort(common.timestampSort);
                 return aggregate;
-            })),
+            }),
         });
         ReactDOM.render(aggContent, container[0]);
     }
@@ -290,12 +289,12 @@ common.getUser().then(user => {
     function activateAggregateKeywordTab(container) {
         let aggContent = React.createElement(AggregateKeywords, {
             campaignPromise: sdata.getCampaignSummaries().then(keywordSelectOptions),
-            loadDataPromise: summaries => ga.mpromise(co(function*() {
+            loadDataPromise: ga.mpromise(async function(summaries) {
                 const adGroups = _.uniqBy(summaries, x => x.adGroupId);
-                const kwSeries = yield Promise.all(adGroups.map(x => keywordDataPromise(x, ninetyDaysAgo, now)));
+                const kwSeries = await Promise.all(adGroups.map(x => keywordDataPromise(x, ninetyDaysAgo, now)));
                 const aggregate = common.aggregateKeywords(kwSeries);
                 return aggregate;
-            })),
+            }),
             updateStatus: ga.mcatch((ids, enabled, callback) => {
                 const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
                 updateStatus(idList, enabled).then(callback);

@@ -118,7 +118,7 @@
         "newline-before-return": "off",
         "newline-per-chained-call": "off",
         "no-array-constructor": "error",
-        "no-await-in-loop": "error",
+        "no-await-in-loop": "off",
         "no-bitwise": "error",
         "no-caller": "error",
         "no-catch-shadow": "error",
@@ -270,7 +270,7 @@
         ],
         "valid-jsdoc": "error",
         "vars-on-top": "error",
-        "wrap-iife": "error",
+        "wrap-iife": "off",
         "wrap-regex": "error",
         "yield-star-spacing": "error",
         "yoda": [

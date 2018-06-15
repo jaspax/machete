@@ -67,19 +67,19 @@ function kdpAjax(request) {
     });
 }
 
-function* fetchAsins(time) {
+async function fetchAsins(time) {
     const titleRequest = Object.assign(baseRequest(time), { 
         'post-ajax': JSON.stringify([{ action: "load", ids: ["sales-dashboard-chart-orders", "sales-dashboard-chart-ku", "sales-dashboard-table"], type: "onLoad" }]),
         target: JSON.stringify([{ id: "sales-dashboard-dd-asin", type: "dynamic-dropdown", metadata: "STRING"}]),
         'request-id': 'KDPGetTitles_OP'
     });
 
-    const response = yield kdpAjax(titleRequest);
+    const response = await kdpAjax(titleRequest);
     const data = JSON.parse(response.data);
     return data['dynamic-dropdown'].map(x => x[0].split(','));
 }
 
-function* fetchSalesData(time, asin) {
+async function fetchSalesData(time, asin) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': JSON.stringify([{ "action": "show", "ids": ["sales-dashboard-export-button"], "type": "onLoad" }]),
         target: JSON.stringify([{ "id": "sales-dashboard-chart-orders", "type": "chart", "metadata": "DATE" }]),
@@ -87,11 +87,11 @@ function* fetchSalesData(time, asin) {
         _filter_asin: JSON.stringify({ "type": "dynamic-dropdown", "value": asin }), // eslint-disable-line camelcase
     });
     
-    const response = yield kdpAjax(reportRequest);
+    const response = await kdpAjax(reportRequest);
     return response.data;
 }
 
-function* fetchKuData(time, asin) {
+async function fetchKuData(time, asin) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': [],
         target: JSON.stringify([{ "id": "sales-dashboard-chart-ku", "type": "chart", "metadata": "DATE" }]),
@@ -99,12 +99,12 @@ function* fetchKuData(time, asin) {
         _filter_asin: JSON.stringify({ "type": "dynamic-dropdown", "value": asin }), // eslint-disable-line camelcase
     });
 
-    const response = yield kdpAjax(reportRequest);
+    const response = await kdpAjax(reportRequest);
     return response.data;
 }
 
-const getSalesHistory = bg.cache.coMemo(function*({ asin }) {
-    return yield bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
+const getSalesHistory = bg.cache.coMemo(function({ asin }) {
+    return bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
         method: 'GET',
         responseType: 'json'
     });

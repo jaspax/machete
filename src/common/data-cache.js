@@ -1,6 +1,5 @@
 const memoize = require('memoizee');
 const constants = require('./constants.js');
-const co = require('co');
 
 module.exports = function() {
 
@@ -14,8 +13,7 @@ module.exports = function() {
     };
 
     function coMemo(fn, opts = {}) {
-        const rv = memoize((...args) => co(fn(...args)), 
-                           Object.assign({}, memoOptsDefault, opts));
+        const rv = memoize(fn, Object.assign({}, memoOptsDefault, opts));
         memoized.push(rv);
         return rv;
     }

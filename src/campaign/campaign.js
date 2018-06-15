@@ -1,7 +1,6 @@
 const $ = require('jquery');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const co = require('co');
 
 const common = require('../common/common.js');
 const spdata = require('../common/sp-data.js');
@@ -71,11 +70,11 @@ function generateHistoryReports(container) {
     const entityId = spdata.getEntityId();
     const campaignId = spdata.getCampaignId();
     let tabContent = React.createElement(CampaignHistoryTab, { 
-        dataPromise: co(function*() {
-            const amsData = yield spdata.getCampaignHistory(entityId, campaignId);
-            if (yield spdata.hasKdpIntegration()) {
-                const summary = yield* spdata.getCampaignSummary(entityId, campaignId);
-                const kdpData = yield spdata.getKdpSalesHistory(summary.asin);
+        dataPromise: ga.mpromise(async function() {
+            const amsData = await spdata.getCampaignHistory(entityId, campaignId);
+            if (await spdata.hasKdpIntegration()) {
+                const summary = await spdata.getCampaignSummary(entityId, campaignId);
+                const kdpData = await spdata.getKdpSalesHistory(summary.asin);
                 return spdata.calculateKnpIncome(amsData, kdpData);
             }
             return amsData;
@@ -91,21 +90,21 @@ function generateBidOptimizer(container) {
     const tabContent = React.createElement(BidOptimizerTab, {
         defaultTarget: 'acos',
         defaultTargetValue: 70,
-        keywordPromiseFactory: (target, options) => ga.mpromise(co(function*() {
+        keywordPromiseFactory: ga.mpromise(async function(target, options) {
             if (!['acos', 'sales'].includes(target.target))
                 throw new Error("Don't know how to optimize for " + target.target);
 
-            const campaignSummary = yield spdata.getCampaignSummary(entityId, campaignId);
-            const campaignData = common.accumulateCampaignSeries(yield spdata.getCampaignHistory(entityId, campaignId));
+            const campaignSummary = await spdata.getCampaignSummary(entityId, campaignId);
+            const campaignData = common.accumulateCampaignSeries(await spdata.getCampaignHistory(entityId, campaignId));
 
-            const keywords = yield spdata.getKeywordData(entityId, adGroupId);
+            const keywords = await spdata.getKeywordData(entityId, adGroupId);
             const renormedKws = common.renormKeywordStats(campaignData, keywords);
 
             if (target.target == 'acos') {
                 return common.optimizeKeywordsAcos(target.value, renormedKws, options);
             }
             return common.optimizeKeywordsSalesPerDay(target.value, campaignData, campaignSummary, renormedKws, options);
-        })),
+        }),
         updateKeyword: kw => spdata.updateKeywordBid([kw.id], kw.optimizedBid),
     });
     ReactDOM.render(tabContent, container[0]);

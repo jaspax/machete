@@ -1,7 +1,6 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const qu = require('async/queue');
-const co = require('co');
 
 const common = require('../common/common.js');
 const ga = require('../common/ga.js');
@@ -105,10 +104,10 @@ class BidOptimizationChooser extends React.Component {
     applyOptimization(kw) {
         const self = this;
         this.setState({ 
-            keywordPromise: ga.mpromise(co(function*() {
-                yield self.props.updateKeyword(kw);
-                return yield self.keywordPromise();
-            })),
+            keywordPromise: ga.mpromise(async function() {
+                await self.props.updateKeyword(kw);
+                return self.keywordPromise();
+            }),
             message: 'Updating keyword...',
         });
     }
