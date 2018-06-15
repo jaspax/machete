@@ -7,6 +7,11 @@ function* dataGather() {
     const asins = yield* fetchAsins(time);
     yield bg.parallelQueue(asins, function*(asinArray) {
         const asin = asinArray[0].substring(0, 10);
+        if (asin[0] != 'B') {
+            ga.mga('event', 'kdp-warning', 'asin-unknown-format', asin);
+            return;
+        }
+
         console.log('Fetch sales data for ASIN', asin);
 
         const sales = yield* fetchSalesData(time, asinArray);
