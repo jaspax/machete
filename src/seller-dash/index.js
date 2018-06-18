@@ -183,7 +183,7 @@ common.getUser().then(user => {
         const tabContent = React.createElement(BidOptimizerTab, {
             defaultTarget: 'acos',
             defaultTargetValue: 70,
-            keywordPromiseFactory: ga.mpromise(async function(target, options) {
+            keywordPromiseFactory: (target, options) => ga.mpromise(async function() {
                 const keywords = await getKeywordDataAggregate();
                 const summaries = await sdata.getCampaignSummaries();
 
@@ -275,7 +275,7 @@ common.getUser().then(user => {
     function activateAggregateHistoryTab(container) {
         let aggContent = React.createElement(AggregateHistory, {
             campaignPromise: sdata.getCampaignSummaries().then(campaignSelectOptions),
-            loadDataPromise: ga.mpromise(async function(summaries) {
+            loadDataPromise: summaries => ga.mpromise(async function() {
                 const histories = await Promise.all(summaries.map(x => adDataPromise(x, 1, now)));
                 const aggregate = histories
                                   .reduce((array, deltas) => array.concat(...deltas), [])
@@ -289,7 +289,7 @@ common.getUser().then(user => {
     function activateAggregateKeywordTab(container) {
         let aggContent = React.createElement(AggregateKeywords, {
             campaignPromise: sdata.getCampaignSummaries().then(keywordSelectOptions),
-            loadDataPromise: ga.mpromise(async function(summaries) {
+            loadDataPromise: summaries => ga.mpromise(async function() {
                 const adGroups = _.uniqBy(summaries, x => x.adGroupId);
                 const kwSeries = await Promise.all(adGroups.map(x => keywordDataPromise(x, ninetyDaysAgo, now)));
                 const aggregate = common.aggregateKeywords(kwSeries);
