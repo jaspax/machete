@@ -90,7 +90,7 @@ function generateBidOptimizer(container) {
     const tabContent = React.createElement(BidOptimizerTab, {
         defaultTarget: 'acos',
         defaultTargetValue: 70,
-        keywordPromiseFactory: ga.mpromise(async function(target, options) {
+        keywordPromiseFactory: (target, options) => ga.mpromise(async function() {
             if (!['acos', 'sales'].includes(target.target))
                 throw new Error("Don't know how to optimize for " + target.target);
 
