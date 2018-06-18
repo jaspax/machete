@@ -105,7 +105,7 @@ function campaignSelectOptions(campaigns) {
 function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
         campaignPromise: spdata.getCampaignSummaries().then(campaignSelectOptions),
-        loadDataPromise: ga.mpromise((summaries) => {
+        loadDataPromise: ga.mcatch(summaries => {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
             return spdata.getAggregateCampaignHistory(spdata.getEntityId(), campaignIds);
         }),
@@ -115,8 +115,10 @@ function activateAggregateHistoryTab(container) {
 
 function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
-        campaignPromise: spdata.getCampaignSummaries(spdata.getEntityId()).then(campaignSelectOptions),
-        loadDataPromise: ga.mpromise(async function(summaries) {
+        campaignPromise: ga.mpromise(async function() {
+            return campaignSelectOptions(await spdata.getCampaignSummaries(spdata.getEntityId()));
+        }),
+        loadDataPromise: summaries => ga.mpromise(async function() {
             const adGroupIds = _.uniq(summaries.map(x => x.adGroupId).filter(x => x && x != 'null'));
             const kwData = await spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
             const aggKws = common.aggregateKeywords(kwData);
