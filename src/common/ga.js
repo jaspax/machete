@@ -111,13 +111,16 @@ function mcatch(fn) {
     };
 }
 
-function mpromise(executor) {
+function mpromise(arg) {
     let promise = null;
-    if (executor.then && executor.catch) {
-        promise = executor;
+    if (arg.then && arg.catch) {
+        promise = arg;
+    }
+    else if (arg.constructor && arg.constructor.name == 'AsyncFunction') {
+        promise = arg();
     }
     else {
-        promise = new Promise(executor);
+        promise = new Promise(arg);
     }
     return promise.catch(error => {
         if (error.handled) {
