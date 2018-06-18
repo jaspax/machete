@@ -107,9 +107,9 @@ function getAllCampaignsAllowed(entityId = getEntityId()) {
     return allowedPromise;
 }
 
-function getCampaignAllowed(entityId = getEntityId(), campaignId = getCampaignId()) {
-    return getAllCampaignsAllowed(entityId)
-    .then(allowed => {
+async function getCampaignAllowed(entityId = getEntityId(), campaignId = getCampaignId()) {
+    try {
+        const allowed = await getAllCampaignsAllowed(entityId);
         if (!allowed) {
             return false;
         }
@@ -117,7 +117,10 @@ function getCampaignAllowed(entityId = getEntityId(), campaignId = getCampaignId
             return true;
         }
         return allowed.includes(campaignId);
-    }).catch(() => false);
+    }
+    catch (ex) {
+        return false;
+    }
 }
 
 let summaryPromise = null;
@@ -129,6 +132,17 @@ function getCampaignSummaries(entityId = getEntityId()) {
         });
     }
     return summaryPromise;
+}
+
+async function getAllowedCampaignSummaries(entityId = getEntityId()) {
+    const summaries = await getCampaignSummaries(entityId);
+    const rv = [];
+    for (const summary of summaries) {
+        if (await getCampaignAllowed(entityId, summary.campaignId)) {
+            rv.push(summary);
+        }
+    }
+    return summaries;
 }
 
 async function getCampaignSummary(entityId = getEntityId(), campaignId = getCampaignId()) {
@@ -270,6 +284,7 @@ module.exports = {
     getAllCampaignsAllowed,
     getCampaignAllowed,
     getCampaignSummaries,
+    getAllowedCampaignSummaries,
     getCampaignSummary,
     getKdpSalesHistory,
     updateKeywordStatus,

@@ -94,9 +94,9 @@ function campaignSelectOptions(campaigns) {
     let options = [
         { value: campaigns, label: 'All Campaigns' },
         { value: campaigns.filter(c => spdata.isRunning(c)), label: 'All Active Campaigns' }
-    ].concat(...campaigns.map(c => ({ value: [c], label: 'Campaign: ' + c.name })));
+    ].concat(...campaigns.filter(c => c.name).map(c => ({ value: [c], label: 'Campaign: ' + c.name })));
 
-    for (const asin of _.uniq(campaigns.map(c => c.asin).filter(a => a))) {
+    for (const asin of _.uniq(campaigns.map(c => c.asin).filter(a => a && a != 'null'))) {
         options.push({ value: campaigns.filter(c => c.asin == asin), label: 'Campaigns for ASIN: ' + asin });
     }
     return options;
@@ -104,7 +104,10 @@ function campaignSelectOptions(campaigns) {
 
 function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
-        campaignPromise: spdata.getCampaignSummaries().then(campaignSelectOptions),
+        campaignPromise: ga.mpromise(async function() {
+            const allowed = await spdata.getAllowedCampaignSummaries();
+            return campaignSelectOptions(allowed);
+        }),
         loadDataPromise: ga.mcatch(summaries => {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
             return spdata.getAggregateCampaignHistory(spdata.getEntityId(), campaignIds);
@@ -116,7 +119,8 @@ function activateAggregateHistoryTab(container) {
 function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: ga.mpromise(async function() {
-            return campaignSelectOptions(await spdata.getCampaignSummaries(spdata.getEntityId()));
+            const allowed = await spdata.getAllowedCampaignSummaries();
+            return campaignSelectOptions(allowed);
         }),
         loadDataPromise: summaries => ga.mpromise(async function() {
             const adGroupIds = _.uniq(summaries.map(x => x.adGroupId).filter(x => x && x != 'null'));
