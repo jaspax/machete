@@ -56,7 +56,9 @@ async function dataGather() {
             });
         }
         catch (ex) {
-            ga.merror(ex);
+            if (!bg.handleServerErrors(ex, "sp.dataGather")) {
+                ga.merror(ex);
+            }
             deferredException = ex;
         }
     }
