@@ -8,7 +8,8 @@ function isBackgroundPage() {
 }
 
 // Execute a function in the context of the hosting page. For Chrome extension
-// scripts, we execute directly.
+// scripts, we execute directly. Local runs should never actually post data to
+// the server.
 function inpage(fn, args) {
     if (process.env.MACHETE_LOCAL)
         return;
@@ -85,10 +86,17 @@ function errorToString(error) {
 }
 
 function merror(...msg) {
+    const ex = msg[0] instanceof Error ? msg[0] : new Error();
+
+    // We do this to capture both the stack at the point which the error was
+    // thrown (if any) and the stack where the error was caught. The latter
+    // condition is more important in the cases where we don't actually capture
+    // an exception but some other kind of message.
     let errstr = msg.map(errorToString).join(' ');
     let error = new Error(errstr);
-    mga('exception', { exDescription: ex.stack, exFatal: !ex.handled });
-    console.error(ex.handled ? '[handled]' : '', ex);
+
+    mga('exception', { exDescription: error.stack, exFatal: !ex.handled });
+    console.error(ex.handled ? '[handled]' : '', error);
 }
 
 function mclick(category, label) {
@@ -102,6 +110,7 @@ function mcatch(fn) {
         }
         catch (ex) {
             merror(ex);
+            ex.handled = true;
             throw ex;
         }
     };
