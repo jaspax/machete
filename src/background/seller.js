@@ -56,6 +56,7 @@ async function requestSellerDataRange({ domain, subRoute, filters, startTimestam
             startDate: startTimestamp,
             endDate: endTimestamp,
             statusFilter: 'ENABLED',
+            _ : moment().toDate().getTime()
         };
         if (filters) {
             if (filters.statusFilter) {
