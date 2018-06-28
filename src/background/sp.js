@@ -56,7 +56,7 @@ async function dataGather() {
             });
         }
         catch (ex) {
-            ga.mex(ex);
+            ga.merror(ex);
             deferredException = ex;
         }
     }

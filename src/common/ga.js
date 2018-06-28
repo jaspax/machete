@@ -87,11 +87,7 @@ function errorToString(error) {
 function merror(...msg) {
     let errstr = msg.map(errorToString).join(' ');
     let error = new Error(errstr);
-    mex(error, false);
-}
-
-function mex(ex, fatal) {
-    mga('exception', { exDescription: ex.stack, exFatal: fatal });
+    mga('exception', { exDescription: ex.stack, exFatal: !ex.handled });
     console.error(ex.handled ? '[handled]' : '', ex);
 }
 
@@ -105,7 +101,7 @@ function mcatch(fn) {
             return fn.apply(this, args);
         }
         catch (ex) {
-            mex(ex);
+            merror(ex);
             throw ex;
         }
     };
@@ -137,7 +133,6 @@ function mpromise(arg) {
 module.exports = {
     mga,
     merror,
-    mex,
     mclick,
     mcatch,
     mpromise,

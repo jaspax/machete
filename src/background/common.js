@@ -224,7 +224,7 @@ function getSellerDomains() {
 function setAlarm() {
     chrome.alarms.onAlarm.addListener(ga.mcatch(alarm => {
         if (alarm.name == alarmKey) {
-            dataGather({}).catch(ga.mex);
+            dataGather({}).catch(ga.merror);
         }
     }));
     return ga.mpromise(resolve => {
