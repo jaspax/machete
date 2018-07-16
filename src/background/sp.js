@@ -382,11 +382,13 @@ async function updateKeyword({ domain, entityId, keywordIdList, operation, dataV
         }
     });
 
-    await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
-        method: 'PATCH',
-        jsonData: { operation, dataValues, keywordIds: successes },
-        responseType: 'json',
-    });
+    for (const page of pageArray(successes, 50)) {
+        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
+            method: 'PATCH',
+            jsonData: { operation, dataValues, keywordIds: page },
+            responseType: 'json',
+        });
+    }
 
     if (successes.length)
         getKeywordData.clear();
