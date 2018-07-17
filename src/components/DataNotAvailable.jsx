@@ -2,7 +2,9 @@ const React = require('react');
 const PropTypes = require('prop-types');
 
 const constants = require('../common/constants.js');
+const sp = require('../common/sp-data.js');
 const href = `https://${constants.hostname}/profile`;
+const request = `https://${constants.hostname}/share/request/start?entityId=`;
 
 function DataNotAvailable(props) {
     if (props.reason == 'notLoggedIn') {
@@ -25,14 +27,12 @@ function DataNotAvailable(props) {
         );
     }
     else if (props.reason == 'notOwned') {
+        const entityId = sp.getEntityId();
         return <div className="machete-upgrade-required">
-            <p>This Machete account does not own this campaign data. Ensure that you
-                are logged in under the correct Machete account.</p>
+            <p>We&#8217;re not sure if you&#8217;re supposed to see this account&#8217;s Machete data.</p>
 
-            <p><a data-mclick="thumbnail-profile" href={href}
-                    target="_blank">Check your current account and log out if
-                    necessary</a>, then refresh this page when you have switched
-                Machete accounts.</p>
+            <p><a data-mclick="thumbnail-share-request" href={request + entityId}
+                    target="_blank">Click here to learn more and request access from the account owner.</a></p>
 
         </div>;
     }
