@@ -8,9 +8,6 @@ async function dataGather() {
     const ranges = await getMissingRanges();
     const domains = bg.getSellerDomains();
 
-    if (!domains || !domains.length)
-        throw new Error('no known seller domains');
-
     for (const domain of domains) {
         for (const range of ranges) {
             const startTimestamp = range.start;
