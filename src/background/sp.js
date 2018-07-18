@@ -57,7 +57,7 @@ async function dataGather() {
         }
         catch (ex) {
             if (!bg.handleServerErrors(ex, "sp.dataGather")) {
-                ga.merror(ex);
+                ga.merror(ex, `context: domain ${domain}, entityId ${entityId}`);
             }
             deferredException = ex;
         }
