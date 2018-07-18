@@ -74,8 +74,11 @@ function generateHistoryReports(container) {
             const amsData = await spdata.getCampaignHistory(entityId, campaignId);
             if (await spdata.hasKdpIntegration()) {
                 const summary = await spdata.getCampaignSummary(entityId, campaignId);
-                const kdpData = await spdata.getKdpSalesHistory(summary.asin);
-                return spdata.calculateKnpIncome(amsData, kdpData);
+                if (summary && summary.asin) {
+                    const kdpData = await spdata.getKdpSalesHistory(summary.asin);
+                    return spdata.calculateKnpIncome(amsData, kdpData);
+                }
+                return amsData;
             }
             return amsData;
         }),
