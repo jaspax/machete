@@ -188,7 +188,7 @@ function addChartButtons(rows) {
                 });
                 ReactDOM.render(btn, container[0]);
 
-                if (summary && summary.latestData && allowed && !$(target).find('.machete-ghost').length) {
+                if (summary.latestData && allowed && !$(target).find('.machete-ghost').length) {
                     const metric = chart.metric[0];
                     const value = metric.format(summary.latestData[metric.prop]);
                     $(target).append(`<div><span class="machete-ghost">New:</span>${value}</div>`);
@@ -201,7 +201,7 @@ function addChartButtons(rows) {
         ga.mpromise(Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()]))
         .then(results => {
             const [allowed, user, summaries] = results;
-            const summary = summaries.find(x => x.campaignId == campaignId);
+            const summary = summaries.find(x => x.campaignId == campaignId) || {};
             renderButtons(allowed, user.isAnon, summary);
         });
     }
