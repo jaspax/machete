@@ -92,9 +92,14 @@ class TimeSeriesChart extends React.Component { // eslint-disable-line react/no-
 
         Plotly.newPlot(this.id, series, layout, {displayModeBar: this.props.displayModeBar});
         target.on('plotly_afterplot', () => {
-            const loading = document.getElementById(this.loadingId);
-            if (loading)
-                loading.parentNode.removeChild(loading);
+            try {
+                const loading = document.getElementById(this.loadingId);
+                if (loading)
+                    loading.parentNode.removeChild(loading);
+            }
+            catch (ex) {
+                ga.mga('event', 'error-handled', 'removing-loading-div', ex.stack);
+            }
         });
     }
 }
