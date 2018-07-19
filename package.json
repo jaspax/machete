@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "publish-beta": "webpack --env.beta --progress && node publish.js beta",
-    "publish-release": "webpack --env.release --progress && node publish.js release"
+    "publish-production": "webpack --env.release --progress && node publish.js release"
   },
   "repository": {
     "type": "git",
