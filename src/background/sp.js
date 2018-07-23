@@ -8,8 +8,8 @@ const spData = require('../common/sp-data.js');
 // eslint-disable-file no-await-in-loop
 
 function checkEntityId(entityId) {
-    if (!(entityId && entityId != 'undefined' && entityId != 'null')) {
-        throw new Error(`invalid entityId={${entityId}}`);
+    if (bg.isUnset(entityId)) {
+        throw new Error('invalid entityId=' + entityId);
     }
 }
 

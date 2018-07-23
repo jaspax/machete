@@ -154,8 +154,8 @@ async function dataGather(req) {
 }
 
 function addEntityId(domain, entityId) {
-    if (!domain || !entityId) {
-        ga.merror("bad arguments to addEntityId:", JSON.stringify([domain, entityId]));
+    if (isUnset(domain) || isUnset(entityId)) {
+        ga.merror("bad arguments to addEntityId:", JSON.stringify({ domain, entityId }));
         return;
     }
 
@@ -164,6 +164,10 @@ function addEntityId(domain, entityId) {
         ids.push({ domain, entityId });
         localStorage.setItem(entityIdKey, JSON.stringify(ids));
     }
+}
+
+function isUnset(str) {
+    return !str || str == 'undefined' || str == 'null';
 }
 
 function getEntityIds() {
@@ -178,7 +182,7 @@ function getEntityIds() {
             toDelete.push(key);
 
             const entityId = key.replace('campaignData_', '');
-            if (entityId) {
+            if (!isUnset(entityId)) {
                 entityIds.push({ entityId });
             }
         }
@@ -198,7 +202,7 @@ function getEntityIds() {
         return item;
     });
 
-    ids = _.uniqBy(ids, 'entityId');
+    ids = _.uniqBy(ids, 'entityId').filter(x => !isUnset(x.domain) && !isUnset(x.entityId));
     localStorage.setItem(entityIdKey, JSON.stringify(ids));
 
     return ids;
@@ -373,6 +377,7 @@ module.exports = {
     parallelQueue,
     cache,
     startSession,
+    isUnset,
     addEntityId,
     getEntityIds,
     addSellerDomain,
