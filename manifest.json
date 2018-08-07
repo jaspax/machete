@@ -48,7 +48,12 @@
               "https://ams.amazon.co.uk/ads/campaigns*",    "https://ams.amazon.co.uk/ads/dashboard*",
               "https://ams.amazon.com/ads/campaigns*",      "https://ams.amazon.com/ads/dashboard*",
               "https://ams.amazon.de/ads/campaigns*",       "https://ams.amazon.de/ads/dashboard*",
-              "https://ams.amazon.fr/ads/campaigns*",       "https://ams.amazon.fr/ads/dashboard*"
+              "https://ams.amazon.fr/ads/campaigns*",       "https://ams.amazon.fr/ads/dashboard*",
+              "https://ams.amazon.ca/cm/campaigns*",       "https://ams.amazon.ca/cm/dashboard*",
+              "https://ams.amazon.co.uk/cm/campaigns*",    "https://ams.amazon.co.uk/cm/dashboard*",
+              "https://ams.amazon.com/cm/campaigns*",      "https://ams.amazon.com/cm/dashboard*",
+              "https://ams.amazon.de/cm/campaigns*",       "https://ams.amazon.de/cm/dashboard*",
+              "https://ams.amazon.fr/cm/campaigns*",       "https://ams.amazon.fr/cm/dashboard*"
           ],
           "js": ["src/dashboard.js"],
           "css": ["css/inject.css"]
