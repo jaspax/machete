@@ -11,6 +11,7 @@ const DashboardHistoryButton = require('../components/DashboardHistoryButton.jsx
 const AggregateHistory = require('../components/AggregateHistory.jsx');
 const AggregateKeywords = require('../components/AggregateKeywords.jsx');
 const AmsCampaignRow = require('../components/AmsCampaignRow.jsx');
+const AmsCampaignTitleCell = require('../components/AmsCampaignTitleCell.jsx');
 const KdpTab = require('../components/KdpTab.jsx');
 const tabber = require('../components/tabber.js');
 
@@ -33,6 +34,9 @@ window.setInterval(ga.mcatch(() => {
     addChartButtons(tableRows);
 
     let wrapper = $('#campaignTable_wrapper');
+    if (!wrapper.length) {
+        wrapper = $('.page-container div').first().children().last();
+    }
     addTabs(wrapper);
     addTotalsRow(wrapper);
 }), 100);
@@ -70,24 +74,34 @@ function addTotalsRow(wrapper) {
         return;
 
     const head = wrapper.find('#campaignTable thead');
-    if (!head.length)
-        return;
+    if (head.length) { // original UI
+        const body = $('<tbody id="machete-totals"></tbody>');
+        spdata.getCampaignSummaries().then(summaries => {
+            const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
+            const lastDay = common.sumCampaignSnapshots(activeCampaigns.map(x => x.latestData));
+            lastDay.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
 
-    const body = $('<tbody id="machete-totals"></tbody>');
-    head.after(body);
+            const totalRow = React.createElement(AmsCampaignRow, { 
+                label: "Yesterday's Totals",
+                lastDay,
+                syncPromise: spdata.startSession(),
+            });
+            ReactDOM.render(totalRow, body[0]);
+        });
+    }
 
-    spdata.getCampaignSummaries().then(summaries => {
-        const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
-        const lastDay = common.sumCampaignSnapshots(activeCampaigns.map(x => x.latestData));
-        lastDay.budget = activeCampaigns.reduce((sum, x) => sum + x.budget, 0);
+    else {
+        const topRows = $('[role=rowgroup]').first();
+        const totalCell = topRows.children().last();
+        totalCell.attr('id', 'machete-totals');
 
-        const totalRow = React.createElement(AmsCampaignRow, { 
-            label: "Yesterday's Totals",
-            lastDay,
+        const ourCell = React.createElement(AmsCampaignTitleCell, {
+            title: '',
             syncPromise: spdata.startSession(),
         });
-        ReactDOM.render(totalRow, body[0]);
-    });
+        ReactDOM.unmountComponentAtNode(totalCell[0]);
+        ReactDOM.render(ourCell, totalCell[0]);
+    }
 }
 
 function campaignSelectOptions(campaigns) {

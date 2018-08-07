@@ -31,8 +31,9 @@ class AmsCampaignTitleCell extends React.Component {
             verticalAlign: 'middle',
         };
 
+        const title = this.props.title ? <div className="machete-title-cell-title">{this.props.title}</div> : null;
         return <ErrorBoundary>
-            <div className="machete-title-cell-title">{this.props.title}</div>
+            {title}
             <div className="machete-title-cell-status">
                 <div className={statusClass} style={statusStyle}></div>
                 <div className="machete-ghost" style={statusStyle}>{statusText}</div>
