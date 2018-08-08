@@ -2,8 +2,32 @@ const $ = require('jquery');
 const ga = require('../common/ga.js');
 
 function tabber(tabs, opt) {
+    let detachedChildren = null;
+
+    // tabs could be the actual UL with the tab names, or it could be the
+    // wrapper around which we want to put the tabs.
+    if (tabs.prop('tagName') == 'UL') {
+        console.log('tabs using UL passed as argument');
+    }
+    else {
+        const firstChild = tabs.children().first();
+        if (firstChild.prop('tagName') == 'UL') {
+            tabs = firstChild;
+            console.log('tabs using UL child of wrapper');
+        }
+        else {
+            const wrapper = tabs;
+            detachedChildren = wrapper.children().detach();
+
+            tabs = $('<ul class="a-tabs a-declarative"></ul>');
+            wrapper.append(tabs);
+            wrapper.addClass('a-tab-container');
+            console.log('tabs created UL child of wrapper');
+        }
+    }
+
     let hasActivated = false;
-    let tab = $(`<li className="a-tab-heading"><a href="#" >${opt.label}</a></li>`);
+    let tab = $(`<li class="a-tab-heading machete-tab"><a href="#" >${opt.label}</a></li>`);
     let container = $(`<div class="a-box a-box-tab a-tab-content a-hidden" data-a-name="machete-${opt.label}"></div>`);
     if (opt.active) {
         tab.addClass('a-active');
@@ -25,11 +49,15 @@ function tabber(tabs, opt) {
         }
     }));
 
-    if (opt.insertIndex)
+    if (opt.insertIndex && opt.insertIndex < tabs.children().length)
         $(tabs.children()[opt.insertIndex - 1]).after(tab);
     else
         tabs.append(tab);
     tabs.parent().append(container);
+
+    if (detachedChildren) {
+        container.append(detachedChildren);
+    }
     return { tab, container };
 }
 

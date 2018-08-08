@@ -6,7 +6,7 @@ const ga = require('./ga.js');
 const common = require('./common.js');
 const constants = require('./constants.js');
 
-function getEntityId(href) {
+function getEntityId(href = window.location.toString()) {
     let entityId = getQueryArgs(href).entityId;
     if (entityId) {
         return entityId;
@@ -22,7 +22,7 @@ function getEntityId(href) {
     throw new Error('could not discover entityId');
 }
 
-function getCampaignId(href) {
+function getCampaignId(href = window.location.toString()) {
     let campaignId = getQueryArgs(href).campaignId;
     if (campaignId) {
         return campaignId;
@@ -45,7 +45,7 @@ function getCampaignId(href) {
     throw new Error('could not discover campaignId');
 }
 
-function getQueryArgs(str) {
+function getQueryArgs(str = window.location.toString()) {
     let qstring = str || window.location.toString();
     qstring = qstring.split('?').pop();
     if (qstring.includes('#')) {

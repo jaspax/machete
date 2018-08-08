@@ -64,7 +64,12 @@
               "https://ams.amazon.co.uk/ads/campaign/*",    "https://ams.amazon.co.uk/rta/campaign/*",
               "https://ams.amazon.com/ads/campaign/*",      "https://ams.amazon.com/rta/campaign/*",
               "https://ams.amazon.de/ads/campaign/*",       "https://ams.amazon.de/rta/campaign/*",
-              "https://ams.amazon.fr/ads/campaign/*",       "https://ams.amazon.fr/rta/campaign/*"
+              "https://ams.amazon.fr/ads/campaign/*",       "https://ams.amazon.fr/rta/campaign/*",
+              "https://ams.amazon.ca/cm/sp/campaigns/*/keywords*",
+              "https://ams.amazon.co.uk/cm/sp/campaigns/*/keywords*",
+              "https://ams.amazon.com/cm/sp/campaigns/*/keywords*",
+              "https://ams.amazon.de/cm/sp/campaigns/*/keywords*",
+              "https://ams.amazon.fr/cm/sp/campaigns/*/keywords*"
           ],
           "js": ["src/campaign.js"],
           "css": ["css/inject.css"]

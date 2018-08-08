@@ -35,35 +35,27 @@ window.setInterval(ga.mcatch(() => {
         wrapper = $('.page-container div').first().children().last();
     }
 
-    addChartButtons(wrapper);
-
     addTabs(wrapper);
     addTotalsRow(wrapper);
+    addChartButtons(wrapper);
 }), 100);
 
 function addTabs(wrapper) {
     if (wrapper.hasClass('a-tab-container'))
         return;
-    const detachedChildren = wrapper.children().detach();
+    tabber(wrapper, { label: 'Dashboard', active: true });
 
-    const tabs = $('<ul class="a-tabs a-declarative"></ul>');
-    wrapper.append(tabs);
-    wrapper.addClass('a-tab-container');
-
-    let {container} = tabber(tabs, { label: 'Dashboard', active: true });
-    container.append(detachedChildren);
-
-    tabber(tabs, { 
+    tabber(wrapper, { 
         label: 'Aggregate History',
         activate: activateAggregateHistoryTab,
     });
 
-    tabber(tabs, {
+    tabber(wrapper, {
         label: 'Aggregate Keywords',
         activate: activateAggregateKeywordTab,
     });
 
-    tabber(tabs, {
+    tabber(wrapper, {
         label: "KDP Integration",
         activate: activateKdpTab,
     });

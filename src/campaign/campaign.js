@@ -12,12 +12,10 @@ const KeywordAnalyticsTab = require('../components/KeywordAnalyticsTab.jsx');
 const BidOptimizerTab = require('../components/BidOptimizerTab.jsx');
 const KeywordBulkUpdate = require('../components/KeywordBulkUpdate.jsx');
 
-const tabClass = `machete-tab`;
-
 const ourTabs = [
-    { label: "Keyword Analytics", activate: generateKeywordReports, matching: /./, insertIndex: 1 },
-    { label: "Campaign History", activate: generateHistoryReports, matching: /./, insertIndex: 2 },
-    { label: "Bid Optimizer", activate: generateBidOptimizer, matching: /./, insertIndex: 3 },
+    { label: "Keyword Analytics", activate: generateKeywordReports, insertIndex: 1 },
+    { label: "Campaign History", activate: generateHistoryReports, insertIndex: 2 },
+    { label: "Bid Optimizer", activate: generateBidOptimizer, insertIndex: 3 },
 ];
 
 const adGroupId = spdata.getAdGroupIdFromDOM(document);
@@ -26,19 +24,18 @@ const keywordDataPromise = spdata.getKeywordData(spdata.getEntityId(), adGroupId
 spdata.startSession();
 spdata.amsPageInit();
 
-let makeTabsInterval = window.setInterval(ga.mcatch(() => {
+window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
-    if (campaignTabs.length && campaignTabs.find(`.${tabClass}`).length == 0) {
+    if (!campaignTabs.length)
+        campaignTabs = $('.page-container > div').last();
+
+    if (campaignTabs.length && campaignTabs.find(`.machete-tab`).length == 0) {
         addCampaignTabs(campaignTabs);
-        window.clearInterval(makeTabsInterval);
     }
 }), 100);
 
 function addCampaignTabs(tabs) {
     for (let tab of ourTabs) {
-        if (!location.toString().match(tab.matching)) {
-            continue;
-        }
         tabber(tabs, tab);
     }
 
