@@ -18,8 +18,18 @@ const ourTabs = [
     { label: "Bid Optimizer", activate: generateBidOptimizer, insertIndex: 3 },
 ];
 
-const adGroupId = spdata.getAdGroupIdFromDOM(document);
-const keywordDataPromise = spdata.getKeywordData(spdata.getEntityId(), adGroupId);
+let adGroupId = null; // await the keywordDataPromise before doing this
+const keywordDataPromise = ga.mpromise((resolve, reject) => {
+    const adGroupInterval = window.setInterval(ga.mcatch(() => {
+        adGroupId = spdata.getAdGroupIdFromDOM(document);
+        if (adGroupId) {
+            const entityId = spdata.getEntityId();
+            spdata.storeAdGroupMetadata(entityId, spdata.getCampaignId(), adGroupId);
+            spdata.getKeywordData(entityId, adGroupId).then(resolve, reject);
+            window.clearInterval(adGroupInterval);
+        }
+    }), 250);
+});
 
 spdata.startSession();
 spdata.amsPageInit();

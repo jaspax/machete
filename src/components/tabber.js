@@ -6,14 +6,10 @@ function tabber(tabs, opt) {
 
     // tabs could be the actual UL with the tab names, or it could be the
     // wrapper around which we want to put the tabs.
-    if (tabs.prop('tagName') == 'UL') {
-        console.log('tabs using UL passed as argument');
-    }
-    else {
+    if (tabs.prop('tagName') != 'UL') {
         const firstChild = tabs.children().first();
         if (firstChild.prop('tagName') == 'UL') {
             tabs = firstChild;
-            console.log('tabs using UL child of wrapper');
         }
         else {
             const wrapper = tabs;
@@ -22,7 +18,6 @@ function tabber(tabs, opt) {
             tabs = $('<ul class="a-tabs a-declarative"></ul>');
             wrapper.append(tabs);
             wrapper.addClass('a-tab-container');
-            console.log('tabs created UL child of wrapper');
         }
     }
 

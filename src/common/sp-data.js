@@ -29,13 +29,9 @@ function getCampaignId(href = window.location.toString()) {
     }
 
     if (href) {
-        let path = href.split('?')[0];
-        let parts = path.split('/');
-        let campaignIdx = parts.indexOf('campaigns');
-        if (campaignIdx >= 0) {
-            const rawId = parts[campaignIdx + 1];
+        const rawId = getUriPathChunk(href, 'campaigns');
+        if (rawId)
             return rawId.replace(/^A/, 'AX');
-        }
     }
 
     campaignId = $('input[name=campaignId]').val();
@@ -43,6 +39,17 @@ function getCampaignId(href = window.location.toString()) {
         return campaignId;
 
     throw new Error('could not discover campaignId');
+}
+
+// take a uri like host.com/foo/1/ and extract the "1" given "foo"
+function getUriPathChunk(href, chunk) {
+    let path = href.split('?')[0];
+    let parts = path.split('/');
+    let nameIndex = parts.indexOf(chunk);
+    if (nameIndex >= 0) {
+        return parts[nameIndex + 1];
+    }
+    return null;
 }
 
 function getQueryArgs(str = window.location.toString()) {
@@ -63,7 +70,14 @@ function getQueryArgs(str = window.location.toString()) {
 
 function getAdGroupIdFromDOM(dom) {
     const adGroupIdInput = dom.querySelector('input[name=adGroupId]');
-    return adGroupIdInput ? adGroupIdInput.value : null;
+    if (adGroupIdInput)
+        return adGroupIdInput.value;
+
+    const sspaLink = dom.querySelector('.page-container nav li a');
+    if (!sspaLink)
+        return null;
+
+    return getUriPathChunk(sspaLink.href, 'ad-groups');
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
@@ -163,6 +177,15 @@ function getKdpSalesHistory(asin) {
     return common.bgMessage({
         action: 'kdp.getSalesHistory',
         asin,
+    });
+}
+
+function storeAdGroupMetadata(entityId, campaignId, adGroupId) {
+    return common.bgMessage({
+        action: 'sp.storeAdGroupMetadata',
+        entityId,
+        campaignId,
+        adGroupId,
     });
 }
 
@@ -296,6 +319,7 @@ module.exports = {
     getAllowedCampaignSummaries,
     getCampaignSummary,
     getKdpSalesHistory,
+    storeAdGroupMetadata,
     updateKeywordStatus,
     updateKeywordBid,
     isRunning,

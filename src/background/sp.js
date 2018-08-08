@@ -60,16 +60,27 @@ async function dataGather() {
 }
 
 async function findAdGroupId(domain, entityId, campaignId) {
-    const html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
+    let html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
         method: 'GET',
         responseType: 'text'
     });
     const template = document.createElement('template');
     template.innerHTML = html;
-    const adGroupId = spData.getAdGroupIdFromDOM(template.content);
+    let adGroupId = spData.getAdGroupIdFromDOM(template.content);
+
+    if (!adGroupId) {
+        // campaignId fixup since the format changed
+        const fixedId = campaignId.replace(/^AX/, 'A');
+        html = await bg.ajax(`https://${domain}/cm/sp/campaigns/${fixedId}?entityId=${entityId}`, {
+            method: 'GET',
+            responseType: 'text'
+        });
+        template.innerHTML = html;
+        adGroupId = spData.getAdGroupIdFromDOM(template.content);
+    }
 
     if (adGroupId) {
-        await storeAdGroupMetadata(entityId, adGroupId, campaignId);
+        await storeAdGroupMetadata({ entityId, adGroupId, campaignId });
     }
 
     return adGroupId;
@@ -340,7 +351,7 @@ function storeCampaignMetadata(entityId, campaignId, asin) {
     });
 }
 
-function storeAdGroupMetadata(entityId, adGroupId, campaignId) {
+function storeAdGroupMetadata({ entityId, adGroupId, campaignId }) {
     checkEntityId(entityId);
     return bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
@@ -400,5 +411,6 @@ module.exports = {
     getAggregateCampaignHistory,
     getKeywordData,
     getAggregateKeywordData,
+    storeAdGroupMetadata,
     updateKeyword,
 };
