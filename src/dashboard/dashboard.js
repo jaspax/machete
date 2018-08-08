@@ -185,7 +185,7 @@ let columns = null;
 function findCampaignRows(wrapper) {
     let tableRows = $('#campaignTable tbody tr');
     if (tableRows.length)
-        return tableRows.map(x => ({ row: x, campaignCell: x[0] }));
+        return Array.from(tableRows).map(x => ({ row: x, campaignCell: $(x).find('td')[1] }));
 
     const rowGroups = wrapper.find('[role=rowgroup]');
     columns = Array.from($(rowGroups[1]).find('span')).filter(x => x.innerText);
@@ -197,7 +197,7 @@ function findCampaignRows(wrapper) {
 }
 
 function findTargetInRow(row, chart) {
-    if (columns) {
+    if (columns && columns.length) {
         const columnTitles = columns.map(x => x.innerText);
         return row[columnTitles.indexOf(chart.columnTitle)];
     }
