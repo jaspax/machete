@@ -35,20 +35,29 @@ window.setInterval(ga.mcatch(() => {
 }), 100);
 
 function addCampaignTabs(tabs) {
+    tabber(tabs, { label: 'Keyword List', active: true });
     for (let tab of ourTabs) {
         tabber(tabs, tab);
     }
 
     // Render the bulk update control on the main keyword list
-    const allTable = $('#keywordTableControls');
+    let allTable = $('#keywordTableControls');
+    if (!allTable.length)
+        allTable = $($('.page-container .a-tab-content').first().children().get(2));
     if (allTable.find('#machete-bulk-all').length == 0) {
         keywordDataPromise.then(data => {
             // Hack ourselves into the Amazon layout
             const bulkContainer = $('<div class="a-span4 machete-kwupdate-all" id="machete-bulk-all"></div>');
-            const first = $('#keywordTableControls').children().first();
-            first.removeClass('a-span8');
-            first.addClass('a-span4');
-            first.after(bulkContainer);
+            if ($('#keywordTableControls').length) {
+                const first = allTable.children().first();
+                first.removeClass('a-span8');
+                first.addClass('a-span4');
+                first.after(bulkContainer);
+            }
+            else {
+                bulkContainer.css('float', 'left');
+                allTable.prepend(bulkContainer);
+            }
             generateBulkUpdate(bulkContainer, data);
         });
     }
