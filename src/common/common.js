@@ -403,6 +403,14 @@ function getUser() {
     return getUserPromise;
 }
 
+function* pageArray(array, step) {
+    if (!array || !array.length)
+        return;
+    for (let index = 0; index < array.length; index += step) {
+        yield array.slice(index, index + step);
+    }
+}
+
 module.exports = {
     getUser,
     moneyFmt: constants.moneyFmt,
@@ -423,4 +431,5 @@ module.exports = {
     renormKeywordStats,
     optimizeKeywordsAcos,
     optimizeKeywordsSalesPerDay,
+    pageArray,
 };

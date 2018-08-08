@@ -18,25 +18,25 @@ const tabber = require('../components/tabber.js');
 const twoWeeks = 15 * constants.timespan.day;
 const startTimestamp = Date.now() - twoWeeks;
 const charts = [
-    { column: 6, label: "Impressions / day", metric: [constants.metric.impressions] },
-    { column: 7, label: "Clicks / day", metric: [constants.metric.clicks] },
-    { column: 8, label: "Avg CPC", metric: [constants.metric.avgCpc] },
-    { column: 9, label: "Spend / day", metric: [constants.metric.spend] },
-    { column: 10, label: "Sales ($) / day", metric: [constants.metric.salesValue, constants.metric.knpeValue, constants.metric.knpeTotalValue] },
-    { column: 11, label: "ACOS", metric: [constants.metric.acos, constants.metric.knpeAcos] },
+    { column: 6, columnTitle: 'Impressions', label: "Impressions / day", metric: [constants.metric.impressions] },
+    { column: 7, columnTitle: 'Clicks', label: "Clicks / day", metric: [constants.metric.clicks] },
+    { column: 8, columnTitle: 'CPC', label: "Avg CPC", metric: [constants.metric.avgCpc] },
+    { column: 9, columnTitle: 'Spend', label: "Spend / day", metric: [constants.metric.spend] },
+    { column: 10, columnTitle: 'Sales', label: "Sales ($) / day", metric: [constants.metric.salesValue, constants.metric.knpeValue, constants.metric.knpeTotalValue] },
+    { column: 11, columnTitle: 'ACoS', label: "ACOS", metric: [constants.metric.acos, constants.metric.knpeAcos] },
 ];
 
 spdata.startSession();
 spdata.amsPageInit();
 
 window.setInterval(ga.mcatch(() => {
-    let tableRows = $('#campaignTable tbody tr');
-    addChartButtons(tableRows);
-
     let wrapper = $('#campaignTable_wrapper');
     if (!wrapper.length) {
         wrapper = $('.page-container div').first().children().last();
     }
+
+    addChartButtons(wrapper);
+
     addTabs(wrapper);
     addTotalsRow(wrapper);
 }), 100);
@@ -159,13 +159,12 @@ function activateKdpTab(container) {
     ReactDOM.render(kdpContent, container[0]);
 }
 
-function addChartButtons(rows) {
-    for (let row of rows) {
+function addChartButtons(wrapper) {
+    for (let { row, campaignCell } of findCampaignRows(wrapper)) {
         if ($(row).find(`.${DashboardHistoryButton.chartClass}`).length)
             continue; 
 
-        let cells = $(row).children();
-        let link = $(cells[1]).find('a')[0];
+        let link = $(campaignCell).find('a')[0];
         if (!link)
             continue;
 
@@ -174,50 +173,68 @@ function addChartButtons(rows) {
 
         const renderButtons = ga.mcatch((allowed, anonymous, summary) => {
             for (let chart of charts) {
-                let target = cells[chart.column];
-                if (!target)
-                    continue;
-
-                const dataPromiseFactory = () => ga.mpromise(async function() {
-                    const data = await spdata.getCampaignHistory(spdata.getEntityId(), campaignId);
-                    const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
-
-                    const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
-                    const campaignData = common.parallelizeSeries(knpe);
-                    return chart.metric.map(metric => common.formatParallelData(campaignData, metric));
-                });
-
-                let container = $(target).find('.machete-dash-container');
-                if (!container.length) {
-                    container = $('<span class="machete-dash-container"></span>');
-                    $(target).append(container);
-                }
-
-                let btn = React.createElement(DashboardHistoryButton, {
-                    allowed,
-                    anonymous,
-                    metric: chart.metric[0].prop,
-                    title: chart.label,
-                    dataPromiseFactory,
-                });
-                ReactDOM.render(btn, container[0]);
-
-                if (summary.latestData && allowed && !$(target).find('.machete-ghost').length) {
-                    const metric = chart.metric[0];
-                    const value = metric.format(summary.latestData[metric.prop]);
-                    $(target).append(`<div><span class="machete-ghost">New:</span>${value}</div>`);
-                }
+                const target = findTargetInRow(row, chart);
+                if (target)
+                    addChartButtonToCell({ summary, allowed, anonymous, target, chart });
             }
         });
-
         renderButtons(false, true, {});
 
         ga.mpromise(Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()]))
         .then(results => {
             const [allowed, user, summaries] = results;
-            const summary = summaries.find(x => x.campaignId == campaignId) || {};
+            const summary = summaries.find(x => x.campaignId == campaignId);
             renderButtons(allowed, user.isAnon, summary);
         });
     }
 }
 
+let columns = null;
+function findCampaignRows(wrapper) {
+    let tableRows = $('#campaignTable tbody tr');
+    if (tableRows.length)
+        return tableRows.map(x => ({ row: x, campaignCell: x[0] }));
+
+    const rowGroups = wrapper.find('[role=rowgroup]');
+    columns = Array.from($(rowGroups[1]).find('span')).filter(x => x.innerText);
+    const cells = $(rowGroups[3]).children('div').children('div');
+    const campaignCells = $(rowGroups[2]).children('div');
+
+    const rows = Array.from(common.pageArray(cells, columns.length));
+    return rows.map((x, index) => ({ row: x, campaignCell: campaignCells[(index * 3) + 2] }));
+}
+
+function findTargetInRow(row, chart) {
+    if (columns) {
+        const columnTitles = columns.map(x => x.innerText);
+        return row[columnTitles.indexOf(chart.columnTitle)];
+    }
+    return $(row).children()[chart.column];
+}
+
+function addChartButtonToCell({ summary, allowed, anonymous, target, chart }) {
+    const dataPromiseFactory = () => ga.mpromise(async function() {
+        const data = await spdata.getCampaignHistory(spdata.getEntityId(), summary.campaignId);
+        const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
+
+        const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
+        const campaignData = common.parallelizeSeries(knpe);
+        return chart.metric.map(metric => common.formatParallelData(campaignData, metric));
+    });
+
+    let container = $(target).find('.machete-dash-container');
+    if (!container.length) {
+        container = $('<div class="machete-dash-container"></div>');
+        $(target).append(container);
+    }
+
+    let btn = React.createElement(DashboardHistoryButton, {
+        allowed,
+        anonymous,
+        metric: chart.metric[0],
+        title: chart.label,
+        dataPromiseFactory,
+        latestData: summary.latestData,
+    });
+    ReactDOM.render(btn, container[0]);
+}

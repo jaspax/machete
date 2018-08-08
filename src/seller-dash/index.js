@@ -27,14 +27,13 @@ const tabClass = `machete-tab`;
 
 // Map column names to data metrics
 const charts = [
-    { column: "Impr", label: "Impressions / day", metric: 'impressions' },
-    { column: "Clicks", label: "Clicks / day", metric: 'clicks' },
-    { column: "Spend", label: "Spend / day", metric: 'spend', },
-    { column: "Orders", label: "Orders / day", metric: 'salesCount', },
-    { column: "ACoS", label: "ACoS", metric: 'acos' },
-    { column: "CTR", label: "CTR", metric: 'ctr' },
-    { column: "CPC", label: "Cost per click ($)", metric: 'avgCpc' },
-    { column: "Sales", label: "Sales ($) / day", metric: 'salesValue' },
+    { column: "Impr", label: "Impressions / day", metric: constants.metric.impressions },
+    { column: "Clicks", label: "Clicks / day", metric: constants.metric.clicks },
+    { column: "Spend", label: "Spend / day", metric: constants.metric.spend },
+    { column: "ACoS", label: "ACoS", metric: constants.metric.acos },
+    { column: "CTR", label: "CTR", metric: constants.metric.ctr },
+    { column: "CPC", label: "Cost per click ($)", metric: constants.metric.avgCpc },
+    { column: "Sales", label: "Sales ($) / day", metric: constants.metric.salesValue },
 ];
 
 const startSessionPromise = common.bgMessage({ action: 'startSession' });
@@ -74,7 +73,6 @@ common.getUser().then(user => {
 
         addChartButtons(columns, rows);
     }), 100);
-
 
     window.setInterval(ga.mcatch(() => {
         let tabs = $('.a-tabs');

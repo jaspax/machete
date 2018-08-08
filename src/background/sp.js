@@ -13,14 +13,6 @@ function checkEntityId(entityId) {
     }
 }
 
-function* pageArray(array, step) {
-    if (!array || !array.length)
-        return;
-    for (let index = 0; index < array.length; index += step) {
-        yield array.slice(index, index + step);
-    }
-}
-
 async function dataGather() {
     // We want to make sure that we at least attempt to sync every single
     // domain, but any exceptions we encounter should be propagated so that we
@@ -129,7 +121,7 @@ async function requestCampaignData(domain, entityId) {
         if (!earliestData)
             earliestData = data;
 
-        for (const campaigns of pageArray(data.aaData, 100)) {
+        for (const campaigns of common.pageArray(data.aaData, 100)) {
             await storeDailyCampaignData(entityId, date, { aaData: campaigns });
         }
 
@@ -161,7 +153,7 @@ async function requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
     checkEntityId(entityId); 
 
     // Chop the campaignId list into bite-sized chunks
-    for (const chunk of pageArray(campaignIds, 20)) {
+    for (const chunk of common.pageArray(campaignIds, 20)) {
         const data = await bg.ajax(`https://${domain}/api/rta/campaign-status`, {
             method: 'GET',
             queryData: {
@@ -251,7 +243,7 @@ function storeStatus(entityId, timestamp, data) {
 async function storeKeywordData(entityId, adGroupId, timestamp, data) {
     // Chop the large keyword list into small, bite-sized chunks for easier
     // digestion on the server.
-    for (const chunk of pageArray(data.aaData, 50)) {
+    for (const chunk of common.pageArray(data.aaData, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
             jsonData: { aaData: chunk },
@@ -382,7 +374,7 @@ async function updateKeyword({ domain, entityId, keywordIdList, operation, dataV
         }
     });
 
-    for (const page of pageArray(successes, 50)) {
+    for (const page of common.pageArray(successes, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
             method: 'PATCH',
             jsonData: { operation, dataValues, keywordIds: page },

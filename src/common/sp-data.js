@@ -28,12 +28,21 @@ function getCampaignId(href) {
         return campaignId;
     }
 
-    campaignId = $('input[name=campaignId]').val();
-    if (campaignId) {
-        return campaignId;
+    if (href) {
+        let path = href.split('?')[0];
+        let parts = path.split('/');
+        let campaignIdx = parts.indexOf('campaigns');
+        if (campaignIdx >= 0) {
+            const rawId = parts[campaignIdx + 1];
+            return rawId.replace(/^A/, 'AX');
+        }
     }
 
-    throw new Error('could not discover entityId');
+    campaignId = $('input[name=campaignId]').val();
+    if (campaignId)
+        return campaignId;
+
+    throw new Error('could not discover campaignId');
 }
 
 function getQueryArgs(str) {
@@ -54,7 +63,7 @@ function getQueryArgs(str) {
 
 function getAdGroupIdFromDOM(dom) {
     const adGroupIdInput = dom.querySelector('input[name=adGroupId]');
-    return adGroupIdInput.value;
+    return adGroupIdInput ? adGroupIdInput.value : null;
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {

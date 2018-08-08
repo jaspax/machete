@@ -37,12 +37,22 @@ class DashboardHistoryButton extends React.Component {
             btnClasses += ' ' + chartClassDisabled;
             mclick = 'thumbnail-disabled';
         }
-        mclick += ' ' + this.props.metric[0].prop;
+        mclick += ' ' + this.props.metric.prop;
 
-        return <span>
-            <a id={this.btnId} className={btnClasses} data-mclick={mclick} onClick={this.onChartClick}>
-                <img src={chartPng} />
-            </a>
+        let ghost = null;
+        if (this.props.latestData && this.props.allowed) {
+            const metric = this.props.metric;
+            const value = metric.format(this.props.latestData[metric.prop]);
+            ghost = <div style={{float: 'left'}}><span className="machete-ghost">New</span>{value}</div>;
+        }
+
+        return <div>
+            <div style={{float: 'right'}}>
+                <a id={this.btnId} className={btnClasses} data-mclick={mclick} onClick={this.onChartClick}>
+                    <img src={chartPng} />
+                </a>
+            </div>
+            {ghost}
             <ErrorBoundary>
                 <Popup anchorId={this.btnId} show={this.state.show} onDismiss={this.onPopupDismissed}>
                     <TimeSeriesChart 
@@ -51,7 +61,7 @@ class DashboardHistoryButton extends React.Component {
                         dataPromise={this.state.dataPromise} />
                 </Popup>
             </ErrorBoundary>
-        </span>;
+        </div>;
     }
 }
 
@@ -59,9 +69,10 @@ DashboardHistoryButton.chartClass = chartClass;
 DashboardHistoryButton.propTypes = {
     allowed: PropTypes.bool.isRequired,
     anonymous: PropTypes.bool.isRequired,
-    metric: PropTypes.string.isRequired,
+    metric: PropTypes.object.isRequired,
     title: PropTypes.string.isRequired,
     dataPromiseFactory: PropTypes.func.isRequired,
+    latestData: PropTypes.object,
 };
 
 module.exports = DashboardHistoryButton;
