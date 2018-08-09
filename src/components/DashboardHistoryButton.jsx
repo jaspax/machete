@@ -43,16 +43,17 @@ class DashboardHistoryButton extends React.Component {
         if (this.props.latestData && this.props.allowed) {
             const metric = this.props.metric;
             const value = metric.format(this.props.latestData[metric.prop]);
-            ghost = <div style={{float: 'left'}}><span className="machete-ghost">New: </span>{value}</div>;
+            ghost = <span><span className="machete-ghost">New:</span>{value}</span>;
         }
 
-        return <div>
-            {ghost}
-            <div style={{float: 'right'}}>
+        return <span>
+            <span>
                 <a id={this.btnId} className={btnClasses} data-mclick={mclick} onClick={this.onChartClick}>
                     <img src={chartPng} />
                 </a>
-            </div>
+            </span>
+            <br />
+            {ghost}
             <ErrorBoundary>
                 <Popup anchorId={this.btnId} show={this.state.show} onDismiss={this.onPopupDismissed}>
                     <TimeSeriesChart 
@@ -61,7 +62,7 @@ class DashboardHistoryButton extends React.Component {
                         dataPromise={this.state.dataPromise} />
                 </Popup>
             </ErrorBoundary>
-        </div>;
+        </span>;
     }
 }
 

@@ -199,7 +199,8 @@ function findCampaignRows(wrapper) {
 function findTargetInRow(row, chart) {
     if (columns && columns.length) {
         const columnTitles = columns.map(x => x.innerText);
-        return row[columnTitles.indexOf(chart.columnTitle)];
+        const cell = row[columnTitles.indexOf(chart.columnTitle)];
+        return $(cell).children()[0];
     }
     return $(row).children()[chart.column];
 }
@@ -216,7 +217,7 @@ function addChartButtonToCell({ summary, allowed, anonymous, target, chart }) {
 
     let container = $(target).find('.machete-dash-container');
     if (!container.length) {
-        container = $('<div class="machete-dash-container"></div>');
+        container = $('<span class="machete-dash-container"></span>');
         $(target).append(container);
     }
 
