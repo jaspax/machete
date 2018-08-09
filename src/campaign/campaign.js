@@ -45,8 +45,7 @@ window.setInterval(ga.mcatch(() => {
 }), 100);
 
 function addCampaignTabs(tabs) {
-    if (tabs.attr('tagName') == 'div') {
-        // new ui
+    if (tabs.prop('tagName') == 'DIV') { // new ui
         tabber(tabs, { label: 'Keyword List', active: true });
     }
     for (let tab of ourTabs) {
