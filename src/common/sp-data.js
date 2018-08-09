@@ -103,10 +103,11 @@ function getAggregateCampaignHistory(entityId = getEntityId(), campaignIds) {
     });
 }
 
-function getKeywordData(entityId = getEntityId(), adGroupId) {
+function getKeywordData(entityId = getEntityId(), campaignId = getCampaignId(), adGroupId) {
     return common.bgMessage({
         action: 'sp.getKeywordData',
         entityId,
+        campaignId,
         adGroupId,
     });
 }

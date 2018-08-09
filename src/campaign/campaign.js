@@ -25,7 +25,7 @@ const keywordDataPromise = ga.mpromise((resolve, reject) => {
         if (adGroupId) {
             const entityId = spdata.getEntityId();
             spdata.storeAdGroupMetadata(entityId, spdata.getCampaignId(), adGroupId);
-            spdata.getKeywordData(entityId, adGroupId).then(resolve, reject);
+            spdata.getKeywordData(entityId, spdata.getCampaignId(), adGroupId).then(resolve, reject);
             window.clearInterval(adGroupInterval);
         }
     }), 250);
@@ -119,7 +119,7 @@ function generateBidOptimizer(container) {
             const campaignSummary = await spdata.getCampaignSummary(entityId, campaignId);
             const campaignData = common.accumulateCampaignSeries(await spdata.getCampaignHistory(entityId, campaignId));
 
-            const keywords = await spdata.getKeywordData(entityId, adGroupId);
+            const keywords = await spdata.getKeywordData(entityId, campaignId, adGroupId);
             const renormedKws = common.renormKeywordStats(campaignData, keywords);
 
             if (target.target == 'acos') {

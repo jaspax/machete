@@ -43,7 +43,7 @@ async function dataGather() {
                     if (!(summary && summary.asin)) {
                         await requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
                     }
-                    await requestKeywordData(domain, entityId, adGroupId);
+                    await requestKeywordData({ domain, entityId, campaignId, adGroupId });
                 }
             });
         }
@@ -204,12 +204,14 @@ async function requestCampaignMetadata(domain, entityId, campaignId, adGroupId) 
     }
 }
 
-async function requestKeywordData(domain, entityId, adGroupId) {
+async function requestKeywordData({ domain, entityId, campaignId, adGroupId }) {
     checkEntityId(entityId);
 
     let timestamp = Date.now();
+    let data = [];
+
     console.log('requesting keyword data for', entityId, adGroupId);
-    const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
+    const response = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
         method: 'POST',
         formData: {
             entityId, 
@@ -219,12 +221,61 @@ async function requestKeywordData(domain, entityId, adGroupId) {
         responseType: 'json',
     });
 
-    if (data.message) {
+    if (response.message) {
         ga.mga('event', 'error-handled', 'keyword-data-failure', `${adGroupId}: ${data.message}`);
-        return;
+        if (campaignId) {
+            // attempt the alternate data api path
+            data = await requestKeywordDataPaged(domain, entityId, campaignId, adGroupId);
+        }
+    }
+    else {
+        data = response.aaData;
     }
 
-    await storeKeywordData(entityId, adGroupId, timestamp, data);
+    if (data && data.length) {
+        await storeKeywordData(entityId, adGroupId, timestamp, data);
+    }
+}
+
+async function requestKeywordDataPaged(domain, entityId, campaignId, adGroupId) {
+    const pageSize = 100;
+    let currentPage = 0;
+    let totalRecords = 0;
+    let allData = [];
+
+    // disgusting fixup for campaignId -- WHY DID THEY CREATE TWO DIFFERENT
+    // FORMATS I AM GOING INSANE
+    campaignId = campaignId.replace(/^AX/, 'A');
+
+    do {
+        const data = await bg.ajax(`https://${domain}/cm/api/sp/campaigns/${campaignId}/adgroups/${adGroupId}/keywords?entityId=${entityId}`, {
+            method: 'POST',
+            responseType: 'json',
+            jsonData: {
+                "startDateUTC": 1,
+                "endDateUTC": Date.now(),
+                "pageOffset": currentPage, 
+                "pageSize": pageSize, 
+                "sort": null, 
+                "period": "LIFETIME", 
+                "filters": [{"field": "KEYWORD_STATE", "operator": "EXACT", "values": ["ENABLED", "PAUSED"], "not": false}], 
+                "interval": "SUMMARY", 
+                "programType": "SP", 
+                "fields": ["KEYWORD_STATE", "KEYWORD", "KEYWORD_MATCH_TYPE", "KEYWORD_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "KEYWORD_BID"], 
+                "queries": []
+            },
+        });
+                             
+        if (!data)
+            break;
+
+        allData = allData.concat(data.keywords);
+        totalRecords = data.summary.numberOfRecords;
+        currentPage++;
+    }
+    while (currentPage * pageSize < totalRecords);
+
+    return allData;
 }
 
 function storeDailyCampaignData(entityId, timestamp, data) {
@@ -254,7 +305,7 @@ function storeStatus(entityId, timestamp, data) {
 async function storeKeywordData(entityId, adGroupId, timestamp, data) {
     // Chop the large keyword list into small, bite-sized chunks for easier
     // digestion on the server.
-    for (const chunk of common.pageArray(data.aaData, 50)) {
+    for (const chunk of common.pageArray(data, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
             jsonData: { aaData: chunk },
@@ -309,7 +360,7 @@ const getAggregateCampaignHistory = bg.cache.coMemo(async function({ entityId, c
     return aggregate.sort((a, b) => a.timestamp - b.timestamp);
 });
 
-const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, adGroupId }) {
+const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, campaignId, adGroupId }) {
     checkEntityId(entityId);
     const url = `${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}`;
     const opts = {
@@ -322,7 +373,7 @@ const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, adGrou
         // Possibly this is the first time we've ever seen this campaign. If so,
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
-        await requestKeywordData(domain, entityId, adGroupId);
+        await requestKeywordData({ domain, entityId, campaignId, adGroupId });
         data = await bg.ajax(url, opts);
     }
 
