@@ -36,8 +36,11 @@ spdata.amsPageInit();
 
 window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
-    if (!campaignTabs.length)
+    if (!campaignTabs.length) {
+        if (!window.location.href.match(/\/keywords/))
+            return;
         campaignTabs = $('.page-container > div').last();
+    }
 
     if (campaignTabs.length && campaignTabs.find(`.machete-tab`).length == 0) {
         addCampaignTabs(campaignTabs);
