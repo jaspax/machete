@@ -68,6 +68,8 @@ function addTotalsRow(wrapper) {
     const head = wrapper.find('#campaignTable thead');
     if (head.length) { // original UI
         const body = $('<tbody id="machete-totals"></tbody>');
+        head.after(body);
+
         spdata.getCampaignSummaries().then(summaries => {
             const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
             const lastDay = common.sumCampaignSnapshots(activeCampaigns.map(x => x.latestData));
