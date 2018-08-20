@@ -5,12 +5,34 @@ const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const spData = require('../common/sp-data.js');
 
-// eslint-disable-file no-await-in-loop
+const entityDailySyncEvent = {};
 
 function checkEntityId(entityId) {
     if (bg.isUnset(entityId)) {
         throw new Error('invalid entityId=' + entityId);
     }
+}
+
+function mkEvent() {
+    const event = {};
+    event.promise = new Promise((resolve, reject) => {
+        event.set = val => {
+            resolve(val);
+            event.set = () => { /* ignore multiple sets */ };
+        };
+        event.error = e => {
+            reject(e);
+            event.error = () => { /* ignore multiple errors */ };
+        };
+    });
+
+    return event;
+}
+
+function getEntitySyncEvent(entityId) {
+    if (!entityDailySyncEvent[entityId])
+        entityDailySyncEvent[entityId] = mkEvent();
+    return entityDailySyncEvent[entityId];
 }
 
 async function dataGather() {
@@ -102,16 +124,24 @@ const getAllowedCampaigns = bg.cache.coMemo(async function({ entityId }) {
     });
 }, { maxAge: 30000 });
 
-const getCampaignSummaries = bg.cache.coMemo(function({ entityId }) {
+const getCampaignSummaries = bg.cache.coMemo(async function({ entityId }) {
     checkEntityId(entityId);
+
+    await summaryReady(entityId);
     return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}/summary`, { 
         method: 'GET',
         responseType: 'json'
     });
 }, { maxAge: 30000 });
 
+async function summaryReady(entityId) {
+    const syncEvent = getEntitySyncEvent(entityId);
+    await syncEvent.promise;
+}
+
 async function requestCampaignData(domain, entityId) {
     checkEntityId(entityId);
+    const syncEvent = getEntitySyncEvent(entityId);
 
     console.log('requesting campaign data for', entityId);
     const missing = await getMissingDates(entityId);
@@ -136,6 +166,7 @@ async function requestCampaignData(domain, entityId) {
             await storeDailyCampaignData(entityId, date, { aaData: campaigns });
         }
 
+        syncEvent.set();
     });
 
     let timestamp = Date.now();
