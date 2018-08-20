@@ -70,6 +70,13 @@ function addTotalsRow(wrapper) {
         const body = $('<tbody id="machete-totals"></tbody>');
         head.after(body);
 
+        const totalRow = React.createElement(AmsCampaignRow, { 
+            label: "Yesterday's Totals",
+            lastDay: {},
+            syncPromise: spdata.startSession(),
+        });
+        ReactDOM.render(totalRow, body[0]);
+
         spdata.getCampaignSummaries().then(summaries => {
             const activeCampaigns = summaries.filter(x => spdata.isRunning(x));
             const lastDay = common.sumCampaignSnapshots(activeCampaigns.map(x => x.latestData));
