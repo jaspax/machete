@@ -30,17 +30,30 @@ function mkEvent() {
 }
 
 function getEntitySyncEvent(entityId) {
-    if (!entityDailySyncEvent[entityId])
-        entityDailySyncEvent[entityId] = mkEvent();
+    if (!entityDailySyncEvent[entityId]) {
+        const event = mkEvent();
+        entityDailySyncEvent[entityId] = event;
+        if (bg.hasSyncedToday('sp'))
+            event.set();
+    }
     return entityDailySyncEvent[entityId];
 }
 
-async function dataGather() {
+async function dataGather(req) {
     // We want to make sure that we at least attempt to sync every single
     // domain, but any exceptions we encounter should be propagated so that we
     // don't record this as a success.
     let deferredException = null;
-    for (const { domain, entityId } of bg.getEntityIds()) {
+    
+    let entities = bg.getEntityIds();
+
+    // if we are responding to a client request, always sync that entityId first
+    if (req) {
+        entities.unshift({ domain: req.domain, entityId: req.entityId });
+        entities = _.uniqBy(entities, x => x.entityId);
+    }
+
+    for (const { domain, entityId } of entities) {
         try {
             const campaignIds = await requestCampaignData(domain, entityId);
             const adGroups = await getAdGroups(entityId);
@@ -145,35 +158,41 @@ async function requestCampaignData(domain, entityId) {
 
     console.log('requesting campaign data for', entityId);
     const missing = await getMissingDates(entityId);
+    let campaignIds = [];
 
-    let earliestData = null;
-    await bg.parallelQueue(missing.missingDays, async function(date) {
-        const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
-            method: 'GET',
-            queryData: {
-                entityId,
-                status: 'Customized',
-                reportStartDate: date,
-                reportEndDate: date,
-            },
-            responseType: 'json',
+    if (missing.missingDays.length) {
+        let earliestData = null;
+        await bg.parallelQueue(missing.missingDays, async function(date) {
+            const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
+                method: 'GET',
+                queryData: {
+                    entityId,
+                    status: 'Customized',
+                    reportStartDate: date,
+                    reportEndDate: date,
+                },
+                responseType: 'json',
+            });
+
+            if (!earliestData)
+                earliestData = data;
+
+            for (const campaigns of common.pageArray(data.aaData, 100)) {
+                await storeDailyCampaignData(entityId, date, { aaData: campaigns });
+            }
+
+            syncEvent.set();
         });
 
-        if (!earliestData)
-            earliestData = data;
-
-        for (const campaigns of common.pageArray(data.aaData, 100)) {
-            await storeDailyCampaignData(entityId, date, { aaData: campaigns });
+        let timestamp = Date.now();
+        if (earliestData && earliestData.aaData && earliestData.aaData.length) {
+            campaignIds = earliestData.aaData.map(x => x.campaignId);
+            await requestCampaignStatus(domain, entityId, campaignIds, timestamp);
         }
-
+    }
+    else {
+        // everything is up-to-date, so signal immediately
         syncEvent.set();
-    });
-
-    let timestamp = Date.now();
-    let campaignIds = [];
-    if (earliestData && earliestData.aaData && earliestData.aaData.length) {
-        campaignIds = earliestData.aaData.map(x => x.campaignId);
-        await requestCampaignStatus(domain, entityId, campaignIds, timestamp);
     }
 
     if (missing.needLifetime) {

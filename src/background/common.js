@@ -96,9 +96,25 @@ function startSession(req) {
     return dataGather(req);
 }
 
+const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
+function hasSyncedToday(module) {
+    if (lastSync[module]) {
+        const moduleSync = moment(lastSync[module]);
+        console.log('Last data sync for', module, 'at', moduleSync.format());
+        return moment().isSame(moduleSync, 'day');
+    }
+
+    console.log('No recorded sync for', module);
+    return false;
+}
+
+function setSyncTime(module, time) {
+    lastSync[module] = time;
+    localStorage.setItem('lastSync', JSON.stringify(lastSync));
+}
+
 async function dataGather(req) {
     console.log('Data sync start at', moment().format());
-    const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
 
     // Store entityIds and domains for further use
     if (req.entityId) {
@@ -121,23 +137,14 @@ async function dataGather(req) {
             throw new Error('module has no name');
         }
 
-        if (lastSync[mod.name]) {
-            const moduleSync = moment(lastSync[mod.name]);
-            console.log('Last data sync for', mod.name, 'at', moduleSync.format());
-            if (moment().isSame(moduleSync, 'day')) {
-                console.log(mod.name, 'sync is up-to-date');
-                continue;
-            }
-        }
-        else {
-            console.log('No recorded sync for', mod.name);
-        }
+        if (hasSyncedToday(mod.name))
+            continue;
 
         try {
             console.log('Data sync', mod.name, 'start at', moment().format());
             await mod.dataGather(req);
             newSync = Date.now();
-            lastSync[mod.name] = newSync;
+            setSyncTime(mod.name, newSync);
         }
         catch (ex) {
             if (!handleServerErrors(ex, 'dataGather:'+mod.name))
@@ -147,7 +154,6 @@ async function dataGather(req) {
     }
 
     cache.clear();
-    localStorage.setItem('lastSync', JSON.stringify(lastSync));
 
     console.log('Data sync finish at', moment().format());
     return Math.max(newSync, oldSync);
@@ -382,4 +388,6 @@ module.exports = {
     getEntityIds,
     addSellerDomain,
     getSellerDomains,
+    hasSyncedToday,
+    setSyncTime,
 };
