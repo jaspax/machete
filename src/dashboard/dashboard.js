@@ -184,7 +184,7 @@ function addChartButtons(wrapper) {
         ga.mpromise(Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()]))
         .then(results => {
             const [allowed, user, summaries] = results;
-            const summary = summaries.find(x => x.campaignId == campaignId);
+            const summary = summaries.find(x => x.campaignId == campaignId) || {};
             renderButtons(allowed, user.isAnon, summary);
         });
     }
