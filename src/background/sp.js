@@ -48,7 +48,7 @@ async function dataGather(req) {
     let entities = bg.getEntityIds();
 
     // if we are responding to a client request, always sync that entityId first
-    if (req) {
+    if (req && req.entityId) {
         entities.unshift({ domain: req.domain, entityId: req.entityId });
         entities = _.uniqBy(entities, x => x.entityId);
     }
