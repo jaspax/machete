@@ -5,7 +5,7 @@ const ga = require('../common/ga.js');
 async function dataGather() {
     const time = Date.now();
     const asins = await fetchAsins(time);
-    await bg.parallelQueue(asins, async function(asinArray) {
+    for (const asinArray of asins) {
         const asin = asinArray[0].substring(0, 10);
         if (asin[0] != 'B') {
             ga.mga('event', 'kdp-warning', 'asin-unknown-format', asinArray.toString());
@@ -21,7 +21,7 @@ async function dataGather() {
             method: 'PUT',
             jsonData: { sales, ku },
         });
-    });
+    }
 }
 
 const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
