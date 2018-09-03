@@ -216,7 +216,7 @@ function findTargetInRow(row, chart) {
 
 function addChartButtonToCell({ summary, allowed, anonymous, target, chart }) {
     const dataPromiseFactory = () => ga.mpromise(async function() {
-        const data = await spdata.getCampaignHistory(spdata.getEntityId(), summary.campaignId);
+        const data = summary.campaignId ? await spdata.getCampaignHistory(spdata.getEntityId(), summary.campaignId) : [];
         const deltas = common.chunkSeries(data, 'day').filter(x => x.timestamp > startTimestamp);
 
         const knpe = spdata.calculateKnpIncome(deltas, summary.kdp);
