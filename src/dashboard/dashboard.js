@@ -179,7 +179,7 @@ function addChartButtons(wrapper) {
                     addChartButtonToCell({ summary, allowed, anonymous, target, chart });
             }
         });
-        renderButtons(false, true, { campaignId });
+        renderButtons(true, false, { campaignId });
 
         ga.mpromise(Promise.all([spdata.getCampaignAllowed(spdata.getEntityId(), campaignId), common.getUser(), spdata.getCampaignSummaries()]))
         .then(results => {
