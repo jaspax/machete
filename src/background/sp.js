@@ -13,14 +13,17 @@ function checkEntityId(entityId) {
     }
 }
 
-function mkEvent() {
+function mkEvent(tag) {
     const event = {};
+    console.log('Created event', tag);
     event.promise = new Promise((resolve, reject) => {
         event.set = val => {
+            console.log('Set event', tag);
             resolve(val);
             event.set = () => { /* ignore multiple sets */ };
         };
         event.error = e => {
+            console.log('Error event', tag);
             reject(e);
             event.error = () => { /* ignore multiple errors */ };
         };
@@ -31,7 +34,7 @@ function mkEvent() {
 
 function getEntitySyncEvent(entityId) {
     if (!entityDailySyncEvent[entityId]) {
-        const event = mkEvent();
+        const event = mkEvent(`entity ${entityId}`);
         entityDailySyncEvent[entityId] = event;
         if (bg.hasSyncedToday('sp'))
             event.set();
@@ -158,40 +161,41 @@ async function requestCampaignData(domain, entityId) {
 
     console.log('requesting campaign data for', entityId);
     const missing = await getMissingDates(entityId);
+    const days = new Set(missing.missingDays);
     let campaignIds = [];
 
-    if (missing.missingDays.length) {
-        let earliestData = null;
-        await bg.parallelQueue(missing.missingDays, async function(date) {
-            const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
-                method: 'GET',
-                queryData: {
-                    entityId,
-                    status: 'Customized',
-                    reportStartDate: date,
-                    reportEndDate: date,
-                },
-                responseType: 'json',
-            });
+    try {
+        if (days.size) {
+            async function queryDataForDate(date) { // eslint-disable-line no-inner-declarations
+                const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
+                    method: 'GET',
+                    queryData: {
+                        entityId,
+                        status: 'Customized',
+                        reportStartDate: date,
+                        reportEndDate: date,
+                    },
+                    responseType: 'json',
+                });
 
-            if (!earliestData)
-                earliestData = data;
+                for (const campaigns of common.pageArray(data.aaData, 100)) {
+                    await storeDailyCampaignData(entityId, date, { aaData: campaigns });
+                }
 
-            for (const campaigns of common.pageArray(data.aaData, 100)) {
-                await storeDailyCampaignData(entityId, date, { aaData: campaigns });
+                return data;
             }
 
+            const latestDay = Math.max(...days.values());
+            const latestData = await queryDataForDate(latestDay);
+            campaignIds = latestData.aaData.map(x => x.campaignId);
+            await requestCampaignStatus(domain, entityId, campaignIds, Date.now());
             syncEvent.set();
-        });
 
-        let timestamp = Date.now();
-        if (earliestData && earliestData.aaData && earliestData.aaData.length) {
-            campaignIds = earliestData.aaData.map(x => x.campaignId);
-            await requestCampaignStatus(domain, entityId, campaignIds, timestamp);
+            days.delete(latestDay);
+            await bg.parallelQueue(days.values(), queryDataForDate);
         }
     }
-    else {
-        // everything is up-to-date, so signal immediately
+    finally {
         syncEvent.set();
     }
 

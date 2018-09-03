@@ -370,7 +370,7 @@ function parallelQueue(items, fn) {
 
         queue.drain = () => resolve(results);
         queue.error = reject;
-        queue.push(items);
+        queue.push(Array.from(items));
     });
 }
 
