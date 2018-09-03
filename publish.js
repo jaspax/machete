@@ -1,4 +1,3 @@
-const co = require('co');
 const fs = require('fs');
 const requestp = require('request-promise-native');
 const readline = require('readline-sync');
@@ -48,8 +47,8 @@ if (require.main === module) {
     });
 }
 
-function* asyncSpawn(cmd, args) {
-    return yield new Promise((resolve, reject) => {
+function asyncSpawn(cmd, args) {
+    return new Promise((resolve, reject) => {
         console.log(cmd, args.join(' '));
         const child = spawn(cmd, args, { stdio: 'inherit' });
         child.on('close', code => {
@@ -60,23 +59,27 @@ function* asyncSpawn(cmd, args) {
     });
 }
 
-function* gitTag(releaseTag) {
-    const manifest = require('./manifest.json');
-    return yield* asyncSpawn('git', ['tag', '-f', `${releaseTag}-${manifest.version}`]);
+function gitStatus() {
+    const output = await asyncSpawn('git', ['status', '-s']);
 }
 
-function* gitPush(releaseTag) {
-    yield* asyncSpawn('git', ['push', 'origin']);
-    yield* asyncSpawn('git', ['push', 'origin', '--tags']);
+function gitTag(releaseTag) {
+    const manifest = require('./manifest.json');
+    return asyncSpawn('git', ['tag', '-f', `${releaseTag}-${manifest.version}`]);
+}
+
+async function gitPush(releaseTag) {
+    await asyncSpawn('git', ['push', 'origin']);
+    await asyncSpawn('git', ['push', 'origin', '--tags']);
 
     if (releaseTag == 'release') {
-        yield* asyncSpawn('git', ['push', 'github']);
-        yield* asyncSpawn('git', ['push', 'github', '--tags']);
+        await asyncSpawn('git', ['push', 'github']);
+        await asyncSpawn('git', ['push', 'github', '--tags']);
     }
 }
 
-function* accessCode() {
-    const data = yield new Promise((resolve, reject) =>
+async function accessCode() {
+    const data = await new Promise((resolve, reject) =>
         fs.readFile('../uploader-keys.json', 'utf8', (err, data) => (err && reject(err)) || resolve(data))
     );
 
@@ -89,8 +92,8 @@ function* accessCode() {
     return codes;
 }
 
-function* accessToken(codes) {
-    const response = yield requestp({
+async function accessToken(codes) {
+    const response = await requestp({
         uri: 'https://accounts.google.com/o/oauth2/token',
         method: 'POST',
         formData: {
@@ -105,9 +108,9 @@ function* accessToken(codes) {
     return token.access_token;
 }
 
-function* uploadPackage(appId, token, pkgPath) {
-    const pkgBuffer = yield new Promise((resolve, reject) => fs.readFile(pkgPath, (err, data) => (err && reject(err)) || resolve(data)));
-    const response = yield requestp({
+async function uploadPackage(appId, token, pkgPath) {
+    const pkgBuffer = await new Promise((resolve, reject) => fs.readFile(pkgPath, (err, data) => (err && reject(err)) || resolve(data)));
+    const response = await requestp({
         uri: 'https://www.googleapis.com/upload/chromewebstore/v1.1/items/' + appId,
         method: 'PUT',
         headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
@@ -121,8 +124,8 @@ function* uploadPackage(appId, token, pkgPath) {
     return status;
 }
 
-function* publishPackage(appId, token) {
-    const response = yield requestp({
+async function publishPackage(appId, token) {
+    const response = await requestp({
         uri: `https://www.googleapis.com/chromewebstore/v1.1/items/${appId}/publish`,
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
