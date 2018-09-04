@@ -157,7 +157,7 @@ async function summaryReady(entityId) {
     await syncEvent.promise;
 }
 
-async function requestCampaignDataRta({ domain, entityId, date }) { // eslint-disable-line no-inner-declarations
+async function requestCampaignDataRta({ domain, entityId, date }) {
     const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
         method: 'GET',
         queryData: {
@@ -202,6 +202,42 @@ async function requestCampaignDataCm({ domain, entityId, date }) {
     return { aaData: allData };
 }
 
+function requestLifetimeCampaignDataRta({ domain, entityId }) {
+    return bg.ajax(`https://${domain}/api/rta/campaigns`, {
+        method: 'GET',
+        queryData: {
+            entityId,
+            status: 'Lifetime',
+        },
+        responseType: 'json',
+    });
+}
+
+async function requestLifetimeCampaignDataCm({ domain, entityId }) {
+    let allData = [];
+    const data = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        method: 'POST',
+        queryData: { entityId },
+        jsonData: {
+            pageOffset: 0,
+            pageSize: 100,
+            sort: { order: "DESC", field: "CAMPAIGN_NAME" },
+            period: "LIFETIME",
+            startDateUTC: 1,
+            endDateUTC: moment().valueOf(),
+            filters: [{ field: "CAMPAIGN_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false }],
+            interval: "SUMMARY",
+            programType: "SP",
+            fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
+            queries: []
+        },
+        responseType: 'json'
+    });
+
+    allData = allData.concat(data.campaigns);
+    return { aaData: allData };
+}
+
 function requestCampaignDataPoly({ domain, entityId, date }) {
     try {
         return requestCampaignDataCm({ domain, entityId, date });
@@ -209,6 +245,16 @@ function requestCampaignDataPoly({ domain, entityId, date }) {
     catch (ex) {
         console.error(ex);
         return requestCampaignDataRta({ domain, entityId, date });
+    }
+}
+
+function requestLifetimeCampaignDataPoly({ domain, entityId }) {
+    try {
+        return requestLifetimeCampaignDataCm({ domain, entityId });
+    }
+    catch (ex) {
+        console.error(ex);
+        return requestLifetimeCampaignDataRta({ domain, entityId });
     }
 }
 
@@ -225,12 +271,13 @@ async function requestCampaignData(domain, entityId) {
         if (days.size) {
             const latestDay = Math.max(...days.values());
             const latestData = await requestCampaignDataPoly({ domain, entityId, date: latestDay });
-            campaignIds = latestData.aaData.map(x => x.campaignId);
-            await requestCampaignStatus(domain, entityId, campaignIds, Date.now());
+            campaignIds = latestData.aaData.map(x => x.id || x.campaignId);
+            if (latestData.aaData.length && !(latestData.aaData[0].state && latestData.aaData[0].status))
+                await requestCampaignStatus(domain, entityId, campaignIds, Date.now());
             syncEvent.set();
 
             days.delete(latestDay);
-            await bg.parallelQueue(days.values().map(x => ({ domain, entityId, date: x }), requestCampaignDataPoly));
+            await bg.parallelQueue(Array.from(days.values()).map(x => ({ domain, entityId, date: x })), requestCampaignDataPoly);
         }
     }
     finally {
@@ -238,14 +285,7 @@ async function requestCampaignData(domain, entityId) {
     }
 
     if (missing.needLifetime) {
-        const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
-            method: 'GET',
-            queryData: {
-                entityId,
-                status: 'Lifetime',
-            },
-            responseType: 'json',
-        });
+        const data = await requestLifetimeCampaignDataPoly({ domain, entityId });
         await storeLifetimeCampaignData(entityId, Date.now(), data);
     }
 
