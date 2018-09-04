@@ -4,6 +4,8 @@ const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const spData = require('../common/sp-data.js');
+const moment = require('frozen-moment');
+require('moment-timezone');
 
 const entityDailySyncEvent = {};
 
@@ -155,6 +157,61 @@ async function summaryReady(entityId) {
     await syncEvent.promise;
 }
 
+async function requestCampaignDataRta({ domain, entityId, date }) { // eslint-disable-line no-inner-declarations
+    const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
+        method: 'GET',
+        queryData: {
+            entityId,
+            status: 'Customized',
+            reportStartDate: date,
+            reportEndDate: date,
+        },
+        responseType: 'json',
+    });
+
+    for (const campaigns of common.pageArray(data.aaData, 100)) {
+        await storeDailyCampaignData(entityId, date, { aaData: campaigns });
+    }
+
+    return data;
+}
+
+async function requestCampaignDataCm({ domain, entityId, date }) {
+    const utcDay = moment(date).tz('UTC');
+    let allData = [];
+    const data = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        method: 'POST',
+        queryData: { entityId },
+        jsonData: {
+            pageOffset: 0,
+            pageSize: 100,
+            sort: { order: "DESC", field: "CAMPAIGN_NAME" },
+            period: "CUSTOM",
+            startDateUTC: utcDay.startOf('day').valueOf(),
+            endDateUTC: utcDay.endOf('day').valueOf(),
+            filters: [{ field: "CAMPAIGN_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false }],
+            interval: "SUMMARY",
+            programType: "SP",
+            fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
+            queries: []
+        },
+        responseType: 'json'
+    });
+
+    allData = allData.concat(data.campaigns);
+    return { aaData: allData };
+}
+
+function requestCampaignDataPoly({ domain, entityId, date }) {
+    try {
+        return requestCampaignDataCm({ domain, entityId, date });
+    }
+    catch (ex) {
+        console.error(ex);
+        return requestCampaignDataRta({ domain, entityId, date });
+    }
+}
+
 async function requestCampaignData(domain, entityId) {
     checkEntityId(entityId);
     const syncEvent = getEntitySyncEvent(entityId);
@@ -166,33 +223,14 @@ async function requestCampaignData(domain, entityId) {
 
     try {
         if (days.size) {
-            async function queryDataForDate(date) { // eslint-disable-line no-inner-declarations
-                const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
-                    method: 'GET',
-                    queryData: {
-                        entityId,
-                        status: 'Customized',
-                        reportStartDate: date,
-                        reportEndDate: date,
-                    },
-                    responseType: 'json',
-                });
-
-                for (const campaigns of common.pageArray(data.aaData, 100)) {
-                    await storeDailyCampaignData(entityId, date, { aaData: campaigns });
-                }
-
-                return data;
-            }
-
             const latestDay = Math.max(...days.values());
-            const latestData = await queryDataForDate(latestDay);
+            const latestData = await requestCampaignDataPoly({ domain, entityId, date: latestDay });
             campaignIds = latestData.aaData.map(x => x.campaignId);
             await requestCampaignStatus(domain, entityId, campaignIds, Date.now());
             syncEvent.set();
 
             days.delete(latestDay);
-            await bg.parallelQueue(days.values(), queryDataForDate);
+            await bg.parallelQueue(days.values().map(x => ({ domain, entityId, date: x }), requestCampaignDataPoly));
         }
     }
     finally {
