@@ -14,29 +14,29 @@ if (require.main === module) {
         appIds = ["doggogocakpiacfoebkjgjolmpklkeha", "linbfabhpielmegmeckbhfadhnnjoack"];
     }
 
-    co(function*() {
+    (async function() {
         try {
             console.log(`Publishing ${pkgPath} to apps ${appIds}`);
 
             for (const appId of appIds) {
                 console.log('Require access code...');
-                const codes = yield* accessCode();
+                const codes = await accessCode();
 
                 console.log('Requesting access token...');
-                const token = yield* accessToken(codes);
+                const token = await accessToken(codes);
 
                 console.log(`Uploading to ${appId}...`);
-                const uploadResult = yield* uploadPackage(appId, token, pkgPath);
+                const uploadResult = await uploadPackage(appId, token, pkgPath);
                 console.log('Upload result:', uploadResult);
 
                 console.log(`Publishing ${appId}...`);
-                const publishResult = yield* publishPackage(appId, token);
+                const publishResult = await publishPackage(appId, token);
                 console.log('Publish result:', publishResult);
             }
 
             console.log('Pushing and tagging current changes in git');
-            yield* gitTag(releaseTag);
-            yield* gitPush(releaseTag);
+            await gitTag(releaseTag);
+            await gitPush(releaseTag);
 
             process.exit(0);
         }
@@ -44,7 +44,7 @@ if (require.main === module) {
             console.error(ex);
             process.exit(1);
         }
-    });
+    }());
 }
 
 function asyncSpawn(cmd, args) {
@@ -57,10 +57,6 @@ function asyncSpawn(cmd, args) {
             return reject('Error code: ' + code);
         });
     });
-}
-
-function gitStatus() {
-    const output = await asyncSpawn('git', ['status', '-s']);
 }
 
 function gitTag(releaseTag) {
