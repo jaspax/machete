@@ -25,20 +25,31 @@ function getEntityId(href = window.location.toString()) {
 function getCampaignId(href = window.location.toString()) {
     let campaignId = getQueryArgs(href).campaignId;
     if (campaignId) {
-        return campaignId;
+        return rtaId(campaignId);
     }
 
     if (href) {
         const rawId = getUriPathChunk(href, 'campaigns');
-        if (rawId)
-            return rawId.replace(/^A/, 'AX');
+        return rtaId(rawId);
     }
 
     campaignId = $('input[name=campaignId]').val();
     if (campaignId)
-        return campaignId;
+        return rtaId(campaignId);
 
     throw new Error('could not discover campaignId');
+}
+
+function cmId(campaignId) {
+    if (!campaignId)
+        return null;
+    return campaignId.replace(/^AX?/, 'A');
+}
+
+function rtaId(campaignId) {
+    if (!campaignId)
+        return null;
+    return campaignId.replace(/^AX?/, 'AX');
 }
 
 // take a uri like host.com/foo/1/ and extract the "1" given "foo"
@@ -211,7 +222,7 @@ function updateKeywordBid(keywordIdList, bid) {
 }
 
 function isRunning(campaignSummary) {
-    return campaignSummary && ['RUNNING', 'OUT_OF_BUDGET', null].includes(campaignSummary.status || null);
+    return campaignSummary && ['RUNNING', 'OUT_OF_BUDGET', 'ENABLED', null].includes(campaignSummary.status || null);
 }
 
 function calculateKnpIncome(amsSales, kdpSales) {
@@ -307,6 +318,8 @@ module.exports = {
     amsPageInit,
     getEntityId,
     getCampaignId,
+    cmId,
+    rtaId,
     getQueryArgs,
     getAdGroupIdFromDOM,
     getCurrentCampaignSnapshot,

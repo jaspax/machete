@@ -4,8 +4,9 @@ const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const spData = require('../common/sp-data.js');
-const moment = require('frozen-moment');
-require('moment-timezone');
+
+const spCm = require('./sp-cm.js');
+const spRta = require('./sp-rta.js');
 
 const entityDailySyncEvent = {};
 
@@ -20,12 +21,10 @@ function mkEvent(tag) {
     console.log('Created event', tag);
     event.promise = new Promise((resolve, reject) => {
         event.set = val => {
-            console.log('Set event', tag);
             resolve(val);
             event.set = () => { /* ignore multiple sets */ };
         };
         event.error = e => {
-            console.log('Error event', tag);
             reject(e);
             event.error = () => { /* ignore multiple errors */ };
         };
@@ -59,71 +58,55 @@ async function dataGather(req) {
     }
 
     for (const { domain, entityId } of entities) {
-        try {
-            const campaignIds = await requestCampaignData(domain, entityId);
-            const adGroups = await getAdGroups(entityId);
-            const summaries = await getCampaignSummaries({ entityId });
+        checkEntityId(entityId);
+        for (const collector of [spCm(domain, entityId), spRta(domain, entityId)]) {
+            try {
+                const campaignIds = await requestCampaignData(collector);
+                const adGroups = await getAdGroups(entityId);
+                const summaries = await getCampaignSummaries({ entityId });
 
-            await bg.parallelQueue(campaignIds, async function(campaignId) {
-                const summary = summaries.find(x => x.campaignId == campaignId);
-                if (!spData.isRunning(summary)) {
-                    return;
-                }
-
-                const adGroupItem = adGroups.find(x => x.campaignId == campaignId);
-                let adGroupId = null;
-                if (adGroupItem) {
-                    adGroupId = adGroupItem.adGroupId;
-                }
-                else {
-                    adGroupId = await findAdGroupId(domain, entityId, campaignId);
-                }
-
-                if (adGroupId) {
-                    if (!(summary && summary.asin)) {
-                        await requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
+                await bg.parallelQueue(campaignIds, async function(campaignId) {
+                    const summary = summaries.find(x => x.campaignId == campaignId);
+                    if (!spData.isRunning(summary)) {
+                        return;
                     }
-                    await requestKeywordData({ domain, entityId, campaignId, adGroupId });
-                }
-            });
-        }
-        catch (ex) {
-            if (!bg.handleServerErrors(ex, "sp.dataGather")) {
-                ga.merror(ex, `context: domain ${domain}, entityId ${entityId}`);
+
+                    const adGroupItem = adGroups.find(x => x.campaignId == campaignId);
+                    let adGroupId = null;
+                    if (adGroupItem) {
+                        adGroupId = adGroupItem.adGroupId;
+                    }
+                    else {
+                        adGroupId = await collector.getAdGroupId(campaignId);
+                        await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
+                    }
+
+                    if (adGroupId) {
+                        if (!(summary && summary.asin)) {
+                            await requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
+                        }
+                        await requestKeywordData({ domain, entityId, campaignId, adGroupId });
+                    }
+                });
+
+                // Actually completing the block above with either collector
+                // means that we don't need to try the other one. Sometimes this
+                // eans that we'll get the same data twice on both collectors,
+                // but oh well.
+                break;
             }
-            deferredException = ex;
+            catch (ex) {
+                if (!bg.handleServerErrors(ex, "sp.dataGather")) {
+                    ga.merror(ex, `context: domain ${domain}, entityId ${entityId}`);
+                }
+                deferredException = ex;
+            }
         }
     }
+
     if (deferredException) {
         throw deferredException;
     }
-}
-
-async function findAdGroupId(domain, entityId, campaignId) {
-    let html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
-        method: 'GET',
-        responseType: 'text'
-    });
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    let adGroupId = spData.getAdGroupIdFromDOM(template.content);
-
-    if (!adGroupId) {
-        // campaignId fixup since the format changed
-        const fixedId = campaignId.replace(/^AX/, 'A');
-        html = await bg.ajax(`https://${domain}/cm/sp/campaigns/${fixedId}?entityId=${entityId}`, {
-            method: 'GET',
-            responseType: 'text'
-        });
-        template.innerHTML = html;
-        adGroupId = spData.getAdGroupIdFromDOM(template.content);
-    }
-
-    if (adGroupId) {
-        await storeAdGroupMetadata({ entityId, adGroupId, campaignId });
-    }
-
-    return adGroupId;
 }
 
 const getAllowedCampaigns = bg.cache.coMemo(async function({ entityId }) {
@@ -157,157 +140,43 @@ async function summaryReady(entityId) {
     await syncEvent.promise;
 }
 
-async function requestCampaignDataRta({ domain, entityId, date }) {
-    const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
-        method: 'GET',
-        queryData: {
-            entityId,
-            status: 'Customized',
-            reportStartDate: date,
-            reportEndDate: date,
-        },
-        responseType: 'json',
-    });
-
-    for (const campaigns of common.pageArray(data.aaData, 100)) {
-        await storeDailyCampaignData(entityId, date, { aaData: campaigns });
-    }
-
-    return data;
-}
-
-async function requestCampaignDataCm({ domain, entityId, date }) {
-    const utcDay = moment(date).tz('UTC');
-    let allData = [];
-    const data = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
-        method: 'POST',
-        queryData: { entityId },
-        jsonData: {
-            pageOffset: 0,
-            pageSize: 100,
-            sort: { order: "DESC", field: "CAMPAIGN_NAME" },
-            period: "CUSTOM",
-            startDateUTC: utcDay.startOf('day').valueOf(),
-            endDateUTC: utcDay.endOf('day').valueOf(),
-            filters: [{ field: "CAMPAIGN_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false }],
-            interval: "SUMMARY",
-            programType: "SP",
-            fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
-            queries: []
-        },
-        responseType: 'json'
-    });
-
-    allData = allData.concat(data.campaigns);
-    return { aaData: allData };
-}
-
-function requestLifetimeCampaignDataRta({ domain, entityId }) {
-    return bg.ajax(`https://${domain}/api/rta/campaigns`, {
-        method: 'GET',
-        queryData: {
-            entityId,
-            status: 'Lifetime',
-        },
-        responseType: 'json',
-    });
-}
-
-async function requestLifetimeCampaignDataCm({ domain, entityId }) {
-    let allData = [];
-    const data = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
-        method: 'POST',
-        queryData: { entityId },
-        jsonData: {
-            pageOffset: 0,
-            pageSize: 100,
-            sort: { order: "DESC", field: "CAMPAIGN_NAME" },
-            period: "LIFETIME",
-            startDateUTC: 1,
-            endDateUTC: moment().valueOf(),
-            filters: [{ field: "CAMPAIGN_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false }],
-            interval: "SUMMARY",
-            programType: "SP",
-            fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
-            queries: []
-        },
-        responseType: 'json'
-    });
-
-    allData = allData.concat(data.campaigns);
-    return { aaData: allData };
-}
-
-function requestCampaignDataPoly({ domain, entityId, date }) {
-    try {
-        return requestCampaignDataCm({ domain, entityId, date });
-    }
-    catch (ex) {
-        console.error(ex);
-        return requestCampaignDataRta({ domain, entityId, date });
-    }
-}
-
-function requestLifetimeCampaignDataPoly({ domain, entityId }) {
-    try {
-        return requestLifetimeCampaignDataCm({ domain, entityId });
-    }
-    catch (ex) {
-        console.error(ex);
-        return requestLifetimeCampaignDataRta({ domain, entityId });
-    }
-}
-
-async function requestCampaignData(domain, entityId) {
-    checkEntityId(entityId);
-    const syncEvent = getEntitySyncEvent(entityId);
-
-    console.log('requesting campaign data for', entityId);
-    const missing = await getMissingDates(entityId);
-    const days = new Set(missing.missingDays);
+async function requestCampaignData(collector) {
+    const syncEvent = getEntitySyncEvent(collector.entityId);
     let campaignIds = [];
 
     try {
+        console.log('requesting campaign data for', collector.entityId);
+        const missing = await getMissingDates(collector.entityId);
+        const days = new Set(missing.missingDays);
+        const now = Date.now();
+
+        if (missing.needLifetime) {
+            const data = await collector.getLifetimeCampaignData();
+            await storeLifetimeCampaignData(collector.entityId, now, data);
+        }
+
         if (days.size) {
             const latestDay = Math.max(...days.values());
-            const latestData = await requestCampaignDataPoly({ domain, entityId, date: latestDay });
-            campaignIds = latestData.aaData.map(x => x.id || x.campaignId);
-            if (latestData.aaData.length && !(latestData.aaData[0].state && latestData.aaData[0].status))
-                await requestCampaignStatus(domain, entityId, campaignIds, Date.now());
+            const latestData = await collector.getDailyCampaignData(latestDay);
+            await storeDailyCampaignData(collector.entityId, latestDay, latestData);
+
+            campaignIds = latestData.map(x => x.campaignId);
+            const status = await collector.getCampaignStatus(campaignIds);
+            await storeCampaignStatus(collector.entityId, now, status);
             syncEvent.set();
 
             days.delete(latestDay);
-            await bg.parallelQueue(Array.from(days.values()).map(x => ({ domain, entityId, date: x })), requestCampaignDataPoly);
+            await bg.parallelQueue(days.values(), async date => {
+                const data = await collector.getDailyCampaignData(date);
+                await storeDailyCampaignData(collector.entityId, date, data);
+            });
         }
     }
     finally {
         syncEvent.set();
     }
 
-    if (missing.needLifetime) {
-        const data = await requestLifetimeCampaignDataPoly({ domain, entityId });
-        await storeLifetimeCampaignData(entityId, Date.now(), data);
-    }
-
     return campaignIds;
-}
-
-async function requestCampaignStatus(domain, entityId, campaignIds, timestamp) {
-    checkEntityId(entityId); 
-
-    // Chop the campaignId list into bite-sized chunks
-    for (const chunk of common.pageArray(campaignIds, 20)) {
-        const data = await bg.ajax(`https://${domain}/api/rta/campaign-status`, {
-            method: 'GET',
-            queryData: {
-                entityId, 
-                campaignIds: chunk.join(','),
-            },
-            responseType: 'json',
-        });
-
-        await storeStatus(entityId, timestamp, data);
-    }
 }
 
 async function requestCampaignMetadata(domain, entityId, campaignId, adGroupId) {
@@ -411,22 +280,26 @@ async function requestKeywordDataPaged(domain, entityId, campaignId, adGroupId) 
 }
 
 function storeDailyCampaignData(entityId, timestamp, data) {
+    if (data.find(x => !x.campaignId || !x.campaignId.match(/^AX/)))
+        throw new Error("somebody did bad in daily");
     return bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        jsonData: data,
+        jsonData: { aaData: data },
         contentType: 'application/json',
     });
 }
 
 function storeLifetimeCampaignData(entityId, timestamp, data) {
+    if (data.find(x => !x.campaignId || !x.campaignId.match(/^AX/)))
+        throw new Error("somebody did bad in lifetime");
     return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        jsonData: data,
+        jsonData: { aaData: data },
         contentType: 'application/json',
     });
 }
 
-function storeStatus(entityId, timestamp, data) {
+function storeCampaignStatus(entityId, timestamp, data) {
     return bg.ajax(`${bg.serviceUrl}/api/campaignStatus/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
