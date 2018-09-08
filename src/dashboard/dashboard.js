@@ -32,7 +32,9 @@ spdata.amsPageInit();
 window.setInterval(ga.mcatch(() => {
     let wrapper = $('#campaignTable_wrapper');
     if (!wrapper.length) {
-        wrapper = $('.page-container div').first().children().last();
+        const topDivs = $('.page-container > div');
+        const firstNotInfo = Array.from(topDivs).find(div => !$(div).find('[type=info]').length);
+        wrapper = $(firstNotInfo).children().last();
     }
 
     addTabs(wrapper);
