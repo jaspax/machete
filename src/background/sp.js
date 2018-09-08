@@ -18,7 +18,6 @@ function checkEntityId(entityId) {
 
 function mkEvent(tag) {
     const event = {};
-    console.log('Created event', tag);
     event.promise = new Promise((resolve, reject) => {
         event.set = val => {
             resolve(val);
