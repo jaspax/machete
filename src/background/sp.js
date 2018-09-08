@@ -280,8 +280,6 @@ async function requestKeywordDataPaged(domain, entityId, campaignId, adGroupId) 
 }
 
 function storeDailyCampaignData(entityId, timestamp, data) {
-    if (data.find(x => !x.campaignId || !x.campaignId.match(/^AX/)))
-        throw new Error("somebody did bad in daily");
     return bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: { aaData: data },
@@ -290,8 +288,6 @@ function storeDailyCampaignData(entityId, timestamp, data) {
 }
 
 function storeLifetimeCampaignData(entityId, timestamp, data) {
-    if (data.find(x => !x.campaignId || !x.campaignId.match(/^AX/)))
-        throw new Error("somebody did bad in lifetime");
     return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: { aaData: data },

@@ -179,36 +179,19 @@ function isUnset(str) {
 function getEntityIds() {
     const entityIds = JSON.parse(localStorage.getItem(entityIdKey)) || [];
 
-    // TODO: This moves old-style entityIds to the new system. Eventually delete
-    // this once all users have been updated.
-    const toDelete = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.match(/^campaignData_/)) {
-            toDelete.push(key);
-
-            const entityId = key.replace('campaignData_', '');
-            if (!isUnset(entityId)) {
-                entityIds.push({ entityId });
-            }
-        }
-    }
-    for (const key of toDelete) {
-        localStorage.removeItem(key);
-    }
-
     // Fix up entityIds to ensure that every one has a stored domain
     let ids = entityIds.map(item => {
         if (typeof item == 'string') {
             return { domain: 'ams.amazon.com', entityId: item };
         }
         else if (!item.domain) {
-            item.domain = 'ams.amazon.com';
+            item.domain = 'advertising.amazon.com';
         }
         return item;
     });
 
     ids = _.uniqBy(ids, 'entityId').filter(x => !isUnset(x.domain) && !isUnset(x.entityId));
+    ids.forEach(x => x.domain = x.domain.replace(/^ams\./, 'advertising.'));
     localStorage.setItem(entityIdKey, JSON.stringify(ids));
 
     return ids;
