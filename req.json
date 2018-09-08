@@ -1,0 +1,1 @@
+{"pageOffset":0,"pageSize":10,"sort":null,"period":"LIFETIME","startDateUTC":1220832000000,"endDateUTC":1536451199999,"filters":[{"field":"AD_STATE","operator":"EXACT","values":["ENABLED","PAUSED"],"not":false}],"programType":"SP","fields":["AD_STATE","AD_NAME","AD_ELIGIBILITY_STATUS","AD_ASIN","AD_SKU","IMPRESSIONS","CLICKS","SPEND","CTR","CPC","ORDERS","SALES","ACOS"]}

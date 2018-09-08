@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const moment = require('frozen-moment');
 require('moment-timezone');
 
@@ -10,7 +11,7 @@ module.exports = function(domain, entityId) {
         data: [],
     };
 
-    async function requestCampaignsPaged(reqfn) {
+    async function requestDataPaged(reqfn) {
         const pageSize = 100;
         let pageOffset = 0;
         let accum = [];
@@ -27,7 +28,7 @@ module.exports = function(domain, entityId) {
 
     async function getDailyCampaignData(date) {
         const utcDay = moment(date).tz('UTC');
-        const allData = await requestCampaignsPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: {
@@ -57,7 +58,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getLifetimeCampaignData() {
-        const allData = await requestCampaignsPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: {
@@ -100,6 +101,50 @@ module.exports = function(domain, entityId) {
         return match[1];
     }
 
+    async function getCampaignAsin(campaignId, adGroupId) {
+        const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${adGroupId}/ads`, {
+            method: 'POST',
+            responseType: 'json',
+            queryData: { entityId },
+            jsonData: {
+                pageOffset: 0,
+                pageSize: 10,
+                sort: null,
+                period: "LIFETIME",
+                startDateUTC: 0,
+                endDateUTC: moment().valueOf(),
+                filters: [],
+                programType: "SP",
+                fields: ["AD_ASIN", "AD_SKU"]
+            },
+        });
+
+        return _.get(response, 'ads[0].asin');
+    }
+
+    async function getKeywordData(campaignId, adGroupId) {
+        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${campaignId}/adgroups/${adGroupId}/keywords`, {
+            method: 'POST',
+            responseType: 'json',
+            queryData: { entityId },
+            jsonData: {
+                startDateUTC: 1,
+                endDateUTC: moment().valueOf(),
+                pageOffset,
+                pageSize,
+                sort: null, 
+                period: "LIFETIME", 
+                filters: [{ field: "KEYWORD_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false}], 
+                interval: "SUMMARY", 
+                programType: "SP", 
+                fields: ["KEYWORD_STATE", "KEYWORD", "KEYWORD_MATCH_TYPE", "KEYWORD_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "KEYWORD_BID"], 
+                queries: []
+            },
+        }));
+                                 
+        return allData;
+    }
+
     return {
         name: 'cm',
         domain,
@@ -108,5 +153,7 @@ module.exports = function(domain, entityId) {
         getLifetimeCampaignData,
         getCampaignStatus,
         getAdGroupId,
+        getCampaignAsin,
+        getKeywordData,
     };
 };

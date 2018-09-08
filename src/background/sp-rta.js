@@ -1,3 +1,6 @@
+const _ = require('lodash');
+
+const ga = require('../common/ga.js');
 const bg = require('./common.js');
 const common = require('../common/common.js');
 const spData = require('../common/sp-data.js');
@@ -71,6 +74,47 @@ module.exports = function(domain, entityId) {
         return adGroupId;
     }
 
+    async function getCampaignAsin(campaignId, adGroupId) {
+        const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
+            method: 'POST',
+            formData: {
+                entityId, 
+                adGroupId,
+                status: 'Lifetime',
+            },
+            responseType: 'json',
+        });
+
+        if (data.message) {
+            ga.mga('event', 'error-handled', 'asin-query-failure', `${adGroupId}: ${data.message}`);
+            return null;
+        }
+
+        /* In principle it looks like this response can contain multiple ad groups,
+         * but in practice that doesn't seem to happen on AMS, so we only track the
+         * one.
+         */
+        return _.get(data, 'aaData[0].asin');
+    }
+
+    async function getKeywordData(campaignId, adGroupId) {
+        const response = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
+            method: 'POST',
+            formData: {
+                entityId, 
+                adGroupId,
+                status: 'Lifetime',
+            },
+            responseType: 'json',
+        });
+
+        if (response.message) {
+            ga.mga('event', 'error-handled', 'keyword-data-failure', `${adGroupId}: ${response.message}`);
+        }
+
+        return response.aaData || [];
+    }
+
     return {
         name: 'rta',
         domain,
@@ -79,5 +123,7 @@ module.exports = function(domain, entityId) {
         getLifetimeCampaignData,
         getCampaignStatus,
         getAdGroupId,
+        getCampaignAsin,
+        getKeywordData,
     };
 };

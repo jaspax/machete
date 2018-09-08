@@ -83,9 +83,9 @@ async function dataGather(req) {
 
                     if (adGroupId) {
                         if (!(summary && summary.asin)) {
-                            await requestCampaignMetadata(domain, entityId, campaignId, adGroupId);
+                            await requestCampaignMetadata(collector, campaignId, adGroupId);
                         }
-                        await requestKeywordData({ domain, entityId, campaignId, adGroupId });
+                        await requestKeywordData(collector, campaignId, adGroupId);
                     }
                 });
 
@@ -179,104 +179,22 @@ async function requestCampaignData(collector) {
     return campaignIds;
 }
 
-async function requestCampaignMetadata(domain, entityId, campaignId, adGroupId) {
-    const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
-        method: 'POST',
-        formData: {
-            entityId, 
-            adGroupId,
-            status: 'Lifetime',
-        },
-        responseType: 'json',
-    });
-
-    if (data.message) {
-        ga.mga('event', 'error-handled', 'asin-query-failure', `${adGroupId}: ${data.message}`);
-        return;
-    }
-
-    /* In principle it looks like this response can contain multiple ad groups,
-     * but in practice that doesn't seem to happen on AMS, so we only track the
-     * one.
-     */
-    const asin = _.get(data, 'aaData[0].asin');
+async function requestCampaignMetadata(collector, campaignId, adGroupId) {
+    const asin = await collector.getCampaignAsin(campaignId, adGroupId);
     if (asin) {
-        await storeCampaignMetadata(entityId, campaignId, asin);
+        await storeCampaignMetadata(collector.entityId, campaignId, asin);
     }
 }
 
-async function requestKeywordData({ domain, entityId, campaignId, adGroupId }) {
-    checkEntityId(entityId);
-
+async function requestKeywordData(collector, campaignId, adGroupId) {
     let timestamp = Date.now();
-    let data = [];
 
-    console.log('requesting keyword data for', entityId, adGroupId);
-    const response = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
-        method: 'POST',
-        formData: {
-            entityId, 
-            adGroupId,
-            status: 'Lifetime',
-        },
-        responseType: 'json',
-    });
-
-    if (response.message) {
-        ga.mga('event', 'error-handled', 'keyword-data-failure', `${adGroupId}: ${data.message}`);
-        if (campaignId) {
-            // attempt the alternate data api path
-            data = await requestKeywordDataPaged(domain, entityId, campaignId, adGroupId);
-        }
-    }
-    else {
-        data = response.aaData;
-    }
+    console.log('requesting keyword data for', collector.entityId, adGroupId);
+    const data = await collector.getKeywordData(campaignId, adGroupId);
 
     if (data && data.length) {
-        await storeKeywordData(entityId, adGroupId, timestamp, data);
+        await storeKeywordData(collector.entityId, adGroupId, timestamp, data);
     }
-}
-
-async function requestKeywordDataPaged(domain, entityId, campaignId, adGroupId) {
-    const pageSize = 100;
-    let currentPage = 0;
-    let totalRecords = 0;
-    let allData = [];
-
-    // disgusting fixup for campaignId -- WHY DID THEY CREATE TWO DIFFERENT
-    // FORMATS I AM GOING INSANE
-    campaignId = campaignId.replace(/^AX/, 'A');
-
-    do {
-        const data = await bg.ajax(`https://${domain}/cm/api/sp/campaigns/${campaignId}/adgroups/${adGroupId}/keywords?entityId=${entityId}`, {
-            method: 'POST',
-            responseType: 'json',
-            jsonData: {
-                "startDateUTC": 1,
-                "endDateUTC": Date.now(),
-                "pageOffset": currentPage, 
-                "pageSize": pageSize, 
-                "sort": null, 
-                "period": "LIFETIME", 
-                "filters": [{"field": "KEYWORD_STATE", "operator": "EXACT", "values": ["ENABLED", "PAUSED"], "not": false}], 
-                "interval": "SUMMARY", 
-                "programType": "SP", 
-                "fields": ["KEYWORD_STATE", "KEYWORD", "KEYWORD_MATCH_TYPE", "KEYWORD_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "KEYWORD_BID"], 
-                "queries": []
-            },
-        });
-                             
-        if (!data)
-            break;
-
-        allData = allData.concat(data.keywords);
-        totalRecords = data.summary.numberOfRecords;
-        currentPage++;
-    }
-    while (currentPage * pageSize < totalRecords);
-
-    return allData;
 }
 
 function storeDailyCampaignData(entityId, timestamp, data) {
@@ -370,12 +288,22 @@ const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, campai
     };
     let data = await bg.ajax(url, opts);
 
+
     if (!data || data.length == 0) {
         // Possibly this is the first time we've ever seen this campaign. If so,
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
-        await requestKeywordData({ domain, entityId, campaignId, adGroupId });
-        data = await bg.ajax(url, opts);
+
+        for (const collector of [spCm(domain, entityId), spRta(domain, entityId)]) {
+            try {
+                await requestKeywordData(collector, campaignId, adGroupId);
+                data = await bg.ajax(url, opts);
+                break;
+            }
+            catch (ex) {
+                ga.merror(ex, `context: domain ${domain}, entityId ${entityId}, collector ${collector.name}`);
+            }
+        }
     }
 
     return data;
