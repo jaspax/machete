@@ -343,16 +343,26 @@ async function ajax(url, opts) {
 function parallelQueue(items, fn) {
     return new Promise((resolve, reject) => {
         const results = [];
+        let error = null;
         const queue = qu((item, callback) => {
             fn(item).then(value => {
                 results.push(value);
                 callback(null, value);
             })
-            .catch(callback);
+            .catch(ex => {
+                ga.merror(ex);
+                error = ex;
+                callback();
+            });
         }, 3);
 
-        queue.drain = () => resolve(results);
-        queue.error = reject;
+        queue.drain = () => {
+            if (error)
+                reject(error);
+            else
+                resolve(results);
+        };
+        queue.error = reject; // shouldn't happen since we're swallowing errors until drain
         queue.push(Array.from(items));
     });
 }
