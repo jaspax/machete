@@ -94,7 +94,7 @@ async function dataGather(req) {
                 // means that we don't need to try the other one. Sometimes this
                 // means that we'll get the same data twice on both collectors,
                 // but oh well.
-                ga.mga('event', 'collector-complete', collector.name);
+                ga.mga('event', 'collector-complete', collector.name, domain);
                 break;
             }
             catch (ex) {
