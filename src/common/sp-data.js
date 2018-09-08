@@ -25,31 +25,19 @@ function getEntityId(href = window.location.toString()) {
 function getCampaignId(href = window.location.toString()) {
     let campaignId = getQueryArgs(href).campaignId;
     if (campaignId) {
-        return rtaId(campaignId);
+        return campaignId;
     }
 
     if (href) {
         const rawId = getUriPathChunk(href, 'campaigns');
-        return rtaId(rawId);
+        return rawId;
     }
 
     campaignId = $('input[name=campaignId]').val();
     if (campaignId)
-        return rtaId(campaignId);
+        return campaignId;
 
     throw new Error('could not discover campaignId');
-}
-
-function cmId(campaignId) {
-    if (!campaignId)
-        return null;
-    return campaignId.replace(/^AX?/, 'A');
-}
-
-function rtaId(campaignId) {
-    if (!campaignId)
-        return null;
-    return campaignId.replace(/^AX?/, 'AX');
 }
 
 // take a uri like host.com/foo/1/ and extract the "1" given "foo"
@@ -318,8 +306,6 @@ module.exports = {
     amsPageInit,
     getEntityId,
     getCampaignId,
-    cmId,
-    rtaId,
     getQueryArgs,
     getAdGroupIdFromDOM,
     getCurrentCampaignSnapshot,

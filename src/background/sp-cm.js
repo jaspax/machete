@@ -3,7 +3,6 @@ const moment = require('frozen-moment');
 require('moment-timezone');
 
 const bg = require('./common.js');
-const spData = require('../common/sp-data.js');
 
 module.exports = function(domain, entityId) {
     const latestCampaignData = {
@@ -19,7 +18,7 @@ module.exports = function(domain, entityId) {
         let data = null;
         do {
             data = await reqfn(pageOffset, pageSize);
-            accum = accum.concat(data.campaigns);
+            accum = accum.concat(data.campaigns || data.keywords);
             pageOffset++;
         } while (pageOffset < data.summary.maxPageNumber);
 
@@ -47,7 +46,7 @@ module.exports = function(domain, entityId) {
             responseType: 'json'
         }));
 
-        allData.forEach(x => x.campaignId = spData.rtaId(x.id));
+        allData.forEach(x => x.campaignId = x.id);
 
         if (date > latestCampaignData.timestamp) {
             latestCampaignData.timestamp = date;
@@ -77,7 +76,7 @@ module.exports = function(domain, entityId) {
             responseType: 'json'
         }));
 
-        allData.forEach(x => x.campaignId = spData.rtaId(x.id));
+        allData.forEach(x => x.campaignId = x.id);
         return allData;
     }
 
@@ -90,7 +89,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getAdGroupId(campaignId) {
-        const page = await bg.ajax(`https://${domain}/cm/sp/campaigns/${spData.cmId(campaignId)}`, {
+        const page = await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaignId}`, {
             method: 'GET',
             queryData: { entityId },
         });

@@ -78,7 +78,8 @@ async function dataGather(req) {
                     }
                     else {
                         adGroupId = await collector.getAdGroupId(campaignId);
-                        await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
+                        if (adGroupId)
+                            await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
                     }
 
                     if (adGroupId) {
