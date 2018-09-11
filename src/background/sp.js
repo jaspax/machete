@@ -76,9 +76,17 @@ async function dataGather(req) {
                         adGroupId = adGroupItem.adGroupId;
                     }
                     else {
-                        adGroupId = await collector.getAdGroupId(campaignId);
-                        if (adGroupId)
-                            await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
+                        try {
+                            adGroupId = await collector.getAdGroupId(campaignId);
+                            if (adGroupId)
+                                await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
+                        }
+                        catch (ex) {
+                            if (ex.message && ex.message.match(/400/))
+                                ga.mga('event', 'error-handled', 'get-adgroupid-400', campaignId);
+                            else
+                                throw ex;
+                        }
                     }
 
                     if (adGroupId) {
