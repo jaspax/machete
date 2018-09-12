@@ -82,8 +82,8 @@ async function dataGather(req) {
                                 await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
                         }
                         catch (ex) {
-                            if (ex.message && ex.message.match(/400/))
-                                ga.mga('event', 'error-handled', 'get-adgroupid-400', campaignId);
+                            if (ex.message && ex.message.match(/404/))
+                                ga.mga('event', 'error-handled', 'get-adgroupid-404', campaignId);
                             else
                                 throw ex;
                         }
