@@ -58,7 +58,7 @@ async function dataGather(req) {
 
     for (const { domain, entityId } of entities) {
         checkEntityId(entityId);
-        for (const collector of [spCm(domain, entityId), spRta(domain, entityId)]) {
+        for (const collector of [spRta(domain, entityId), spCm(domain, entityId)]) {
             try {
                 const campaignIds = await requestCampaignData(collector);
                 const adGroups = await getAdGroups(entityId);
