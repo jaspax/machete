@@ -43,7 +43,8 @@ module.exports = function(domain, entityId) {
             return true;
         }
         catch (ex) {
-            return false;
+            const error = bg.handleServerErrors(ex, 'cm probe');
+            return error == 'amazonNotLoggedIn';
         }
     }
 
