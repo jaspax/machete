@@ -10,6 +10,13 @@ module.exports = function(domain, entityId) {
         data: [],
     };
 
+    function formatId(id) {
+        if (id.match(/^A/)) {
+            throw new Error('Preformatted ID? : ' + id);
+        }
+        return 'A' + id;
+    }
+
     async function requestDataPaged(reqfn) {
         const pageSize = 100;
         let pageOffset = 0;
@@ -23,6 +30,21 @@ module.exports = function(domain, entityId) {
         } while (pageOffset < data.summary.maxPageNumber);
 
         return accum;
+    }
+
+    async function probe() {
+        try {
+            const campaigns = await getLifetimeCampaignData();
+            const campaign = campaigns[0];
+            await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaign.id}`, {
+                method: 'GET',
+                queryData: { entityId },
+            });
+            return true;
+        }
+        catch (ex) {
+            return false;
+        }
     }
 
     async function getDailyCampaignData(date) {
@@ -89,7 +111,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getAdGroupId(campaignId) {
-        const page = await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaignId}`, {
+        const page = await bg.ajax(`https://${domain}/cm/sp/campaigns/${formatId(campaignId)}`, {
             method: 'GET',
             queryData: { entityId },
         });
@@ -101,7 +123,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getCampaignAsin(campaignId, adGroupId) {
-        const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${adGroupId}/ads`, {
+        const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/ads`, {
             method: 'POST',
             responseType: 'json',
             queryData: { entityId },
@@ -122,7 +144,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getKeywordData(campaignId, adGroupId) {
-        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${campaignId}/adgroups/${adGroupId}/keywords`, {
+        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
             method: 'POST',
             responseType: 'json',
             queryData: { entityId },
@@ -148,6 +170,7 @@ module.exports = function(domain, entityId) {
         name: 'cm',
         domain,
         entityId,
+        probe,
         getDailyCampaignData,
         getLifetimeCampaignData,
         getCampaignStatus,

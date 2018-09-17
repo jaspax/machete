@@ -6,6 +6,30 @@ const common = require('../common/common.js');
 const spData = require('../common/sp-data.js');
 
 module.exports = function(domain, entityId) {
+    function formatId(id) {
+        if (id.match(/^A/)) {
+            throw new Error('Preformatted ID? : ' + id);
+        }
+        if (id.match(/^C/))
+            return 'A' + id;
+        return 'AX' + id;
+    }
+
+    async function probe() {
+        try {
+            const campaigns = await getLifetimeCampaignData();
+            const campaign = campaigns[0];
+            await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaign.campaignId}`, {
+                method: 'GET',
+                responseType: 'text'
+            });
+            return true;
+        }
+        catch (ex) {
+            return false;
+        }
+    }
+
     async function getDailyCampaignData(date) {
         const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
@@ -53,25 +77,13 @@ module.exports = function(domain, entityId) {
     }
 
     async function getAdGroupId(campaignId) {
-        let html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaignId}`, {
+        let html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${formatId(campaignId)}`, {
             method: 'GET',
             responseType: 'text'
         });
         const template = document.createElement('template');
         template.innerHTML = html;
-        let adGroupId = spData.getAdGroupIdFromDOM(template.content);
-
-        if (!adGroupId) {
-            // campaignId fixup since the format changed
-            const fixedId = campaignId.replace(/^AX/, 'A');
-            html = await bg.ajax(`https://${domain}/cm/sp/campaigns/${fixedId}?entityId=${entityId}`, {
-                method: 'GET',
-                responseType: 'text'
-            });
-            template.innerHTML = html;
-            adGroupId = spData.getAdGroupIdFromDOM(template.content);
-        }
-        return adGroupId;
+        return spData.getAdGroupIdFromDOM(template.content);
     }
 
     async function getCampaignAsin(campaignId, adGroupId) {
@@ -79,7 +91,7 @@ module.exports = function(domain, entityId) {
             method: 'POST',
             formData: {
                 entityId, 
-                adGroupId,
+                adGroupId: formatId(adGroupId),
                 status: 'Lifetime',
             },
             responseType: 'json',
@@ -102,7 +114,7 @@ module.exports = function(domain, entityId) {
             method: 'POST',
             formData: {
                 entityId, 
-                adGroupId,
+                adGroupId: formatId(adGroupId),
                 status: 'Lifetime',
             },
             responseType: 'json',
@@ -119,6 +131,7 @@ module.exports = function(domain, entityId) {
         name: 'rta',
         domain,
         entityId,
+        probe,
         getDailyCampaignData,
         getLifetimeCampaignData,
         getCampaignStatus,

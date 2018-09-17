@@ -22,20 +22,28 @@ function getEntityId(href = window.location.toString()) {
     throw new Error('could not discover entityId');
 }
 
+function stripPrefix(id) {
+    if (!id)
+        return id;
+    if (!id.replace)
+        return id;
+    return id.replace(/^AX?/, '');
+} 
+
 function getCampaignId(href = window.location.toString()) {
     let campaignId = getQueryArgs(href).campaignId;
     if (campaignId) {
-        return campaignId;
+        return stripPrefix(campaignId);
     }
 
     if (href) {
         const rawId = getUriPathChunk(href, 'campaigns');
-        return rawId;
+        return stripPrefix(rawId);
     }
 
     campaignId = $('input[name=campaignId]').val();
     if (campaignId)
-        return campaignId;
+        return stripPrefix(campaignId);
 
     throw new Error('could not discover campaignId');
 }
@@ -70,13 +78,13 @@ function getQueryArgs(str = window.location.toString()) {
 function getAdGroupIdFromDOM(dom) {
     const adGroupIdInput = dom.querySelector('input[name=adGroupId]');
     if (adGroupIdInput)
-        return adGroupIdInput.value;
+        return stripPrefix(adGroupIdInput.value);
 
     const sspaLink = dom.querySelector('.page-container nav li a');
     if (!sspaLink)
         return null;
 
-    return getUriPathChunk(sspaLink.href, 'ad-groups');
+    return stripPrefix(getUriPathChunk(sspaLink.href, 'ad-groups'));
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
@@ -304,6 +312,7 @@ function hasKdpIntegration() {
 
 module.exports = {
     amsPageInit,
+    stripPrefix,
     getEntityId,
     getCampaignId,
     getQueryArgs,

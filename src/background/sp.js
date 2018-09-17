@@ -57,59 +57,62 @@ async function dataGather(req) {
     }
 
     for (const { domain, entityId } of entities) {
-        checkEntityId(entityId);
-        for (const collector of [spRta(domain, entityId), spCm(domain, entityId)]) {
-            try {
-                const campaignIds = await requestCampaignData(collector);
-                const adGroups = await getAdGroups(entityId);
-                const summaries = await getCampaignSummaries({ entityId });
+        if (bg.isUnset(entityId))
+            continue;
 
-                await bg.parallelQueue(campaignIds, async function(campaignId) {
-                    const summary = summaries.find(x => x.campaignId == campaignId);
-                    if (!spData.isRunning(summary)) {
-                        return;
-                    }
-
-                    const adGroupItem = adGroups.find(x => x.campaignId == campaignId);
-                    let adGroupId = null;
-                    if (adGroupItem) {
-                        adGroupId = adGroupItem.adGroupId;
-                    }
-                    else {
-                        try {
-                            adGroupId = await collector.getAdGroupId(campaignId);
-                            if (adGroupId)
-                                await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
-                        }
-                        catch (ex) {
-                            if (ex.message && ex.message.match(/404/))
-                                ga.mga('event', 'error-handled', 'get-adgroupid-404', campaignId);
-                            else
-                                throw ex;
-                        }
-                    }
-
-                    if (adGroupId) {
-                        if (!(summary && summary.asin)) {
-                            await requestCampaignMetadata(collector, campaignId, adGroupId);
-                        }
-                        await requestKeywordData(collector, campaignId, adGroupId);
-                    }
-                });
-
-                // Actually completing the block above with either collector
-                // means that we don't need to try the other one. Sometimes this
-                // means that we'll get the same data twice on both collectors,
-                // but oh well.
-                ga.mga('event', 'collector-complete', collector.name, domain);
+        let collector = null;
+        for (const c of [spRta(domain, entityId), spCm(domain, entityId)]) {
+            if (await c.probe()) {
+                collector = c;
                 break;
             }
-            catch (ex) {
-                if (!bg.handleServerErrors(ex, "sp.dataGather")) {
-                    ga.merror(ex, `context: domain ${domain}, entityId ${entityId}`);
+            console.log('Probe failed for', domain, entityId, c.name);
+        }
+        if (!collector) {
+            ga.merror(new Error(`No valid collectors for ${domain} ${entityId}`));
+            continue;
+        }
+
+        console.log('Using collector', domain, entityId, collector.name);
+        ga.mga('event', 'collector-domain', domain, collector.name);
+
+        try {
+            const campaignIds = await requestCampaignData(collector);
+            const adGroups = await getAdGroups(entityId);
+            const summaries = await getCampaignSummaries({ entityId });
+
+            await bg.parallelQueue(campaignIds, async function(campaignId) {
+                campaignId = spData.stripPrefix(campaignId);
+                const summary = summaries.find(x => x.campaignId == campaignId);
+                if (!spData.isRunning(summary)) {
+                    return;
                 }
-                deferredException = ex;
+
+                const adGroupItem = adGroups.find(x => x.campaignId == campaignId);
+                let adGroupId = null;
+                if (adGroupItem) {
+                    adGroupId = adGroupItem.adGroupId;
+                }
+                else {
+                    console.log('requesting adGroupId for', collector.entityId, campaignId);
+                    adGroupId = await collector.getAdGroupId(campaignId);
+                    if (adGroupId)
+                        await storeAdGroupMetadata({ entityId: collector.entityId, adGroupId, campaignId });
+                }
+
+                if (adGroupId) {
+                    if (!(summary && summary.asin)) {
+                        await requestCampaignMetadata(collector, campaignId, spData.stripPrefix(adGroupId));
+                    }
+                    await requestKeywordData(collector, campaignId, spData.stripPrefix(adGroupId));
+                }
+            });
+        }
+        catch (ex) {
+            if (!bg.handleServerErrors(ex, "sp.dataGather")) {
+                ga.merror(ex, `context: domain ${domain}, entityId ${entityId}`);
             }
+            deferredException = ex;
         }
     }
 
@@ -198,7 +201,7 @@ async function requestCampaignMetadata(collector, campaignId, adGroupId) {
 async function requestKeywordData(collector, campaignId, adGroupId) {
     let timestamp = Date.now();
 
-    console.log('requesting keyword data for', collector.entityId, adGroupId);
+    console.log('requesting keyword data for', collector.entityId, campaignId, adGroupId);
     const data = await collector.getKeywordData(campaignId, adGroupId);
 
     if (data && data.length) {
