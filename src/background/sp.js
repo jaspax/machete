@@ -212,7 +212,7 @@ async function requestKeywordData(collector, campaignId, adGroupId) {
 function storeDailyCampaignData(entityId, timestamp, data) {
     return bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        jsonData: { aaData: data },
+        jsonData: data,
         contentType: 'application/json',
     });
 }
@@ -220,7 +220,7 @@ function storeDailyCampaignData(entityId, timestamp, data) {
 function storeLifetimeCampaignData(entityId, timestamp, data) {
     return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
-        jsonData: { aaData: data },
+        jsonData: data,
         contentType: 'application/json',
     });
 }
@@ -239,7 +239,7 @@ async function storeKeywordData(entityId, adGroupId, timestamp, data) {
     for (const chunk of common.pageArray(data, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}/${adGroupId}?timestamp=${timestamp}`, {
             method: 'PUT',
-            jsonData: { aaData: chunk },
+            jsonData: chunk,
             contentType: 'application/json',
         });
     }
