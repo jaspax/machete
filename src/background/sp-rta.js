@@ -128,7 +128,7 @@ module.exports = function(domain, entityId) {
         return response.aaData || [];
     }
 
-    async function updateKeywords({ timestamp, keywordIdList, operation, dataValues }) {
+    async function updateKeywords({ keywordIdList, operation, dataValues }) {
         const successes = [];
 
         // the parameters to the Amazon API imply that you can pass more than 1

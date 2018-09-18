@@ -57,7 +57,7 @@ async function getCollector(domain, entityId) {
         console.log('Probe failed for', domain, entityId, c.name);
     }
     if (!collector) {
-        throw new Error(`No valid collectors for ${domain} ${entityId}`));
+        throw new Error(`No valid collectors for ${domain} ${entityId}`);
     }
 
     collectorCache[entityId] = collector;
@@ -310,17 +310,15 @@ const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, campai
     };
     let data = await bg.ajax(url, opts);
 
-
     if (!data || data.length == 0) {
         // Possibly this is the first time we've ever seen this campaign. If so,
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
 
+        const collector = await getCollector(domain, entityId);
         try {
-            const collector = await getCollector(domain, entityId);
             await requestKeywordData(collector, campaignId, adGroupId);
             data = await bg.ajax(url, opts);
-            break;
         }
         catch (ex) {
             ga.merror(ex, `context: domain ${domain}, entityId ${entityId}, collector ${collector.name}`);
@@ -372,7 +370,7 @@ async function updateKeyword({ domain, entityId, keywordIdList, operation, dataV
     const timestamp = Date.now();
 
     const collector = await getCollector(domain, entityId);
-    const successes = await collector.updateKeywords({ timestamp, keywordIdList, operation, dataValues });
+    const successes = await collector.updateKeywords({ keywordIdList, operation, dataValues });
 
     for (const page of common.pageArray(successes, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {

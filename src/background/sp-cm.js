@@ -3,6 +3,7 @@ const moment = require('frozen-moment');
 require('moment-timezone');
 
 const bg = require('./common.js');
+const common = require('../common/common.js');
 
 module.exports = function(domain, entityId) {
     const latestCampaignData = {
@@ -167,22 +168,27 @@ module.exports = function(domain, entityId) {
         return allData;
     }
 
-    async function updateKeywords({ timestamp, keywordIdList, operation, dataValues }) {
-        const successes = [];
-
-        // the parameters to the Amazon API imply that you can pass more than 1
-        // keyword at a time, but testing this shows that doing so just
-        // generates an error. So we do it the stupid way instead, with a loop.
-        await bg.parallelQueue(keywordIdList, async function(id) {
-            const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
-                method: 'POST',
-                formData: Object.assign({operation, entityId, keywordIds: id}, dataValues),
+    async function updateKeywords({ adGroupId, keywordIdList, operation, dataValues }) {
+        let successes = [];
+        for (const chunk of common.pageArray(keywordIdList, 50)) {
+            const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
+                method: 'PATCH',
+                queryData: { entityId },
+                jsonData: chunk.map(kwid => {
+                    const item = { id: formatId(kwid), programType: "SP" };
+                    if (operation == 'PAUSE')
+                        item.state = 'PAUSED';
+                    if (operation == 'ENABLE')
+                        item.state = 'ENABLED';
+                    if (operation == 'UPDATE')
+                        item.bid = { bid: dataValues.bid };
+                    return item;
+                }),
                 responseType: 'json',
             });
-            if (response.success) {
-                successes.push(id);
-            }
-        });
+
+            successes = successes.concat(response.updatedKeywords);
+        }
 
         return successes;
     }
