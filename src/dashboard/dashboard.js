@@ -30,12 +30,17 @@ spdata.startSession();
 spdata.amsPageInit();
 
 window.setInterval(ga.mcatch(() => {
+    if (!window.location.pathname.match(/cm\/(campaigns|dashboard)/))
+        return;
+
     let wrapper = $('#campaignTable_wrapper');
     if (!wrapper.length) {
         const topDivs = $('.page-container > div');
         const firstNotInfo = Array.from(topDivs).find(div => !$(div).find('[type=info]').length);
         wrapper = $(firstNotInfo).children().last();
     }
+    if (!wrapper.length)
+        return;
 
     addTabs(wrapper);
     addTotalsRow(wrapper);

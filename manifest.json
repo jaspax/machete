@@ -44,16 +44,11 @@
   "content_scripts": [
       {
           "matches": [
-              "https://advertising.amazon.ca/ads/campaigns*",       "https://advertising.amazon.ca/ads/dashboard*",
-              "https://advertising.amazon.co.uk/ads/campaigns*",    "https://advertising.amazon.co.uk/ads/dashboard*",
-              "https://advertising.amazon.com/ads/campaigns*",      "https://advertising.amazon.com/ads/dashboard*",
-              "https://advertising.amazon.de/ads/campaigns*",       "https://advertising.amazon.de/ads/dashboard*",
-              "https://advertising.amazon.fr/ads/campaigns*",       "https://advertising.amazon.fr/ads/dashboard*",
-              "https://advertising.amazon.ca/cm/campaigns*",       "https://advertising.amazon.ca/cm/dashboard*",
-              "https://advertising.amazon.co.uk/cm/campaigns*",    "https://advertising.amazon.co.uk/cm/dashboard*",
-              "https://advertising.amazon.com/cm/campaigns*",      "https://advertising.amazon.com/cm/dashboard*",
-              "https://advertising.amazon.de/cm/campaigns*",       "https://advertising.amazon.de/cm/dashboard*",
-              "https://advertising.amazon.fr/cm/campaigns*",       "https://advertising.amazon.fr/cm/dashboard*"
+              "https://advertising.amazon.ca/*",
+              "https://advertising.amazon.co.uk/*",
+              "https://advertising.amazon.com/*",
+              "https://advertising.amazon.de/*",
+              "https://advertising.amazon.fr/*"
           ],
           "js": ["src/dashboard.js"],
           "css": ["css/inject.css"]
