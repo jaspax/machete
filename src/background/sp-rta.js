@@ -128,6 +128,26 @@ module.exports = function(domain, entityId) {
         return response.aaData || [];
     }
 
+    async function updateKeywords({ timestamp, keywordIdList, operation, dataValues }) {
+        const successes = [];
+
+        // the parameters to the Amazon API imply that you can pass more than 1
+        // keyword at a time, but testing this shows that doing so just
+        // generates an error. So we do it the stupid way instead, with a loop.
+        await bg.parallelQueue(keywordIdList, async function(id) {
+            const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
+                method: 'POST',
+                formData: Object.assign({operation, entityId, keywordIds: id}, dataValues),
+                responseType: 'json',
+            });
+            if (response.success) {
+                successes.push(id);
+            }
+        });
+
+        return successes;
+    }
+
     return {
         name: 'rta',
         domain,
@@ -139,5 +159,6 @@ module.exports = function(domain, entityId) {
         getAdGroupId,
         getCampaignAsin,
         getKeywordData,
+        updateKeywords,
     };
 };

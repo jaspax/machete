@@ -42,6 +42,31 @@ function getEntitySyncEvent(entityId) {
     return entityDailySyncEvent[entityId];
 }
 
+const collectorCache = {};
+async function getCollector(domain, entityId) {
+    if (collectorCache[entityId]) {
+        return collectorCache[entityId];
+    }
+
+    let collector = null;
+    for (const c of [spRta(domain, entityId), spCm(domain, entityId)]) {
+        if (await c.probe()) {
+            collector = c;
+            break;
+        }
+        console.log('Probe failed for', domain, entityId, c.name);
+    }
+    if (!collector) {
+        throw new Error(`No valid collectors for ${domain} ${entityId}`));
+    }
+
+    collectorCache[entityId] = collector;
+    console.log('Using collector', domain, entityId, collector.name);
+    ga.mga('event', 'collector-domain', domain, collector.name);
+
+    return collector;
+}
+
 async function dataGather(req) {
     // We want to make sure that we at least attempt to sync every single
     // domain, but any exceptions we encounter should be propagated so that we
@@ -60,23 +85,8 @@ async function dataGather(req) {
         if (bg.isUnset(entityId))
             continue;
 
-        let collector = null;
-        for (const c of [spRta(domain, entityId), spCm(domain, entityId)]) {
-            if (await c.probe()) {
-                collector = c;
-                break;
-            }
-            console.log('Probe failed for', domain, entityId, c.name);
-        }
-        if (!collector) {
-            ga.merror(new Error(`No valid collectors for ${domain} ${entityId}`));
-            continue;
-        }
-
-        console.log('Using collector', domain, entityId, collector.name);
-        ga.mga('event', 'collector-domain', domain, collector.name);
-
         try {
+            const collector = await getCollector(domain, entityId);
             const campaignIds = await requestCampaignData(collector);
             const adGroups = await getAdGroups(entityId);
             const summaries = await getCampaignSummaries({ entityId });
@@ -306,15 +316,14 @@ const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, campai
         // let's query Amazon and populate our own servers, and then come back.
         // This is very slow but should usually only happen once.
 
-        for (const collector of [spCm(domain, entityId), spRta(domain, entityId)]) {
-            try {
-                await requestKeywordData(collector, campaignId, adGroupId);
-                data = await bg.ajax(url, opts);
-                break;
-            }
-            catch (ex) {
-                ga.merror(ex, `context: domain ${domain}, entityId ${entityId}, collector ${collector.name}`);
-            }
+        try {
+            const collector = await getCollector(domain, entityId);
+            await requestKeywordData(collector, campaignId, adGroupId);
+            data = await bg.ajax(url, opts);
+            break;
+        }
+        catch (ex) {
+            ga.merror(ex, `context: domain ${domain}, entityId ${entityId}, collector ${collector.name}`);
         }
     }
 
@@ -360,22 +369,10 @@ function getAdGroups(entityId) {
 }
 
 async function updateKeyword({ domain, entityId, keywordIdList, operation, dataValues }) {
-    // TODO: the parameters to the Amazon API imply that you can pass more than
-    // 1 keyword at a time, but testing this shows that doing so just generates
-    // an error. So we do it the stupid way instead, with a loop.
     const timestamp = Date.now();
 
-    const successes = [];
-    await bg.parallelQueue(keywordIdList, async function(id) {
-        const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
-            method: 'POST',
-            formData: Object.assign({operation, entityId, keywordIds: id}, dataValues),
-            responseType: 'json',
-        });
-        if (response.success) {
-            successes.push(id);
-        }
-    });
+    const collector = await getCollector(domain, entityId);
+    const successes = await collector.updateKeywords({ timestamp, keywordIdList, operation, dataValues });
 
     for (const page of common.pageArray(successes, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
