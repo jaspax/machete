@@ -16,7 +16,7 @@ const lastVersionKey = 'lastVersion';
 chrome.runtime.onInstalled.addListener(details => {
     const manifest = chrome.runtime.getManifest();
     if (details.reason == 'install') {
-        chrome.tabs.create({ url: `${serviceUrl}/${process.env.PRODUCT}/welcome` });
+        chrome.tabs.create({ url: `${serviceUrl}/setup/postinstall` });
     }
     localStorage.setItem(lastVersionKey, manifest.version);
     setAlarm();
