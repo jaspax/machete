@@ -30,7 +30,7 @@ spdata.startSession();
 spdata.amsPageInit();
 
 window.setInterval(ga.mcatch(() => {
-    if (!window.location.pathname.match(/cm\/(campaigns|dashboard)/))
+    if (!(window.location.pathname.match(/cm\/(campaigns|dashboard)/) || window.location.pathname.match(/ads/)))
         return;
 
     let wrapper = $('#campaignTable_wrapper');
