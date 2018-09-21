@@ -137,7 +137,7 @@ module.exports = function(domain, entityId) {
         await bg.parallelQueue(keywordIdList, async function(id) {
             const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
                 method: 'POST',
-                formData: Object.assign({operation, entityId, keywordIds: id}, dataValues),
+                formData: Object.assign({operation, entityId, keywordIds: formatId(id)}, dataValues),
                 responseType: 'json',
             });
             if (response.success) {
