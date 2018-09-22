@@ -212,8 +212,8 @@ function chunkSeries(data, chunk) {
     return c;
 }
 
-// Convert a series of timestamped snapshots into a series of objects in which
-// each key has the difference from the previous snapshot, ie. the rate of
+// Convert a series of mixed snapshots and deltas into a series of objects in
+// which each key has the difference from the previous snapshot, ie. the rate of
 // change between snapshots. Only the metrics found in `cumulativeMetrics` are
 // converted into rates. The opt object has the following relevant keys:
 //      startTimestamp: earliest timestamp to examine. Items outside of this
@@ -221,10 +221,10 @@ function chunkSeries(data, chunk) {
 //      endTimestamp: latest timestamp to examine. Items outside of this range
 //          are discarded.
 function convertSnapshotsToDeltas(data, opt) {
-    let c = [];
+    let deltas = [];
     opt = opt || {};
 
-    let lastItem = null;
+    let lastSnapshot = null;
     let prevDecreased = false;
     data = data.sort(timestampSort);
     for (let item of data) {
@@ -236,42 +236,42 @@ function convertSnapshotsToDeltas(data, opt) {
             continue;
         }
 
-        if (item.measurementType == 'daily') {
-            c.push(Object.assign({}, item));
-            if (lastItem) {
-                lastItem = Object.assign({}, lastItem);
-                for (const metric of cumulativeMetrics) {
-                    lastItem[metric] += item[metric];
-                }
-                lastItem.timestamp = item.timestamp;
-                prevDecreased = false;
-            }
+        // identical timestamps are probably server-side duplicates
+        if (lastSnapshot && item.timestamp == lastSnapshot.timestamp) {
             continue;
         }
 
-        if (lastItem) {
-            // identical timestamps are probably server-side duplicates
-            if (item.timestamp == lastItem.timestamp)
-                continue;
-
-            // Skip this if any metric decreased, but don't skip multiple rows
-            if (!prevDecreased && cumulativeMetrics.some(metric => item[metric] < lastItem[metric])) {
-                prevDecreased = true;
-                continue;
+        if (item.measurementType == 'daily') {
+            deltas.push(Object.assign({}, item));
+            if (lastSnapshot) {
+                for (const metric of cumulativeMetrics) {
+                    lastSnapshot[metric] += item[metric];
+                }
+                lastSnapshot.timestamp = item.timestamp;
+                prevDecreased = false;
             }
-            prevDecreased = false;
-
-            const delta = Object.assign({}, item);
-            for (let metric of cumulativeMetrics) {
-                delta[metric] = item[metric] - lastItem[metric];
-            }
-            c.push(delta);
         }
+        else { // measurementType == 'snapshot'
+            if (lastSnapshot) {
+                // Skip this if any metric decreased, but don't skip multiple rows
+                if (!prevDecreased && cumulativeMetrics.some(metric => item[metric] < lastSnapshot[metric])) {
+                    prevDecreased = true;
+                    continue;
+                }
+                prevDecreased = false;
 
-        lastItem = item;
+                const delta = Object.assign({}, item);
+                for (let metric of cumulativeMetrics) {
+                    delta[metric] = item[metric] - lastSnapshot[metric];
+                }
+                deltas.push(delta);
+            }
+
+            lastSnapshot = item;
+        }
     }
 
-    return c;
+    return deltas;
 }
 
 function aggregateSeries(series, opt = { chunk: 'day' }) {
