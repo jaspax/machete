@@ -220,6 +220,9 @@ async function requestKeywordData(collector, campaignId, adGroupId) {
 }
 
 function storeDailyCampaignData(entityId, timestamp, data) {
+    if (!(data && data.length))
+        return Promise.resolve();
+
     return bg.ajax(`${bg.serviceUrl}/api/campaignData/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
@@ -228,6 +231,9 @@ function storeDailyCampaignData(entityId, timestamp, data) {
 }
 
 function storeLifetimeCampaignData(entityId, timestamp, data) {
+    if (!(data && data.length))
+        return Promise.resolve();
+
     return bg.ajax(`${bg.serviceUrl}/api/data/${entityId}?timestamp=${timestamp}`, {
         method: 'PUT',
         jsonData: data,
