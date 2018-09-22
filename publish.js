@@ -8,10 +8,10 @@ if (require.main === module) {
     const releaseTag = argv.shift();
 
     let pkgPath = 'out/beta/machete-beta.zip';
-    let appIds = ["adccehneljpgedjokmmbofllidphnjel", "ekcgmjhleflmfemjpeomblomcbhfnfcj"];
+    let appIds = ["ekcgmjhleflmfemjpeomblomcbhfnfcj"];
     if (releaseTag == 'release') {
         pkgPath = 'out/release/machete-release.zip';
-        appIds = ["doggogocakpiacfoebkjgjolmpklkeha", "linbfabhpielmegmeckbhfadhnnjoack"];
+        appIds = ["linbfabhpielmegmeckbhfadhnnjoack"];
     }
 
     (async function() {
