@@ -317,18 +317,20 @@ function aggregateKeywords(kwSets) {
                     a[kw][key] = item[key] + (a[kw][key] || 0);
                 }
                 a[kw].id.push(item.id);
+                a[kw].adGroupId.push(item.adGroupId);
                 a[kw].bid = Math.max(a[kw].bid, item.bid);
                 a[kw].enabled = a[kw].enabled || item.enabled;
             }
             else {
-                a[kw] = item;
+                a[kw] = Object.assign({}, item);
                 a[kw].id = [item.id];
+                a[kw].adGroupId = [item.adGroupId];
             }
         }
     }
 
     // Recalculate the aggregate metrics
-    const keywords = _.keys(a).map(x => a[x]);
+    const keywords = _.values(a);
     keywords.forEach(calculateItemStats);
     return keywords;
 }

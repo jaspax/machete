@@ -142,6 +142,19 @@ function activateAggregateHistoryTab(container) {
 }
 
 function activateAggregateKeywordTab(container) {
+    let kwData = null;
+    function findInKwData(id) {
+        if (!kwData)
+            return null;
+
+        for (const kws of kwData) {
+            const found = kws.find(x => x.id == id);
+            if (found)
+                return found;
+        }
+        return null;
+    }
+
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: ga.mpromise(async function() {
             const allowed = await spdata.getAllowedCampaignSummaries();
@@ -149,17 +162,19 @@ function activateAggregateKeywordTab(container) {
         }),
         loadDataPromise: summaries => ga.mpromise(async function() {
             const adGroupIds = _.uniq(summaries.map(x => x.adGroupId).filter(x => x && x != 'null'));
-            const kwData = await spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
+            kwData = await spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),
         updateStatus: ga.mcatch((ids, enabled, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-            spdata.updateKeywordStatus(idList, enabled).then(callback);
+            const kws = idList.map(findInKwData);
+            spdata.updateKeywordStatus(kws, enabled).then(callback);
         }),
         updateBid: ga.mcatch((ids, bid, callback) => {
             const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-            spdata.updateKeywordBid(idList, bid).then(callback);
+            const kws = idList.map(findInKwData);
+            spdata.updateKeywordBid(kws, bid).then(callback);
         }),
     });
     ReactDOM.render(aggContent, container[0]);
