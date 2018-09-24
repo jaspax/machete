@@ -292,6 +292,7 @@ async function ajax(url, opts) {
         headers: new Headers(),
         mode: 'cors',
         credentials: 'include',
+        redirect: 'error',
     };
 
     if (opts.queryData) {
@@ -301,6 +302,9 @@ async function ajax(url, opts) {
         }
         url += '?' + q.toString();
     }
+
+    if (opts.formData && opts.jsonData)
+        throw new Error('Cannot set both formData and jsonData on ajax request');
 
     if (opts.formData) {
         init.body = new URLSearchParams();
