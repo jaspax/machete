@@ -30,7 +30,10 @@ spdata.startSession();
 spdata.amsPageInit();
 
 window.setInterval(ga.mcatch(() => {
-    if (!(window.location.pathname.match(/cm\/(campaigns|dashboard)/) || window.location.pathname.match(/ads/)))
+    const loc = window.location.pathname;
+    if (!(loc.match(/ads/) || loc.match(/cm\/(campaigns|dashboard)/)))
+        return;
+    if (loc.match(/cm\/sp\/campaigns\/\w+/)) // actually the campaign view
         return;
 
     let wrapper = $('#campaignTable_wrapper');
