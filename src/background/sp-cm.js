@@ -168,26 +168,31 @@ module.exports = function(domain, entityId) {
         return allData;
     }
 
-    async function updateKeywords({ adGroupId, keywordIdList, operation, dataValues }) {
+    async function updateKeywords({ keywordIdList, operation, dataValues }) {
         let successes = [];
-        for (const chunk of common.pageArray(keywordIdList, 50)) {
-            const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
-                method: 'PATCH',
-                queryData: { entityId },
-                jsonData: chunk.map(kwid => {
-                    const item = { id: formatId(kwid), programType: "SP" };
-                    if (operation == 'PAUSE')
-                        item.state = 'PAUSED';
-                    if (operation == 'ENABLE')
-                        item.state = 'ENABLED';
-                    if (operation == 'UPDATE')
-                        item.bid = { bid: dataValues.bid };
-                    return item;
-                }),
-                responseType: 'json',
-            });
 
-            successes = successes.concat(response.updatedKeywords);
+        const keywordsByAdGroup = _.groupBy(keywordIdList, 'adGroupId');
+        for (const adGroupId of Object.keys(keywordsByAdGroup)) {
+            const list = keywordsByAdGroup[adGroupId];
+            for (const chunk of common.pageArray(list, 50)) {
+                const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
+                    method: 'PATCH',
+                    queryData: { entityId },
+                    jsonData: chunk.map(kw => {
+                        const item = { id: formatId(kw.id), programType: "SP" };
+                        if (operation == 'PAUSE')
+                            item.state = 'PAUSED';
+                        if (operation == 'ENABLE')
+                            item.state = 'ENABLED';
+                        if (operation == 'UPDATE')
+                            item.bid = { bid: dataValues.bid };
+                        return item;
+                    }),
+                    responseType: 'json',
+                });
+
+                successes = successes.concat(response.updatedKeywords);
+            }
         }
 
         return successes;

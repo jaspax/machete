@@ -197,6 +197,7 @@ function storeAdGroupMetadata(entityId, campaignId, adGroupId) {
     });
 }
 
+// NB: keywordIdList is a list of { id, adGroupId }
 function updateKeyword(keywordIdList, operation, dataValues) {
     return common.bgMessage({
         action: 'sp.updateKeyword',
