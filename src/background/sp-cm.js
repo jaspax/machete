@@ -185,7 +185,7 @@ module.exports = function(domain, entityId) {
                         if (operation == 'ENABLE')
                             item.state = 'ENABLED';
                         if (operation == 'UPDATE')
-                            item.bid = { bid: dataValues.bid };
+                            item.bid = { millicents: dataValues.bid * 100000, currencyCode: kw.currencyCode };
                         return item;
                     }),
                     responseType: 'json',

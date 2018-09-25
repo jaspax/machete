@@ -253,7 +253,7 @@ class KeywordAnalysis extends React.Component {
     }
 
     keywordModify(modifier, keywords, value, onSuccess) {
-        modifier(keywords.map(kw => kw.id), value, result => {
+        modifier(keywords, value, result => {
             if (result.success) {
                 keywords.forEach(onSuccess);
             }

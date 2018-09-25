@@ -166,15 +166,13 @@ function activateAggregateKeywordTab(container) {
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),
-        updateStatus: ga.mcatch((ids, enabled, callback) => {
-            const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-            const kws = idList.map(findInKwData);
-            spdata.updateKeywordStatus(kws, enabled).then(callback);
+        updateStatus: ga.mcatch((kws, enabled, callback) => {
+            const flattened = _.uniq(kws.reduce((array, item) => array.concat(...item.id), []));
+            spdata.updateKeywordStatus(flattened.map(findInKwData), enabled).then(callback);
         }),
-        updateBid: ga.mcatch((ids, bid, callback) => {
-            const idList = _.uniq(ids.reduce((array, item) => array.concat(...item), []));
-            const kws = idList.map(findInKwData);
-            spdata.updateKeywordBid(kws, bid).then(callback);
+        updateBid: ga.mcatch((kws, bid, callback) => {
+            const flattened = _.uniq(kws.reduce((array, item) => array.concat(...item.id), []));
+            spdata.updateKeywordBid(flattened.map(findInKwData), bid).then(callback);
         }),
     });
     ReactDOM.render(aggContent, container[0]);

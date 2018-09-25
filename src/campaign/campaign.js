@@ -79,8 +79,8 @@ function addCampaignTabs(tabs) {
 }
 
 function generateKeywordReports(container) {
-    const updateStatus = (ids, enabled, callback) => spdata.updateKeywordStatus(ids.map(id => ({ id, adGroupId })), enabled).then(callback);
-    const updateBid = (ids, bid, callback) => spdata.updateKeywordBid(ids.map(id => ({ id, adGroupId })), bid).then(callback);
+    const updateStatus = (kws, enabled, callback) => spdata.updateKeywordStatus(kws, enabled).then(callback);
+    const updateBid = (kws, bid, callback) => spdata.updateKeywordBid(kws, bid).then(callback);
     const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
         updateStatus: ga.mcatch(updateStatus),
