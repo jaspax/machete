@@ -49,7 +49,7 @@ async function getCollector(domain, entityId) {
     }
 
     let collector = null;
-    for (const c of [spRta(domain, entityId), spCm(domain, entityId)]) {
+    for (const c of [spCm(domain, entityId), spRta(domain, entityId)]) {
         if (await c.probe()) {
             collector = c;
             break;
