@@ -5,6 +5,8 @@ const ErrorBoundary = require('./ErrorBoundary.jsx');
 const KeywordEnableToggle = require('./KeywordEnableToggle.jsx');
 const KeywordBidUpdate = require('./KeywordBidUpdate.jsx');
 
+const ga = require('../common/ga.js');
+
 class KeywordBulkUpdate extends React.Component {
     constructor(props) {
         super(props);
@@ -25,10 +27,12 @@ class KeywordBulkUpdate extends React.Component {
     }
 
     handleEnabledChange(enabled) {
+        ga.revent('kwBulkUpdate', { type: 'enable', value: enabled });
         this.props.onEnabledChange(enabled, this.props.data);
     }
 
     handleBidChange(bid) {
+        ga.revent('kwBulkUpdate', { type: 'bid', value: bid });
         this.props.onBidChange(bid, this.props.data);
     }
 }

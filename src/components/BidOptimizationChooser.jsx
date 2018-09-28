@@ -110,6 +110,7 @@ class BidOptimizationChooser extends React.Component {
             }),
             message: 'Updating keyword...',
         });
+        ga.revent('bidOptimizeOne');
     }
 
     applyAllOptimizations() {
@@ -128,6 +129,7 @@ class BidOptimizationChooser extends React.Component {
         kwq.drain = () => this.setState({ keywordPromise: this.keywordPromise() });
 
         kwq.push(this.state.lastKeywords.filter(kw => kw.optimizeResult == 'optimized'));
+        ga.revent('bidOptimizeAll');
     }
 }
 

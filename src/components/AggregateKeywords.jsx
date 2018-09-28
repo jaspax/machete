@@ -4,6 +4,7 @@ const PropTypes = require('prop-types');
 const ErrorBoundary = require('./ErrorBoundary.jsx');
 const CampaignSelector = require('./CampaignSelector.jsx');
 const KeywordAnalysis = require('./KeywordAnalysis.jsx');
+const ga = require('../common/ga.js');
 
 class AggregateKeywords extends React.Component {
     constructor(props) {
@@ -14,6 +15,7 @@ class AggregateKeywords extends React.Component {
     }
 
     render() {
+        ga.revent('viewAggregateKeywords');
         let display = null;
         if (this.state.dataPromise) {
             display = <section>

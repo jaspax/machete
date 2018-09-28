@@ -1,4 +1,5 @@
 const $ = require('jquery');
+const constants = require('./constants.js');
 
 /* eslint-disable no-unused-vars */
 /* global __ga:false */
@@ -139,12 +140,35 @@ function mpromise(arg) {
     });
 }
 
+function revent(eventId, eventData) {
+    try {
+        const opts = {
+            method: 'PUT',
+            headers: new Headers(),
+            mode: 'cors',
+            credentials: 'include',
+            redirect: 'error',
+            body: JSON.stringify({ eventId, eventData }),
+        };
+        opts.headers.set('Content-Type', 'application/json');
+
+        window.fetch(`https://${constants.hostname}/evt`, opts).then(response => {
+            if (!response.ok)
+                merror(`revent ${eventId} ${eventData} response error: ${response.status} ${response.statusText}`);
+        });
+    }
+    catch (ex) {
+        merror(`revent ${eventId} ${eventData} create error`, ex);
+    }
+}
+
 module.exports = {
     mga,
     merror,
     mclick,
     mcatch,
     mpromise,
+    revent,
     errorToString, 
     errorToObject, 
 };

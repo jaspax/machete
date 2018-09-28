@@ -42,6 +42,7 @@ class KeywordBubbleChart extends React.Component {
     }
 
     renderChart() {
+        ga.revent('kwRenderBubbleChart');
         window.setTimeout(ga.mcatch(() => {
             let kws = this.props.keywordData;
             let chartData = {

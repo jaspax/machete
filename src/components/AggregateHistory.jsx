@@ -5,6 +5,7 @@ const _ = require('lodash');
 const ErrorBoundary = require('./ErrorBoundary.jsx');
 const CampaignSelector = require('./CampaignSelector.jsx');
 const CampaignHistoryView = require('./CampaignHistoryView.jsx');
+const ga = require('../common/ga.js');
 
 class AggregateHistory extends React.Component {
     constructor(props) {
@@ -19,6 +20,7 @@ class AggregateHistory extends React.Component {
     }
 
     render() {
+        ga.revent('viewAggregateHistory');
         let display = null;
         if (this.state.dataPromise) {
              display = <section className="machete-report">

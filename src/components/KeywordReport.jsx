@@ -9,7 +9,7 @@ const ga = require('../common/ga.js');
 
 class KeywordReport extends React.Component {
     render() {
-        return <Collapsible trigger={this.props.title} lazyRender={true} transitionTime={200}>
+        return <Collapsible trigger={this.props.title} lazyRender={true} onOpen={this.onOpen.bind(this)} transitionTime={200}>
             <ErrorBoundary>
                 <KeywordBulkUpdate
                     data={this.props.data}
@@ -26,6 +26,10 @@ class KeywordReport extends React.Component {
                 </div>
             </ErrorBoundary>
         </Collapsible>;
+    }
+
+    onOpen() {
+        ga.revent('kwReportOpen', { title: this.props.title });
     }
 
     shouldComponentUpdate(nextProps) {

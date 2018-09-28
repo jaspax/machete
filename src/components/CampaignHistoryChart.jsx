@@ -4,6 +4,7 @@ const PropTypes = require('prop-types');
 const TimeSeriesChart = require('./TimeSeriesChart.jsx');
 
 const common = require('../common/common.js');
+const ga = require('../common/ga.js');
 const constants = require('../common/constants.js');
 
 class CampaignHistoryChart extends React.Component {
@@ -11,6 +12,7 @@ class CampaignHistoryChart extends React.Component {
         const width = this.state ? this.state.width : 800;
         const dataPromise = this.props.dataPromise.then(this.createHistoryData.bind(this));
         const layoutPromise = dataPromise.then(this.createLayout.bind(this));
+        ga.revent('viewCampaignHistory');
 
         return <div style={{width: '100%'}} ref={div => this.containerDiv = div}>
                 <TimeSeriesChart

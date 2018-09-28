@@ -1,6 +1,7 @@
 const React = require('react');
 const Async = require('react-promise').default;
 const spData = require('../common/sp-data.js');
+const ga = require('../common/ga.js');
 
 function KdpTab() {
     return <div className="a-box-inner">
@@ -14,6 +15,7 @@ function pending() {
 }
 
 function request() {
+    ga.revent('kdpIntegration');
     return spData.requestKdpIntegration().then(window.location.reload);
 }
 
