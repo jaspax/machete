@@ -140,9 +140,9 @@ function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
         onEnabledChange: ga.mcatch((enabled, keywords) => 
-                                   spdata.updateKeywordStatus(keywords.map(kw => kw.id), enabled).then(() => window.location.reload())),
+                                   spdata.updateKeywordStatus(keywords, enabled).then(() => window.location.reload())),
         onBidChange: ga.mcatch((bid, keywords) => 
-                               spdata.updateKeywordBid(keywords.map(kw => kw.id), bid).then(() => window.location.reload())),
+                               spdata.updateKeywordBid(keywords, bid).then(() => window.location.reload())),
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }
