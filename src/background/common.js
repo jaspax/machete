@@ -114,6 +114,7 @@ function setSyncTime(module, time) {
 }
 
 async function dataGather(req) {
+    ga.beginLogBuffer('dataGather');
     console.log('Data sync start at', moment().format());
 
     // Store entityIds and domains for further use
@@ -156,6 +157,7 @@ async function dataGather(req) {
     cache.clear();
 
     console.log('Data sync finish at', moment().format());
+    ga.endLogBuffer();
     return Math.max(newSync, oldSync);
 }
 
