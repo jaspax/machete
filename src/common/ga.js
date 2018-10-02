@@ -1,4 +1,5 @@
 const $ = require('jquery');
+const qw = require('qw');
 const constants = require('./constants.js');
 
 /* eslint-disable no-unused-vars */
@@ -162,6 +163,36 @@ function revent(eventId, eventData) {
     }
 }
 
+const consoleMethods = qw`log warn error`;
+let buffer = [];
+let currentTag = null;
+
+function beginLogBuffer(eventTag) {
+    if (currentTag) {
+        console.warn('Ignoring log buffering with tag', eventTag, 'while tag is already open:', currentTag);
+        return;
+    }
+
+    currentTag = eventTag;
+    for (const method of consoleMethods) {
+        const orig = console[method];
+        console[method] = (...args) => {
+            buffer.push(args);
+            orig(method);
+        };
+        console[method].orig = orig;
+    }
+}
+
+function endLogBuffer() {
+    revent('clientLog', { tag: currentTag, messages: buffer });
+    currentTag = null;
+    buffer = [];
+    for (const method of consoleMethods) {
+        console[method] = console[method].orig;
+    }
+}
+
 module.exports = {
     mga,
     merror,
@@ -171,4 +202,6 @@ module.exports = {
     revent,
     errorToString, 
     errorToObject, 
+    beginLogBuffer,
+    endLogBuffer,
 };
