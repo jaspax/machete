@@ -197,25 +197,24 @@ function storeAdGroupMetadata(entityId, campaignId, adGroupId) {
     });
 }
 
-// NB: keywordIdList is a list of { id, adGroupId }
-function updateKeyword(keywordIdList, operation, dataValues) {
+function updateKeyword(keywords, operation, dataValues) {
     return common.bgMessage({
         action: 'sp.updateKeyword',
         entityId: getEntityId(),
-        keywordIdList,
+        keywords,
         operation,
         dataValues,
     });
 }
 
-function updateKeywordStatus(keywordIdList, enable) {
+function updateKeywordStatus(keywords, enable) {
     let operation = enable ? "ENABLE" : "PAUSE";
-    return updateKeyword(keywordIdList, operation, {});
+    return updateKeyword(keywords, operation, {});
 }
 
-function updateKeywordBid(keywordIdList, bid) {
+function updateKeywordBid(keywords, bid) {
     bid = parseFloat(bid).toFixed(2).toString();
-    return updateKeyword(keywordIdList, 'UPDATE', {bid});
+    return updateKeyword(keywords, 'UPDATE', {bid});
 }
 
 function isRunning(campaignSummary) {

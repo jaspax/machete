@@ -43,14 +43,16 @@ function getEntitySyncEvent(entityId) {
 }
 
 const collectorCache = {};
-async function getCollector(domain, entityId) {
-    if (collectorCache[entityId]) {
-        return collectorCache[entityId];
+
+async function getCollectorImpl(domain, entityId, scope, probeFn) {
+    const cacheTag = `${entityId}:${scope}`;
+    if (collectorCache[cacheTag]) {
+        return collectorCache[cacheTag];
     }
 
     let collector = null;
     for (const c of [spCm(domain, entityId), spRta(domain, entityId)]) {
-        if (await c.probe()) {
+        if (await probeFn(c)) {
             collector = c;
             break;
         }
@@ -60,11 +62,19 @@ async function getCollector(domain, entityId) {
         throw new Error(`No valid collectors for ${domain} ${entityId}`);
     }
 
-    collectorCache[entityId] = collector;
-    console.log('Using collector', domain, entityId, collector.name);
+    collectorCache[cacheTag] = collector;
+    console.log('Using collector', domain, cacheTag, collector.name);
     ga.mga('event', 'collector-domain', domain, collector.name);
 
     return collector;
+}
+
+function getCollector(domain, entityId) {
+    return getCollectorImpl(domain, entityId, 'general', c => c.probe());
+}
+
+function getCollectorForKeywordUpdate(domain, entityId, keywordOpts) {
+    return getCollectorImpl(domain, entityId, 'keywordUpdate', c => c.probeKeywordUpdate(keywordOpts));
 }
 
 async function dataGather(req) {
@@ -372,11 +382,11 @@ function getAdGroups(entityId) {
     });
 }
 
-async function updateKeyword({ domain, entityId, keywordIdList, operation, dataValues }) {
+async function updateKeyword({ domain, entityId, keywords, operation, dataValues }) {
     const timestamp = Date.now();
 
-    const collector = await getCollector(domain, entityId);
-    const successes = await collector.updateKeywords({ keywordIdList, operation, dataValues });
+    const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: keywords.shift() });
+    const successes = await collector.updateKeywords({ keywords, operation, dataValues });
 
     for (const page of common.pageArray(successes, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
@@ -391,7 +401,7 @@ async function updateKeyword({ domain, entityId, keywordIdList, operation, dataV
 
     // TODO: in the case that we have a lot of these (bulk update), implement
     // progress feedback.
-    return { success: successes.length == keywordIdList.length };
+    return { success: successes.length == keywords.length };
 }
 
 module.exports = {

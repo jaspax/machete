@@ -49,6 +49,17 @@ module.exports = function(domain, entityId) {
         }
     }
 
+    async function probeKeywordUpdate({ operation, keyword, dataValues }) {
+        try {
+            const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
+            return result.length == 1;
+        }
+        catch (ex) {
+            const error = bg.handleServerErrors(ex, 'cm probe');
+            return error == 'amazonNotLoggedIn';
+        }
+    }
+
     async function getDailyCampaignData(date) {
         const utcDay = moment(date).tz('UTC');
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
@@ -168,10 +179,10 @@ module.exports = function(domain, entityId) {
         return allData;
     }
 
-    async function updateKeywords({ keywordIdList, operation, dataValues }) {
+    async function updateKeywords({ keywords, operation, dataValues }) {
         let successes = [];
 
-        const keywordsByAdGroup = _.groupBy(keywordIdList, 'adGroupId');
+        const keywordsByAdGroup = _.groupBy(keywords, 'adGroupId');
         for (const adGroupId of Object.keys(keywordsByAdGroup)) {
             const list = keywordsByAdGroup[adGroupId];
             for (const chunk of common.pageArray(list, 50)) {
@@ -203,6 +214,7 @@ module.exports = function(domain, entityId) {
         domain,
         entityId,
         probe,
+        probeKeywordUpdate,
         getDailyCampaignData,
         getLifetimeCampaignData,
         getCampaignStatus,

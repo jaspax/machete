@@ -26,7 +26,18 @@ module.exports = function(domain, entityId) {
             return true;
         }
         catch (ex) {
-            const error = bg.handleServerErrors(ex, 'cm probe');
+            const error = bg.handleServerErrors(ex, 'rta probe');
+            return error == 'amazonNotLoggedIn';
+        }
+    }
+
+    async function probeKeywordUpdate({ operation, keyword, dataValues }) {
+        try {
+            const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
+            return result.length == 1;
+        }
+        catch (ex) {
+            const error = bg.handleServerErrors(ex, 'rta probe');
             return error == 'amazonNotLoggedIn';
         }
     }
@@ -128,13 +139,13 @@ module.exports = function(domain, entityId) {
         return response.aaData || [];
     }
 
-    async function updateKeywords({ keywordIdList, operation, dataValues }) {
+    async function updateKeywords({ keywords, operation, dataValues }) {
         const successes = [];
 
         // the parameters to the Amazon API imply that you can pass more than 1
         // keyword at a time, but testing this shows that doing so just
         // generates an error. So we do it the stupid way instead, with a loop.
-        await bg.parallelQueue(keywordIdList.map(kw => kw.id), async function(id) {
+        await bg.parallelQueue(keywords.map(kw => kw.id), async function(id) {
             const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
                 method: 'POST',
                 formData: Object.assign({operation, entityId, keywordIds: formatId(id)}, dataValues),
@@ -153,6 +164,7 @@ module.exports = function(domain, entityId) {
         domain,
         entityId,
         probe,
+        probeKeywordUpdate,
         getDailyCampaignData,
         getLifetimeCampaignData,
         getCampaignStatus,
