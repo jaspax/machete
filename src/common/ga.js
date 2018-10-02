@@ -178,7 +178,7 @@ function beginLogBuffer(eventTag) {
         const orig = console[method];
         console[method] = (...args) => {
             buffer.push(args);
-            orig(method);
+            orig(...args);
         };
         console[method].orig = orig;
     }
