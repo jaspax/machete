@@ -385,7 +385,10 @@ function getAdGroups(entityId) {
 async function updateKeyword({ domain, entityId, keywords, operation, dataValues }) {
     const timestamp = Date.now();
 
-    const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: keywords.shift() });
+    const probeKw = keywords.shift();
+    const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: probeKw });
+
+    keywords.push(probeKw);
     const successes = await collector.updateKeywords({ keywords, operation, dataValues });
 
     for (const page of common.pageArray(successes, 50)) {
