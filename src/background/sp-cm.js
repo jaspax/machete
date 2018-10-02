@@ -3,7 +3,6 @@ const moment = require('frozen-moment');
 require('moment-timezone');
 
 const bg = require('./common.js');
-const common = require('../common/common.js');
 
 module.exports = function(domain, entityId) {
     const latestCampaignData = {
@@ -185,25 +184,23 @@ module.exports = function(domain, entityId) {
         const keywordsByAdGroup = _.groupBy(keywords, 'adGroupId');
         for (const adGroupId of Object.keys(keywordsByAdGroup)) {
             const list = keywordsByAdGroup[adGroupId];
-            for (const chunk of common.pageArray(list, 50)) {
-                const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
-                    method: 'PATCH',
-                    queryData: { entityId },
-                    jsonData: chunk.map(kw => {
-                        const item = { id: formatId(kw.id), programType: "SP" };
-                        if (operation == 'PAUSE')
-                            item.state = 'PAUSED';
-                        if (operation == 'ENABLE')
-                            item.state = 'ENABLED';
-                        if (operation == 'UPDATE')
-                            item.bid = { millicents: dataValues.bid * 100000, currencyCode: kw.currencyCode };
-                        return item;
-                    }),
-                    responseType: 'json',
-                });
+            const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
+                method: 'PATCH',
+                queryData: { entityId },
+                jsonData: list.map(kw => {
+                    const item = { id: formatId(kw.id), programType: "SP" };
+                    if (operation == 'PAUSE')
+                        item.state = 'PAUSED';
+                    if (operation == 'ENABLE')
+                        item.state = 'ENABLED';
+                    if (operation == 'UPDATE')
+                        item.bid = { millicents: dataValues.bid * 100000, currencyCode: kw.currencyCode };
+                    return item;
+                }),
+                responseType: 'json',
+            });
 
-                successes = successes.concat(response.updatedKeywords);
-            }
+            successes = successes.concat(response.updatedKeywords);
         }
 
         return successes;
