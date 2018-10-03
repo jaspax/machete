@@ -165,15 +165,10 @@ function revent(eventId, eventData) {
 
 const consoleMethods = qw`log warn error`;
 let buffer = [];
-let currentTag = null;
+let tagStack = [];
 
 function beginLogBuffer(eventTag) {
-    if (currentTag) {
-        console.warn('Ignoring log buffering with tag', eventTag, 'while tag is already open:', currentTag);
-        return;
-    }
-
-    currentTag = eventTag;
+    tagStack.push(eventTag);
     for (const method of consoleMethods) {
         const orig = console[method];
         console[method] = (...args) => {
@@ -185,13 +180,12 @@ function beginLogBuffer(eventTag) {
 }
 
 function endLogBuffer() {
-    if (!currentTag) {
-        console.warn('Ignoring end log buffering with no current tag');
+    if (!tagStack.length)
+        console.warn('Ignoring end log buffering with empty tag stack');
         return;
     }
 
-    revent('clientLog', { tag: currentTag, messages: buffer });
-    currentTag = null;
+    revent('clientLog', { tag: tagStack.pop(), messages: buffer });
     buffer = [];
     for (const method of consoleMethods) {
         console[method] = console[method].orig;
