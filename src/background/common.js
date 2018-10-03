@@ -113,7 +113,7 @@ function setSyncTime(module, time) {
     localStorage.setItem('lastSync', JSON.stringify(lastSync));
 }
 
-const dataGather = cache.coMemo(async function dataGatherImpl(req) {
+const dataGather = cache.coMemo(async function(req) {
     ga.beginLogBuffer('dataGather');
     console.log('Data sync start at', moment().format());
 
