@@ -185,6 +185,11 @@ function beginLogBuffer(eventTag) {
 }
 
 function endLogBuffer() {
+    if (!currentTag) {
+        console.warn('Ignoring end log buffering with no current tag');
+        return;
+    }
+
     revent('clientLog', { tag: currentTag, messages: buffer });
     currentTag = null;
     buffer = [];
