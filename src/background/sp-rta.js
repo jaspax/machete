@@ -26,6 +26,7 @@ module.exports = function(domain, entityId) {
             return true;
         }
         catch (ex) {
+            console.log('rta probe failed with', ex.message);
             const error = bg.handleServerErrors(ex, 'rta probe');
             return error == 'amazonNotLoggedIn';
         }
@@ -37,7 +38,8 @@ module.exports = function(domain, entityId) {
             return result.length == 1;
         }
         catch (ex) {
-            const error = bg.handleServerErrors(ex, 'rta probe');
+            console.log('rta keyword probe failed with', ex.message);
+            const error = bg.handleServerErrors(ex, 'rta keyword probe');
             return error == 'amazonNotLoggedIn';
         }
     }

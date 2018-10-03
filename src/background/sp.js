@@ -59,7 +59,7 @@ async function getCollectorImpl(domain, entityId, scope, probeFn) {
         console.log('Probe failed for', domain, entityId, c.name);
     }
     if (!collector) {
-        throw new Error(`No valid collectors for ${domain} ${entityId}`);
+        throw new Error(`No valid collectors for ${domain} ${cacheTag}`);
     }
 
     collectorCache[cacheTag] = collector;

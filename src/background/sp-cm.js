@@ -43,6 +43,7 @@ module.exports = function(domain, entityId) {
             return true;
         }
         catch (ex) {
+            console.log('cm probe failed with', ex.message);
             const error = bg.handleServerErrors(ex, 'cm probe');
             return error == 'amazonNotLoggedIn';
         }
@@ -54,7 +55,8 @@ module.exports = function(domain, entityId) {
             return result.length == 1;
         }
         catch (ex) {
-            const error = bg.handleServerErrors(ex, 'cm probe');
+            console.log('cm keyword probe failed with', ex.message);
+            const error = bg.handleServerErrors(ex, 'cm keyword probe');
             return error == 'amazonNotLoggedIn';
         }
     }
