@@ -180,7 +180,7 @@ function beginLogBuffer(eventTag) {
 }
 
 function endLogBuffer() {
-    if (!tagStack.length)
+    if (!tagStack.length) {
         console.warn('Ignoring end log buffering with empty tag stack');
         return;
     }

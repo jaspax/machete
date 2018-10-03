@@ -26,6 +26,8 @@ chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
     chrome.tabs.create({ url: `${serviceUrl}/profile` });
 }));
 
+let dataGatherPromise = null;
+
 function messageListener(handler) {
     chrome.runtime.onMessage.addListener(ga.mcatch((req, sender, sendResponse) => {
         console.log('Handling message:', req);
@@ -96,6 +98,12 @@ function startSession(req) {
     return dataGather(req);
 }
 
+function dataGather(req) {
+    if (!dataGatherPromise)
+        dataGatherPromise = dataGatherImpl(req);
+    return dataGatherPromise;
+}
+
 const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
 function hasSyncedToday(module) {
     if (lastSync[module]) {
@@ -113,7 +121,7 @@ function setSyncTime(module, time) {
     localStorage.setItem('lastSync', JSON.stringify(lastSync));
 }
 
-async function dataGather(req) {
+async function dataGatherImpl(req) {
     ga.beginLogBuffer('dataGather');
     console.log('Data sync start at', moment().format());
 
