@@ -172,7 +172,7 @@ function beginLogBuffer(eventTag) {
     for (const method of consoleMethods) {
         const orig = console[method];
         console[method] = (...args) => {
-            buffer.push(args);
+            buffer.push(args.map(item => typeof item == 'object' ? JSON.stringify(item) : item));
             orig(...args);
         };
         console[method].orig = orig;
