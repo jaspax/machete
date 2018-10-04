@@ -35,6 +35,9 @@ module.exports = function(domain, entityId) {
     async function probe() {
         try {
             const campaigns = await getLifetimeCampaignData();
+            if (!campaigns.length)
+                return true; // I guess?
+
             const campaign = campaigns[0];
             await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaign.id}`, {
                 method: 'GET',
