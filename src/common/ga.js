@@ -154,7 +154,7 @@ function revent(eventId, eventData) {
         opts.headers.set('Content-Type', 'application/json');
 
         window.fetch(`https://${constants.hostname}/evt`, opts).then(response => {
-            if (!response.ok && response.status != 401)
+            if (!response.ok && response.status != 401) {
                 merror(`revent ${eventId} ${eventData} response error: ${response.status} ${response.statusText}`);
             }
         });
