@@ -15,14 +15,14 @@ class KeywordReport extends React.Component {
     render() {
         return <Collapsible trigger={this.props.title} lazyRender={true} onOpen={this.onOpen.bind(this)} transitionTime={200}>
             <ErrorBoundary>
-                <div style={{ padding: '5px' }}>
+                <div style={{height: '48px'}}>
                     <DownloadButton title="Download this report" onClick={this.generateDownloadCsv.bind(this)} />
+                    <KeywordBulkUpdate
+                        data={this.props.data}
+                        onEnabledChange={this.props.onKeywordEnabledChange}
+                        onBidChange={this.props.onKeywordBidChange}
+                    />
                 </div>
-                <KeywordBulkUpdate
-                    data={this.props.data}
-                    onEnabledChange={this.props.onKeywordEnabledChange}
-                    onBidChange={this.props.onKeywordBidChange}
-                />
                 <div style={{clear: 'both'}}>
                     <KeywordTable
                         data={this.props.data}
