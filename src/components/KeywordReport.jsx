@@ -4,6 +4,10 @@ const ErrorBoundary = require('./ErrorBoundary.jsx');
 const KeywordTable = require('./KeywordTable.jsx');
 const KeywordBulkUpdate = require('./KeywordBulkUpdate.jsx');
 const Collapsible = require('react-collapsible').default;
+const DownloadButton = require('./DownloadButton.jsx');
+const csv = require('csv-stringify');
+const common = require('../common/common.js');
+const $ = require('jquery');
 
 const ga = require('../common/ga.js');
 
@@ -11,6 +15,9 @@ class KeywordReport extends React.Component {
     render() {
         return <Collapsible trigger={this.props.title} lazyRender={true} onOpen={this.onOpen.bind(this)} transitionTime={200}>
             <ErrorBoundary>
+                <div style={{ padding: '5px' }}>
+                    <DownloadButton title="Download this report" onClick={this.generateDownloadCsv.bind(this)} />
+                </div>
                 <KeywordBulkUpdate
                     data={this.props.data}
                     onEnabledChange={this.props.onKeywordEnabledChange}
@@ -42,6 +49,34 @@ class KeywordReport extends React.Component {
             }
         }
         return false;
+    }
+
+    generateDownloadCsv(evt) {
+        evt.preventDefault();
+        if (!this.props.data) {
+            return;
+        }
+        const data = this.props.data.map(x => ({
+            "Keyword": x.keyword || '',
+            "Impressions": x.impressions,
+            "Clicks": x.clicks,
+            "Sales (units)": x.salesCount,
+            "Sales (value)": common.numberFmt(x.salesValue),
+            "Spend": common.numberFmt(x.spend),
+            "ACOS": common.numberFmt(x.acos),
+            "Average CPC": common.numberFmt(x.avgCpc),
+        }));
+        csv(data, { header: true }, (error, data) => {
+            if (error) {
+                // TODO: report errors
+                return ga.merror(error);
+            }
+            const blob = new Blob([data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            $(`<a href='${url}' download='${this.props.title}.csv'></a>`)[0].click();
+
+            return url;
+        });
     }
 }
 
