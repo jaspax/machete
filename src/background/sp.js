@@ -407,6 +407,10 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     return { success: successes.length == keywords.length };
 }
 
+function setBrandName({ entityId, brandName }) {
+    bg.setEntityId(entityId, { name: brandName });
+}
+
 module.exports = {
     name: 'sp',
     dataGather,
@@ -419,4 +423,5 @@ module.exports = {
     getAggregateKeywordData,
     storeAdGroupMetadata,
     updateKeyword,
+    setBrandName,
 };

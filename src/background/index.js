@@ -30,6 +30,8 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.storeAdGroupMetadata(req);
         case 'sp.updateKeyword':
             return sp.updateKeyword(req);
+        case 'sp.setBrandName':
+            return sp.setBrandName(req);
 
         // Seller actions
         case 'seller.getSummaries':

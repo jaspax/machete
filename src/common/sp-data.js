@@ -299,6 +299,23 @@ function amsPageInit() {
                 return result;
             }));
         }
+
+        let brandName = null;
+        const brandNameDiv = $('#currentBrandName');
+        if (brandNameDiv.length)
+            brandName = brandNameDiv[0].innerText;
+        if (!brandName) {
+            const accountLink = $('.kdpUserBarLinksRight').find('a').first();
+            if (accountLink.length)
+                brandName = accountLink[0].innerText.replace('Hello ', '');
+        }
+        if (brandName) {
+            common.bgMessage({
+                action: 'sp.setBrandName',
+                entityId: getEntityId(),
+                brandName,
+            }).catch(ga.mcatch);
+        }
     }));
 }
 

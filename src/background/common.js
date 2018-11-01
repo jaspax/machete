@@ -119,7 +119,7 @@ const dataGather = cache.coMemo(async function(req) {
 
     // Store entityIds and domains for further use
     if (req.entityId) {
-        addEntityId(req.domain, req.entityId);
+        setEntityId(req.entityId, { domain: req.domain });
     }
     else if (req.domain) {
         addSellerDomain(req.domain);
@@ -161,17 +161,21 @@ const dataGather = cache.coMemo(async function(req) {
     return Math.max(newSync, oldSync);
 }, { maxAge: 6 * constants.timespan.hour });
 
-function addEntityId(domain, entityId) {
-    if (isUnset(domain) || isUnset(entityId)) {
-        ga.merror("bad arguments to addEntityId:", JSON.stringify({ domain, entityId }));
+function setEntityId(entityId, fields) {
+    if (isUnset(entityId)) {
+        ga.merror('Invalid arguments to setEntityId', JSON.stringify({ entityId, fields }));
         return;
     }
 
     const ids = JSON.parse(localStorage.getItem(entityIdKey)) || [];
-    if (!ids.find(x => x.entityId == entityId || x == entityId)) {
-        ids.push({ domain, entityId });
-        localStorage.setItem(entityIdKey, JSON.stringify(ids));
+    let existing = ids.find(x => x.entityId == entityId);
+    if (existing) {
+        Object.assign(existing, fields);
     }
+    else {
+        ids.push(Object.assign({ entityId }, fields));
+    }
+    localStorage.setItem(entityIdKey, JSON.stringify(ids));
 }
 
 function isUnset(str) {
@@ -184,7 +188,7 @@ function getEntityIds() {
     // Fix up entityIds to ensure that every one has a stored domain
     let ids = entityIds.map(item => {
         if (typeof item == 'string') {
-            return { domain: 'ams.amazon.com', entityId: item };
+            return { domain: 'advertising.amazon.com', entityId: item };
         }
         else if (!item.domain) {
             item.domain = 'advertising.amazon.com';
@@ -201,7 +205,7 @@ function getEntityIds() {
 
 function addSellerDomain(domain) {
     if (!domain) {
-        ga.merror("bad arguments to addEntityId:", JSON.stringify(domain));
+        ga.merror("bad arguments to addSellerDomain:", JSON.stringify(domain));
         return;
     }
 
@@ -383,7 +387,7 @@ module.exports = {
     cache,
     startSession,
     isUnset,
-    addEntityId,
+    setEntityId,
     getEntityIds,
     addSellerDomain,
     getSellerDomains,
