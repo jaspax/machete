@@ -163,8 +163,7 @@ const dataGather = cache.coMemo(async function(req) {
 
 function setEntityId(entityId, fields) {
     if (isUnset(entityId)) {
-        ga.merror('Invalid arguments to setEntityId', JSON.stringify({ entityId, fields }));
-        return;
+        throw new Error('Invalid arguments to setEntityId:' + JSON.stringify({ entityId, fields }));
     }
 
     const ids = JSON.parse(localStorage.getItem(entityIdKey)) || [];
@@ -173,9 +172,11 @@ function setEntityId(entityId, fields) {
         Object.assign(existing, fields);
     }
     else {
-        ids.push(Object.assign({ entityId }, fields));
+        existing = Object.assign({ entityId }, fields);
+        ids.push(existing);
     }
     localStorage.setItem(entityIdKey, JSON.stringify(ids));
+    return existing;
 }
 
 function isUnset(str) {

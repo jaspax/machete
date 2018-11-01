@@ -97,6 +97,13 @@ async function dataGather(req) {
 
         try {
             const collector = await getCollector(domain, entityId);
+
+            // Store entity metadata locally if we have all relevant fields
+            const entityMetadata = bg.setEntityId(entityId, { collector: collector.name });
+            if (entityMetadata.name && entityMetadata.collector && entityMetadata.domain) {
+                await storeEntityMetadata(entityMetadata);
+            }
+
             const campaignIds = await requestCampaignData(collector);
             const adGroups = await getAdGroups(entityId);
             const summaries = await getCampaignSummaries({ entityId });
@@ -371,6 +378,15 @@ function storeAdGroupMetadata({ entityId, adGroupId, campaignId }) {
     return bg.ajax(`${bg.serviceUrl}/api/adGroupMetadata/${entityId}/${adGroupId}`, {
         method: 'PUT',
         jsonData: { campaignId },
+    });
+}
+
+function storeEntityMetadata(metadata) {
+    const entityId = metadata.entityId;
+    checkEntityId(entityId);
+    return bg.ajax(`${bg.serviceUrl}/api/meta/${entityId}`, {
+        method: 'PUT',
+        jsonData: metadata,
     });
 }
 
