@@ -15,7 +15,7 @@ const CampaignHistoryChart = require('./CampaignHistoryChart.jsx');
 const TimeSeriesGranularitySelector = require('./TimeSeriesGranularitySelector.jsx');
 const MetricSelector = require('./MetricSelector.jsx');
 
-class CampaignHistoryView extends React.Component { // eslint-disable-line react/no-deprecated
+class CampaignHistoryView extends React.Component {
     constructor(props) {
         super(props);
         this.rangeChange = this.rangeChange.bind(this);
@@ -58,7 +58,7 @@ class CampaignHistoryView extends React.Component { // eslint-disable-line react
         };
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentWillReceiveProps(nextProps) { // eslint-disable-line react/no-deprecated
         this.setState(this.baseState(nextProps));
     }
 

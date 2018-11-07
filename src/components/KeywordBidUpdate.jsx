@@ -5,7 +5,7 @@ const common = require('../common/common.js');
 
 const SmallButton = require('./SmallButton.jsx');
 
-class KeywordBidUpdate extends React.Component { // eslint-disable-line react/no-deprecated
+class KeywordBidUpdate extends React.Component {
     constructor(props) {
         super(props);
         this.state = { changing: false, bid: common.numberFmt(props.bid) };
@@ -40,7 +40,7 @@ class KeywordBidUpdate extends React.Component { // eslint-disable-line react/no
         this.setState({ bid: e.target.value });
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentWillReceiveProps(nextProps) { // eslint-disable-line react/no-deprecated
         this.setState({ changing: false, bid: nextProps.bid });
     }
 }
