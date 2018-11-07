@@ -22,7 +22,7 @@ let chartCounter = 0;
  *   name: name of this series
  * }
  */
-class TimeSeriesChart extends React.Component { // eslint-disable-line react/no-deprecated
+class TimeSeriesChart extends React.Component {
     constructor(props) {
         super(props);
         chartCounter++;
@@ -61,7 +61,7 @@ class TimeSeriesChart extends React.Component { // eslint-disable-line react/no-
         return <ErrorSink error={error} />;
     }
 
-    componentWillReceiveProps() {
+    componentWillReceiveProps() { // eslint-disable-line react/no-deprecated
         Plotly.purge(this.id);
     }
 
