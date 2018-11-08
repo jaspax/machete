@@ -431,7 +431,7 @@ async function addKeywords({ domain, entityId, keywords, adGroupId, bid }) {
     for (const page of common.pageArray(result.ok, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
             method: 'PATCH',
-            jsonData: { operation: 'ADD', adGroupId, bid, keywordIds: page },
+            jsonData: { operation: 'ADD', adGroupId, keywordIds: page, dataValues: { bid } },
             responseType: 'json',
         });
     }
