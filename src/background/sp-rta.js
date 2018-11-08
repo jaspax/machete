@@ -176,9 +176,10 @@ module.exports = function(domain, entityId) {
             responseType: 'json',
         });
 
-        if (!response.success)
-            throw new Error('Error adding keywords:' + JSON.stringify(response.invalidKeywords));
-        return response.validKeywords;
+        return {
+            fail: response.invalidKeywords,
+            ok: response.validKeywords,
+        };
     }
 
     return {

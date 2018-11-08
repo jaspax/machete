@@ -238,9 +238,10 @@ module.exports = function(domain, entityId) {
             responseType: 'json',
         });
 
-        if (response.failedKeywords.length)
-            throw new Error('Error adding keywords:' + JSON.stringify(response.failedKeywords));
-        return response.succeededKeywords;
+        return {
+            fail: response.failedKeywords,
+            ok: response.succeededKeywords,
+        };
     }
 
     return {

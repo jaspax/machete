@@ -425,7 +425,18 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
 
 async function addKeywords({ domain, entityId, keywords, adGroupId, bid }) {
     const collector = await getCollector(domain, entityId);
-    return collector.addKeywords({ keywords, adGroupId, bid });
+
+    const timestamp = Date.now();
+    const result = await collector.addKeywords({ keywords, adGroupId, bid });
+    for (const page of common.pageArray(result.ok, 50)) {
+        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
+            method: 'PATCH',
+            jsonData: { operation: 'ADD', adGroupId, bid, keywordIds: page },
+            responseType: 'json',
+        });
+    }
+
+    return result;
 }
 
 function setBrandName({ entityId, brandName }) {
