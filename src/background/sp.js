@@ -423,6 +423,11 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     return { success: successes.length == keywords.length };
 }
 
+async function addKeywords({ domain, entityId, keywords, adGroupId, bid }) {
+    const collector = await getCollector(domain, entityId);
+    return collector.addKeywords({ keywords, adGroupId, bid });
+}
+
 function setBrandName({ entityId, brandName }) {
     bg.setEntityId(entityId, { name: brandName });
 }
@@ -439,5 +444,6 @@ module.exports = {
     getAggregateKeywordData,
     storeAdGroupMetadata,
     updateKeyword,
+    addKeywords,
     setBrandName,
 };

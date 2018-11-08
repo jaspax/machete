@@ -217,6 +217,16 @@ function updateKeywordBid(keywords, bid) {
     return updateKeyword(keywords, 'UPDATE', {bid});
 }
 
+function addKeywords(adGroupId, keywords, bid) {
+    return common.bgMessage({
+        action: 'sp.addKeywords',
+        entityId: getEntityId(),
+        adGroupId,
+        keywords,
+        bid,
+    });
+}
+
 function isRunning(campaignSummary) {
     return campaignSummary && ['RUNNING', 'OUT_OF_BUDGET', 'ENABLED', null].includes(campaignSummary.status || null);
 }
@@ -348,6 +358,7 @@ module.exports = {
     storeAdGroupMetadata,
     updateKeywordStatus,
     updateKeywordBid,
+    addKeywords,
     isRunning,
     startSession,
     calculateKnpIncome,
