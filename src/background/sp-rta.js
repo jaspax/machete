@@ -164,6 +164,23 @@ module.exports = function(domain, entityId) {
         return successes;
     }
 
+    async function addKeywords({ keywords, adGroupId, bid, }) {
+        const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
+            method: 'POST',
+            formData: {
+                keywords: JSON.stringify(keywords.map(kw => ({ keyword: kw, match: "BROAD" }))),
+                bid,
+                adGroupId,
+                entityId,
+            },
+            responseType: 'json',
+        });
+
+        if (!response.success)
+            throw new Error('Error adding keywords:' + JSON.stringify(response.invalidKeywords));
+        return response.validKeywords;
+    }
+
     return {
         name: 'rta',
         domain,
@@ -177,5 +194,6 @@ module.exports = function(domain, entityId) {
         getCampaignAsin,
         getKeywordData,
         updateKeywords,
+        addKeywords,
     };
 };

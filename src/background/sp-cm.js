@@ -10,11 +10,30 @@ module.exports = function(domain, entityId) {
         data: [],
     };
 
+    const currencyCode = guessCurrencyCode();
+
     function formatId(id) {
         if (id.match(/^A/)) {
             throw new Error('Preformatted ID? : ' + id);
         }
         return 'A' + id;
+    }
+
+    function guessCurrencyCode() {
+        // We assume (possibly wrongly) that we can predict the currency from
+        // the domain.
+        switch (domain) {
+            case 'advertising.amazon.co.uk':
+                return 'GBP';
+            case 'advertising.amazon.ca':
+                return 'CAD';
+            case 'advertising.amazon.co.de':
+            case 'advertising.amazon.co.fr':
+                return 'EUR';
+            case 'advertising.amazon.com':
+            default:
+                return 'USD';
+        }
     }
 
     async function requestDataPaged(reqfn) {
@@ -211,6 +230,19 @@ module.exports = function(domain, entityId) {
         return successes;
     }
 
+    async function addKeywords({ keywords, adGroupId, bid, }) {
+        const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
+            method: 'POST',
+            queryData: { entityId },
+            jsonData: { keywords: keywords.map(kw => ({ keyword: kw, matchType: "BROAD", bid: { millicents: bid * 100000, currencyCode } })) },
+            responseType: 'json',
+        });
+
+        if (response.failedKeywords.length)
+            throw new Error('Error adding keywords:' + JSON.stringify(response.failedKeywords));
+        return response.succeededKeywords;
+    }
+
     return {
         name: 'cm',
         domain,
@@ -224,5 +256,6 @@ module.exports = function(domain, entityId) {
         getCampaignAsin,
         getKeywordData,
         updateKeywords,
+        addKeywords
     };
 };
