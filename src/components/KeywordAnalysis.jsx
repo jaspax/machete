@@ -232,11 +232,13 @@ class KeywordAnalysis extends React.Component {
 
         return <KeywordAnalyticsView 
             keywordData={data}
+            campaignPromise={this.props.campaignPromise}
             modifiedData={this.state.modified}
             worstKeywordTables={worstKwTables}
             bestKeywordTables={bestKwTables}
             onKeywordEnabledChange={this.updateStatus.bind(this)}
             onKeywordBidChange={this.updateBid.bind(this)}
+            onKeywordCopy={this.props.copyKeywords}
         />;
     }
 
@@ -267,8 +269,10 @@ class KeywordAnalysis extends React.Component {
 
 KeywordAnalysis.propTypes = {
     dataPromise: PropTypes.object.isRequired,
+    campaignPromise: PropTypes.object.isRequired,
     updateStatus: PropTypes.func.isRequired,
     updateBid: PropTypes.func.isRequired,
+    copyKeywords: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordAnalysis;

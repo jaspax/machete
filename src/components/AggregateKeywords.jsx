@@ -21,8 +21,13 @@ class AggregateKeywords extends React.Component {
             display = <section>
                 <div className="machete-warning"><b>Caution:</b> Updates made to
                     keywords in this view will affect all campaigns selected above.</div>
-                <KeywordAnalysis dataPromise={this.state.dataPromise} 
-                updateStatus={this.props.updateStatus} updateBid={this.props.updateBid} />
+                <KeywordAnalysis 
+                    dataPromise={this.state.dataPromise} 
+                    campaignPromise={this.props.campaignPromise}
+                    updateStatus={this.props.updateStatus} 
+                    updateBid={this.props.updateBid} 
+                    copyKeywords={this.props.copyKeywords}
+                />
             </section>;
         }
 
@@ -44,10 +49,11 @@ class AggregateKeywords extends React.Component {
 }
 
 AggregateKeywords.propTypes = {
-    campaignPromise: PropTypes.object.isRequired,
     loadDataPromise: PropTypes.func.isRequired,
+    campaignPromise: PropTypes.object.isRequired,
     updateStatus: PropTypes.func.isRequired,
     updateBid: PropTypes.func.isRequired,
+    copyKeywords: PropTypes.func.isRequired,
 };
 
 module.exports = AggregateKeywords;

@@ -164,22 +164,26 @@ module.exports = function(domain, entityId) {
         return successes;
     }
 
-    async function addKeywords({ keywords, adGroupId, bid, }) {
-        const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
-            method: 'POST',
-            formData: {
-                keywords: JSON.stringify(keywords.map(kw => ({ keyword: kw, match: "BROAD" }))),
-                bid,
-                adGroupId,
-                entityId,
-            },
-            responseType: 'json',
+    async function addKeywords({ keywords, adGroupId }) {
+        const rv = { fail: [], ok: [] };
+        const bidGroups = _.groupBy(keywords, 'bid');
+        await bg.parallelQueue(Object.keys(bidGroups), async bid => {
+            const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
+                method: 'POST',
+                formData: {
+                    keywords: JSON.stringify(bidGroups[bid].map(item => ({ keyword: item.keyword, match: "BROAD" }))),
+                    bid,
+                    adGroupId,
+                    entityId,
+                },
+                responseType: 'json',
+            });
+
+            rv.ok.push(...response.succeededKeywords);
+            rv.fail.push(...response.failedKeywords);
         });
 
-        return {
-            fail: response.invalidKeywords,
-            ok: response.validKeywords,
-        };
+        return rv;
     }
 
     return {

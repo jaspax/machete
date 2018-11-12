@@ -83,8 +83,10 @@ function generateKeywordReports(container) {
     const updateBid = (kws, bid, callback) => spdata.updateKeywordBid(kws, bid).then(callback);
     const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
+        campaignPromise: spdata.getAllowedCampaigns(),
         updateStatus: ga.mcatch(updateStatus),
         updateBid: ga.mcatch(updateBid),
+        copyKeywords: spdata.copyKeywordsToCampaigns,
     });
     ReactDOM.render(chart, container[0]);
 }
@@ -143,6 +145,8 @@ function generateBulkUpdate(container, data) {
                                    spdata.updateKeywordStatus(keywords, enabled).then(() => window.location.reload())),
         onBidChange: ga.mcatch((bid, keywords) => 
                                spdata.updateKeywordBid(keywords, bid).then(() => window.location.reload())),
+        campaignPromise: spdata.getAllowedCampaignSummaries(),
+        onCopy: spdata.copyKeywordsToCampaigns,
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }

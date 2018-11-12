@@ -227,6 +227,15 @@ function addKeywords(adGroupId, keywords, bid) {
     });
 }
 
+function copyKeywordsToCampaigns(keywords, campaigns) {
+    return common.bgMessage({
+        action: 'sp.addKeywords',
+        entityId: getEntityId(),
+        keywords: keywords,
+        adGroupId: campaign.adGroupId,
+    });
+}
+
 function isRunning(campaignSummary) {
     return campaignSummary && ['RUNNING', 'OUT_OF_BUDGET', 'ENABLED', null].includes(campaignSummary.status || null);
 }

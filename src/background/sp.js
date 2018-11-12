@@ -423,18 +423,13 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     return { success: successes.length == keywords.length };
 }
 
-async function addKeywords({ domain, entityId, keywords, adGroupId, bid }) {
+async function addKeywords({ domain, entityId, keywords, adGroupId }) {
     const collector = await getCollector(domain, entityId);
 
     const timestamp = Date.now();
-    const result = await collector.addKeywords({ keywords, adGroupId, bid });
-    for (const page of common.pageArray(result.ok, 50)) {
-        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
-            method: 'PATCH',
-            jsonData: { operation: 'ADD', adGroupId, keywordIds: page, dataValues: { bid } },
-            responseType: 'json',
-        });
-    }
+    const result = await collector.addKeywords({ keywords, adGroupId });
+
+    // TODO: refresh keyword data
 
     return result;
 }

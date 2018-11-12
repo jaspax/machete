@@ -27,9 +27,8 @@ class Popup extends React.Component {
             pos = {top: anchorPos.top + anchor.height() + gutter, left: anchorPos.left + anchor.width() - width + gutter};
         }
 
-        // Clicking anywhere outside the popup dismisses the chart. We bind the
-        // event here, and unbind it when we're actually re-rendered with
-        // show=false.
+        // Clicking anywhere outside the popup dismisses it. We bind the event
+        // here, and unbind it when we're actually re-rendered with show=false.
         const self = this;
         $(document).on(dismissEvent, ga.mcatch(function() {
             if (!$.contains(self.target, this)) { // eslint-disable-line no-invalid-this

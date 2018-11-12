@@ -19,8 +19,10 @@ class KeywordReport extends React.Component {
                     <DownloadButton title="Download this report" onClick={this.generateDownloadCsv.bind(this)} />
                     <KeywordBulkUpdate
                         data={this.props.data}
+                        campaignPromise={this.props.campaignPromise}
                         onEnabledChange={this.props.onKeywordEnabledChange}
                         onBidChange={this.props.onKeywordBidChange}
+                        onCopy={this.props.onKeywordCopy}
                     />
                 </div>
                 <div style={{clear: 'both'}}>
@@ -91,6 +93,8 @@ KeywordReport.propTypes = {
     columns: PropTypes.array.isRequired,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
+    onKeywordCopy: PropTypes.func.isRequired,
+    campaignPromise: PropTypes.object.isRequired,
 };
 
 module.exports = KeywordReport;

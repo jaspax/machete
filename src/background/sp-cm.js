@@ -230,7 +230,7 @@ module.exports = function(domain, entityId) {
         return successes;
     }
 
-    async function addKeywords({ keywords, adGroupId, bid, }) {
+    async function addKeywords({ keywords, adGroupId, bid }) {
         const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
             method: 'POST',
             queryData: { entityId },

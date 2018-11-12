@@ -4,6 +4,7 @@ const PropTypes = require('prop-types');
 const ErrorBoundary = require('./ErrorBoundary.jsx');
 const KeywordEnableToggle = require('./KeywordEnableToggle.jsx');
 const KeywordBidUpdate = require('./KeywordBidUpdate.jsx');
+const KeywordCopyButton = require('./KeywordCopyButton.jsx');
 
 const ga = require('../common/ga.js');
 
@@ -12,6 +13,7 @@ class KeywordBulkUpdate extends React.Component {
         super(props);
         this.handleEnabledChange = this.handleEnabledChange.bind(this);
         this.handleBidChange = this.handleBidChange.bind(this);
+        this.handleCopy = this.handleCopy.bind(this);
     }
 
     render() {
@@ -22,6 +24,7 @@ class KeywordBulkUpdate extends React.Component {
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
                 <KeywordEnableToggle enabled={enabled} onChange={this.handleEnabledChange} />
                 <KeywordBidUpdate bid={bid} onChange={this.handleBidChange} />
+                <KeywordCopyButton campaignPromise={this.props.campaignPromise} onCopy={this.handleCopy} />
             </div>
         </ErrorBoundary>;
     }
@@ -35,12 +38,19 @@ class KeywordBulkUpdate extends React.Component {
         ga.revent('kwBulkUpdate', { type: 'bid', value: bid });
         this.props.onBidChange(bid, this.props.data);
     }
+
+    handleCopy(campaigns) {
+        ga.revent('kwBulkCopy');
+        this.props.onCopy(this.props.data, campaigns);
+    }
 }
 
 KeywordBulkUpdate.propTypes = {
     data: PropTypes.array.isRequired,
+    campaignPromise: PropTypes.object.isRequired,
     onEnabledChange: PropTypes.func.isRequired,
     onBidChange: PropTypes.func.isRequired,
+    onCopy: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordBulkUpdate;
