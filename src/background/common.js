@@ -114,7 +114,6 @@ function setSyncTime(module, time) {
 }
 
 const dataGather = cache.coMemo(async function(req) {
-    ga.beginLogBuffer('dataGather');
     console.log('Data sync start at', moment().format());
 
     // Store entityIds and domains for further use
@@ -127,12 +126,11 @@ const dataGather = cache.coMemo(async function(req) {
     
     /* These requires MUST go here to avoid a circular require */
     const kdp = require('./kdp.js'); // eslint-disable-line global-require
-    const seller = require('./seller.js'); // eslint-disable-line global-require
     const sp = require('./sp.js'); // eslint-disable-line global-require
 
     const oldSync = Math.max(..._.values(lastSync));
     let newSync = 0;
-    for (const mod of [sp, seller, kdp]) {
+    for (const mod of [sp, kdp]) {
         if (!mod.name) {
             console.error('looking at nameless module', mod);
             throw new Error('module has no name');
@@ -157,7 +155,6 @@ const dataGather = cache.coMemo(async function(req) {
     cache.clear();
 
     console.log('Data sync finish at', moment().format());
-    ga.endLogBuffer();
     return Math.max(newSync, oldSync);
 }, { maxAge: 6 * constants.timespan.hour });
 

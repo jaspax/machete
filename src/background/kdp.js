@@ -3,24 +3,30 @@ const moment = require('moment');
 const ga = require('../common/ga.js');
 
 async function dataGather() {
-    const time = Date.now();
-    const asins = await fetchAsins(time);
-    for (const asinArray of asins) {
-        const asin = asinArray[0].substring(0, 10);
-        if (asin[0] != 'B') {
-            ga.mga('event', 'kdp-warning', 'asin-unknown-format', asinArray.toString());
-            return;
+    try {
+        ga.beginLogBuffer('kdp.dataGather');
+        const time = Date.now();
+        const asins = await fetchAsins(time);
+        for (const asinArray of asins) {
+            const asin = asinArray[0].substring(0, 10);
+            if (asin[0] != 'B') {
+                ga.mga('event', 'kdp-warning', 'asin-unknown-format', asinArray.toString());
+                return;
+            }
+
+            console.log('Fetch sales data for ASIN', asin);
+
+            const sales = await fetchSalesData(time, asinArray);
+            const ku = await fetchKuData(time, asinArray);
+
+            await bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
+                method: 'PUT',
+                jsonData: { sales, ku },
+            });
         }
-
-        console.log('Fetch sales data for ASIN', asin);
-
-        const sales = await fetchSalesData(time, asinArray);
-        const ku = await fetchKuData(time, asinArray);
-
-        await bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
-            method: 'PUT',
-            jsonData: { sales, ku },
-        });
+    }
+    finally {
+        ga.endLogBuffer();
     }
 }
 

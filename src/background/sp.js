@@ -78,6 +78,7 @@ function getCollectorForKeywordUpdate(domain, entityId, keywordOpts) {
 }
 
 async function dataGather(req) {
+    ga.beginLogBuffer('sp.dataGather');
     // We want to make sure that we at least attempt to sync every single
     // domain, but any exceptions we encounter should be propagated so that we
     // don't record this as a success.
@@ -143,6 +144,7 @@ async function dataGather(req) {
         }
     }
 
+    ga.endLogBuffer();
     if (deferredException) {
         throw deferredException;
     }
