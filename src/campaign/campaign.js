@@ -83,7 +83,7 @@ function generateKeywordReports(container) {
     const updateBid = (kws, bid, callback) => spdata.updateKeywordBid(kws, bid).then(callback);
     const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
-        campaignPromise: spdata.getAllowedCampaigns(),
+        campaignPromise: spdata.getAllowedCampaignSummaries(),
         updateStatus: ga.mcatch(updateStatus),
         updateBid: ga.mcatch(updateBid),
         copyKeywords: spdata.copyKeywordsToCampaigns,

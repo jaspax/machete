@@ -228,12 +228,23 @@ function addKeywords(adGroupId, keywords, bid) {
 }
 
 function copyKeywordsToCampaigns(keywords, campaigns) {
-    return common.bgMessage({
-        action: 'sp.addKeywords',
-        entityId: getEntityId(),
-        keywords: keywords,
-        adGroupId: campaign.adGroupId,
-    });
+    const rv = {
+        ok: [],
+        fail: []
+    };
+    for (const campaign of campaigns) {
+        const result = common.bgMessage({
+            action: 'sp.addKeywords',
+            entityId: getEntityId(),
+            campaignId: campaign.campaignId,
+            adGroupId: campaign.adGroupId,
+            keywords: keywords,
+        });
+        rv.ok = rv.ok.concat(result.ok);
+        rv.fail = rv.fail.concat(result.fail);
+    }
+
+    return rv;
 }
 
 function isRunning(campaignSummary) {

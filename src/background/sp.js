@@ -423,13 +423,13 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     return { success: successes.length == keywords.length };
 }
 
-async function addKeywords({ domain, entityId, keywords, adGroupId }) {
+async function addKeywords({ domain, entityId, campaignId, adGroupId, keywords }) {
     const collector = await getCollector(domain, entityId);
+    campaignId = spData.stripPrefix(campaignId);
+    adGroupId = spData.stripPrefix(adGroupId);
 
-    const timestamp = Date.now();
     const result = await collector.addKeywords({ keywords, adGroupId });
-
-    // TODO: refresh keyword data
+    await requestKeywordData(collector, campaignId, adGroupId);
 
     return result;
 }
