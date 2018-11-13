@@ -29,18 +29,18 @@ class Popup extends React.Component {
 
         // Clicking anywhere outside the popup dismisses it. We bind the event
         // here, and unbind it when we're actually re-rendered with show=false.
-        const self = this;
-        $(document).on(dismissEvent, ga.mcatch(function() {
-            if (!$.contains(self.target, this)) { // eslint-disable-line no-invalid-this
+        $(document).on(dismissEvent, this, ga.mcatch(function(evt) {
+            const popup = evt.data;
+            if (!$.contains(popup.target, evt.target)) {
                 ga.mga('event', 'popup', 'dismiss');
-                if (self.props.onDismiss) {
-                    self.props.onDismiss();
+                if (popup.props.onDismiss) {
+                    popup.props.onDismiss();
                 }
             }
         }));
 
         return <Portal>
-            <div className="machete-popup" style={pos} ref={target => self.target = target}>
+            <div className="machete-popup" style={pos} ref={target => this.target = target}>
                 {this.props.children}
             </div>
         </Portal>;
