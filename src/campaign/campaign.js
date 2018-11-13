@@ -37,7 +37,7 @@ spdata.amsPageInit();
 window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
     if (!campaignTabs.length) {
-        if (!window.location.href.match(/\/keywords/))
+        if (!window.location.href.match(/\/(keywords|targeting)/))
             return;
         campaignTabs = $('.page-container > div').last();
     }
