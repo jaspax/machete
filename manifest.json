@@ -70,17 +70,6 @@
           "css": ["css/inject.css"]
       },
       {
-          "matches": [
-              "https://sellercentral.amazon.ca/hz/cm/*",
-              "https://sellercentral.amazon.co.uk/hz/cm/*",
-              "https://sellercentral.amazon.com/hz/cm/*",
-              "https://sellercentral.amazon.de/hz/cm/*",
-              "https://sellercentral.amazon.fr/hz/cm/*"
-          ],
-          "js": ["src/seller-dash.js"],
-          "css": ["css/inject.css"]
-      },
-      {
           "matches": ["https://kdp.amazon.com/*"],
           "js": ["src/kdp.js"],
           "css": ["css/inject.css"]
