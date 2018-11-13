@@ -15,8 +15,10 @@ function KeywordAnalyticsView(props) {
                 data={tableData}
                 modifiedData={props.modifiedData}
                 columns={table.columns}
+                campaignPromise={props.campaignPromise}
                 onKeywordEnabledChange={props.onKeywordEnabledChange}
                 onKeywordBidChange={props.onKeywordBidChange}
+                onKeywordCopy={props.onKeywordCopy}
         />;
     };
 
@@ -71,11 +73,13 @@ function transformKeywordData(data) {
 
 KeywordAnalyticsView.propTypes = {
     keywordData: PropTypes.array,
+    campaignPromise: PropTypes.object.isRequired,
     modifiedData: PropTypes.array,
     bestKeywordTables: PropTypes.array,
     worstKeywordTables: PropTypes.array,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
+    onKeywordCopy: PropTypes.func.isRequired,
 };
 
 KeywordAnalyticsView.defaultProps = {

@@ -154,6 +154,7 @@ function activateAggregateKeywordTab(container) {
         }
         return null;
     }
+    const flatten = kws => _.uniq(kws.reduce((array, item) => array.concat(...item.id), [])).map(findInKwData);
 
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: ga.mpromise(async function() {
@@ -167,12 +168,16 @@ function activateAggregateKeywordTab(container) {
             return aggKws;
         }),
         updateStatus: ga.mcatch((kws, enabled, callback) => {
-            const flattened = _.uniq(kws.reduce((array, item) => array.concat(...item.id), []));
-            spdata.updateKeywordStatus(flattened.map(findInKwData), enabled).then(callback);
+            const flattened = flatten(kws);
+            spdata.updateKeywordStatus(flattened, enabled).then(callback);
         }),
         updateBid: ga.mcatch((kws, bid, callback) => {
-            const flattened = _.uniq(kws.reduce((array, item) => array.concat(...item.id), []));
-            spdata.updateKeywordBid(flattened.map(findInKwData), bid).then(callback);
+            const flattened = flatten(kws);
+            spdata.updateKeywordBid(flattened, bid).then(callback);
+        }),
+        copyKeywords: ga.mcatch((kws, campaigns) => {
+            const flattened = flatten(kws);
+            return spdata.copyKeywordsToCampaigns(flattened, campaigns);
         }),
     });
     ReactDOM.render(aggContent, container[0]);

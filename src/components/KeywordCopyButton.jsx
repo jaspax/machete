@@ -41,12 +41,15 @@ class KeywordCopyButton extends React.Component {
         const button = this.state.copying
             ? <button className="machete-button" disabled={true}>Copying... <span className="loadingSmall"></span></button>
             : <button className="machete-highlight-button" onClick={this.copyToCampaigns}>Copy</button>; 
-        const result = this.state.result.error
-            ? <div>We encountered some errors while attempting to copy keywords:
-                <ul>{this.state.result.error.map(x => <li key={x} className="machete-error">{x}</li>)}</ul>
-              </div>
-            : <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Copied</span>;
-        return <div>{button}{result}</div>;
+        let resultDisplay = null;
+        if (this.state.result) {
+            resultDisplay = this.state.result.error
+                ? <div>We encountered some errors while attempting to copy keywords:
+                    <ul>{this.state.result.error.map(x => <li key={x} className="machete-error">{x}</li>)}</ul>
+                  </div>
+                : <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Copied</span>;
+        }
+        return <div>{button}{resultDisplay}</div>;
     }
 
     campaignSelectorChanged(selected) {

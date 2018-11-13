@@ -379,6 +379,7 @@ module.exports = {
     updateKeywordStatus,
     updateKeywordBid,
     addKeywords,
+    copyKeywordsToCampaigns,
     isRunning,
     startSession,
     calculateKnpIncome,
