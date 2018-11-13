@@ -58,7 +58,7 @@ class KeywordCopyButton extends React.Component {
 
     async copyToCampaigns() {
         this.setState({ copying: true });
-        const result = await this.props.onCopy(this.selected);
+        const result = await this.props.onKeywordCopy(this.selected);
         this.setState({ copying: false, result });
         if (!result.error) {
             setTimeout(() => this.setState({ showPopup: false }), 500);
@@ -68,7 +68,7 @@ class KeywordCopyButton extends React.Component {
 
 KeywordCopyButton.propTypes = {
     campaignPromise: PropTypes.object.isRequired,
-    onCopy: PropTypes.func.isRequired,
+    onKeywordCopy: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordCopyButton;

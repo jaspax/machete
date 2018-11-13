@@ -79,14 +79,12 @@ function addCampaignTabs(tabs) {
 }
 
 function generateKeywordReports(container) {
-    const updateStatus = (kws, enabled, callback) => spdata.updateKeywordStatus(kws, enabled).then(callback);
-    const updateBid = (kws, bid, callback) => spdata.updateKeywordBid(kws, bid).then(callback);
     const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
         campaignPromise: spdata.getAllowedCampaignSummaries(),
-        updateStatus: ga.mcatch(updateStatus),
-        updateBid: ga.mcatch(updateBid),
-        copyKeywords: spdata.copyKeywordsToCampaigns,
+        onKeywordEnableChange: spdata.updateKeywordStatus,
+        onKeywordBidChange: spdata.updateKeywordBid,
+        onKeywordCopy: spdata.copyKeywordsToCampaigns,
     });
     ReactDOM.render(chart, container[0]);
 }
@@ -141,12 +139,16 @@ function generateBidOptimizer(container) {
 function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
-        onEnabledChange: ga.mcatch((enabled, keywords) => 
-                                   spdata.updateKeywordStatus(keywords, enabled).then(() => window.location.reload())),
-        onBidChange: ga.mcatch((bid, keywords) => 
-                               spdata.updateKeywordBid(keywords, bid).then(() => window.location.reload())),
+        onKeywordEnableChange: async(enabled, keywords) => {
+            await spdata.updateKeywordStatus(enabled, keywords);
+            window.location.reload();
+        },
+        onKeywordBidChange: async(bid, keywords) => {
+            await spdata.updateKeywordBid(bid, keywords);
+            window.location.reload();
+        },
         campaignPromise: spdata.getAllowedCampaignSummaries(),
-        onCopy: spdata.copyKeywordsToCampaigns,
+        onKeywordCopy: spdata.copyKeywordsToCampaigns,
     });
     ReactDOM.render(bulkUpdate, container[0]);
 }

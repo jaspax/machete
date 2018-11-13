@@ -5,7 +5,6 @@ const ErrorSink = require('./ErrorSink.jsx');
 const Async = require('react-promise').default;
 
 const common = require('../common/common.js');
-const ga = require('../common/ga.js');
 
 class KeywordAnalysis extends React.Component {
     constructor(props) {
@@ -238,7 +237,7 @@ class KeywordAnalysis extends React.Component {
             bestKeywordTables={bestKwTables}
             onKeywordEnabledChange={this.updateStatus.bind(this)}
             onKeywordBidChange={this.updateBid.bind(this)}
-            onKeywordCopy={this.props.copyKeywords}
+            onKeywordCopy={this.props.onKeywordCopy}
         />;
     }
 
@@ -247,32 +246,26 @@ class KeywordAnalysis extends React.Component {
     }
 
     updateStatus(enabled, keywords) {
-        this.keywordModify(this.props.updateStatus, keywords, enabled, kw => kw.enabled = enabled);
+        return this.keywordModify(this.props.onKeywordEnabledChange, keywords, enabled, kw => kw.enabled = enabled);
     }
 
     updateBid(bid, keywords) {
-        this.keywordModify(this.props.updateBid, keywords, bid, kw => kw.bid = bid);
+        return this.keywordModify(this.props.onKeywordBidChange, keywords, bid, kw => kw.bid = bid);
     }
 
-    keywordModify(modifier, keywords, value, onSuccess) {
-        modifier(keywords, value, result => {
-            if (result.success) {
-                keywords.forEach(onSuccess);
-            }
-            else {
-                ga.merror('enabled update error:', result);
-            }
-            this.setState({ modified: keywords });
-        });
+    async keywordModify(modifier, keywords, value, onSuccess) {
+        const result = await modifier(value, keywords);
+        result.ok.forEach(onSuccess);
+        this.setState({ modified: keywords });
     }
 }
 
 KeywordAnalysis.propTypes = {
     dataPromise: PropTypes.object.isRequired,
     campaignPromise: PropTypes.object.isRequired,
-    updateStatus: PropTypes.func.isRequired,
-    updateBid: PropTypes.func.isRequired,
-    copyKeywords: PropTypes.func.isRequired,
+    onKeywordEnabledChange: PropTypes.func.isRequired,
+    onKeywordBidChange: PropTypes.func.isRequired,
+    onKeywordCopy: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordAnalysis;

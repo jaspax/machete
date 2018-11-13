@@ -31,9 +31,10 @@ class KeywordBidUpdate extends React.Component {
         );
     }
 
-    handleClick() {
+    async handleClick() {
         this.setState({ changing: true });
-        this.props.onChange(this.state.bid);
+        await this.props.onKeywordBidChange(this.state.bid);
+        this.setState({ changing: false });
     }
 
     handleChange(e) {
@@ -47,7 +48,7 @@ class KeywordBidUpdate extends React.Component {
 
 KeywordBidUpdate.propTypes = {
     bid: PropTypes.number.isRequired,
-    onChange: PropTypes.func.isRequired,
+    onKeywordBidChange: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordBidUpdate;

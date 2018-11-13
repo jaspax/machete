@@ -22,35 +22,35 @@ class KeywordBulkUpdate extends React.Component {
         return <ErrorBoundary>
             <div className="machete-kwupdate-bulk">
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
-                <KeywordEnableToggle enabled={enabled} onChange={this.handleEnabledChange} />
-                <KeywordBidUpdate bid={bid} onChange={this.handleBidChange} />
-                <KeywordCopyButton campaignPromise={this.props.campaignPromise} onCopy={this.handleCopy} />
+                <KeywordEnableToggle enabled={enabled} onKeywordEnabledChange={this.handleEnabledChange} />
+                <KeywordBidUpdate bid={bid} onKeywordBidChange={this.handleBidChange} />
+                <KeywordCopyButton campaignPromise={this.props.campaignPromise} onKeywordCopy={this.handleCopy} />
             </div>
         </ErrorBoundary>;
     }
 
     handleEnabledChange(enabled) {
         ga.revent('kwBulkUpdate', { type: 'enable', value: enabled });
-        this.props.onEnabledChange(enabled, this.props.data);
+        this.props.onKeywordEnabledChange(enabled, this.props.data);
     }
 
     handleBidChange(bid) {
         ga.revent('kwBulkUpdate', { type: 'bid', value: bid });
-        this.props.onBidChange(bid, this.props.data);
+        this.props.onKeywordBidChange(bid, this.props.data);
     }
 
     handleCopy(campaigns) {
         ga.revent('kwBulkCopy');
-        this.props.onCopy(this.props.data, campaigns);
+        this.props.onKeywordCopy(campaigns, this.props.data);
     }
 }
 
 KeywordBulkUpdate.propTypes = {
     data: PropTypes.array.isRequired,
     campaignPromise: PropTypes.object.isRequired,
-    onEnabledChange: PropTypes.func.isRequired,
-    onBidChange: PropTypes.func.isRequired,
-    onCopy: PropTypes.func.isRequired,
+    onKeywordEnabledChange: PropTypes.func.isRequired,
+    onKeywordBidChange: PropTypes.func.isRequired,
+    onKeywordCopy: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordBulkUpdate;

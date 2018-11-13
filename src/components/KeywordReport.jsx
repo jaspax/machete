@@ -20,9 +20,9 @@ class KeywordReport extends React.Component {
                     <KeywordBulkUpdate
                         data={this.props.data}
                         campaignPromise={this.props.campaignPromise}
-                        onEnabledChange={this.props.onKeywordEnabledChange}
-                        onBidChange={this.props.onKeywordBidChange}
-                        onCopy={this.props.onKeywordCopy}
+                        onKeywordEnabledChange={this.props.onKeywordEnabledChange}
+                        onKeywordBidChange={this.props.onKeywordBidChange}
+                        onKeywordCopy={this.props.onKeywordCopy}
                     />
                 </div>
                 <div style={{clear: 'both'}}>

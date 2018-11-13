@@ -8,9 +8,9 @@ function KeywordAnalyticsTab(props) {
         <KeywordAnalysis 
             dataPromise={props.dataPromise} 
             campaignPromise={props.campaignPromise}
-            updateStatus={props.updateStatus} 
-            updateBid={props.updateBid} 
-            copyKeywords={props.copyKeywords}
+            onKeywordEnableChange={props.onKeywordEnableChange} 
+            onKeywordBidChange={props.onKeywordBidChange} 
+            onKeywordCopy={props.onKeywordCopy}
         />
     </div>;
 }
@@ -18,9 +18,9 @@ function KeywordAnalyticsTab(props) {
 KeywordAnalyticsTab.propTypes = {
     dataPromise: PropTypes.object.isRequired,
     campaignPromise: PropTypes.object.isRequired,
-    updateStatus: PropTypes.func.isRequired,
-    updateBid: PropTypes.func.isRequired,
-    copyKeywords: PropTypes.func.isRequired,
+    onKeywordEnableChange: PropTypes.func.isRequired,
+    onKeywordBidChange: PropTypes.func.isRequired,
+    onKeywordCopy: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordAnalyticsTab;

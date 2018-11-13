@@ -207,12 +207,12 @@ function updateKeyword(keywords, operation, dataValues) {
     });
 }
 
-function updateKeywordStatus(keywords, enable) {
+function updateKeywordStatus(enable, keywords) {
     let operation = enable ? "ENABLE" : "PAUSE";
     return updateKeyword(keywords, operation, {});
 }
 
-function updateKeywordBid(keywords, bid) {
+function updateKeywordBid(bid, keywords) {
     bid = parseFloat(bid).toFixed(2).toString();
     return updateKeyword(keywords, 'UPDATE', {bid});
 }
@@ -227,7 +227,7 @@ function addKeywords(adGroupId, keywords, bid) {
     });
 }
 
-function copyKeywordsToCampaigns(keywords, campaigns) {
+function copyKeywordsToCampaigns(campaigns, keywords) {
     const rv = {
         ok: [],
         fail: []
