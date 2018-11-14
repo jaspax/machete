@@ -145,42 +145,56 @@ module.exports = function(domain, entityId) {
     }
 
     async function updateKeywords({ keywords, operation, dataValues }) {
-        const successes = [];
+        const result = { ok: [], fail: [] };
 
         // the parameters to the Amazon API imply that you can pass more than 1
         // keyword at a time, but testing this shows that doing so just
         // generates an error. So we do it the stupid way instead, with a loop.
-        await bg.parallelQueue(keywords.map(kw => kw.id), async function(id) {
-            const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
-                method: 'POST',
-                formData: Object.assign({operation, entityId, keywordIds: formatId(id)}, dataValues),
-                responseType: 'json',
-            });
-            if (response.success) {
-                successes.push(id);
+        await bg.parallelQueue(keywords, async function(kw) {
+            try {
+                const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
+                    method: 'POST',
+                    formData: Object.assign({operation, entityId, keywordIds: formatId(kw.id)}, dataValues),
+                    responseType: 'json',
+                });
+                if (response.success) {
+                    result.ok.push(kw);
+                }
+                else {
+                    result.fail.push(kw);
+                }
+            }
+            catch (ex) {
+                console.error(ex);
+                result.fail.push(kw);
             }
         });
 
-        return successes;
+        return result;
     }
 
     async function addKeywords({ keywords, adGroupId }) {
         const rv = { fail: [], ok: [] };
         const bidGroups = _.groupBy(keywords, 'bid');
         await bg.parallelQueue(Object.keys(bidGroups), async bid => {
-            const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
-                method: 'POST',
-                formData: {
-                    keywords: JSON.stringify(bidGroups[bid].map(item => ({ keyword: item.keyword, match: "BROAD" }))),
-                    bid,
-                    adGroupId,
-                    entityId,
-                },
-                responseType: 'json',
-            });
+            try {
+                const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
+                    method: 'POST',
+                    formData: {
+                        keywords: JSON.stringify(bidGroups[bid].map(item => ({ keyword: item.keyword, match: "BROAD" }))),
+                        bid,
+                        adGroupId,
+                        entityId,
+                    },
+                    responseType: 'json',
+                });
 
-            rv.ok.push(...response.succeededKeywords);
-            rv.fail.push(...response.failedKeywords);
+                rv.ok.push(...response.succeededKeywords);
+                rv.fail.push(...response.failedKeywords);
+            }
+            catch (ex) {
+                rv.fail.push(...bidGroups[bid]);
+            }
         });
 
         return rv;

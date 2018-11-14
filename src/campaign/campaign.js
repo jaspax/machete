@@ -142,10 +142,12 @@ function generateBulkUpdate(container, data) {
         onKeywordEnableChange: async(enabled, keywords) => {
             await spdata.updateKeywordStatus(enabled, keywords);
             window.location.reload();
+            return { ok: [], fail: [] };
         },
         onKeywordBidChange: async(bid, keywords) => {
             await spdata.updateKeywordBid(bid, keywords);
             window.location.reload();
+            return { ok: [], fail: [] };
         },
         campaignPromise: spdata.getAllowedCampaignSummaries(),
         onKeywordCopy: spdata.copyKeywordsToCampaigns,

@@ -203,31 +203,38 @@ module.exports = function(domain, entityId) {
     }
 
     async function updateKeywords({ keywords, operation, dataValues }) {
-        let successes = [];
+        const result = { ok: [], fail: [] };
 
         const keywordsByAdGroup = _.groupBy(keywords, 'adGroupId');
-        for (const adGroupId of Object.keys(keywordsByAdGroup)) {
+        await bg.parallelQueue(Object.keys(keywordsByAdGroup), async adGroupId => {
             const list = keywordsByAdGroup[adGroupId];
-            const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
-                method: 'PATCH',
-                queryData: { entityId },
-                jsonData: list.map(kw => {
-                    const item = { id: formatId(kw.id), programType: "SP" };
-                    if (operation == 'PAUSE')
-                        item.state = 'PAUSED';
-                    if (operation == 'ENABLE')
-                        item.state = 'ENABLED';
-                    if (operation == 'UPDATE')
-                        item.bid = { millicents: dataValues.bid * 100000, currencyCode: kw.currencyCode };
-                    return item;
-                }),
-                responseType: 'json',
-            });
+            try {
+                const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
+                    method: 'PATCH',
+                    queryData: { entityId },
+                    jsonData: list.map(kw => {
+                        const item = { id: formatId(kw.id), programType: "SP" };
+                        if (operation == 'PAUSE')
+                            item.state = 'PAUSED';
+                        if (operation == 'ENABLE')
+                            item.state = 'ENABLED';
+                        if (operation == 'UPDATE')
+                            item.bid = { millicents: dataValues.bid * 100000, currencyCode: kw.currencyCode };
+                        return item;
+                    }),
+                    responseType: 'json',
+                });
 
-            successes = successes.concat(response.updatedKeywords);
-        }
+                result.ok.push(...response.updatedKeywords);
+                result.fail.push(...response.failedKeywords);
+            }
+            catch (ex) {
+                console.error(ex);
+                result.fail.push(...list);
+            }
+        });
 
-        return successes;
+        return result;
     }
 
     async function addKeywords({ keywords, adGroupId, bid }) {
@@ -239,8 +246,8 @@ module.exports = function(domain, entityId) {
         });
 
         return {
-            fail: response.failedKeywords,
             ok: response.succeededKeywords,
+            fail: response.failedKeywords,
         };
     }
 
