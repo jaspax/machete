@@ -407,9 +407,9 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: probeKw });
 
     keywords.push(probeKw);
-    const successes = await collector.updateKeywords({ keywords, operation, dataValues });
+    const result = await collector.updateKeywords({ keywords, operation, dataValues });
 
-    for (const page of common.pageArray(successes, 50)) {
+    for (const page of common.pageArray(result.ok, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
             method: 'PATCH',
             jsonData: { operation, dataValues, keywordIds: page },
@@ -417,12 +417,9 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
         });
     }
 
-    if (successes.length)
+    if (result.ok.length)
         getKeywordData.clear();
-
-    // TODO: in the case that we have a lot of these (bulk update), implement
-    // progress feedback.
-    return { success: successes.length == keywords.length };
+    return result;
 }
 
 async function addKeywords({ domain, entityId, campaignId, adGroupId, keywords }) {

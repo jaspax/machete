@@ -74,7 +74,7 @@ module.exports = function(domain, entityId) {
     async function probeKeywordUpdate({ operation, keyword, dataValues }) {
         try {
             const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
-            return result.length == 1;
+            return result.ok.length == 1;
         }
         catch (ex) {
             console.log('cm keyword probe failed with', ex.message);
@@ -225,8 +225,8 @@ module.exports = function(domain, entityId) {
                     responseType: 'json',
                 });
 
-                result.ok.push(...response.updatedKeywords);
-                result.fail.push(...response.failedKeywords);
+                result.ok.push(...response.updatedKeywords || []);
+                result.fail.push(...response.failedKeywords || []);
             }
             catch (ex) {
                 console.error(ex);
