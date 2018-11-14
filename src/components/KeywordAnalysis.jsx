@@ -255,8 +255,10 @@ class KeywordAnalysis extends React.Component {
 
     async keywordModify(modifier, keywords, value, onSuccess) {
         const result = await modifier(value, keywords);
-        result.ok.forEach(onSuccess);
-        this.setState({ modified: keywords });
+
+        const modified = keywords.filter(kw => result.ok.includes(kw.id));
+        modified.forEach(onSuccess);
+        this.setState({ modified });
     }
 }
 

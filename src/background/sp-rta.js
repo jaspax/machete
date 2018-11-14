@@ -158,15 +158,15 @@ module.exports = function(domain, entityId) {
                     responseType: 'json',
                 });
                 if (response.success) {
-                    result.ok.push(kw);
+                    result.ok.push(kw.id);
                 }
                 else {
-                    result.fail.push(kw);
+                    result.fail.push(kw.id);
                 }
             }
             catch (ex) {
                 console.error(ex);
-                result.fail.push(kw);
+                result.fail.push(kw.id);
             }
         });
 
@@ -189,11 +189,11 @@ module.exports = function(domain, entityId) {
                     responseType: 'json',
                 });
 
-                rv.ok.push(...response.succeededKeywords || []);
-                rv.fail.push(...response.failedKeywords || []);
+                rv.ok.push(...response.succeededKeywords.map(kw => spData.stripPrefix(kw.id)));
+                rv.fail.push(...response.failedKeywords.map(kw => spData.stripPrefix(kw.id)));
             }
             catch (ex) {
-                rv.fail.push(...bidGroups[bid]);
+                rv.fail.push(...bidGroups[bid].map(kw => kw.id));
             }
         });
 

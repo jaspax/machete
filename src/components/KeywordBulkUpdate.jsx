@@ -31,17 +31,17 @@ class KeywordBulkUpdate extends React.Component {
 
     handleEnabledChange(enabled) {
         ga.revent('kwBulkUpdate', { type: 'enable', value: enabled });
-        this.props.onKeywordEnabledChange(enabled, this.props.data);
+        return this.props.onKeywordEnabledChange(enabled, this.props.data);
     }
 
     handleBidChange(bid) {
         ga.revent('kwBulkUpdate', { type: 'bid', value: bid });
-        this.props.onKeywordBidChange(bid, this.props.data);
+        return this.props.onKeywordBidChange(bid, this.props.data);
     }
 
     handleCopy(campaigns) {
         ga.revent('kwBulkCopy');
-        this.props.onKeywordCopy(campaigns, this.props.data);
+        return this.props.onKeywordCopy(campaigns, this.props.data);
     }
 }
 

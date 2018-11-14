@@ -3,6 +3,7 @@ const moment = require('frozen-moment');
 require('moment-timezone');
 
 const bg = require('./common.js');
+const spData = require('../common/sp-data.js');
 
 module.exports = function(domain, entityId) {
     const latestCampaignData = {
@@ -225,8 +226,8 @@ module.exports = function(domain, entityId) {
                     responseType: 'json',
                 });
 
-                result.ok.push(...response.updatedKeywords || []);
-                result.fail.push(...response.failedKeywords || []);
+                result.ok.push(...response.updatedKeywords.map(kw => spData.stripPrefix(kw.id)));
+                result.fail.push(...response.failedKeywords.map(kw => spData.stripPrefix(kw.id)));
             }
             catch (ex) {
                 console.error(ex);
@@ -246,8 +247,8 @@ module.exports = function(domain, entityId) {
         });
 
         return {
-            ok: response.succeededKeywords,
-            fail: response.failedKeywords,
+            ok: response.succeededKeywords.map(kw => spData.stripPrefix(kw.id)),
+            fail: response.failedKeywords.map(kw => spData.stripPrefix(kw.id)),
         };
     }
 

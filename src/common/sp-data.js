@@ -240,8 +240,8 @@ function copyKeywordsToCampaigns(campaigns, keywords) {
             adGroupId: campaign.adGroupId,
             keywords: keywords,
         });
-        rv.ok = rv.ok.concat(result.ok);
-        rv.fail = rv.fail.concat(result.fail);
+        rv.ok.push(...result.ok);
+        rv.fail.push(...result.fail);
     }
 
     return rv;
