@@ -42,7 +42,7 @@ class KeywordEnableToggle extends React.Component {
 
     async handleClick() {
         this.setState({ changing: true });
-        await this.props.onKeywordEnableChange(!this.props.enabled);
+        await this.props.onKeywordEnabledChange(!this.props.enabled);
         this.setState({ changing: false });
     }
 
@@ -53,7 +53,7 @@ class KeywordEnableToggle extends React.Component {
 
 KeywordEnableToggle.propTypes = {
     enabled: PropTypes.bool.isRequired,
-    onKeywordEnableChange: PropTypes.func.isRequired,
+    onKeywordEnabledChange: PropTypes.func.isRequired,
 };
 
 module.exports = KeywordEnableToggle;

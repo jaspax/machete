@@ -8,7 +8,7 @@ function KeywordAnalyticsTab(props) {
         <KeywordAnalysis 
             dataPromise={props.dataPromise} 
             campaignPromise={props.campaignPromise}
-            onKeywordEnableChange={props.onKeywordEnableChange} 
+            onKeywordEnabledChange={props.onKeywordEnabledChange} 
             onKeywordBidChange={props.onKeywordBidChange} 
             onKeywordCopy={props.onKeywordCopy}
         />
@@ -18,7 +18,7 @@ function KeywordAnalyticsTab(props) {
 KeywordAnalyticsTab.propTypes = {
     dataPromise: PropTypes.object.isRequired,
     campaignPromise: PropTypes.object.isRequired,
-    onKeywordEnableChange: PropTypes.func.isRequired,
+    onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
     onKeywordCopy: PropTypes.func.isRequired,
 };

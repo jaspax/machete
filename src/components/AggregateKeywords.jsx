@@ -24,7 +24,7 @@ class AggregateKeywords extends React.Component {
                 <KeywordAnalysis 
                     dataPromise={this.state.dataPromise} 
                     campaignPromise={this.props.campaignPromise}
-                    onKeywordEnableChange={this.props.onKeywordEnableChange} 
+                    onKeywordEnabledChange={this.props.onKeywordEnabledChange} 
                     onKeywordBidChange={this.props.onKeywordBidChange} 
                     onKeywordCopy={this.props.onKeywordCopy}
                 />
@@ -51,7 +51,7 @@ class AggregateKeywords extends React.Component {
 AggregateKeywords.propTypes = {
     loadDataPromise: PropTypes.func.isRequired,
     campaignPromise: PropTypes.object.isRequired,
-    onKeywordEnableChange: PropTypes.func.isRequired,
+    onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,
     onKeywordCopy: PropTypes.func.isRequired,
 };

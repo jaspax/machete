@@ -82,7 +82,7 @@ function generateKeywordReports(container) {
     const chart = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
         campaignPromise: spdata.getAllowedCampaignSummaries(),
-        onKeywordEnableChange: spdata.updateKeywordStatus,
+        onKeywordEnabledChange: spdata.updateKeywordStatus,
         onKeywordBidChange: spdata.updateKeywordBid,
         onKeywordCopy: spdata.copyKeywordsToCampaigns,
     });
@@ -139,7 +139,7 @@ function generateBidOptimizer(container) {
 function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
-        onKeywordEnableChange: async(enabled, keywords) => {
+        onKeywordEnabledChange: async(enabled, keywords) => {
             await spdata.updateKeywordStatus(enabled, keywords);
             window.location.reload();
             return { ok: [], fail: [] };

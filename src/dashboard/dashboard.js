@@ -167,7 +167,7 @@ function activateAggregateKeywordTab(container) {
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;
         }),
-        onKeywordEnableChange: ga.mcatch((enabled, kws) => {
+        onKeywordEnabledChange: ga.mcatch((enabled, kws) => {
             const flattened = flatten(kws);
             return spdata.updateKeywordStatus(enabled, flattened);
         }),
