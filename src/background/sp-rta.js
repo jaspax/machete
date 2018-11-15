@@ -183,17 +183,22 @@ module.exports = function(domain, entityId) {
                     formData: {
                         keywords: JSON.stringify(bidGroups[bid].map(item => ({ keyword: item.keyword, match: "BROAD" }))),
                         bid,
-                        adGroupId,
+                        adGroupId: formatId(adGroupId),
                         entityId,
                     },
                     responseType: 'json',
                 });
 
-                rv.ok.push(...response.succeededKeywords.map(kw => spData.stripPrefix(kw.id)));
-                rv.fail.push(...response.failedKeywords.map(kw => spData.stripPrefix(kw.id)));
+                if (response.success) {
+                    rv.ok.push(...response.validKeywords.map(kw => spData.stripPrefix(kw.id)));
+                    rv.fail.push(...response.invalidKeywords);
+                }
+                else {
+                    throw new Error(response.message);
+                }
             }
             catch (ex) {
-                rv.fail.push(...bidGroups[bid].map(kw => kw.id));
+                rv.fail.push(...bidGroups[bid].map(kw => ({ errorMessage: ex.message, keyword: kw})));
             }
         });
 

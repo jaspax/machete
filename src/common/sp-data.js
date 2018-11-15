@@ -227,13 +227,13 @@ function addKeywords(adGroupId, keywords, bid) {
     });
 }
 
-function copyKeywordsToCampaigns(campaigns, keywords) {
+async function copyKeywordsToCampaigns(campaigns, keywords) {
     const rv = {
         ok: [],
         fail: []
     };
     for (const campaign of campaigns) {
-        const result = common.bgMessage({
+        const result = await common.bgMessage({
             action: 'sp.addKeywords',
             entityId: getEntityId(),
             campaignId: campaign.campaignId,

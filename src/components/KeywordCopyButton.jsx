@@ -19,7 +19,7 @@ class KeywordCopyButton extends React.Component {
 
     render() {
         const showPopup = () => this.setState({ showPopup: true });
-        const dismissPopup = () => this.setState({ showPopup: false });
+        const dismissPopup = () => this.setState({ showPopup: false, result: null });
 
         return <div className="machete-kwcopy" title="Copy these keywords to another campaign...">
             <span className="a-button a-button-small" id={this.id} onClick={showPopup}>
@@ -39,30 +39,37 @@ class KeywordCopyButton extends React.Component {
 
     renderCopyStatus() {
         const button = this.state.copying
-            ? <button className="machete-button" disabled={true}>Copying... <span className="loadingSmall"></span></button>
+            ? <button className="machete-button" disabled={true}>Copying... <span className="loading-small"></span></button>
             : <button className="machete-highlight-button" onClick={this.copyToCampaigns}>Copy</button>; 
+
         let resultDisplay = null;
         if (this.state.result) {
-            resultDisplay = this.state.result.error
-                ? <div>We encountered some errors while attempting to copy keywords:
-                    <ul>{this.state.result.error.map(x => <li key={x} className="machete-error">{x}</li>)}</ul>
+            const result = this.state.result;
+            console.log(result);
+            const successDisplay = result.ok.length 
+                ? <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Copied {result.ok.length} keywords</span>
+                : null;
+
+            const errorDisplay = result.fail.length
+                ? <div style={{height: '180px', overflow: 'auto'}}>We encountered some errors while attempting to copy these keywords:
+                    {this.state.result.fail.map((x, idx) => <p key={idx} className="machete-error">{x.keyword.keyword}: {x.errorMessage}</p>)}
                   </div>
-                : <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Copied</span>;
+                : null;
+
+            resultDisplay = <div>{successDisplay}{errorDisplay}</div>;
         }
+
         return <div>{button}{resultDisplay}</div>;
     }
-
+    
     campaignSelectorChanged(selected) {
         this.selected = selected;
     }
 
     async copyToCampaigns() {
-        this.setState({ copying: true });
+        this.setState({ copying: true, result: null });
         const result = await this.props.onKeywordCopy(this.selected);
         this.setState({ copying: false, result });
-        if (!result.error) {
-            setTimeout(() => this.setState({ showPopup: false }), 500);
-        }
     }
 }
 

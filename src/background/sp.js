@@ -426,6 +426,7 @@ async function addKeywords({ domain, entityId, campaignId, adGroupId, keywords }
     const collector = await getCollector(domain, entityId);
     campaignId = spData.stripPrefix(campaignId);
     adGroupId = spData.stripPrefix(adGroupId);
+    keywords = _.uniqBy(keywords, kw => kw.keyword);
 
     const result = await collector.addKeywords({ keywords, adGroupId });
     await requestKeywordData(collector, campaignId, adGroupId);
