@@ -79,14 +79,14 @@ function addCampaignTabs(tabs) {
 }
 
 function generateKeywordReports(container) {
-    const chart = React.createElement(KeywordAnalyticsTab, {
+    const tab = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
         campaignPromise: spdata.getAllowedCampaignSummaries(),
         onKeywordEnabledChange: spdata.updateKeywordStatus,
         onKeywordBidChange: spdata.updateKeywordBid,
         onKeywordCopy: spdata.copyKeywordsToCampaigns,
     });
-    ReactDOM.render(chart, container[0]);
+    ReactDOM.render(tab, container[0]);
 }
 
 function generateHistoryReports(container) {
@@ -141,13 +141,11 @@ function generateBulkUpdate(container, data) {
         data,
         onKeywordEnabledChange: async(enabled, keywords) => {
             await spdata.updateKeywordStatus(enabled, keywords);
-            window.location.reload();
-            return { ok: [], fail: [] };
+            return new Promise(() => window.location.reload()); // never resolves on purpose
         },
         onKeywordBidChange: async(bid, keywords) => {
             await spdata.updateKeywordBid(bid, keywords);
-            window.location.reload();
-            return { ok: [], fail: [] };
+            return new Promise(() => window.location.reload()); // never resolves on purpose
         },
         campaignPromise: spdata.getAllowedCampaignSummaries(),
         onKeywordCopy: spdata.copyKeywordsToCampaigns,

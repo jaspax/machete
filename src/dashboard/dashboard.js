@@ -161,8 +161,8 @@ function activateAggregateKeywordTab(container) {
             const allowed = await spdata.getAllowedCampaignSummaries();
             return campaignSelectOptions(allowed);
         }),
-        loadDataPromise: summaries => ga.mpromise(async function() {
-            const adGroupIds = _.uniq(summaries.map(x => x.adGroupId).filter(x => x && x != 'null'));
+        loadDataPromise: campaigns => ga.mpromise(async function() {
+            const adGroupIds = _.uniq(campaigns.map(x => x.adGroupId).filter(x => x && x != 'null'));
             kwData = await spdata.getAggregateKeywordData(spdata.getEntityId(), adGroupIds);
             const aggKws = common.aggregateKeywords(kwData);
             return aggKws;

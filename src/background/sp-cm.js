@@ -220,14 +220,14 @@ module.exports = function(domain, entityId) {
                         if (operation == 'ENABLE')
                             item.state = 'ENABLED';
                         if (operation == 'UPDATE')
-                            item.bid = { millicents: dataValues.bid * 100000, currencyCode: kw.currencyCode };
+                            item.bid = { millicents: dataValues.bid * 100000, currencyCode };
                         return item;
                     }),
                     responseType: 'json',
                 });
 
                 result.ok.push(...response.updatedKeywords.map(kw => spData.stripPrefix(kw.id)));
-                result.fail.push(...response.failedKeywords.map(kw => spData.stripPrefix(kw.id)));
+                result.fail.push(...response.failedKeywordIds.map(spData.stripPrefix));
             }
             catch (ex) {
                 console.error(ex);

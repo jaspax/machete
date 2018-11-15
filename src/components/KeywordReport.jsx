@@ -41,18 +41,6 @@ class KeywordReport extends React.Component {
         ga.revent('kwReportOpen', { title: this.props.title });
     }
 
-    shouldComponentUpdate(nextProps) {
-        if (!nextProps.modifiedData) {
-            return true;
-        }
-        for (let item of nextProps.modifiedData) {
-            if (this.props.data.includes(item) || nextProps.data.includes(item)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     generateDownloadCsv(evt) {
         evt.preventDefault();
         if (!this.props.data) {
@@ -89,7 +77,6 @@ function singleKeywordChange(handler) {
 KeywordReport.propTypes = {
     title: PropTypes.string.isRequired,
     data: PropTypes.array.isRequired,
-    modifiedData: PropTypes.array,
     columns: PropTypes.array.isRequired,
     onKeywordEnabledChange: PropTypes.func.isRequired,
     onKeywordBidChange: PropTypes.func.isRequired,

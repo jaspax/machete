@@ -232,33 +232,16 @@ class KeywordAnalysis extends React.Component {
         return <KeywordAnalyticsView 
             keywordData={data}
             campaignPromise={this.props.campaignPromise}
-            modifiedData={this.state.modified}
             worstKeywordTables={worstKwTables}
             bestKeywordTables={bestKwTables}
-            onKeywordEnabledChange={this.updateStatus.bind(this)}
-            onKeywordBidChange={this.updateBid.bind(this)}
+            onKeywordEnabledChange={this.props.onKeywordEnabledChange}
+            onKeywordBidChange={this.props.onKeywordBidChange}
             onKeywordCopy={this.props.onKeywordCopy}
         />;
     }
 
     catch(error) {
         return <ErrorSink error={error} />;
-    }
-
-    updateStatus(enabled, keywords) {
-        return this.keywordModify(this.props.onKeywordEnabledChange, keywords, enabled, kw => kw.enabled = enabled);
-    }
-
-    updateBid(bid, keywords) {
-        return this.keywordModify(this.props.onKeywordBidChange, keywords, bid, kw => kw.bid = bid);
-    }
-
-    async keywordModify(modifier, keywords, value, onSuccess) {
-        const result = await modifier(value, keywords);
-
-        const modified = keywords.filter(kw => result.ok.includes(kw.id));
-        modified.forEach(onSuccess);
-        this.setState({ modified });
     }
 }
 
