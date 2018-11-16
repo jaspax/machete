@@ -115,26 +115,11 @@ function addTotalsRow(wrapper) {
     }
 }
 
-function campaignSelectOptions(campaigns) {
-    let options = [
-        { value: campaigns, label: 'All Campaigns' },
-        { value: campaigns.filter(c => spdata.isRunning(c)), label: 'All Active Campaigns' }
-    ];
-    for (const asinGroup of Object.values(_.groupBy(campaigns, 'asin'))) {
-        if (!asinGroup[0].asin)
-            continue;
-        options.push({ value: asinGroup, label: `All Campaigns For "${asinGroup[0].productTitle || '[unknown title]'}" (ASIN ${asinGroup[0].asin})`});
-    }
-    options = options.concat(...campaigns.filter(c => c.name).map(c => ({ value: [c], label: c.name })));
-
-    return options;
-}
-
 function activateAggregateHistoryTab(container) {
     let aggContent = React.createElement(AggregateHistory, {
         campaignPromise: ga.mpromise(async function() {
             const allowed = await spdata.getAllowedCampaignSummaries();
-            return campaignSelectOptions(allowed);
+            return spdata.campaignSelectOptions(allowed);
         }),
         loadDataPromise: ga.mcatch(summaries => {
             const campaignIds = _.uniq(summaries.map(x => x.campaignId));
@@ -162,7 +147,7 @@ function activateAggregateKeywordTab(container) {
     let aggContent = React.createElement(AggregateKeywords, {
         campaignPromise: ga.mpromise(async function() {
             const allowed = await spdata.getAllowedCampaignSummaries();
-            return campaignSelectOptions(allowed);
+            return spdata.campaignSelectOptions(allowed);
         }),
         loadDataPromise: campaigns => ga.mpromise(async function() {
             const adGroupIds = _.uniq(campaigns.map(x => x.adGroupId).filter(x => x && x != 'null'));

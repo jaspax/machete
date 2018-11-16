@@ -81,7 +81,10 @@ function addCampaignTabs(tabs) {
 function generateKeywordReports(container) {
     const tab = React.createElement(KeywordAnalyticsTab, {
         dataPromise: keywordDataPromise,
-        campaignPromise: spdata.getAllowedCampaignSummaries(),
+        campaignPromise: ga.mpromise(async function() {
+            const allowed = await spdata.getAllowedCampaignSummaries();
+            return spdata.campaignSelectOptions(allowed);
+        }),
         onKeywordEnabledChange: spdata.updateKeywordStatus,
         onKeywordBidChange: spdata.updateKeywordBid,
         onKeywordCopy: spdata.copyKeywordsToCampaigns,
@@ -147,7 +150,10 @@ function generateBulkUpdate(container, data) {
             await spdata.updateKeywordBid(bid, keywords);
             return new Promise(() => window.location.reload()); // never resolves on purpose
         },
-        campaignPromise: spdata.getAllowedCampaignSummaries(),
+        campaignPromise: ga.mpromise(async function() {
+            const allowed = await spdata.getAllowedCampaignSummaries();
+            return spdata.campaignSelectOptions(allowed);
+        }),
         onKeywordCopy: spdata.copyKeywordsToCampaigns,
     });
     ReactDOM.render(bulkUpdate, container[0]);

@@ -357,6 +357,21 @@ function hasKdpIntegration() {
     return common.bgMessage({ action: 'kdp.hasPermission' });
 }
 
+function campaignSelectOptions(campaigns) {
+    let options = [
+        { value: campaigns, label: 'All Campaigns' },
+        { value: campaigns.filter(c => isRunning(c)), label: 'All Active Campaigns' }
+    ];
+    for (const asinGroup of Object.values(_.groupBy(campaigns, 'asin'))) {
+        if (!asinGroup[0].asin)
+            continue;
+        options.push({ value: asinGroup, label: `All Campaigns For "${asinGroup[0].productTitle || '[unknown title]'}" (ASIN ${asinGroup[0].asin})`});
+    }
+    options = options.concat(...campaigns.filter(c => c.name).map(c => ({ value: [c], label: c.name })));
+
+    return options;
+}
+
 module.exports = {
     amsPageInit,
     stripPrefix,
@@ -385,4 +400,5 @@ module.exports = {
     calculateKnpIncome,
     requestKdpIntegration,
     hasKdpIntegration,
+    campaignSelectOptions,
 };
