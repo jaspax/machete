@@ -119,11 +119,14 @@ function campaignSelectOptions(campaigns) {
     let options = [
         { value: campaigns, label: 'All Campaigns' },
         { value: campaigns.filter(c => spdata.isRunning(c)), label: 'All Active Campaigns' }
-    ].concat(...campaigns.filter(c => c.name).map(c => ({ value: [c], label: 'Campaign: ' + c.name })));
-
-    for (const asin of _.uniq(campaigns.map(c => c.asin).filter(a => a && a != 'null'))) {
-        options.push({ value: campaigns.filter(c => c.asin == asin), label: 'Campaigns for ASIN: ' + asin });
+    ];
+    for (const asinGroup of Object.values(_.groupBy(campaigns, 'asin'))) {
+        if (!asinGroup[0].asin)
+            continue;
+        options.push({ value: asinGroup, label: `All Campaigns For "${asinGroup[0].productTitle || '[unknown title]'}" (ASIN ${asinGroup[0].asin})`});
     }
+    options = options.concat(...campaigns.filter(c => c.name).map(c => ({ value: [c], label: c.name })));
+
     return options;
 }
 
