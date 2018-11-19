@@ -25,7 +25,9 @@ function showDescription(enabled) {
 
 function enabledDescription() {
     return <div>
-        <p>KDP Integration is enabled! Soon some simple reports of your historical KDP data will be available on this tab.</p>
+        <p>KDP Integration is enabled! You can now see estimated KU page read
+    income on your campaign history charts. We may develop other reports on this
+    tab in the future.</p>
     </div>;
 }
 
