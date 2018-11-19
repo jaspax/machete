@@ -53,7 +53,6 @@ module.exports = function(domain, entityId) {
     }
 
     async function probe() {
-        try {
             const campaigns = await getLifetimeCampaignData();
             if (!campaigns.length)
                 return true; // I guess?
@@ -64,24 +63,11 @@ module.exports = function(domain, entityId) {
                 queryData: { entityId },
             });
             return true;
-        }
-        catch (ex) {
-            console.log('cm probe failed with', ex.message);
-            const error = bg.handleServerErrors(ex, 'cm probe');
-            return error == 'amazonNotLoggedIn';
-        }
     }
 
     async function probeKeywordUpdate({ operation, keyword, dataValues }) {
-        try {
-            const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
-            return result.ok.length == 1;
-        }
-        catch (ex) {
-            console.log('cm keyword probe failed with', ex.message);
-            const error = bg.handleServerErrors(ex, 'cm keyword probe');
-            return error == 'amazonNotLoggedIn';
-        }
+        const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
+        return result.ok.length == 1;
     }
 
     async function getDailyCampaignData(date) {

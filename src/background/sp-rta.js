@@ -16,35 +16,21 @@ module.exports = function(domain, entityId) {
     }
 
     async function probe() {
-        try {
-            const campaigns = await getLifetimeCampaignData();
-            if (!campaigns.length)
-                return true; // I guess?
+        const campaigns = await getLifetimeCampaignData();
+        if (!campaigns.length)
+            return true; // I guess?
 
-            const campaign = campaigns[0];
-            await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaign.campaignId}`, {
-                method: 'GET',
-                responseType: 'text'
-            });
-            return true;
-        }
-        catch (ex) {
-            console.log('rta probe failed with', ex.message);
-            const error = bg.handleServerErrors(ex, 'rta probe');
-            return error == 'amazonNotLoggedIn';
-        }
+        const campaign = campaigns[0];
+        await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaign.campaignId}`, {
+            method: 'GET',
+            responseType: 'text'
+        });
+        return true;
     }
 
     async function probeKeywordUpdate({ operation, keyword, dataValues }) {
-        try {
-            const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
-            return result.ok.length == 1;
-        }
-        catch (ex) {
-            console.log('rta keyword probe failed with', ex.message);
-            const error = bg.handleServerErrors(ex, 'rta keyword probe');
-            return error == 'amazonNotLoggedIn';
-        }
+        const result = await updateKeywords({ operation, dataValues, keywords: [keyword] });
+        return result.ok.length == 1;
     }
 
     async function getDailyCampaignData(date) {

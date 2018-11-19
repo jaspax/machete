@@ -51,15 +51,21 @@ async function getCollectorImpl(domain, entityId, scope, probeFn) {
     }
 
     let collector = null;
+    const errors = [];
     for (const c of [spCm(domain, entityId), spRta(domain, entityId)]) {
-        if (await probeFn(c)) {
+        try {
+            await probeFn(c);
             collector = c;
             break;
         }
-        console.log('Probe failed for', domain, entityId, c.name);
+        catch (ex) {
+            errors.push({ name: c.name, ex });
+            console.log('Probe failed for', domain, entityId, c.name, ex.message);
+        }
     }
     if (!collector) {
-        throw new Error(`No valid collectors for ${domain} ${cacheTag}`);
+        console.log(`No valid collectors for ${domain} ${cacheTag}: ${JSON.stringify(errors.map(x => ({ name: x.name, ex: ga.errorToObject(x.ex) })))}`);
+        throw errors.pop().ex;
     }
 
     collectorCache[cacheTag] = collector;
