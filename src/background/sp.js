@@ -59,13 +59,22 @@ async function getCollectorImpl(domain, entityId, scope, probeFn) {
             break;
         }
         catch (ex) {
+            const handled = bg.handleServerErrors(ex, 'sp.getCollector:' + c.name);
+            if (handled == 'amazonNotLoggedIn') {
+                // treat this as if it were success, then let the error
+                // propagate when we try to get the real page.
+                collector = c;
+                break;
+            }
+
             errors.push({ name: c.name, ex });
-            console.log('Probe failed for', domain, entityId, c.name, ex.message);
+            console.log('Probe failed for', domain, entityId, c.name, ga.errorToString(ex));
         }
     }
     if (!collector) {
         console.log(`No valid collectors for ${domain} ${cacheTag}: ${JSON.stringify(errors.map(x => ({ name: x.name, ex: ga.errorToObject(x.ex) })))}`);
-        throw errors.pop().ex;
+        ga.mga('event', 'no-valid-collector', cacheTag, ga.errorToString(errors));
+        throw new Error(`No valid collectors for ${domain}`);
     }
 
     collectorCache[cacheTag] = collector;

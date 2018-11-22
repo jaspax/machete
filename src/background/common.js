@@ -296,7 +296,6 @@ async function ajax(url, opts) {
         headers: new Headers(),
         mode: 'cors',
         credentials: 'include',
-        redirect: 'error',
     };
 
     if (opts.queryData) {
@@ -327,6 +326,13 @@ async function ajax(url, opts) {
         const response = await window.fetch(url, init);
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
+        }
+        if (response.redirected) {
+            // this is USUALLY because we got redirected to a login page. In
+            // this case we fake out a 401 so that calling code handles it
+            // correctly.
+            url += ` (redirected to ${response.url})`;
+            throw new Error('401 Redirect');
         }
 
         if (response.status == 204)
