@@ -8,10 +8,17 @@ async function dataGather() {
         const time = Date.now();
         const asins = await fetchAsins(time);
         for (const asinArray of asins) {
-            const asin = asinArray[0].substring(0, 10);
-            if (asin[0] != 'B') {
+            let asin = null;
+            for (const item of asinArray) {
+                // valid ASINs are either Bxxxxxxxxx or 10-digit integers
+                if (item[0] != 'B' && isNaN(parseFloat(item[0])))
+                    continue;
+                asin = item.substring(0, 10);
+                break;
+            }
+            if (!asin) {
                 ga.mga('event', 'kdp-warning', 'asin-unknown-format', asinArray.toString());
-                return;
+                continue;
             }
 
             console.log('Fetch sales data for ASIN', asin);
