@@ -245,6 +245,12 @@ async function requestCampaignMetadata(collector, campaignId, adGroupId) {
 async function requestKeywordData(collector, campaignId, adGroupId) {
     let timestamp = Date.now();
 
+    if (campaignId[0] == 'C') {
+        // this is a product display ad, which doesn't have keywords. Skip it.
+        console.log('Skipping requestKeywordData for', campaignId, adGroupId, 'because for wrong ad type');
+        return;
+    }
+
     console.log('requesting keyword data for', collector.entityId, campaignId, adGroupId);
     const data = await collector.getKeywordData(campaignId, adGroupId);
 
