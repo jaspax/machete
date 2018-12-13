@@ -109,7 +109,12 @@ module.exports = function(domain, entityId) {
          * but in practice that doesn't seem to happen on AMS, so we only track the
          * one.
          */
-        return _.get(data, 'aaData[0].asin');
+        const asin = _.get(data, 'aaData[0].asin');
+        if (!asin) {
+            console.log('asin not found in response:', JSON.stringify(data));
+        }
+
+        return asin;
     }
 
     async function getKeywordData(campaignId, adGroupId) {
