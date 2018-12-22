@@ -143,11 +143,15 @@ function generateBulkUpdate(container, data) {
     const bulkUpdate = React.createElement(KeywordBulkUpdate, {
         data,
         onKeywordEnabledChange: async(enabled, keywords) => {
-            await spdata.updateKeywordStatus(enabled, keywords);
+            const result = await spdata.updateKeywordStatus(enabled, keywords);
+            if (result.fail.length)
+                return result;
             return new Promise(() => window.location.reload()); // never resolves on purpose
         },
         onKeywordBidChange: async(bid, keywords) => {
-            await spdata.updateKeywordBid(bid, keywords);
+            const result = await spdata.updateKeywordBid(bid, keywords);
+            if (result.fail.length)
+                return result;
             return new Promise(() => window.location.reload()); // never resolves on purpose
         },
         campaignPromise: ga.mpromise(async function() {

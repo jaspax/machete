@@ -88,9 +88,11 @@ function getCollector(domain, entityId) {
     return getCollectorImpl(domain, entityId, 'general', c => c.probe());
 }
 
+/*
 function getCollectorForKeywordUpdate(domain, entityId, keywordOpts) {
     return getCollectorImpl(domain, entityId, 'keywordUpdate', c => c.probeKeywordUpdate(keywordOpts));
 }
+*/
 
 async function dataGather(req) {
     ga.beginLogBuffer('sp.dataGather');

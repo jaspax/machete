@@ -3,6 +3,7 @@ const PropTypes = require('prop-types');
 
 const Popup = require('./Popup.jsx');
 const CampaignSelector = require('./CampaignSelector.jsx');
+const KeywordResultDisplay = require('./KeywordResultDisplay.jsx');
 
 let keywordIdCounter = 0;
 
@@ -42,22 +43,9 @@ class KeywordCopyButton extends React.Component {
             ? <button className="machete-button" disabled={true}>Copying... <span className="loading-small"></span></button>
             : <button className="machete-highlight-button" onClick={this.copyToCampaigns}>Copy</button>; 
 
-        let resultDisplay = null;
-        if (this.state.result) {
-            const result = this.state.result;
-            console.log(result);
-            const successDisplay = result.ok.length 
-                ? <span><span style={{ color: 'green', fontWeight: 'bold' }}>✓</span>&nbsp;Copied {result.ok.length} keywords</span>
-                : null;
-
-            const errorDisplay = result.fail.length
-                ? <div style={{height: '180px', overflow: 'auto'}}>We encountered some errors while attempting to copy these keywords:
-                    {this.state.result.fail.map((x, idx) => <p key={idx} className="machete-error">{x.keyword.keyword}: {x.errorMessage}</p>)}
-                  </div>
-                : null;
-
-            resultDisplay = <div>{successDisplay}{errorDisplay}</div>;
-        }
+        const resultDisplay = this.state.result
+            ? <KeywordResultDisplay ok={this.state.result.ok} fail={this.state.result.fail} />
+            : null;
 
         return <div>{button}{resultDisplay}</div>;
     }

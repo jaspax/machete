@@ -2,11 +2,15 @@ const React = require('react');
 const PropTypes = require('prop-types');
 
 const ErrorBoundary = require('./ErrorBoundary.jsx');
-const KeywordEnableToggle = require('./KeywordEnableToggle.jsx');
 const KeywordBidUpdate = require('./KeywordBidUpdate.jsx');
 const KeywordCopyButton = require('./KeywordCopyButton.jsx');
+const KeywordEnableToggle = require('./KeywordEnableToggle.jsx');
+const KeywordResultDisplay = require('./KeywordResultDisplay.jsx');
+const Popup = require('./Popup.jsx');
 
 const ga = require('../common/ga.js');
+
+let bulkIdCounter = 0;
 
 class KeywordBulkUpdate extends React.Component {
     constructor(props) {
@@ -14,29 +18,36 @@ class KeywordBulkUpdate extends React.Component {
         this.handleEnabledChange = this.handleEnabledChange.bind(this);
         this.handleBidChange = this.handleBidChange.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
+        this.id = ++bulkIdCounter;
     }
 
     render() {
+        const dismissPopup = () => this.setState({ showPopup: false, result: null });
         const enabled = this.props.data.length ? this.props.data[0].enabled : false;
         const bid = this.props.data.length ? Number(this.props.data[0].bid) : 0;
         return <ErrorBoundary>
-            <div className="machete-kwupdate-bulk">
+            <div className="machete-kwupdate-bulk" id={this.id}>
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
                 <KeywordEnableToggle enabled={enabled} onKeywordEnabledChange={this.handleEnabledChange} />
                 <KeywordBidUpdate bid={bid} onKeywordBidChange={this.handleBidChange} />
                 <KeywordCopyButton campaignPromise={this.props.campaignPromise} onKeywordCopy={this.handleCopy} />
             </div>
+            <Popup anchorId={this.id} show={this.state.showPopup} onDismiss={dismissPopup} >
+                <KeywordResultDisplay ok={this.state.result.ok} fail={this.state.result.fail} />
+            </Popup>
         </ErrorBoundary>;
     }
 
-    handleEnabledChange(enabled) {
+    async handleEnabledChange(enabled) {
         ga.revent('kwBulkUpdate', { type: 'enable', value: enabled });
-        return this.props.onKeywordEnabledChange(enabled, this.props.data);
+        const result = await this.props.onKeywordEnabledChange(enabled, this.props.data);
+        this.setState({ showPopup: true, result });
     }
 
-    handleBidChange(bid) {
+    async handleBidChange(bid) {
         ga.revent('kwBulkUpdate', { type: 'bid', value: bid });
-        return this.props.onKeywordBidChange(bid, this.props.data);
+        const result = await this.props.onKeywordBidChange(bid, this.props.data);
+        this.setState({ showPopup: true, result });
     }
 
     handleCopy(campaigns) {
