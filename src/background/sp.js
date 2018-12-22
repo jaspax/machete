@@ -431,7 +431,14 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     }
 
     const probeKw = keywords.shift();
-    const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: probeKw });
+
+    // We would like to use the fast path here, which is returned by
+    // getCollectorForKeywordUpdate, but doing so causes failures under
+    // conditions we don't entirely understand. Switching to the regular
+    // collector resolves this issue for most users.
+    //
+    // const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: probeKw });
+    const collector = await getCollector(domain, entityId);
 
     keywords.push(probeKw);
     const result = await collector.updateKeywords({ keywords, operation, dataValues });
