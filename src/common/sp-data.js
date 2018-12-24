@@ -12,11 +12,14 @@ function getEntityId(href = window.location.toString()) {
         return entityId;
     }
 
-    let navLink = $('.topNavLogo')[0].href;
-    let query = navLink.substring(navLink.indexOf('?') + 1);
-    entityId = getQueryArgs(query).entityId;
-    if (entityId) {
-        return entityId;
+    let navLink = $('.topNavLogo')[0];
+    if (navLink) {
+        let navHref = navLink.href;
+        let query = navHref.substring(navHref.indexOf('?') + 1);
+        entityId = getQueryArgs(query).entityId;
+        if (entityId) {
+            return entityId;
+        }
     }
 
     throw new Error('could not discover entityId');
