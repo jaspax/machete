@@ -7,25 +7,14 @@ const DataNotAvailable = require('./DataNotAvailable.jsx');
 function ErrorSink(props) {
     const error = props.error;
 
-    if (error.handled) {
-        if (error.authError) {
-            return <DataNotAvailable reason={error.authError} />;
-        }
-        return <div className="machete-error">
-            <div className="machete-error-explain">
-                There was an error attempting to display the requested data.
-                An error report has been automatically generated and sent to
-                our support address. You may try again in a few minutes.
-            </div>
-        </div>;
+    if (error.handled && error.authError) {
+        return <DataNotAvailable reason={error.authError} />;
     }
-    return <div className="machete-error">
-        <div className="machete-error-explain">
-            There was an error attempting to display the requested data.
-            Please report this error by copying the error information below
-            and sending it to <a href="mailto:support@machete-app.com?subject=Bug%20report">support@machete-app.com</a>.
-        </div>
-        <textarea style={{ width: "100%", height: "100%" }} readOnly>
+    return <div className="machete-error machete-error-explain" style={{ width: "100%", height: "250px" }}>
+        There was an error attempting to display the requested data.
+        Please report this error by copying the error information below
+        and sending it to <a href="mailto:support@machete-app.com?subject=Bug%20report">support@machete-app.com</a>.
+        <textarea style={{ width: "100%", height: "150px" }} readOnly>
             {ga.errorToString(error)}
         </textarea>
     </div>;
