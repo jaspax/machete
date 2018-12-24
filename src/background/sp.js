@@ -245,11 +245,14 @@ async function requestCampaignMetadata(collector, campaignId, adGroupId) {
 }
 
 async function requestKeywordData(collector, campaignId, adGroupId) {
-    let timestamp = Date.now();
+    if (!(campaignId && adGroupId)) {
+        ga.merror(`missing campaignId or adGroupId: entityId ${collector.entityId}, campaignId ${campaignId}, adGroupId ${adGroupId}, collector ${collector.name}`);
+        return;
+    }
 
     if (campaignId[0] == 'C') {
         // this is a product display ad, which doesn't have keywords. Skip it.
-        console.log('Skipping requestKeywordData for', campaignId, adGroupId, 'because for wrong ad type');
+        console.log('Skipping requestKeywordData for', campaignId, adGroupId, 'because of wrong ad type');
         return;
     }
 
@@ -257,7 +260,7 @@ async function requestKeywordData(collector, campaignId, adGroupId) {
     const data = await collector.getKeywordData(campaignId, adGroupId);
 
     if (data && data.length) {
-        await storeKeywordData(collector.entityId, adGroupId, timestamp, data);
+        await storeKeywordData(collector.entityId, adGroupId, Date.now(), data);
     }
 }
 
@@ -369,7 +372,7 @@ const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, campai
             data = await bg.ajax(url, opts);
         }
         catch (ex) {
-            ga.merror(ex, `context: domain ${domain}, entityId ${entityId}, collector ${collector.name}`);
+            ga.merror(ex, `context: domain ${domain}, entityId ${entityId}, campaignId ${campaignId}, adGroupId ${adGroupId}, collector ${collector.name}`);
         }
     }
 
