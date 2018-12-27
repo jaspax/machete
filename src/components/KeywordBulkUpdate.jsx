@@ -15,6 +15,7 @@ let bulkIdCounter = 0;
 class KeywordBulkUpdate extends React.Component {
     constructor(props) {
         super(props);
+        this.state = { showPopup: false, result: null };
         this.handleEnabledChange = this.handleEnabledChange.bind(this);
         this.handleBidChange = this.handleBidChange.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
@@ -25,6 +26,9 @@ class KeywordBulkUpdate extends React.Component {
         const dismissPopup = () => this.setState({ showPopup: false, result: null });
         const enabled = this.props.data.length ? this.props.data[0].enabled : false;
         const bid = this.props.data.length ? Number(this.props.data[0].bid) : 0;
+        const ok = this.state.result ? this.state.result.ok : [];
+        const fail = this.state.result ? this.state.result.fail : [];
+
         return <ErrorBoundary>
             <div className="machete-kwupdate-bulk" id={this.id}>
                 <div className="machete-kwbulk-label">Bulk update {this.props.data.length} keywords</div>
@@ -33,7 +37,7 @@ class KeywordBulkUpdate extends React.Component {
                 <KeywordCopyButton campaignPromise={this.props.campaignPromise} onKeywordCopy={this.handleCopy} />
             </div>
             <Popup anchorId={this.id} show={this.state.showPopup} onDismiss={dismissPopup} >
-                <KeywordResultDisplay ok={this.state.result.ok} fail={this.state.result.fail} />
+                <KeywordResultDisplay ok={ok} fail={fail} />
             </Popup>
         </ErrorBoundary>;
     }
