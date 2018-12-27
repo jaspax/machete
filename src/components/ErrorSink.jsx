@@ -7,7 +7,7 @@ const DataNotAvailable = require('./DataNotAvailable.jsx');
 function ErrorSink(props) {
     const error = props.error;
 
-    if (error.handled && error.authError) {
+    if (error && error.handled && error.authError) {
         return <DataNotAvailable reason={error.authError} />;
     }
     return <div className="machete-error machete-error-explain" style={{ width: "100%", height: "250px" }}>
