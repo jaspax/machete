@@ -45,13 +45,15 @@ class KeywordBulkUpdate extends React.Component {
     async handleEnabledChange(enabled) {
         ga.revent('kwBulkUpdate', { type: 'enable', value: enabled });
         const result = await this.props.onKeywordEnabledChange(enabled, this.props.data);
-        this.setState({ showPopup: true, result });
+        if (result.fail && result.fail.length)
+            this.setState({ showPopup: true, result });
     }
 
     async handleBidChange(bid) {
         ga.revent('kwBulkUpdate', { type: 'bid', value: bid });
         const result = await this.props.onKeywordBidChange(bid, this.props.data);
-        this.setState({ showPopup: true, result });
+        if (result.fail && result.fail.length)
+            this.setState({ showPopup: true, result });
     }
 
     handleCopy(campaigns) {

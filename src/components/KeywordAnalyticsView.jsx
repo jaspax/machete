@@ -19,6 +19,7 @@ class KeywordAnalyticsView extends React.Component {
                     onSuccess(val, kw);
             }
             this.setState({ updated: true });
+            return result;
         };
 
         const keywordMapper = table => {
