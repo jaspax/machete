@@ -67,13 +67,13 @@ async function getCollectorImpl(domain, entityId, scope, probeFn) {
                 break;
             }
 
-            errors.push({ name: c.name, ex });
+            errors.push(`${c.name}: ${ga.errorToString(ex)}`);
             console.log('Probe failed for', domain, entityId, c.name, ga.errorToString(ex));
         }
     }
     if (!collector) {
-        console.log(`No valid collectors for ${domain} ${cacheTag}: ${JSON.stringify(errors.map(x => ({ name: x.name, ex: ga.errorToObject(x.ex) })))}`);
-        ga.mga('event', 'no-valid-collector', cacheTag, ga.errorToString(errors));
+        console.log(`No valid collectors for ${domain} ${cacheTag}: ${errors}`);
+        ga.mga('event', 'no-valid-collector', cacheTag, errors.join(', '));
         throw new Error(`No valid collectors for ${domain}`);
     }
 
