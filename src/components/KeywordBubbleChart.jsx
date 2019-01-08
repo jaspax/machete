@@ -74,9 +74,14 @@ class KeywordBubbleChart extends React.Component {
             const target = document.getElementById(this.id);
             if (target && target.on) {
                 target.on('plotly_afterplot', () => {
-                    const loading = document.getElementById(this.loadingId);
-                    if (loading)
-                        loading.parentNode.removeChild(loading);
+                    try {
+                        const loading = document.getElementById(this.loadingId);
+                        if (loading)
+                            loading.parentNode.removeChild(loading);
+                    }
+                    catch (ex) {
+                        ga.mga('event', 'error-handled', 'removing-bubble-loading-div', ex.stack);
+                    }
                 });
             }
         }));
