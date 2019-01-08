@@ -84,10 +84,18 @@ function getAdGroupIdFromDOM(dom) {
         return stripPrefix(adGroupIdInput.value);
 
     const sspaLink = dom.querySelector('.page-container nav li a');
-    if (!sspaLink)
-        return null;
+    if (sspaLink)
+        return stripPrefix(getUriPathChunk(sspaLink.href, 'ad-groups'));
 
-    return stripPrefix(getUriPathChunk(sspaLink.href, 'ad-groups'));
+    const scripts = dom.querySelectorAll('script');
+    for (const script of scripts) {
+        const match = script.innerText.match(/adGroupId: *"(.*)"/);
+        if (match) {
+            return match[1];
+        }
+    }
+
+    return null;
 }
 
 function getCurrentCampaignSnapshot(entityId = getEntityId(), campaignId = getCampaignId()) {
