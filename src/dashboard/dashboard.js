@@ -38,6 +38,9 @@ window.setInterval(ga.mcatch(() => {
 
     let wrapper = $('#campaignTable_wrapper');
     if (!wrapper.length) {
+        wrapper = $('[data-e2e-id=campaignsDashboard]');
+    }
+    if (!wrapper.length) {
         const topDivs = $('.page-container > div');
         const firstNotInfo = Array.from(topDivs).find(div => !$(div).find('[type=info]').length);
         wrapper = $(firstNotInfo).children().last();
