@@ -134,7 +134,7 @@ function generateBidOptimizer(container) {
             }
             return common.optimizeKeywordsSalesPerDay(target.value, campaignData, campaignSummary, renormedKws, options);
         }),
-        updateKeyword: kw => spdata.updateKeywordBid([kw], kw.optimizedBid),
+        updateKeyword: kw => spdata.updateKeywordBid(kw.optimizedBid, [kw]),
     });
     ReactDOM.render(tabContent, container[0]);
 }
