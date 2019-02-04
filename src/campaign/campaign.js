@@ -56,7 +56,7 @@ function addCampaignTabs(tabs) {
     }
 
     // Render the bulk update control on the main keyword list
-    let allTable = $('#keywordTableControls');
+    let allTable = $('[data-e2e-id=dataTableWrapper]').children().first();
     if (!allTable.length)
         allTable = $($('.page-container .a-tab-content').first().children().get(2));
     if (allTable.find('#machete-bulk-all').length == 0) {
