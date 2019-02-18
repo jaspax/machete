@@ -10,6 +10,8 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return bg.getUser(req);
         case 'startSession':
             return bg.startSession(req);
+        case 'sayHello':
+            return bg.sayHello(req);
 
         // AMS actions
         case 'sp.getAllowedCampaigns': 

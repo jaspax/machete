@@ -75,6 +75,9 @@
           "css": ["css/inject.css"]
       }
   ],
+  "externally_connectable": {
+      "matches": ["https://machete-app.com/*", "https://beta.machete-app.com/*"]
+  },
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
   "web_accessible_resources": ["images/**"]
 }

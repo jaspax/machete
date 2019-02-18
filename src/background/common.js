@@ -27,7 +27,12 @@ chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
 }));
 
 function messageListener(handler) {
-    chrome.runtime.onMessage.addListener(ga.mcatch((req, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener(messageHandler(handler));
+    chrome.runtime.onMessageExternal.addListener(messageHandler(handler));
+}
+
+function messageHandler(handler) {
+    return ga.mcatch((req, sender, sendResponse) => {
         console.log('Handling message:', req);
         if (sender.tab.incognito) {
             sendResponse({ 
@@ -82,7 +87,7 @@ function messageListener(handler) {
         f();
 
         return true;
-    }));
+    });
 }
 
 function getUser() {
@@ -94,6 +99,10 @@ function getUser() {
 
 function startSession(req) {
     return dataGather(req);
+}
+
+function sayHello() {
+    return { 'ok': true };
 }
 
 const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
@@ -385,6 +394,7 @@ module.exports = {
     serviceUrl,
     messageListener,
     getUser: cache.coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
+    sayHello,
     handleServerErrors,
     ajax,
     parallelQueue,
