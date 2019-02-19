@@ -30,12 +30,24 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.getAggregateKeywordData(req);
         case 'sp.storeAdGroupMetadata':
             return sp.storeAdGroupMetadata(req);
+        case 'sp.setBrandName':
+            return sp.setBrandName(req);
+
+        // Actions used by the Machete Dashboard integration
         case 'sp.updateKeyword':
             return sp.updateKeyword(req);
         case 'sp.addKeywords':
             return sp.addKeywords(req);
-        case 'sp.setBrandName':
-            return sp.setBrandName(req);
+        case 'sp.requestLifetimeCampaignData':
+            return sp.requestLifetimeCampaignData(req);
+        case 'sp.requestDailyCampaignData':
+            return sp.requestDailyCampaignData(req);
+        case 'sp.requestAdGroupId':
+            return sp.requestAdGroupId(req);
+        case 'sp.requestCampaignAsin':
+            return sp.requestCampaignAsin(req);
+        case 'sp.requestKeywordData':
+            return sp.requestKeywordData(req);
 
         // Seller actions
         case 'seller.getSummaries':

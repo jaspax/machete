@@ -198,6 +198,31 @@ async function summaryReady(entityId) {
     await syncEvent.promise;
 }
 
+function requestLifetimeCampaignData({ entity }) {
+    const collector = getCollector(entity.domain, entity.entityId);
+    return collector.getLifetimeCampaignData();
+}
+
+function requestDailyCampaignData({ entity, date }) {
+    const collector = getCollector(entity.domain, entity.entityId);
+    return collector.getDailyCampaignData(date);
+}
+
+function requestAdGroupId({ entity, campaignId }) {
+    const collector = getCollector(entity.domain, entity.entityId);
+    return collector.getAdGroupId(campaignId);
+}
+
+function requestCampaignAsin({ entity, campaignId, adGroupId }) {
+    const collector = getCollector(entity.domain, entity.entityId);
+    return collector.getCampaignAsin(campaignId, adGroupId);
+}
+
+function requestKeywordData({ entity, campaignId, adGroupId }) {
+    const collector = getCollector(entity.domain, entity.entityId);
+    return collector.getKeywordData(campaignId, adGroupId);
+}
+
 async function requestCampaignData(collector) {
     const syncEvent = getEntitySyncEvent(collector.entityId);
     let campaignIds = [];
@@ -244,7 +269,7 @@ async function requestCampaignMetadata(collector, campaignId, adGroupId) {
     }
 }
 
-async function requestKeywordData(collector, campaignId, adGroupId) {
+async function requestKeywordDataImpl(collector, campaignId, adGroupId) {
     if (!(campaignId && adGroupId)) {
         ga.merror(`missing campaignId or adGroupId: entityId ${collector.entityId}, campaignId ${campaignId}, adGroupId ${adGroupId}, collector ${collector.name}`);
         return;
@@ -368,7 +393,7 @@ const getKeywordData = bg.cache.coMemo(async function({ domain, entityId, campai
 
         const collector = await getCollector(domain, entityId);
         try {
-            await requestKeywordData(collector, campaignId, adGroupId);
+            await requestKeywordDataImpl(collector, campaignId, adGroupId);
             data = await bg.ajax(url, opts);
         }
         catch (ex) {
@@ -468,7 +493,7 @@ async function addKeywords({ domain, entityId, campaignId, adGroupId, keywords }
     keywords = _.uniqBy(keywords, kw => kw.keyword);
 
     const result = await collector.addKeywords({ keywords, adGroupId });
-    await requestKeywordData(collector, campaignId, adGroupId);
+    await requestKeywordDataImpl(collector, campaignId, adGroupId);
 
     return result;
 }
@@ -491,4 +516,9 @@ module.exports = {
     updateKeyword,
     addKeywords,
     setBrandName,
+    requestLifetimeCampaignData,
+    requestDailyCampaignData,
+    requestAdGroupId,
+    requestCampaignAsin,
+    requestKeywordData,
 };
