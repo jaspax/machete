@@ -198,28 +198,28 @@ async function summaryReady(entityId) {
     await syncEvent.promise;
 }
 
-function requestLifetimeCampaignData({ entity }) {
-    const collector = getCollector(entity.domain, entity.entityId);
+async function requestLifetimeCampaignData({ entity }) {
+    const collector = await getCollector(entity.domain, entity.entityId);
     return collector.getLifetimeCampaignData();
 }
 
-function requestDailyCampaignData({ entity, date }) {
-    const collector = getCollector(entity.domain, entity.entityId);
+async function requestDailyCampaignData({ entity, date }) {
+    const collector = await getCollector(entity.domain, entity.entityId);
     return collector.getDailyCampaignData(date);
 }
 
-function requestAdGroupId({ entity, campaignId }) {
-    const collector = getCollector(entity.domain, entity.entityId);
+async function requestAdGroupId({ entity, campaignId }) {
+    const collector = await getCollector(entity.domain, entity.entityId);
     return collector.getAdGroupId(campaignId);
 }
 
-function requestCampaignAsin({ entity, campaignId, adGroupId }) {
-    const collector = getCollector(entity.domain, entity.entityId);
+async function requestCampaignAsin({ entity, campaignId, adGroupId }) {
+    const collector = await getCollector(entity.domain, entity.entityId);
     return collector.getCampaignAsin(campaignId, adGroupId);
 }
 
-function requestKeywordData({ entity, campaignId, adGroupId }) {
-    const collector = getCollector(entity.domain, entity.entityId);
+async function requestKeywordData({ entity, campaignId, adGroupId }) {
+    const collector = await getCollector(entity.domain, entity.entityId);
     return collector.getKeywordData(campaignId, adGroupId);
 }
 
