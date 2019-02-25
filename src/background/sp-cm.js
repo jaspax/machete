@@ -53,16 +53,18 @@ module.exports = function(domain, entityId) {
     }
 
     async function probe() {
-            const campaigns = await getLifetimeCampaignData();
-            if (!campaigns.length)
-                return true; // I guess?
+        const campaigns = await getLifetimeCampaignData();
+        if (!campaigns.length)
+            return true; // I guess?
 
-            const campaign = campaigns[0];
+        const campaign = campaigns.find(x => x.id.slice(0, 2) != 'AC');
+        if (campaign) {
             await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaign.id}`, {
                 method: 'GET',
                 queryData: { entityId },
             });
-            return true;
+        }
+        return true;
     }
 
     async function probeKeywordUpdate({ operation, keyword, dataValues }) {
