@@ -20,7 +20,7 @@ module.exports = function(domain, entityId) {
         if (!campaigns.length)
             return true; // I guess?
 
-        const campaign = campaigns.find(x => x.id.slice(0, 2) != 'AC');
+        const campaign = campaigns.find(x => x.campaignId.slice(0, 2) != 'AC');
         if (campaign) {
             await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaign.campaignId}`, {
                 method: 'GET',
