@@ -451,7 +451,7 @@ function getAdGroups(entityId) {
     });
 }
 
-async function updateKeyword({ domain, entityId, keywords, operation, dataValues }) {
+async function updateKeyword({ domain, entityId, entity, keywords, operation, dataValues }) {
     const timestamp = Date.now();
     if (!keywords || !keywords.length) {
         return { ok: [], fail: [] };
@@ -468,13 +468,19 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     // collector resolves this issue for most users.
     //
     // const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: probeKw });
-    const collector = await getCollector(domain, entityId);
+    
+    // simultaneous compat with plugin and page. TODO: delete this later
+    if (!entity) {
+        entity = { domain, entityId };
+    }
+
+    const collector = await getCollector(entity.domain, entity.entityId);
 
     keywords.push(probeKw);
     const result = await collector.updateKeywords({ keywords, operation, dataValues });
 
     for (const page of common.pageArray(result.ok, 50)) {
-        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entityId}?timestamp=${timestamp}`, {
+        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entity.entityId}?timestamp=${timestamp}`, {
             method: 'PATCH',
             jsonData: { operation, dataValues, keywordIds: page },
             responseType: 'json',
@@ -486,8 +492,13 @@ async function updateKeyword({ domain, entityId, keywords, operation, dataValues
     return result;
 }
 
-async function addKeywords({ domain, entityId, campaignId, adGroupId, keywords }) {
-    const collector = await getCollector(domain, entityId);
+async function addKeywords({ entity, entityId, domain, campaignId, adGroupId, keywords }) {
+    // simultaneous compat with plugin and page. TODO: delete this later
+    if (!entity) {
+        entity = { domain, entityId };
+    }
+
+    const collector = await getCollector(entity.domain, entity.entityId);
     campaignId = spData.stripPrefix(campaignId);
     adGroupId = spData.stripPrefix(adGroupId);
     keywords = _.uniqBy(keywords, kw => kw.keyword);

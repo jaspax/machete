@@ -194,6 +194,7 @@ module.exports = function(domain, entityId) {
     async function updateKeywords({ keywords, operation, dataValues }) {
         const result = { ok: [], fail: [] };
 
+        keywords = disaggregateKeywords(keywords);
         const keywordsByAdGroup = _.groupBy(keywords, 'adGroupId');
         await bg.parallelQueue(Object.keys(keywordsByAdGroup), async adGroupId => {
             const list = keywordsByAdGroup[adGroupId];
