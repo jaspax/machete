@@ -226,6 +226,28 @@ module.exports = function(domain, entityId) {
         return result;
     }
 
+    async function updateCampaigns({ campaigns, operation, dataValues }) {
+        const result = { ok: [], fail: [] };
+        const response = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+            method: 'PATCH',
+            query: { entityId },
+            jsonData: campaigns.map(x => {
+                const item = { id: formatId(x.campaignId), programType: "SP" };
+                if (operation == 'PAUSE')
+                    item.state = 'PAUSED';
+                if (operation == 'ENABLE')
+                    item.state = 'ENABLED';
+                if (operation == 'UPDATE')
+                    item.bid = { millicents: dataValues.bid * 100000, currencyCode };
+                return item;
+            }),
+            responseType: 'json',
+        });
+
+        result.ok.push(...response.updatedCampaigns.map(x => spData.stripPrefix(x.id)));
+        result.fail.push(...response.failedCampaigns.map(x => spData.stripPrefix(x.id)));
+    }
+
     async function addKeywords({ keywords, adGroupId, bid }) {
         const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
             method: 'POST',
@@ -253,6 +275,7 @@ module.exports = function(domain, entityId) {
         getCampaignAsin,
         getKeywordData,
         updateKeywords,
-        addKeywords
+        addKeywords,
+        updateCampaigns
     };
 };

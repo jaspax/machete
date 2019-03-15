@@ -38,6 +38,8 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.updateKeyword(req);
         case 'sp.addKeywords':
             return sp.addKeywords(req);
+        case 'sp.updateCampaigns':
+            return sp.updateCampaigns(req);
         case 'sp.requestLifetimeCampaignData':
             return sp.requestLifetimeCampaignData(req);
         case 'sp.requestDailyCampaignData':
