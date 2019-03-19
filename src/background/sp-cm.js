@@ -238,7 +238,7 @@ module.exports = function(domain, entityId) {
                 if (operation == 'ENABLE')
                     item.state = 'ENABLED';
                 if (operation == 'UPDATE')
-                    item.bid = { millicents: dataValues.bid * 100000, currencyCode };
+                    item.budget = { millicents: dataValues.budget * 100000, currencyCode, budgetType: x.budgetType };
                 return item;
             }),
             responseType: 'json',
@@ -246,6 +246,7 @@ module.exports = function(domain, entityId) {
 
         result.ok.push(...response.updatedCampaigns.map(x => spData.stripPrefix(x.id)));
         result.fail.push(...response.failedCampaigns.map(x => spData.stripPrefix(x.id)));
+        return result;
     }
 
     async function addKeywords({ keywords, adGroupId, bid }) {

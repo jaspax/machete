@@ -510,21 +510,12 @@ async function addKeywords({ entity, entityId, domain, campaignId, adGroupId, ke
 }
 
 async function updateCampaigns({ entity, campaigns, operation, dataValues }) {
-    const timestamp = Date.now();
     if (!campaigns || !campaigns.length) {
         return { ok: [], fail: [] };
     }
 
     const collector = await getCollector(entity.domain, entity.entityId);
     const result = await collector.updateCampaigns({ campaigns, operation, dataValues });
-
-    for (const page of common.pageArray(result.ok, 100)) {
-        await bg.ajax(`${bg.serviceUrl}/api/campaignData/${entity.entityId}?timestamp=${timestamp}`, {
-            method: 'PATCH',
-            jsonData: { operation, dataValues, campaignIds: page },
-            responseType: 'json',
-        });
-    }
     return result;
 }
 
