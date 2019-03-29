@@ -341,6 +341,8 @@ function amsPageInit() {
             }));
         }
 
+        window.setInterval(addDashboardLinks, 250);
+
         let brandName = null;
         const brandNameDiv = $('#currentBrandName');
         if (brandNameDiv.length)
@@ -381,6 +383,49 @@ function campaignSelectOptions(campaigns) {
     options = options.concat(...campaigns.filter(c => c.name).map(c => ({ value: [c], label: c.name })));
 
     return options;
+}
+
+function dashboardLink(entityId, campaignId) {
+    return $(`<a class="machete-dashboard-link" target="_blank" href="https://${constants.hostname}/dashboard/highlights?entityId=${entityId}&ckey=id&cval=${stripPrefix(campaignId)}">View on Machete</a>`);
+}
+
+function addDashboardLinks() {
+    for (const link of $('a[data-e2e-id]')) {
+        if ($(link).attr('data-machete-link'))
+            continue;
+
+        try {
+            const entityId = getEntityId(link.href);
+            const campaignId = getCampaignId(link.href);
+
+            if (entityId && campaignId) {
+                $(link).after([$('<br />'), dashboardLink(entityId, campaignId)]);
+            }
+            $(link).attr('data-machete-link', true);
+        }
+        catch (ex) {
+            console.log(`Couldn't discover entityId/campaignId for ${link} (probably expected)`);
+        }
+    }
+
+    // there should typically only be 1 headline, but just in case...
+    for (const headline of $("[data-e2e-id='headline']")) {
+        if ($(headline).attr('data-machete-link'))
+            continue;
+
+        try {
+            const entityId = getEntityId();
+            const campaignId = getCampaignId();
+
+            if (entityId && campaignId) {
+                $(headline).append(dashboardLink(entityId, campaignId));
+            }
+            $(headline).attr('data-machete-link', true);
+        }
+        catch (ex) {
+            console.log(`Couldn't discover entityId/campaignId for headline`);
+        }
+    }
 }
 
 module.exports = {

@@ -415,3 +415,14 @@
 .machete-checkbox {
     margin-right: 4px;
 }
+
+.machete-dashboard-link {
+    font-variant: small-caps;
+}
+
+.machete-dashboard-link:after {
+    content: url('https://beta.machete-app.com/static/images/external-link.svg');
+    margin-left: 4px;
+    height: 16px;
+    width: 16px;
+}
