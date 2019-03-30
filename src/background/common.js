@@ -23,7 +23,7 @@ chrome.runtime.onInstalled.addListener(details => {
 });
 
 chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
-    chrome.tabs.create({ url: `${serviceUrl}/profile` });
+    chrome.tabs.create({ url: `${serviceUrl}/dashboard` });
 }));
 
 function messageListener(handler) {
