@@ -81,7 +81,7 @@ async function accessCode() {
 
     const codes = JSON.parse(data);
     console.log('Please visit the following URL to authorize this upload:');
-    console.log(`     https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/chromewebstore&client_id=${codes.client_id}&redirect_uri=urn:ietf:wg:oauth:2.0:oob`);
+    console.log(`  https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/chromewebstore&client_id=${codes.client_id}&redirect_uri=urn:ietf:wg:oauth:2.0:oob`);
     const accessCode = readline.question('Enter the authorization code here: ');
 
     codes.access_code = accessCode;
