@@ -385,8 +385,11 @@ function campaignSelectOptions(campaigns) {
     return options;
 }
 
-function dashboardLink(entityId, campaignId) {
-    return $(`<a class="machete-dashboard-link" target="_blank" href="https://${constants.hostname}/dashboard/highlights?entityId=${entityId}&ckey=id&cval=${stripPrefix(campaignId)}">View on Machete</a>`);
+function dashboardLink(entityId, campaignId, linkClass) {
+    return $(`<a class="machete-dashboard-link ${linkClass}" target="_blank" href="https://${constants.hostname}/dashboard/highlights?entityId=${entityId}&ckey=id&cval=${stripPrefix(campaignId)}">
+        <span>View on Machete</span>
+        <img src="https://${constants.hostname}/static/images/external-link.svg" />
+    </a>`);
 }
 
 function addDashboardLinks() {
@@ -399,7 +402,7 @@ function addDashboardLinks() {
             const campaignId = getCampaignId(link.href);
 
             if (entityId && campaignId) {
-                $(link).after([$('<br />'), dashboardLink(entityId, campaignId)]);
+                $(link).after([$('<br />'), dashboardLink(entityId, campaignId, 'dashboard-small')]);
             }
             $(link).attr('data-machete-link', true);
         }
@@ -418,7 +421,7 @@ function addDashboardLinks() {
             const campaignId = getCampaignId();
 
             if (entityId && campaignId) {
-                $(headline).append(dashboardLink(entityId, campaignId));
+                $(headline).append(dashboardLink(entityId, campaignId, 'dashboard-headline'));
             }
             $(headline).attr('data-machete-link', true);
         }

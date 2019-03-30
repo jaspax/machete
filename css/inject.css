@@ -416,13 +416,25 @@
     margin-right: 4px;
 }
 
-.machete-dashboard-link {
-    font-variant: small-caps;
+a.machete-dashboard-link, a.machete-dashboard-link:link {
+    text-decoration: none;
 }
 
-.machete-dashboard-link:after {
-    content: url('https://beta.machete-app.com/static/images/external-link.svg');
-    margin-left: 4px;
-    height: 16px;
-    width: 16px;
+.machete-dashboard-link span {
+    color: rgb(196, 85, 0);
+    text-decoration: underline;
+}
+
+.machete-dashboard-link img {
+    vertical-align: baseline;
+}
+
+.machete-dashboard-link.dashboard-small img {
+    height: 10px;
+    width: 10px;
+}
+
+.machete-dashboard-link.dashboard-headline img {
+    height: 24px;
+    width: 24px;
 }
