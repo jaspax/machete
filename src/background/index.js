@@ -50,6 +50,8 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.requestCampaignAsin(req);
         case 'sp.requestKeywordData':
             return sp.requestKeywordData(req);
+        case 'sp.requestAdEntities':
+            return sp.requestAdEntities(req);
 
         // Seller actions
         case 'seller.getSummaries':

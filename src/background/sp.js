@@ -223,6 +223,11 @@ async function requestKeywordData({ entity, campaignId, adGroupId }) {
     return collector.getKeywordData(campaignId, adGroupId);
 }
 
+function requestAdEntities({ domain }) {
+    const collector = spCm(domain);
+    return collector.getAdEntities();
+}
+
 async function requestCampaignData(collector) {
     const syncEvent = getEntitySyncEvent(collector.entityId);
     let campaignIds = [];
@@ -525,22 +530,23 @@ function setBrandName({ entityId, brandName }) {
 
 module.exports = {
     name: 'sp',
+    addKeywords,
     dataGather,
+    getAggregateCampaignHistory,
+    getAggregateKeywordData,
+    getAllCampaignData,
     getAllowedCampaigns, 
     getCampaignSummaries, 
-    getAllCampaignData,
     getDataHistory,
-    getAggregateCampaignHistory,
     getKeywordData,
-    getAggregateKeywordData,
-    storeAdGroupMetadata,
-    updateKeyword,
-    updateCampaigns,
-    addKeywords,
-    setBrandName,
-    requestLifetimeCampaignData,
-    requestDailyCampaignData,
+    requestAdEntities,
     requestAdGroupId,
     requestCampaignAsin,
+    requestDailyCampaignData,
     requestKeywordData,
+    requestLifetimeCampaignData,
+    setBrandName,
+    storeAdGroupMetadata,
+    updateCampaigns,
+    updateKeyword,
 };

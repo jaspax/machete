@@ -168,6 +168,26 @@ module.exports = function(domain, entityId) {
         return _.get(response, 'ads[0].asin');
     }
 
+    async function getAdEntities() {
+        const html = await bg.ajax(`https://${domain}/accounts`, {
+            method: 'GET',
+            responseType: 'text'
+        });
+        const template = document.createElement('template');
+        template.innerHTML = html;
+
+        const entities = [];
+        const elements = template.content.querySelectorAll("[data-entity-id]");
+        for (const el of elements) {
+            const entityId = el.getAttribute('data-entity-id');
+            const titleEl = el.querySelector('.item-content-title');
+            const name = titleEl.innerText.trim();
+            entities.push({ domain, entityId, name, collector: 'cm' });
+        }
+
+        return entities;
+    }
+
     async function getKeywordData(campaignId, adGroupId) {
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
             method: 'POST',
@@ -269,6 +289,7 @@ module.exports = function(domain, entityId) {
         entityId,
         probe,
         probeKeywordUpdate,
+        getAdEntities,
         getDailyCampaignData,
         getLifetimeCampaignData,
         getCampaignStatus,
