@@ -386,7 +386,8 @@ function campaignSelectOptions(campaigns) {
 }
 
 function dashboardLink(entityId, campaignId, linkClass) {
-    return $(`<a class="machete-dashboard-link ${linkClass}" target="_blank" href="https://${constants.hostname}/dashboard/highlights?entityId=${entityId}&ckey=id&cval=${stripPrefix(campaignId)}">
+    const query = campaignId ? `entityId=${entityId}&ckey=id&cval=${stripPrefix(campaignId)}` : `entityId=${entityId}`;
+    return $(`<a class="machete-dashboard-link ${linkClass}" target="_blank" href="https://${constants.hostname}/dashboard/highlights?${query}">
         <span>View on Machete</span>
         <img src="https://${constants.hostname}/static/images/external-link.svg" />
     </a>`);
@@ -402,7 +403,7 @@ function addDashboardLinks() {
             const campaignId = getCampaignId(link.href);
 
             if (entityId && campaignId) {
-                $(link).after([$('<br />'), dashboardLink(entityId, campaignId, 'dashboard-small')]);
+                $(link).after([dashboardLink(entityId, campaignId, 'dashboard-small')]);
             }
             $(link).attr('data-machete-link', true);
         }
@@ -412,12 +413,12 @@ function addDashboardLinks() {
     }
 
     // there should typically only be 1 headline, but just in case...
+    const entityId = getEntityId();
     for (const headline of $("[data-e2e-id='headline']")) {
         if ($(headline).attr('data-machete-link'))
             continue;
 
         try {
-            const entityId = getEntityId();
             const campaignId = getCampaignId();
 
             if (entityId && campaignId) {
@@ -428,6 +429,14 @@ function addDashboardLinks() {
         catch (ex) {
             console.log(`Couldn't discover entityId/campaignId for headline`);
         }
+    }
+
+    for (const title of $("[data-e2e-id='title']")) {
+        if ($(title).attr('data-machete-link'))
+            continue;
+
+        $(title).append(dashboardLink(entityId, null, 'dashboard-headline'));
+        $(title).attr('data-machete-link', true);
     }
 }
 
