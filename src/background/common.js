@@ -268,6 +268,10 @@ function handleServerErrors(ex, desc) {
         ga.mga('event', 'error-handled', 'network-error-401', desc);
         return 'amazonNotLoggedIn';
     }
+    if (ex.message.match(/^403/)) {
+        ga.mga('event', 'error-handled', 'network-error-403', desc);
+        return 'amazonNotLoggedIn';
+    }
     if (ex.message.match(/^404/)) {
         ga.mga('event', 'error-handled', 'network-error-404', desc);
         return 'notFound';
