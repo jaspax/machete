@@ -22,7 +22,7 @@ function getEntityId(href = window.location.toString()) {
         }
     }
 
-    throw new Error('could not discover entityId');
+    throw new Error('could not discover entityId from ' + href);
 }
 
 function stripPrefix(id) {
@@ -48,7 +48,7 @@ function getCampaignId(href = window.location.toString()) {
     if (campaignId)
         return stripPrefix(campaignId);
 
-    throw new Error('could not discover campaignId');
+    throw new Error('could not discover campaignId from ' + href);
 }
 
 // take a uri like host.com/foo/1/ and extract the "1" given "foo"
