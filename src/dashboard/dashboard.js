@@ -26,32 +26,33 @@ const charts = [
     { column: 11, columnTitle: 'ACoS', label: "ACOS", metric: [constants.metric.acos, constants.metric.knpeAcos] },
 ];
 
-spdata.startSession();
-spdata.amsPageInit();
+const syncPromise = spdata.amsPageInit();
+if (syncPromise) {
+    window.setInterval(ga.mcatch(() => {
+        const loc = window.location.pathname;
+        if (!(loc.match(/ads/) || loc.match(/cm\/(campaigns|dashboard)/)))
+            return;
+        if (loc.match(/cm\/sp\/campaigns\/\w+/)) // actually the campaign view
+            return;
 
-window.setInterval(ga.mcatch(() => {
-    const loc = window.location.pathname;
-    if (!(loc.match(/ads/) || loc.match(/cm\/(campaigns|dashboard)/)))
-        return;
-    if (loc.match(/cm\/sp\/campaigns\/\w+/)) // actually the campaign view
-        return;
+        let wrapper = $('#campaignTable_wrapper');
+        if (!wrapper.length) {
+            wrapper = $('[data-e2e-id=campaignsDashboard]');
+        }
+        if (!wrapper.length) {
+            const topDivs = $('.page-container > div');
+            const firstNotInfo = Array.from(topDivs).find(div => !$(div).find('[type=info]').length);
+            wrapper = $(firstNotInfo).children().last();
+        }
+        if (!wrapper.length)
+            return;
 
-    let wrapper = $('#campaignTable_wrapper');
-    if (!wrapper.length) {
-        wrapper = $('[data-e2e-id=campaignsDashboard]');
-    }
-    if (!wrapper.length) {
-        const topDivs = $('.page-container > div');
-        const firstNotInfo = Array.from(topDivs).find(div => !$(div).find('[type=info]').length);
-        wrapper = $(firstNotInfo).children().last();
-    }
-    if (!wrapper.length)
-        return;
+        addTabs(wrapper);
+        addTotalsRow(wrapper);
+        addChartButtons(wrapper);
+    }), 100);
+}
 
-    addTabs(wrapper);
-    addTotalsRow(wrapper);
-    addChartButtons(wrapper);
-}), 100);
 
 function addTabs(wrapper) {
     if (wrapper.hasClass('a-tab-container'))
@@ -86,7 +87,7 @@ function addTotalsRow(wrapper) {
         const totalRow = React.createElement(AmsCampaignRow, { 
             label: "Yesterday's Totals",
             lastDay: {},
-            syncPromise: spdata.startSession(),
+            syncPromise,
         });
         ReactDOM.render(totalRow, body[0]);
 
@@ -98,7 +99,7 @@ function addTotalsRow(wrapper) {
             const totalRow = React.createElement(AmsCampaignRow, { 
                 label: "Yesterday's Totals",
                 lastDay,
-                syncPromise: spdata.startSession(),
+                syncPromise,
             });
             ReactDOM.render(totalRow, body[0]);
         });
@@ -111,7 +112,7 @@ function addTotalsRow(wrapper) {
 
         const ourCell = React.createElement(AmsCampaignTitleCell, {
             title: '',
-            syncPromise: spdata.startSession(),
+            syncPromise,
         });
         ReactDOM.unmountComponentAtNode(totalCell[0]);
         ReactDOM.render(ourCell, totalCell[0]);

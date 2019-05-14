@@ -19,20 +19,21 @@ const ourTabs = [
 ];
 
 let adGroupId = null; // await the keywordDataPromise before doing this
-const keywordDataPromise = ga.mpromise((resolve, reject) => {
-    const adGroupInterval = window.setInterval(ga.mcatch(() => {
-        adGroupId = spdata.getAdGroupIdFromDOM(document);
-        if (adGroupId) {
-            const entityId = spdata.getEntityId();
-            spdata.storeAdGroupMetadata(entityId, spdata.getCampaignId(), adGroupId);
-            spdata.getKeywordData(entityId, spdata.getCampaignId(), adGroupId).then(resolve, reject);
-            window.clearInterval(adGroupInterval);
-        }
-    }), 250);
-});
+let keywordDataPromise = null; 
 
-spdata.startSession();
-spdata.amsPageInit();
+if (spdata.amsPageInit()) {
+    keywordDataPromise = ga.mpromise((resolve, reject) => {
+        const adGroupInterval = window.setInterval(ga.mcatch(() => {
+            adGroupId = spdata.getAdGroupIdFromDOM(document);
+            if (adGroupId) {
+                const entityId = spdata.getEntityId();
+                spdata.storeAdGroupMetadata(entityId, spdata.getCampaignId(), adGroupId);
+                spdata.getKeywordData(entityId, spdata.getCampaignId(), adGroupId).then(resolve, reject);
+                window.clearInterval(adGroupInterval);
+            }
+        }), 250);
+    });
+}
 
 window.setInterval(ga.mcatch(() => {
     let campaignTabs = $('#campaign_detail_tab_set');
