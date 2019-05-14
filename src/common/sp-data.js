@@ -314,6 +314,14 @@ function startSession() {
 }
 
 function amsPageInit() {
+    try {
+        getEntityId();
+    }
+    catch (ex) {
+        console.warn(ex);
+        return false;
+    }
+
     common.getUser().then(ga.mcatch(user => {
         const desc = user.activeSubscription.name;
         let email = user.email;
@@ -360,6 +368,8 @@ function amsPageInit() {
             }).catch(ga.mcatch);
         }
     }));
+
+    return startSession();
 }
 
 function requestKdpIntegration() {
@@ -464,7 +474,6 @@ module.exports = {
     addKeywords,
     copyKeywordsToCampaigns,
     isRunning,
-    startSession,
     calculateKnpIncome,
     requestKdpIntegration,
     hasKdpIntegration,
