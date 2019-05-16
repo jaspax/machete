@@ -24,7 +24,7 @@ let keywordDataPromise = null;
 if (spdata.amsPageInit()) {
     keywordDataPromise = ga.mpromise((resolve, reject) => {
         const adGroupInterval = window.setInterval(ga.mcatch(() => {
-            adGroupId = spdata.getAdGroupIdFromDOM(document);
+            adGroupId = spdata.stripPrefix(spdata.getAdGroupIdFromDOM(document));
             if (adGroupId) {
                 const entityId = spdata.getEntityId();
                 spdata.storeAdGroupMetadata(entityId, spdata.getCampaignId(), adGroupId);
