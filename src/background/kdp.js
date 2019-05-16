@@ -66,12 +66,16 @@ function baseRequest(time) {
     };
 }
 
-function kdpAjax(request) {
-    return bg.ajax('https://kdp.amazon.com/en_US/reports-new/data', {
+async function kdpAjax(request) {
+    const response = await bg.ajax('https://kdp.amazon.com/en_US/reports-new/data', {
         method: 'POST',
         formData: request,
         responseType: 'json',
     });
+    if (response.exception) {
+        throw new Error("KDP reported an unrecoverable error");
+    }
+    return response.data;
 }
 
 async function requestAsins(time) {
@@ -81,12 +85,12 @@ async function requestAsins(time) {
         'request-id': 'KDPGetTitles_OP'
     });
 
-    const response = await kdpAjax(titleRequest);
-    const data = JSON.parse(response.data);
+    const strData = await kdpAjax(titleRequest);
+    const data = JSON.parse(strData);
     return data['dynamic-dropdown'].map(x => x[0].split(','));
 }
 
-async function requestSalesData(time, asin) {
+function requestSalesData(time, asin) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': JSON.stringify([{ "action": "show", "ids": ["sales-dashboard-export-button"], "type": "onLoad" }]),
         target: JSON.stringify([{ "id": "sales-dashboard-chart-orders", "type": "chart", "metadata": "DATE" }]),
@@ -94,11 +98,10 @@ async function requestSalesData(time, asin) {
         _filter_asin: JSON.stringify({ "type": "dynamic-dropdown", "value": asin }), // eslint-disable-line camelcase
     });
     
-    const response = await kdpAjax(reportRequest);
-    return response.data;
+    return kdpAjax(reportRequest);
 }
 
-async function requestKuData(time, asin) {
+function requestKuData(time, asin) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': [],
         target: JSON.stringify([{ "id": "sales-dashboard-chart-ku", "type": "chart", "metadata": "DATE" }]),
@@ -106,8 +109,7 @@ async function requestKuData(time, asin) {
         _filter_asin: JSON.stringify({ "type": "dynamic-dropdown", "value": asin }), // eslint-disable-line camelcase
     });
 
-    const response = await kdpAjax(reportRequest);
-    return response.data;
+    return kdpAjax(reportRequest);
 }
 
 const getSalesHistory = bg.cache.coMemo(function({ asin }) {
