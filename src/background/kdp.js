@@ -40,13 +40,7 @@ async function dataGather() {
 const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
 
 function requestPermission() {
-    return ga.mpromise((resolve, reject) => {
-        chrome.permissions.request(kdpPermissions, granted => {
-            if (granted)
-                return resolve();
-            return reject(new Error('user refused'));
-        });
-    });
+    return ga.mpromise(resolve => chrome.permissions.request(kdpPermissions, resolve);
 }
 
 function hasPermission() {

@@ -52,6 +52,12 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.requestKeywordData(req);
         case 'sp.requestAdEntities':
             return sp.requestAdEntities(req);
+        case 'kdp.requestPermission':
+            return kdp.requestPermission(req);
+        case 'kdp.hasPermission':
+            return kdp.hasPermission(req);
+        case 'kdp.getSalesHistory':
+            return kdp.getSalesHistory(req);
 
         // Seller actions
         case 'seller.getSummaries':
@@ -66,14 +72,6 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return seller.getAdDataRangeByAsin(req);
         case 'seller.getKeywordDataRange':
             return seller.getKeywordDataRange(req);
-
-        // KDP actions
-        case 'kdp.requestPermission':
-            return kdp.requestPermission(req);
-        case 'kdp.hasPermission':
-            return kdp.hasPermission(req);
-        case 'kdp.getSalesHistory':
-            return kdp.getSalesHistory(req);
 
         default:
             throw new Error('unknown action: ' + req.action);
