@@ -58,6 +58,13 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return kdp.hasPermission(req);
         case 'kdp.getSalesHistory':
             return kdp.getSalesHistory(req);
+        case 'kdp.requestAsins':
+            return kdp.requestAsins(req);
+        case 'kdp.requestSalesData':
+            return kdp.requestSalesData(req);
+        case 'kdp.requestKuData':
+            return kdp.requestKuData(req);
+
 
         // Seller actions
         case 'seller.getSummaries':

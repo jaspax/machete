@@ -6,7 +6,7 @@ async function dataGather() {
     try {
         ga.beginLogBuffer('kdp.dataGather');
         const time = Date.now();
-        const asins = await fetchAsins(time);
+        const asins = await requestAsins(time);
         for (const asinArray of asins) {
             let asin = null;
             for (const item of asinArray) {
@@ -21,10 +21,10 @@ async function dataGather() {
                 continue;
             }
 
-            console.log('Fetch sales data for ASIN', asin);
+            console.log('request sales data for ASIN', asin);
 
-            const sales = await fetchSalesData(time, asinArray);
-            const ku = await fetchKuData(time, asinArray);
+            const sales = await requestSalesData(time, asinArray);
+            const ku = await requestKuData(time, asinArray);
 
             await bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
                 method: 'PUT',
@@ -40,7 +40,7 @@ async function dataGather() {
 const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
 
 function requestPermission() {
-    return ga.mpromise(resolve => chrome.permissions.request(kdpPermissions, resolve);
+    return ga.mpromise(resolve => chrome.permissions.request(kdpPermissions, resolve));
 }
 
 function hasPermission() {
@@ -74,7 +74,7 @@ function kdpAjax(request) {
     });
 }
 
-async function fetchAsins(time) {
+async function requestAsins(time) {
     const titleRequest = Object.assign(baseRequest(time), { 
         'post-ajax': JSON.stringify([{ action: "load", ids: ["sales-dashboard-chart-orders", "sales-dashboard-chart-ku", "sales-dashboard-table"], type: "onLoad" }]),
         target: JSON.stringify([{ id: "sales-dashboard-dd-asin", type: "dynamic-dropdown", metadata: "STRING"}]),
@@ -86,7 +86,7 @@ async function fetchAsins(time) {
     return data['dynamic-dropdown'].map(x => x[0].split(','));
 }
 
-async function fetchSalesData(time, asin) {
+async function requestSalesData(time, asin) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': JSON.stringify([{ "action": "show", "ids": ["sales-dashboard-export-button"], "type": "onLoad" }]),
         target: JSON.stringify([{ "id": "sales-dashboard-chart-orders", "type": "chart", "metadata": "DATE" }]),
@@ -98,7 +98,7 @@ async function fetchSalesData(time, asin) {
     return response.data;
 }
 
-async function fetchKuData(time, asin) {
+async function requestKuData(time, asin) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': [],
         target: JSON.stringify([{ "id": "sales-dashboard-chart-ku", "type": "chart", "metadata": "DATE" }]),
@@ -123,4 +123,7 @@ module.exports = {
     requestPermission,
     hasPermission,
     getSalesHistory,
+    requestAsins,
+    requestSalesData,
+    requestKuData,
 };
