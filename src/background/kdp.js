@@ -6,7 +6,7 @@ async function dataGather() {
     try {
         ga.beginLogBuffer('kdp.dataGather');
         const time = Date.now();
-        const asins = await requestAsins(time);
+        const asins = await requestAsins({ time });
         for (const asinArray of asins) {
             let asin = null;
             for (const item of asinArray) {
@@ -23,8 +23,8 @@ async function dataGather() {
 
             console.log('request sales data for ASIN', asin);
 
-            const sales = await requestSalesData(time, asinArray);
-            const ku = await requestKuData(time, asinArray);
+            const sales = await requestSalesData({ time, asin: asinArray });
+            const ku = await requestKuData({ time, asin: asinArray });
 
             await bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
                 method: 'PUT',
@@ -66,19 +66,24 @@ function baseRequest(time) {
     };
 }
 
+const kdpUrl = 'https://kdp.amazon.com/en_US/reports-new/data';
 async function kdpAjax(request) {
-    const response = await bg.ajax('https://kdp.amazon.com/en_US/reports-new/data', {
+    const response = await bg.ajax(kdpUrl, {
         method: 'POST',
         formData: request,
         responseType: 'json',
     });
     if (response.exception) {
-        throw new Error("KDP reported an unrecoverable error");
+        console.warn("KDP error for request body", request);
+        const ex = new Error("KDP reported an unrecoverable error");
+        ex.url = kdpUrl;
+        ex.formData = JSON.stringify(request);
+        throw ex;
     }
     return response.data;
 }
 
-async function requestAsins(time) {
+async function requestAsins({ time }) {
     const titleRequest = Object.assign(baseRequest(time), { 
         'post-ajax': JSON.stringify([{ action: "load", ids: ["sales-dashboard-chart-orders", "sales-dashboard-chart-ku", "sales-dashboard-table"], type: "onLoad" }]),
         target: JSON.stringify([{ id: "sales-dashboard-dd-asin", type: "dynamic-dropdown", metadata: "STRING"}]),
@@ -90,7 +95,7 @@ async function requestAsins(time) {
     return data['dynamic-dropdown'].map(x => x[0].split(','));
 }
 
-function requestSalesData(time, asin) {
+function requestSalesData({ time, asin }) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': JSON.stringify([{ "action": "show", "ids": ["sales-dashboard-export-button"], "type": "onLoad" }]),
         target: JSON.stringify([{ "id": "sales-dashboard-chart-orders", "type": "chart", "metadata": "DATE" }]),
@@ -101,7 +106,7 @@ function requestSalesData(time, asin) {
     return kdpAjax(reportRequest);
 }
 
-function requestKuData(time, asin) {
+function requestKuData({ time, asin }) {
     const reportRequest = Object.assign(baseRequest(time), {
         'post-ajax': [],
         target: JSON.stringify([{ "id": "sales-dashboard-chart-ku", "type": "chart", "metadata": "DATE" }]),
