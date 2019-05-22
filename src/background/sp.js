@@ -149,7 +149,7 @@ async function dataGather(req) {
                     if (!(summary && summary.asin)) {
                         await requestCampaignMetadata(collector, campaignId, spData.stripPrefix(adGroupId));
                     }
-                    await requestKeywordData(collector, campaignId, spData.stripPrefix(adGroupId));
+                    await requestKeywordData({ entity: { entityId, domain }, campaignId, adGroupId: spData.stripPrefix(adGroupId) });
                 }
             });
         }
