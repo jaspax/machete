@@ -269,16 +269,16 @@ module.exports = function(domain, entityId) {
         return result;
     }
 
-    async function addKeywords({ keywords, adGroupId, bid }) {
+    async function addKeywords({ keywords, adGroupId }) {
         const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
             method: 'POST',
             queryData: { entityId },
-            jsonData: { keywords: keywords.map(kw => ({ keyword: kw, matchType: "BROAD", bid: { millicents: bid * 100000, currencyCode } })) },
+            jsonData: { keywords: keywords.map(kw => ({ keyword: kw.keyword, matchType: "BROAD", bid: { millicents: kw.bid * 100000, currencyCode } })) },
             responseType: 'json',
         });
 
         return {
-            ok: response.succeededKeywords.map(kw => spData.stripPrefix(kw.id)),
+            ok: response.succeededKeywordIds.map(spData.stripPrefix),
             fail: response.failedKeywords.map(kw => spData.stripPrefix(kw.id)),
         };
     }
