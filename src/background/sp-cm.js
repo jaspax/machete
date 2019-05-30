@@ -39,15 +39,14 @@ module.exports = function(domain, entityId) {
 
     async function requestDataPaged(reqfn) {
         const pageSize = 100;
-        let pageOffset = 0;
         let accum = [];
 
-        let data = null;
-        do {
-            data = await reqfn(pageOffset, pageSize);
+        const firstData = await reqfn(0, pageSize);
+        const pages = [...Array(firstData.summary.maxPageNumber).keys()].slice(1);
+        await bg.parallelQueue(pages, async pageOffset => {
+            const data = await reqfn(pageOffset, pageSize);
             accum = accum.concat(data.campaigns || data.keywords);
-            pageOffset++;
-        } while (pageOffset < data.summary.maxPageNumber);
+        });
 
         return accum;
     }
@@ -84,7 +83,7 @@ module.exports = function(domain, entityId) {
                 period: "CUSTOM",
                 startDateUTC: utcDay.startOf('day').valueOf(),
                 endDateUTC: utcDay.endOf('day').valueOf(),
-                filters: [{ field: "CAMPAIGN_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false }],
+                filters: [],
                 interval: "SUMMARY",
                 programType: "SP",
                 fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
@@ -114,7 +113,7 @@ module.exports = function(domain, entityId) {
                 period: "LIFETIME",
                 startDateUTC: 1,
                 endDateUTC: moment().valueOf(),
-                filters: [{ field: "CAMPAIGN_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false }],
+                filters: [],
                 interval: "SUMMARY",
                 programType: "SP",
                 fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
