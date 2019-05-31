@@ -62,3 +62,8 @@ out
 
 # Our generated zip file
 machete-*.zip
+
+# tag files
+tags
+tags.lock
+tags.temp
