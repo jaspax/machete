@@ -2,6 +2,7 @@ const fs = require('fs');
 const requestp = require('request-promise-native');
 const readline = require('readline-sync');
 const { spawn } = require('child_process');
+const { google } = require('googleapis');
 
 if (require.main === module) {
     const argv = process.argv.slice(2);
@@ -18,12 +19,11 @@ if (require.main === module) {
         try {
             console.log(`Publishing ${pkgPath} to apps ${appIds}`);
 
-            for (const appId of appIds) {
-                console.log('Require access code...');
-                const codes = await accessCode();
+            const client = await authClient();
 
+            for (const appId of appIds) {
                 console.log('Requesting access token...');
-                const token = await accessToken(codes);
+                const token = await accessToken(client);
 
                 console.log(`Uploading to ${appId}...`);
                 const uploadResult = await uploadPackage(appId, token, pkgPath);
@@ -74,34 +74,39 @@ async function gitPush(releaseTag) {
     }
 }
 
-async function accessCode() {
-    const data = await new Promise((resolve, reject) =>
-        fs.readFile('../uploader-keys.json', 'utf8', (err, data) => (err && reject(err)) || resolve(data))
-    );
-
-    const codes = JSON.parse(data);
-    console.log('Please visit the following URL to authorize this upload:');
-    console.log(`  https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/chromewebstore&client_id=${codes.client_id}&redirect_uri=urn:ietf:wg:oauth:2.0:oob`);
-    const accessCode = readline.question('Enter the authorization code here: ');
-
-    codes.access_code = accessCode;
-    return codes;
+function readAsync(fname) {
+    return new Promise((resolve, reject) => fs.readFile(fname, 'utf8', (err, data) => (err && reject(err)) || resolve(data)));
 }
 
-async function accessToken(codes) {
-    const response = await requestp({
-        uri: 'https://accounts.google.com/o/oauth2/token',
-        method: 'POST',
-        formData: {
-            client_id: codes.client_id,
-            client_secret: codes.client_secret,
-            code: codes.access_code,
-            grant_type: "authorization_code",
-            redirect_uri: "urn:ietf:wg:oauth:2.0:oob"
-        }
+async function authClient() {
+    const data = await readAsync('../uploader-keys.json');
+    const codes = JSON.parse(data);
+    const oauthClient = new google.auth.OAuth2(codes.client_id, codes.client_secret, 'urn:ietf:wg:oauth:2.0:oob');
+    oauthClient.on('tokens', async tokens => {
+        console.log('Storing new tokens');
+        await new Promise((resolve, reject) => fs.writeFile('../uploader-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
     });
-    const token = JSON.parse(response);
-    return token.access_token;
+    return oauthClient;
+}
+
+async function accessToken(oauthClient) {
+    try {
+        const tokens = JSON.parse(await readAsync('../uploader-tokens'));
+        await oauthClient.setCredentials(tokens);
+        console.log('Using cached tokens');
+        return tokens.access_token;
+    }
+    catch (ex) {
+        console.warn(`Couldn't find cached tokens`);
+    }
+
+    const url = oauthClient.generateAuthUrl({ access_type: 'offline', scope: ['https://www.googleapis.com/auth/chromewebstore'] });
+
+    console.log('Please visit the following URL to authorize this upload:');
+    console.log(`  ${url}`);
+    const accessCode = readline.question('Enter the authorization code here: ');
+    const { tokens } = await oauthClient.getToken(accessCode);
+    return tokens.access_token;
 }
 
 async function uploadPackage(appId, token, pkgPath) {
