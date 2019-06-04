@@ -39,9 +39,10 @@ module.exports = function(domain, entityId) {
 
     async function requestDataPaged(reqfn) {
         const pageSize = 100;
-        let accum = [];
 
         const firstData = await reqfn(0, pageSize);
+        let accum = firstData.campaigns || firstData.keywords;
+
         const pages = [...Array(firstData.summary.maxPageNumber).keys()].slice(1);
         await bg.parallelQueue(pages, async pageOffset => {
             const data = await reqfn(pageOffset, pageSize);
