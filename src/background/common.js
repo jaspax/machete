@@ -37,8 +37,7 @@ function messageHandler(handler) {
         if (sender.tab.incognito) {
             sendResponse({ 
                 error: {
-                    handled: true,
-                    authError: 'incognito',
+                    handled: 'incognito',
                     message: 'Machete cannot be used in incognito mode',
                 }
             });
@@ -63,10 +62,9 @@ function messageHandler(handler) {
                     return;
 
                 const response = { status: error.message, error: ga.errorToObject(error) };
-                const authError = handleServerErrors(error, req.action);
-                if (authError) {
-                    response.error.handled = true;
-                    response.error.authError = authError;
+                const handled = handleServerErrors(error, req.action);
+                if (handled) {
+                    response.error.handled = handled;
                     console.warn(error);
                 }
                 else {
