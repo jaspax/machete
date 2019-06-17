@@ -38,7 +38,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function requestDataPaged(reqfn) {
-        const pageSize = 100;
+        const pageSize = 200;
 
         const firstData = await reqfn(0, pageSize);
         let accum = firstData.campaigns || firstData.keywords;
