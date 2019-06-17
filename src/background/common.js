@@ -281,7 +281,7 @@ function handleServerErrors(ex, desc) {
     }
     if (ex.message.match(/0 error/) || ex.message.match(/Failed to fetch/)) {
         ga.mga('event', 'error-handled', 'network-error-unknown', desc);
-        return 'networkError';
+        return 'amazonNotLoggedIn';
     }
     return null;
 }
