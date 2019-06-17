@@ -39,7 +39,8 @@
     "react-promise": "^2.0.0",
     "react-radio-group": "^3.0.2",
     "react-select": "^1.0.0-rc.10",
-    "react-table": "^6.5.3"
+    "react-table": "^6.5.3",
+    "sleep-promise": "^8.0.1"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

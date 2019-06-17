@@ -1,6 +1,7 @@
 const qu = require('async/queue');
 const moment = require('moment');
 const _ = require('lodash');
+const sleep = require('sleep-promise').default;
 
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
@@ -333,35 +334,48 @@ async function ajax(url, opts) {
     }
 
     const origStack = new Error().stack;
-    try {
-        const response = await window.fetch(url, init);
-        if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText}`);
-        }
-        if (response.redirected) {
-            // this is USUALLY because we got redirected to a login page. In
-            // this case we fake out a 401 so that calling code handles it
-            // correctly.
-            url += ` (redirected to ${response.url})`;
-            throw new Error('401 Redirect');
-        }
+    while (true) { // eslint-disable-line no-constant-condition
+        try {
+            const response = await window.fetch(url, init);
+            if (!response.ok) {
+                if (response.status == 403) {
+                    // sometimes a 403 indicates that we're querying too fast for
+                    // poor Amazon's servers. So we chill out for a generous 5s,
+                    // then try again.
+                    const text = await response.text();
+                    console.log(response.status, response.statusText, text);
+                    if (text.toLowerCase().includes("frequently")) { // Actual Amazon message is "Access too frequently!"
+                        await sleep(5000);
+                        continue;
+                    }
+                }
 
-        if (response.status == 204)
-            return null;
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            if (response.redirected) {
+                // this is USUALLY because we got redirected to a login page. In
+                // this case we fake out a 401 so that calling code handles it
+                // correctly.
+                url += ` (redirected to ${response.url})`;
+                throw new Error('401 Redirect');
+            }
 
-        const body = await response.text();
-        if (opts.responseType == 'json') {
-            if (!body.length)
-                return {};
-            return JSON.parse(body);
+            if (response.status == 204)
+                return null;
+            const body = await response.text();
+            if (opts.responseType == 'json') {
+                if (!body.length)
+                    return {};
+                return JSON.parse(body);
+            }
+            return body;
         }
-        return body;
-    }
-    catch (ex) {
-        ex.method = opts.method;
-        ex.url = url;
-        ex.origStack = origStack;
-        throw ex;
+        catch (ex) {
+            ex.method = opts.method;
+            ex.url = url;
+            ex.origStack = origStack;
+            throw ex;
+        }
     }
 }
 
