@@ -198,19 +198,25 @@ module.exports = function(domain, entityId) {
         return rv;
     }
 
+    function getPortfolios() {
+        console.warn('Unimplemented: rta.getPortfolios');
+        return [];
+    }
+
     return {
         name: 'rta',
+        addKeywords,
         domain,
         entityId,
-        probe,
-        probeKeywordUpdate,
-        getDailyCampaignData,
-        getLifetimeCampaignData,
-        getCampaignStatus,
         getAdGroupId,
         getCampaignAsin,
+        getCampaignStatus,
+        getDailyCampaignData,
         getKeywordData,
+        getLifetimeCampaignData,
+        getPortfolios,
+        probe,
+        probeKeywordUpdate,
         updateKeywords,
-        addKeywords,
     };
 };

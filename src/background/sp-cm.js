@@ -46,7 +46,7 @@ module.exports = function(domain, entityId) {
         const pages = [...Array(firstData.summary.maxPageNumber).keys()].slice(1);
         await bg.parallelQueue(pages, async pageOffset => {
             const data = await reqfn(pageOffset, pageSize);
-            accum = accum.concat(data.campaigns || data.keywords);
+            accum = accum.concat(data.campaigns || data.keywords || data.portfolios);
         });
 
         return accum;
@@ -283,21 +283,38 @@ module.exports = function(domain, entityId) {
         };
     }
 
+    async function getPortfolios() {
+        const portfolios = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/portfolios/performance`, {
+            method: 'GET',
+            queryData: { entityId },
+            jsonData: {
+                pageOffset,
+                pageSize,
+                period: "LIFETIME",
+                filters: [],
+                fields: ["PORTFOLIO_NAME", "PORTFOLIO_STATUS", "PORTFOLIO_BUDGET", "PORTFOLIO_BUDGET_TYPE"], 
+            },
+            responseType: 'json',
+        }));
+        return portfolios.map(x => Object.assign(x, { id: spData.stripPrefix(x.id) }));
+    }
+
     return {
         name: 'cm',
+        addKeywords,
         domain,
         entityId,
-        probe,
-        probeKeywordUpdate,
         getAdEntities,
-        getDailyCampaignData,
-        getLifetimeCampaignData,
-        getCampaignStatus,
         getAdGroupId,
         getCampaignAsin,
+        getCampaignStatus,
+        getDailyCampaignData,
         getKeywordData,
+        getLifetimeCampaignData,
+        getPortfolios,
+        probe,
+        probeKeywordUpdate,
+        updateCampaigns,
         updateKeywords,
-        addKeywords,
-        updateCampaigns
     };
 };
