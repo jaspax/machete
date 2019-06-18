@@ -30,7 +30,7 @@ if (require.main === module) {
                 console.log('Upload result:', uploadResult);
 
                 console.log(`Publishing ${appId}...`);
-                const publishResult = await publishPackage(appId, token);
+                const publishResult = await publishPackage(appId, header);
                 console.log('Publish result:', publishResult);
             }
 
@@ -125,11 +125,11 @@ async function uploadPackage(appId, headers, pkgPath) {
     return status;
 }
 
-async function publishPackage(appId, token) {
+async function publishPackage(appId, headers) {
     const response = await requestp({
         uri: `https://www.googleapis.com/chromewebstore/v1.1/items/${appId}/publish`,
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
+        headers
     });
 
     const status = JSON.parse(response);
