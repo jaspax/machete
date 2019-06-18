@@ -522,9 +522,9 @@ function setBrandName({ entityId, brandName }) {
     bg.setEntityId(entityId, { name: brandName });
 }
 
-function requestPortfolios({ entity }) {
+async function requestPortfolios({ entity }) {
     const { domain, entityId } = entity;
-    const collector = getCollector(domain, entityId);
+    const collector = await getCollector(domain, entityId);
     return collector.getPortfolios();
 }
 
