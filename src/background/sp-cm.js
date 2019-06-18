@@ -41,23 +41,40 @@ module.exports = function(domain, entityId) {
         const pageSize = 200;
 
         const firstData = await reqfn(0, pageSize);
-        let accum = firstData.campaigns || firstData.keywords;
+        let accum = firstData.campaigns || firstData.keywords || firstData.portfolios;
 
         const pages = [...Array(firstData.summary.maxPageNumber).keys()].slice(1);
         await bg.parallelQueue(pages, async pageOffset => {
             const data = await reqfn(pageOffset, pageSize);
-            accum = accum.concat(data.campaigns || data.keywords);
+            accum = accum.concat(data.campaigns || data.keywords || data.portfolios);
         });
 
         return accum;
     }
 
     async function probe() {
-        const campaigns = await getLifetimeCampaignData();
-        if (!campaigns.length)
+        const probeCampaign = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+            method: 'POST',
+            queryData: { entityId },
+            jsonData: {
+                pageOffset: 0,
+                pageSize: 5,
+                sort: { order: "DESC", field: "CAMPAIGN_NAME" },
+                period: "LIFETIME",
+                startDateUTC: 1,
+                endDateUTC: moment().valueOf(),
+                filters: [],
+                interval: "SUMMARY",
+                programType: "SP",
+                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
+                queries: []
+            },
+            responseType: 'json'
+        });
+        if (!probeCampaign.campaigns.length)
             return true; // I guess?
 
-        const campaign = campaigns.find(x => x.id.slice(0, 2) != 'AC');
+        const campaign = probeCampaign.campaigns.find(x => x.id.slice(0, 2) != 'AC');
         if (campaign) {
             await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaign.id}`, {
                 method: 'GET',
@@ -283,21 +300,41 @@ module.exports = function(domain, entityId) {
         };
     }
 
+    async function getPortfolios() {
+        const portfolios = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/portfolios/performance`, {
+            method: 'POST',
+            queryData: { entityId },
+            jsonData: {
+                pageOffset,
+                pageSize,
+                startDateUTC: 1,
+                endDateUTC: moment().valueOf(),
+                sort: null, 
+                period: "LIFETIME", 
+                filters: [{ "field": "CAMPAIGN_PROGRAM_TYPE", "not": false, "operator": "EXACT", "values": ["SP", "HSA"]}],
+                fields: ["PORTFOLIO_NAME", "PORTFOLIO_STATUS", "PORTFOLIO_BUDGET", "PORTFOLIO_BUDGET_TYPE", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "NTB_ORDERS", "NTB_PERCENT_OF_ORDERS", "NTB_SALES", "NTB_PERCENT_OF_SALES"],
+            },
+            responseType: 'json',
+        }));
+        return portfolios.map(x => Object.assign(x, { id: spData.stripPrefix(x.id) }));
+    }
+
     return {
         name: 'cm',
+        addKeywords,
         domain,
         entityId,
-        probe,
-        probeKeywordUpdate,
         getAdEntities,
-        getDailyCampaignData,
-        getLifetimeCampaignData,
-        getCampaignStatus,
         getAdGroupId,
         getCampaignAsin,
+        getCampaignStatus,
+        getDailyCampaignData,
         getKeywordData,
+        getLifetimeCampaignData,
+        getPortfolios,
+        probe,
+        probeKeywordUpdate,
+        updateCampaigns,
         updateKeywords,
-        addKeywords,
-        updateCampaigns
     };
 };

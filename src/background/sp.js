@@ -88,12 +88,6 @@ function getCollector(domain, entityId) {
     return getCollectorImpl(domain, entityId, 'general', c => c.probe());
 }
 
-/*
-function getCollectorForKeywordUpdate(domain, entityId, keywordOpts) {
-    return getCollectorImpl(domain, entityId, 'keywordUpdate', c => c.probeKeywordUpdate(keywordOpts));
-}
-*/
-
 async function dataGather(req) {
     ga.beginLogBuffer('sp.dataGather');
     // We want to make sure that we at least attempt to sync every single
@@ -528,6 +522,12 @@ function setBrandName({ entityId, brandName }) {
     bg.setEntityId(entityId, { name: brandName });
 }
 
+async function requestPortfolios({ entity }) {
+    const { domain, entityId } = entity;
+    const collector = await getCollector(domain, entityId);
+    return collector.getPortfolios();
+}
+
 module.exports = {
     name: 'sp',
     addKeywords,
@@ -545,6 +545,7 @@ module.exports = {
     requestDailyCampaignData,
     requestKeywordData,
     requestLifetimeCampaignData,
+    requestPortfolios,
     setBrandName,
     storeAdGroupMetadata,
     updateCampaigns,

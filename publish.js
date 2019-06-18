@@ -23,14 +23,14 @@ if (require.main === module) {
 
             for (const appId of appIds) {
                 console.log('Requesting access token...');
-                const token = await accessToken(client);
+                const header = await authorizationHeader(client);
 
                 console.log(`Uploading to ${appId}...`);
-                const uploadResult = await uploadPackage(appId, token, pkgPath);
+                const uploadResult = await uploadPackage(appId, header, pkgPath);
                 console.log('Upload result:', uploadResult);
 
                 console.log(`Publishing ${appId}...`);
-                const publishResult = await publishPackage(appId, token);
+                const publishResult = await publishPackage(appId, header);
                 console.log('Publish result:', publishResult);
             }
 
@@ -83,21 +83,21 @@ async function authClient() {
     const codes = JSON.parse(data);
     const oauthClient = new google.auth.OAuth2(codes.client_id, codes.client_secret, 'urn:ietf:wg:oauth:2.0:oob');
     oauthClient.on('tokens', async tokens => {
-        console.log('Storing new tokens');
-        await new Promise((resolve, reject) => fs.writeFile('../uploader-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
+        console.log('Storing new tokens in ./new-tokens, please save these in ../uploader-tokens');
+        await new Promise((resolve, reject) => fs.writeFile('new-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
     });
     return oauthClient;
 }
 
-async function accessToken(oauthClient) {
+async function authorizationHeader(oauthClient) {
     try {
-        const tokens = JSON.parse(await readAsync('../uploader-tokens'));
-        await oauthClient.setCredentials(tokens);
-        console.log('Using cached tokens');
-        return tokens.access_token;
+        const cached = JSON.parse(await readAsync('../uploader-tokens'));
+        await oauthClient.setCredentials(cached);
+        return oauthClient.getRequestHeaders();
     }
     catch (ex) {
-        console.warn(`Couldn't find cached tokens`);
+        console.log(ex);
+        console.warn(`Couldn't generate headers from cached tokens`);
     }
 
     const url = oauthClient.generateAuthUrl({ access_type: 'offline', scope: ['https://www.googleapis.com/auth/chromewebstore'] });
@@ -106,15 +106,15 @@ async function accessToken(oauthClient) {
     console.log(`  ${url}`);
     const accessCode = readline.question('Enter the authorization code here: ');
     const { tokens } = await oauthClient.getToken(accessCode);
-    return tokens.access_token;
+    return oauthClient.getRequestHeaders();
 }
 
-async function uploadPackage(appId, token, pkgPath) {
+async function uploadPackage(appId, headers, pkgPath) {
     const pkgBuffer = await new Promise((resolve, reject) => fs.readFile(pkgPath, (err, data) => (err && reject(err)) || resolve(data)));
     const response = await requestp({
         uri: 'https://www.googleapis.com/upload/chromewebstore/v1.1/items/' + appId,
         method: 'PUT',
-        headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
+        headers,
         body: pkgBuffer
     });
 
@@ -125,11 +125,11 @@ async function uploadPackage(appId, token, pkgPath) {
     return status;
 }
 
-async function publishPackage(appId, token) {
+async function publishPackage(appId, headers) {
     const response = await requestp({
         uri: `https://www.googleapis.com/chromewebstore/v1.1/items/${appId}/publish`,
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'x-goog-api-version': 2 },
+        headers
     });
 
     const status = JSON.parse(response);

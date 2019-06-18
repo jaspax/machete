@@ -52,6 +52,8 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.requestKeywordData(req);
         case 'sp.requestAdEntities':
             return sp.requestAdEntities(req);
+        case 'sp.requestPortfolios':
+            return sp.requestPortfolios(req);
         case 'kdp.requestPermission':
             return kdp.requestPermission(req);
         case 'kdp.hasPermission':
