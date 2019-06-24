@@ -84,7 +84,6 @@ module.exports = (env = defaultEnv) => {
         },
         entry: {
             dashboard: './src/dashboard/dashboard.js',
-            campaign: './src/campaign/campaign.js',
             background: './src/background/index.js',
         },
         output: {
