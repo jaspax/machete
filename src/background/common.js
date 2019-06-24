@@ -1,26 +1,13 @@
-const qu = require('async/queue');
-const moment = require('moment');
-const _ = require('lodash');
-const sleep = require('sleep-promise').default;
-
 const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
-const cache = require('../common/data-cache.js')();
+const qu = require('async/queue');
 const serviceUrl = `https://${constants.hostname}`;
-
-const alarmPeriodMinutes = 12 * 60;
-const alarmKey = 'macheteSync';
-const entityIdKey = 'spEntityIds';
-const sellerDomainKey = 'sellerDomains';
-const lastVersionKey = 'lastVersion';
+const sleep = require('sleep-promise').default;
 
 chrome.runtime.onInstalled.addListener(details => {
-    const manifest = chrome.runtime.getManifest();
     if (details.reason == 'install') {
         chrome.tabs.create({ url: `${serviceUrl}/setup/postinstall` });
     }
-    localStorage.setItem(lastVersionKey, manifest.version);
-    setAlarm();
 });
 
 chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
@@ -89,163 +76,12 @@ function messageHandler(handler) {
     });
 }
 
-function getUser() {
-    return ajax(`${serviceUrl}/api/user`, {
-        method: 'GET',
-        responseType: 'json'
-    });
-}
-
-function startSession(req) {
-    return dataGather(req);
-}
-
 function sayHello() {
-    return { 'ok': true };
-}
-
-const lastSync = JSON.parse(localStorage.getItem('lastSync')) || {};
-function hasSyncedToday(module) {
-    if (lastSync[module]) {
-        const moduleSync = moment(lastSync[module]);
-        console.log('Last data sync for', module, 'at', moduleSync.format());
-        return moment().isSame(moduleSync, 'day');
-    }
-
-    console.log('No recorded sync for', module);
-    return false;
-}
-
-function setSyncTime(module, time) {
-    lastSync[module] = time;
-    localStorage.setItem('lastSync', JSON.stringify(lastSync));
-}
-
-const dataGather = cache.coMemo(async function(req) {
-    console.log('Data sync start at', moment().format());
-
-    // Store entityIds and domains for further use
-    if (req.entityId) {
-        setEntityId(req.entityId, { domain: req.domain });
-    }
-    else if (req.domain) {
-        addSellerDomain(req.domain);
-    }
-    
-    /* These requires MUST go here to avoid a circular require */
-    const kdp = require('./kdp.js'); // eslint-disable-line global-require
-    const sp = require('./sp.js'); // eslint-disable-line global-require
-
-    const oldSync = Math.max(..._.values(lastSync));
-    let newSync = 0;
-    for (const mod of [sp, kdp]) {
-        if (!mod.name) {
-            console.error('looking at nameless module', mod);
-            throw new Error('module has no name');
-        }
-
-        if (hasSyncedToday(mod.name))
-            continue;
-
-        try {
-            console.log('Data sync', mod.name, 'start at', moment().format());
-            await mod.dataGather(req);
-            newSync = Date.now();
-            setSyncTime(mod.name, newSync);
-        }
-        catch (ex) {
-            if (!handleServerErrors(ex, 'dataGather:'+mod.name))
-                ga.merror(ex);
-        }
-        console.log('Data sync', mod.name, 'finish at', moment().format());
-    }
-
-    cache.clear();
-
-    console.log('Data sync finish at', moment().format());
-    return Math.max(newSync, oldSync);
-}, { maxAge: 6 * constants.timespan.hour });
-
-function setEntityId(entityId, fields) {
-    if (isUnset(entityId)) {
-        throw new Error('Invalid arguments to setEntityId:' + JSON.stringify({ entityId, fields }));
-    }
-
-    const ids = JSON.parse(localStorage.getItem(entityIdKey)) || [];
-    let existing = ids.find(x => x.entityId == entityId);
-    if (existing) {
-        Object.assign(existing, fields);
-    }
-    else {
-        existing = Object.assign({ entityId }, fields);
-        ids.push(existing);
-    }
-    localStorage.setItem(entityIdKey, JSON.stringify(ids));
-    return existing;
-}
-
-function isUnset(str) {
-    return !str || str == 'undefined' || str == 'null';
-}
-
-function getEntityIds() {
-    const entityIds = JSON.parse(localStorage.getItem(entityIdKey)) || [];
-
-    // Fix up entityIds to ensure that every one has a stored domain
-    let ids = entityIds.map(item => {
-        if (typeof item == 'string') {
-            return { domain: 'advertising.amazon.com', entityId: item };
-        }
-        else if (!item.domain) {
-            item.domain = 'advertising.amazon.com';
-        }
-        return item;
-    });
-
-    ids = _.uniqBy(ids, 'entityId').filter(x => !isUnset(x.domain) && !isUnset(x.entityId));
-    ids.forEach(x => x.domain = x.domain.replace(/^ams\./, 'advertising.'));
-    localStorage.setItem(entityIdKey, JSON.stringify(ids));
-
-    return ids;
-}
-
-function addSellerDomain(domain) {
-    if (!domain) {
-        ga.merror("bad arguments to addSellerDomain:", JSON.stringify(domain));
-        return;
-    }
-
-    const ids = JSON.parse(localStorage.getItem(sellerDomainKey)) || [];
-    if (!ids.includes(domain)) {
-        ids.push(domain);
-        localStorage.setItem(sellerDomainKey, JSON.stringify(ids));
-    }
-}
-
-function getSellerDomains() {
-    return JSON.parse(localStorage.getItem(sellerDomainKey)) || [];
-}
-
-function setAlarm() {
-    chrome.alarms.onAlarm.addListener(ga.mcatch(alarm => {
-        if (alarm.name == alarmKey) {
-            dataGather({}).catch(ga.merror);
-        }
-    }));
-    return ga.mpromise(resolve => {
-        chrome.alarms.get(alarmKey, alarm => {
-            if (!alarm) {
-                const when = Date.now() + 1000;
-                chrome.alarms.create(alarmKey, {
-                    when,
-                    periodInMinutes: alarmPeriodMinutes,
-                });
-                console.log('set alarm ', alarmKey, 'for', moment(when).format());
-                resolve(true);
-            }
-            resolve(false);
-        });
-    });
+    const manifest = chrome.runtime.getManifest();
+    return { 
+        ok: true,
+        version: manifest.version,
+    };
 }
 
 function handleServerErrors(ex, desc) {
@@ -409,18 +245,8 @@ function parallelQueue(items, fn) {
 module.exports = {
     serviceUrl,
     messageListener,
-    getUser: cache.coMemo(getUser, { maxAge: 2 * constants.timespan.minute }),
     sayHello,
     handleServerErrors,
     ajax,
     parallelQueue,
-    cache,
-    startSession,
-    isUnset,
-    setEntityId,
-    getEntityIds,
-    addSellerDomain,
-    getSellerDomains,
-    hasSyncedToday,
-    setSyncTime,
 };
