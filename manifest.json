@@ -52,27 +52,6 @@
           ],
           "js": ["src/dashboard.js"],
           "css": ["css/inject.css"]
-      },
-      {
-          "matches": [
-              "https://advertising.amazon.ca/ads/campaign/*",       "https://advertising.amazon.ca/rta/campaign/*",
-              "https://advertising.amazon.co.uk/ads/campaign/*",    "https://advertising.amazon.co.uk/rta/campaign/*",
-              "https://advertising.amazon.com/ads/campaign/*",      "https://advertising.amazon.com/rta/campaign/*",
-              "https://advertising.amazon.de/ads/campaign/*",       "https://advertising.amazon.de/rta/campaign/*",
-              "https://advertising.amazon.fr/ads/campaign/*",       "https://advertising.amazon.fr/rta/campaign/*",
-              "https://advertising.amazon.ca/cm/sp/campaigns/*",
-              "https://advertising.amazon.co.uk/cm/sp/campaigns/*",
-              "https://advertising.amazon.com/cm/sp/campaigns/*",
-              "https://advertising.amazon.de/cm/sp/campaigns/*",
-              "https://advertising.amazon.fr/cm/sp/campaigns/*"
-          ],
-          "js": ["src/campaign.js"],
-          "css": ["css/inject.css"]
-      },
-      {
-          "matches": ["https://kdp.amazon.com/*"],
-          "js": ["src/kdp.js"],
-          "css": ["css/inject.css"]
       }
   ],
   "externally_connectable": {
