@@ -2,41 +2,6 @@ const bg = require('./common.js');
 const moment = require('moment');
 const ga = require('../common/ga.js');
 
-async function dataGather() {
-    try {
-        ga.beginLogBuffer('kdp.dataGather');
-        const time = Date.now();
-        const asins = await requestAsins({ time });
-        for (const asinArray of asins) {
-            let asin = null;
-            for (const item of asinArray) {
-                // valid ASINs are either Bxxxxxxxxx or 10-digit integers
-                if (item[0] != 'B' && isNaN(parseFloat(item[0])))
-                    continue;
-                asin = item.substring(0, 10);
-                break;
-            }
-            if (!asin) {
-                ga.mga('event', 'kdp-warning', 'asin-unknown-format', asinArray.toString());
-                continue;
-            }
-
-            console.log('request sales data for ASIN', asin);
-
-            const sales = await requestSalesData({ time, asin: asinArray });
-            const ku = await requestKuData({ time, asin: asinArray });
-
-            await bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
-                method: 'PUT',
-                jsonData: { sales, ku },
-            });
-        }
-    }
-    finally {
-        ga.endLogBuffer();
-    }
-}
-
 const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
 
 function requestPermission() {
@@ -117,19 +82,10 @@ function requestKuData({ time, asin }) {
     return kdpAjax(reportRequest);
 }
 
-const getSalesHistory = bg.cache.coMemo(function({ asin }) {
-    return bg.ajax(`${bg.serviceUrl}/api/kdp/${asin}/history`, {
-        method: 'GET',
-        responseType: 'json'
-    });
-});
-
 module.exports = {
     name: 'kdp',
-    dataGather,
     requestPermission,
     hasPermission,
-    getSalesHistory,
     requestAsins,
     requestSalesData,
     requestKuData,

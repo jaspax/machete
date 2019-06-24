@@ -32,12 +32,12 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.requestAdEntities(req);
         case 'sp.requestPortfolios':
             return sp.requestPortfolios(req);
+
+        // KDP actions
         case 'kdp.requestPermission':
             return kdp.requestPermission(req);
         case 'kdp.hasPermission':
             return kdp.hasPermission(req);
-        case 'kdp.getSalesHistory':
-            return kdp.getSalesHistory(req);
         case 'kdp.requestAsins':
             return kdp.requestAsins(req);
         case 'kdp.requestSalesData':
