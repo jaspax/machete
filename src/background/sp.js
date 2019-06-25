@@ -8,7 +8,7 @@ const spRta = require('./sp-rta.js');
 
 const collectorCache = {};
 
-async function getCollectorImpl(domain, entityId, scope, probeFn) {
+async function getCollector(domain, entityId, scope = 'general') {
     const cacheTag = `${entityId}:${scope}`;
     if (collectorCache[cacheTag]) {
         return collectorCache[cacheTag];
@@ -18,7 +18,7 @@ async function getCollectorImpl(domain, entityId, scope, probeFn) {
     const errors = [];
     for (const c of [spCm(domain, entityId), spRta(domain, entityId)]) {
         try {
-            await probeFn(c);
+            await c.probe();
             collector = c;
             break;
         }
@@ -46,10 +46,6 @@ async function getCollectorImpl(domain, entityId, scope, probeFn) {
     ga.mga('event', 'collector-domain', domain, collector.name);
 
     return collector;
-}
-
-function getCollector(domain, entityId) {
-    return getCollectorImpl(domain, entityId, 'general', c => c.probe());
 }
 
 async function requestLifetimeCampaignData({ entity }) {
@@ -82,8 +78,7 @@ function requestAdEntities({ domain }) {
     return collector.getAdEntities();
 }
 
-async function updateKeyword({ domain, entityId, entity, keywords, operation, dataValues }) {
-    const timestamp = Date.now();
+async function updateKeyword({ entity, keywords, operation, dataValues }) {
     if (!keywords || !keywords.length) {
         return { ok: [], fail: [] };
     }
@@ -91,34 +86,8 @@ async function updateKeyword({ domain, entityId, entity, keywords, operation, da
         keywords = [keywords];
     }
 
-    const probeKw = keywords.shift();
-
-    // We would like to use the fast path here, which is returned by
-    // getCollectorForKeywordUpdate, but doing so causes failures under
-    // conditions we don't entirely understand. Switching to the regular
-    // collector resolves this issue for most users.
-    //
-    // const collector = await getCollectorForKeywordUpdate(domain, entityId, { operation, dataValues, keyword: probeKw });
-    
-    // simultaneous compat with plugin and page. TODO: delete this later
-    if (!entity) {
-        entity = { domain, entityId };
-    }
-
     const collector = await getCollector(entity.domain, entity.entityId);
-
-    keywords.push(probeKw);
-    const result = await collector.updateKeywords({ keywords, operation, dataValues });
-
-    for (const page of bg.pageArray(result.ok, 50)) {
-        await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entity.entityId}?timestamp=${timestamp}`, {
-            method: 'PATCH',
-            jsonData: { operation, dataValues, keywordIds: page },
-            responseType: 'json',
-        });
-    }
-
-    return result;
+    return collector.updateKeywords({ keywords, operation, dataValues });
 }
 
 async function addKeywords({ entity, adGroupId, keywords }) {

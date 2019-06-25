@@ -1,6 +1,6 @@
 const bg = require('./common.js');
-const sp = require('./sp.js');
 const kdp = require('./kdp.js');
+const sp = require('./sp.js');
 
 bg.messageListener(function(req) { // eslint-disable-line complexity
     switch (req.action) {

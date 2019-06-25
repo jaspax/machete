@@ -257,5 +257,4 @@ module.exports = {
     pageArray,
     parallelQueue,
     sayHello,
-    serviceUrl,
 };
