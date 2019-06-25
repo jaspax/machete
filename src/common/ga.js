@@ -1,7 +1,3 @@
-const $ = require('jquery');
-const qw = require('qw');
-const constants = require('./constants.js');
-
 /* eslint-disable no-unused-vars */
 /* global __ga:false */
 
@@ -56,14 +52,6 @@ inpage(function () {
 // This is next to useless, but at least we'll get *something*
 window.onerror = merror;
 
-$(document).on('click.machete.ga', '[data-mclick]', function() {
-    const args = $(this).attr('data-mclick').split(' ');
-    let category = args[0];
-    let label = args[1] || this.id;
-    mclick(category, label);
-    return true;
-});
-
 function mga(...args) {
     inpage(function(...a) {
         __ga(...a);
@@ -99,10 +87,6 @@ function merror(...msg) {
 
     mga('exception', { exDescription: error.stack, exFatal: !ex.handled });
     console.error(ex.handled ? '[handled]' : '', error);
-}
-
-function mclick(category, label) {
-    mga('event', category, 'click', label);
 }
 
 function mcatch(fn) {
@@ -153,7 +137,7 @@ function revent(eventId, eventData) {
         };
         opts.headers.set('Content-Type', 'application/json');
 
-        window.fetch(`https://${constants.hostname}/evt`, opts).then(response => {
+        window.fetch(`https://${process.env.HOSTNAME}/evt`, opts).then(response => {
             if (!response.ok && response.status != 401) {
                 merror(`revent ${eventId} ${eventData} response error: ${response.status} ${response.statusText}`);
             }
@@ -164,44 +148,12 @@ function revent(eventId, eventData) {
     }
 }
 
-const consoleMethods = qw`log warn error`;
-let buffer = [];
-let tagStack = [];
-
-function beginLogBuffer(eventTag) {
-    tagStack.push(eventTag);
-    for (const method of consoleMethods) {
-        const orig = console[method];
-        console[method] = (...args) => {
-            buffer.push(args.map(item => typeof item == 'object' ? JSON.stringify(item) : item));
-            orig(...args);
-        };
-        console[method].orig = orig;
-    }
-}
-
-function endLogBuffer() {
-    if (!tagStack.length) {
-        console.warn('Ignoring end log buffering with empty tag stack');
-        return;
-    }
-
-    revent('clientLog', { tag: tagStack.pop(), messages: buffer });
-    buffer = [];
-    for (const method of consoleMethods) {
-        console[method] = console[method].orig;
-    }
-}
-
 module.exports = {
     mga,
     merror,
-    mclick,
     mcatch,
     mpromise,
     revent,
     errorToString, 
     errorToObject, 
-    beginLogBuffer,
-    endLogBuffer,
 };

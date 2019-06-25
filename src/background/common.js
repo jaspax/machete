@@ -1,8 +1,8 @@
-const constants = require('../common/constants.js');
 const ga = require('../common/ga.js');
 const qu = require('async/queue');
-const serviceUrl = `https://${constants.hostname}`;
 const sleep = require('sleep-promise').default;
+
+const serviceUrl = `https://${process.env.HOSTNAME}`;
 
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {
@@ -242,11 +242,20 @@ function parallelQueue(items, fn) {
     });
 }
 
+function* pageArray(array, step) {
+    if (!array || !array.length)
+        return;
+    for (let index = 0; index < array.length; index += step) {
+        yield array.slice(index, index + step);
+    }
+}
+
 module.exports = {
-    serviceUrl,
-    messageListener,
-    sayHello,
-    handleServerErrors,
     ajax,
+    handleServerErrors,
+    messageListener,
+    pageArray,
     parallelQueue,
+    sayHello,
+    serviceUrl,
 };

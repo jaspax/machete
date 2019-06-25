@@ -1,8 +1,6 @@
 const _ = require('lodash');
-
 const ga = require('../common/ga.js');
 const bg = require('./common.js');
-const common = require('../common/common.js');
 const spData = require('../common/sp-data.js');
 
 module.exports = function(domain, entityId) {
@@ -65,7 +63,7 @@ module.exports = function(domain, entityId) {
         const allStatus = {};
 
         // Chop the campaignId list into bite-sized chunks
-        for (const chunk of common.pageArray(campaignIds, 20)) {
+        for (const chunk of bg.pageArray(campaignIds, 20)) {
             const data = await bg.ajax(`https://${domain}/api/rta/campaign-status`, {
                 method: 'GET',
                 queryData: {

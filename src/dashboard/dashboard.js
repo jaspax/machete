@@ -1,6 +1,5 @@
 const $ = require('jquery');
 const ga = require('../common/ga.js');
-const constants = require('../common/constants.js');
 const spData = require('../common/sp-data');
 
 amsPageInit();
@@ -73,9 +72,9 @@ function amsPageInit() {
 
 function dashboardLink(entityId, campaignId, linkClass) {
     const query = campaignId ? `entityId=${entityId}&ckey=id&cval=${spData.stripPrefix(campaignId)}` : `entityId=${entityId}`;
-    return $(`<a class="machete-dashboard-link ${linkClass}" target="_blank" href="https://${constants.hostname}/dashboard/highlights?${query}">
+    return $(`<a class="machete-dashboard-link ${linkClass}" target="_blank" href="https://${process.env.HOSTNAME}/dashboard/highlights?${query}">
         <span>View on Machete</span>
-        <img src="https://${constants.hostname}/static/images/external-link.svg" />
+        <img src="https://${process.env.HOSTNAME}/static/images/external-link.svg" />
     </a>`);
 }
 

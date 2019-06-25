@@ -1,6 +1,5 @@
 const bg = require('./common.js');
 const _ = require('lodash');
-const common = require('../common/common.js');
 const ga = require('../common/ga.js');
 const spData = require('../common/sp-data.js');
 
@@ -111,7 +110,7 @@ async function updateKeyword({ domain, entityId, entity, keywords, operation, da
     keywords.push(probeKw);
     const result = await collector.updateKeywords({ keywords, operation, dataValues });
 
-    for (const page of common.pageArray(result.ok, 50)) {
+    for (const page of bg.pageArray(result.ok, 50)) {
         await bg.ajax(`${bg.serviceUrl}/api/keywordData/${entity.entityId}?timestamp=${timestamp}`, {
             method: 'PATCH',
             jsonData: { operation, dataValues, keywordIds: page },
