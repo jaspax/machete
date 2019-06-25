@@ -5,7 +5,8 @@
         "es6": true
     },
     "parserOptions": {
-        "ecmaFeatures": { "jsx": true },
+        "sourceType": "module",
+        "ecmaFeatures": { "modules": true },
         "ecmaVersion": 8
     },
     "globals": {
@@ -91,7 +92,6 @@
         "id-match": "error",
         "indent": "off",
         "init-declarations": "error",
-        "jsx-quotes": "error",
         "key-spacing": "error",
         "keyword-spacing": "error",
         "line-comment-position": "off",
@@ -272,7 +272,6 @@
         "yoda": [
             "error",
             "never"
-        ],
-        "react/jsx-no-target-blank": "off"
+        ]
     }
 }
