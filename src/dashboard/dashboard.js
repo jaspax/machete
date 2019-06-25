@@ -1,6 +1,5 @@
 const $ = require('jquery');
 const ga = require('../common/ga.js');
-const common = require('../common/common.js');
 const constants = require('../common/constants.js');
 const spData = require('../common/sp-data');
 
@@ -69,24 +68,6 @@ function amsPageInit() {
     }
 
     window.setInterval(addDashboardLinks, 250);
-
-    let brandName = null;
-    const brandNameDiv = $('#currentBrandName');
-    if (brandNameDiv.length)
-        brandName = brandNameDiv[0].innerText;
-    if (!brandName) {
-        const accountLink = $('.kdpUserBarLinksRight').find('a').first();
-        if (accountLink.length)
-            brandName = accountLink[0].innerText.replace('Hello ', '');
-    }
-    if (brandName) {
-        common.bgMessage({
-            action: 'sp.setBrandName',
-            entityId: getEntityId(),
-            brandName,
-        }).catch(ga.mcatch);
-    }
-
     return true;
 }
 
@@ -99,48 +80,53 @@ function dashboardLink(entityId, campaignId, linkClass) {
 }
 
 function addDashboardLinks() {
-    for (const link of $('a[data-e2e-id]')) {
-        if ($(link).attr('data-machete-link'))
-            continue;
+    try {
+        for (const link of $('a[data-e2e-id]')) {
+            if ($(link).attr('data-machete-link'))
+                continue;
 
-        try {
-            const entityId = getEntityId(link.href);
-            const campaignId = getCampaignId(link.href);
+            try {
+                const entityId = getEntityId(link.href);
+                const campaignId = getCampaignId(link.href);
 
-            if (entityId && campaignId) {
-                $(link).after([dashboardLink(entityId, campaignId, 'dashboard-small')]);
+                if (entityId && campaignId) {
+                    $(link).after([dashboardLink(entityId, campaignId, 'dashboard-small')]);
+                }
+                $(link).attr('data-machete-link', true);
             }
-            $(link).attr('data-machete-link', true);
+            catch (ex) {
+                console.log(`Couldn't discover entityId/campaignId for ${link} (probably expected)`);
+            }
         }
-        catch (ex) {
-            console.log(`Couldn't discover entityId/campaignId for ${link} (probably expected)`);
+
+        // there should typically only be 1 headline, but just in case...
+        const entityId = getEntityId();
+        for (const headline of $("[data-e2e-id='headline']")) {
+            if ($(headline).attr('data-machete-link'))
+                continue;
+
+            try {
+                const campaignId = getCampaignId();
+
+                if (entityId && campaignId) {
+                    $(headline).append(dashboardLink(entityId, campaignId, 'dashboard-headline'));
+                }
+                $(headline).attr('data-machete-link', true);
+            }
+            catch (ex) {
+                console.log(`Couldn't discover entityId/campaignId for headline`);
+            }
+        }
+
+        for (const title of $("[data-e2e-id='title']")) {
+            if ($(title).attr('data-machete-link'))
+                continue;
+
+            $(title).append(dashboardLink(entityId, null, 'dashboard-headline'));
+            $(title).attr('data-machete-link', true);
         }
     }
-
-    // there should typically only be 1 headline, but just in case...
-    const entityId = getEntityId();
-    for (const headline of $("[data-e2e-id='headline']")) {
-        if ($(headline).attr('data-machete-link'))
-            continue;
-
-        try {
-            const campaignId = getCampaignId();
-
-            if (entityId && campaignId) {
-                $(headline).append(dashboardLink(entityId, campaignId, 'dashboard-headline'));
-            }
-            $(headline).attr('data-machete-link', true);
-        }
-        catch (ex) {
-            console.log(`Couldn't discover entityId/campaignId for headline`);
-        }
-    }
-
-    for (const title of $("[data-e2e-id='title']")) {
-        if ($(title).attr('data-machete-link'))
-            continue;
-
-        $(title).append(dashboardLink(entityId, null, 'dashboard-headline'));
-        $(title).attr('data-machete-link', true);
+    catch (ex) {
+        ga.merror(ex);
     }
 }

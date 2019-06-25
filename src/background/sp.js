@@ -142,10 +142,6 @@ async function updateCampaigns({ entity, campaigns, operation, dataValues }) {
     return result;
 }
 
-function setBrandName({ entityId, brandName }) {
-    bg.setEntityId(entityId, { name: brandName });
-}
-
 async function requestPortfolios({ entity }) {
     const { domain, entityId } = entity;
     const collector = await getCollector(domain, entityId);
@@ -162,7 +158,6 @@ module.exports = {
     requestKeywordData,
     requestLifetimeCampaignData,
     requestPortfolios,
-    setBrandName,
     updateCampaigns,
     updateKeyword,
 };

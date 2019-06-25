@@ -8,9 +8,6 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
         case 'sayHello':
             return bg.sayHello(req);
 
-        case 'sp.setBrandName':
-            return sp.setBrandName(req);
-
         // Actions used by the Machete Dashboard integration
         case 'sp.updateKeyword':
             return sp.updateKeyword(req);
