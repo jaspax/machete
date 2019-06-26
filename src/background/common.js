@@ -38,7 +38,7 @@ function messageHandler(handler) {
             const begin = performance.now();
 
             try {
-                const data = await handler(req, sender);
+                const data = await handler(req, sender) || '';
                 const response = { data };
                 console.log('Success handling message:', req, "response", response);
                 sendResponse(response);
