@@ -39,7 +39,7 @@ function messageHandler(handler) {
 
             try {
                 let data = await handler(req, sender);
-                if (data === undefined)
+                if (typeof data == 'undefined')
                     data = ''; // must return a defined falsy value!
 
                 const response = { data };
