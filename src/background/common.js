@@ -38,7 +38,10 @@ function messageHandler(handler) {
             const begin = performance.now();
 
             try {
-                const data = await handler(req, sender) || '';
+                let data = await handler(req, sender);
+                if (data === undefined)
+                    data = ''; // must return a defined falsy value!
+
                 const response = { data };
                 console.log('Success handling message:', req, "response", response);
                 sendResponse(response);
