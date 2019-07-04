@@ -83,8 +83,8 @@ async function authClient() {
     const codes = JSON.parse(data);
     const oauthClient = new google.auth.OAuth2(codes.client_id, codes.client_secret, 'urn:ietf:wg:oauth:2.0:oob');
     oauthClient.on('tokens', async tokens => {
-        console.log('Storing new tokens in ./new-tokens, please save these in ../uploader-tokens');
-        await new Promise((resolve, reject) => fs.writeFile('new-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
+        console.log('Storing new tokens in ../new-tokens, please save these in ../uploader-tokens');
+        await new Promise((resolve, reject) => fs.writeFile('../new-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
     });
     return oauthClient;
 }
