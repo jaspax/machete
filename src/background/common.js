@@ -177,16 +177,9 @@ async function ajax(url, opts) {
         try {
             const response = await window.fetch(url, init);
             if (!response.ok) {
-                if (response.status == 403) {
-                    // sometimes a 403 indicates that we're querying too fast for
-                    // poor Amazon's servers. So we chill out for a generous 5s,
-                    // then try again.
-                    const text = await response.text();
-                    console.log(response.status, response.statusText, text);
-                    if (text.toLowerCase().includes("frequently")) { // Actual Amazon message is "Access too frequently!"
-                        await sleep(5000);
-                        continue;
-                    }
+                if (await shouldRetry(response)) {
+                    await sleep(5000);
+                    continue;
                 }
 
                 throw new Error(`${response.status} ${response.statusText}`);
@@ -216,6 +209,17 @@ async function ajax(url, opts) {
             throw ex;
         }
     }
+}
+
+async function shouldRetry(response) {
+    if (response.status == 429) { // 429 Too Many Requests
+        return true;
+    }
+    if (response.status == 403) { // 403 Access too frequently!
+        const text = await response.text();
+        return text.toLowerCase().includes("frequently");
+    }
+    return false;
 }
 
 function parallelQueue(items, fn) {
