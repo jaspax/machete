@@ -2,6 +2,7 @@ const _ = require('lodash');
 const moment = require('frozen-moment');
 require('moment-timezone');
 
+const ga = require('../common/ga');
 const bg = require('./common.js');
 const spData = require('../common/sp-data.js');
 
@@ -255,8 +256,8 @@ module.exports = function(domain, entityId) {
                 result.fail.push(...response.failedKeywordIds.map(spData.stripPrefix));
             }
             catch (ex) {
-                console.error(ex);
-                result.fail.push(...list);
+                ga.merror(ex);
+                result.fail.push(...list.map(kw => spData.stripPrefix(kw.id)));
             }
         });
 
@@ -265,24 +266,30 @@ module.exports = function(domain, entityId) {
 
     async function updateCampaigns({ campaigns, operation, dataValues }) {
         const result = { ok: [], fail: [] };
-        const response = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
-            method: 'PATCH',
-            query: { entityId },
-            jsonData: campaigns.map(x => {
-                const item = { id: formatId(x.campaignId), programType: "SP" };
-                if (operation == 'PAUSE')
-                    item.state = 'PAUSED';
-                if (operation == 'ENABLE')
-                    item.state = 'ENABLED';
-                if (operation == 'UPDATE')
-                    item.budget = { millicents: dataValues.budget * 100000, currencyCode, budgetType: x.budgetType };
-                return item;
-            }),
-            responseType: 'json',
-        });
+        try {
+            const response = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+                method: 'PATCH',
+                query: { entityId },
+                jsonData: campaigns.map(x => {
+                    const item = { id: formatId(x.campaignId), programType: "SP" };
+                    if (operation == 'PAUSE')
+                        item.state = 'PAUSED';
+                    if (operation == 'ENABLE')
+                        item.state = 'ENABLED';
+                    if (operation == 'UPDATE')
+                        item.budget = { millicents: dataValues.budget * 100000, currencyCode, budgetType: x.budgetType };
+                    return item;
+                }),
+                responseType: 'json',
+            });
 
-        result.ok.push(...response.updatedCampaigns.map(x => spData.stripPrefix(x.id)));
-        result.fail.push(...response.failedCampaigns.map(x => spData.stripPrefix(x.id)));
+            result.ok.push(...response.updatedCampaigns.map(x => spData.stripPrefix(x.id)));
+            result.fail.push(...response.failedCampaigns.map(x => spData.stripPrefix(x.id)));
+        }
+        catch (ex) {
+            ga.merror(ex);
+            result.fail.push(...campaigns.map(x => x.campaignId));
+        }
         return result;
     }
 
