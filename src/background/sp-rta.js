@@ -2,6 +2,8 @@ const _ = require('lodash');
 const ga = require('../common/ga.js');
 const bg = require('./common.js');
 const spData = require('../common/sp-data.js');
+const moment = require('moment');
+require('moment-timezone');
 
 module.exports = function(domain, entityId) {
     function formatId(id) {
@@ -39,8 +41,8 @@ module.exports = function(domain, entityId) {
             queryData: {
                 entityId,
                 status: 'Customized',
-                reportStartDate: date,
-                reportEndDate: date,
+                reportStartDate: moment.tz(date, 'UTC').unix(),
+                reportEndDate: moment.tz(date, 'UTC').unix(),
             },
             responseType: 'json',
         });

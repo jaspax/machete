@@ -91,7 +91,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getDailyCampaignData(date) {
-        const utcDay = moment(date).tz('UTC');
+        const utcDay = moment.tz(date, 'UTC');
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
