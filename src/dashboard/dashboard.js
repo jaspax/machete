@@ -100,7 +100,9 @@ function addDashboardLinks() {
 
         // there should typically only be 1 headline, but just in case...
         const entityId = getEntityId();
-        for (const headline of $("[data-e2e-id='headline']")) {
+        let headlines = Array.from($("[data-e2e-id='headline']"));
+        headlines = headlines.concat(...Array.from($("[data-e2e-id='aac-page-name']")));
+        for (const headline of headlines) {
             if ($(headline).attr('data-machete-link'))
                 continue;
 
