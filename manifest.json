@@ -55,7 +55,11 @@
       }
   ],
   "externally_connectable": {
-      "matches": ["https://machete-app.com/*", "https://beta.machete-app.com/*"]
+      "matches": [
+          "https://machete-app.com/*", 
+          "https://beta.machete-app.com/*", 
+          "https://www.machete-app.com/*"
+      ]
   },
   "content_security_policy": "script-src 'self' https://www.google-analytics.com; object-src 'self'",
   "web_accessible_resources": ["images/**"]
