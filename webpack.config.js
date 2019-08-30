@@ -12,7 +12,7 @@ const defaultEnv = {
 module.exports = (env = defaultEnv) => {
     const versionTag = env.release ? 'release' : 'beta';
     let define = null;
-    let hostname = 'machete-app.com';
+    let hostname = 'www.machete-app.com';
     if (env.release) {
         define = new webpack.DefinePlugin({
             'process.env.MACHETE_LOCAL': JSON.stringify(false),
