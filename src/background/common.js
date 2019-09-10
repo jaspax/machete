@@ -15,14 +15,26 @@ chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
 }));
 
 function messageListener(handler) {
-    chrome.runtime.onMessage.addListener(messageHandler(handler));
-    chrome.runtime.onMessageExternal.addListener(messageHandler(handler));
+    const messageHandler = createMessageHandler(handler);
+
+    chrome.runtime.onMessage.addListener(messageHandler);
+    chrome.runtime.onMessageExternal.addListener(messageHandler);
+    chrome.runtime.onConnect.addListener(port => {
+        port.onMessage.addListener(req => {
+            messageHandler(req, port, res => port.postMessage(Object.assign(res, { msgId: req.msgId })));
+        });
+    });
+    chrome.runtime.onConnectExternal.addListener(port => {
+        port.onMessage.addListener(req => {
+            messageHandler(req, port, res => port.postMessage(Object.assign(res, { msgId: req.msgId })));
+        });
+    });
 }
 
-function messageHandler(handler) {
+function createMessageHandler(handler) {
     return ga.mcatch((req, sender, sendResponse) => {
         console.log('Handling message:', req);
-        if (sender.tab.incognito) {
+        if (sender.tab && sender.tab.incognito) {
             sendResponse({ 
                 error: {
                     handled: 'incognito',
@@ -33,7 +45,9 @@ function messageHandler(handler) {
         }
 
         async function f() {
-            chrome.pageAction.show(sender.tab.id);
+            if (sender.tab)
+                chrome.pageAction.show(sender.tab.id);
+
             ga.mga('event', 'background-message', req.action);
             const begin = performance.now();
 
