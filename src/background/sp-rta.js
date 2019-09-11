@@ -113,7 +113,7 @@ module.exports = function(domain, entityId) {
          */
         const asin = _.get(data, 'aaData[0].asin');
         if (!asin) {
-            ga.mlog('asin not found in response:', JSON.stringify(data));
+            ga.warn('asin not found in response:', JSON.stringify(data));
         }
 
         return asin;
@@ -158,8 +158,7 @@ module.exports = function(domain, entityId) {
                 }
             }
             catch (ex) {
-                ga.mlog(ex);
-                // console.error(ex);
+                ga.warn(ex);
                 result.fail.push(kw.id);
             }
         });
@@ -200,8 +199,7 @@ module.exports = function(domain, entityId) {
     }
 
     function getPortfolios() {
-        ga.mlog('Unimplemented: rta.getPortfolios');
-        // console.warn('Unimplemented: rta.getPortfolios');
+        ga.warn('Unimplemented: rta.getPortfolios');
         return [];
     }
 

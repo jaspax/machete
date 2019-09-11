@@ -46,7 +46,7 @@ function messageListener(handler) {
 
 function createMessageHandler(handler) {
     return ga.mcatch((req, sender, sendResponse) => {
-        ga.mlog('Handling message:', req);
+        ga.debug('Handling message:', req);
         if (sender.tab && sender.tab.incognito) {
             sendResponse({ 
                 error: {
@@ -70,7 +70,7 @@ function createMessageHandler(handler) {
                     data = ''; // must return a defined falsy value!
 
                 const response = { data };
-                ga.mlog('Success handling message:', req, "response", response);
+                ga.debug('Success handling message:', req, "response", response);
                 sendResponse(response);
             }
             catch (error) {
@@ -83,7 +83,7 @@ function createMessageHandler(handler) {
                 const handled = handleServerErrors(error, req.action);
                 if (handled) {
                     response.error.handled = handled;
-                    ga.mlog(error); // console.warn
+                    ga.warn(error);
                 }
                 else {
                     ga.merror(req, error);

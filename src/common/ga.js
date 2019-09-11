@@ -83,11 +83,10 @@ function merror(...msg) {
     // condition is more important in the cases where we don't actually capture
     // an exception but some other kind of message.
     let errstr = msg.map(errorToString).join(' ');
-    let error = new Error(errstr);
+    let err = new Error(errstr);
 
     mga('exception', { exDescription: error.stack, exFatal: !ex.handled });
-    mlog(error);
-    console.error(ex.handled ? '[handled]' : '', error);
+    error(ex.handled ? '[handled]' : '', err);
 }
 
 function mcatch(fn) {
@@ -150,8 +149,7 @@ function revent(eventId, eventData) {
 }
 
 const logListeners = [];
-function mlog(...msgs) {
-    console.log(...msgs);
+function mlog(msgs) {
     for (const listener of logListeners) {
         try {
             listener.log(msgs);
@@ -160,6 +158,26 @@ function mlog(...msgs) {
             console.error(`exception in log listener ${listener} msgs ${msgs} ex ${ex}`);
         }
     }
+}
+
+function debug(...msgs) {
+    console.log(...msgs);
+    mlog({ level: 'debug', msgs });
+}
+
+function info(...msgs) {
+    console.log(...msgs);
+    mlog({ level: 'info', msgs });
+}
+
+function warn(...msgs) {
+    console.warn(...msgs);
+    mlog({ level: 'warn', msgs });
+}
+
+function error(...msgs) {
+    console.error(...msgs);
+    mlog({ level: 'error', msgs });
 }
 
 function addLogListener(listener) {
@@ -179,8 +197,11 @@ module.exports = {
     mcatch,
     merror,
     mga,
-    mlog,
     mpromise,
     removeLogListener,
     revent,
+    debug,
+    info,
+    warn,
+    error,
 };

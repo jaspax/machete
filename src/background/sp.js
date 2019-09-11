@@ -32,17 +32,17 @@ async function getCollector(domain, entityId, scope = 'general') {
             }
 
             errors.push(`${c.name}: ${ga.errorToString(ex)}`);
-            ga.mlog('Probe failed for', domain, entityId, c.name, ga.errorToString(ex));
+            ga.debug('Probe failed for', domain, entityId, c.name, ga.errorToString(ex));
         }
     }
     if (!collector) {
-        ga.mlog(`No valid collectors for ${domain} ${cacheTag}: ${errors}`);
+        ga.warn(`No valid collectors for ${domain} ${cacheTag}: ${errors}`);
         ga.mga('event', 'no-valid-collector', cacheTag, errors.join(', '));
         throw new Error(`No valid collectors for ${domain}`);
     }
 
     collectorCache[cacheTag] = collector;
-    ga.mlog('Using collector', domain, cacheTag, collector.name);
+    ga.debug('Using collector', domain, cacheTag, collector.name);
     ga.mga('event', 'collector-domain', domain, collector.name);
 
     return collector;
