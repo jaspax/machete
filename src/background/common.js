@@ -14,26 +14,39 @@ chrome.pageAction.onClicked.addListener(ga.mcatch(() => {
     chrome.tabs.create({ url: `${serviceUrl}/dashboard` });
 }));
 
+function handlePortConnect(messageHandler) {
+    return port => {
+        if (port.name == 'machete.action') {
+            port.onMessage.addListener(req => {
+                messageHandler(req, port, res => port.postMessage(Object.assign(res, { msgId: req.msgId })));
+            });
+        }
+        if (port.name == 'machete.log') {
+            const listener = {
+                log(msg) {
+                    port.postMessage(msg);
+                }
+            };
+            ga.addLogListener(listener);
+            port.onDisconnect.addListener(() => {
+                ga.removeLogListener(listener);
+            });
+        }
+    };
+}
+
 function messageListener(handler) {
     const messageHandler = createMessageHandler(handler);
 
     chrome.runtime.onMessage.addListener(messageHandler);
     chrome.runtime.onMessageExternal.addListener(messageHandler);
-    chrome.runtime.onConnect.addListener(port => {
-        port.onMessage.addListener(req => {
-            messageHandler(req, port, res => port.postMessage(Object.assign(res, { msgId: req.msgId })));
-        });
-    });
-    chrome.runtime.onConnectExternal.addListener(port => {
-        port.onMessage.addListener(req => {
-            messageHandler(req, port, res => port.postMessage(Object.assign(res, { msgId: req.msgId })));
-        });
-    });
+    chrome.runtime.onConnect.addListener(handlePortConnect(messageHandler));
+    chrome.runtime.onConnectExternal.addListener(handlePortConnect(messageHandler));
 }
 
 function createMessageHandler(handler) {
     return ga.mcatch((req, sender, sendResponse) => {
-        console.log('Handling message:', req);
+        ga.mlog('Handling message:', req);
         if (sender.tab && sender.tab.incognito) {
             sendResponse({ 
                 error: {
@@ -57,7 +70,7 @@ function createMessageHandler(handler) {
                     data = ''; // must return a defined falsy value!
 
                 const response = { data };
-                console.log('Success handling message:', req, "response", response);
+                ga.mlog('Success handling message:', req, "response", response);
                 sendResponse(response);
             }
             catch (error) {
@@ -70,7 +83,7 @@ function createMessageHandler(handler) {
                 const handled = handleServerErrors(error, req.action);
                 if (handled) {
                     response.error.handled = handled;
-                    console.warn(error);
+                    ga.mlog(error); // console.warn
                 }
                 else {
                     ga.merror(req, error);

@@ -86,13 +86,14 @@ function merror(...msg) {
     let error = new Error(errstr);
 
     mga('exception', { exDescription: error.stack, exFatal: !ex.handled });
+    mlog(error);
     console.error(ex.handled ? '[handled]' : '', error);
 }
 
 function mcatch(fn) {
     return function(...args) {
         try {
-            return fn.apply(this, args);
+            return fn.apply(this, args); // eslint-disable-line no-invalid-this
         }
         catch (ex) {
             merror(ex);
@@ -148,12 +149,38 @@ function revent(eventId, eventData) {
     }
 }
 
+const logListeners = [];
+function mlog(...msgs) {
+    console.log(...msgs);
+    for (const listener of logListeners) {
+        try {
+            listener.log(msgs);
+        }
+        catch (ex) {
+            console.error(`exception in log listener ${listener} msgs ${msgs} ex ${ex}`);
+        }
+    }
+}
+
+function addLogListener(listener) {
+    logListeners.push(listener);
+}
+
+function removeLogListener(listener) {
+    const i = logListeners.indexOf(listener);
+    if (i >= 0)
+        logListeners.splice(i);
+}
+
 module.exports = {
-    mga,
-    merror,
-    mcatch,
-    mpromise,
-    revent,
-    errorToString, 
+    addLogListener,
     errorToObject, 
+    errorToString, 
+    mcatch,
+    merror,
+    mga,
+    mlog,
+    mpromise,
+    removeLogListener,
+    revent,
 };

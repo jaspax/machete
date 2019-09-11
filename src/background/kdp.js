@@ -39,7 +39,7 @@ async function kdpAjax(request) {
         responseType: 'json',
     });
     if (response.exception) {
-        console.warn("KDP error for request body", request);
+        ga.mlog(`KDP error for request body ${request}`); // console.warn
         const ex = new Error("KDP reported an unrecoverable error");
         ex.url = kdpUrl;
         ex.formData = JSON.stringify(request);
