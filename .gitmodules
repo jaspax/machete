@@ -1,0 +1,3 @@
+[submodule "src/machete-shared"]
+	path = src/shared
+	url = git@gitlab.com:jaspax/machete-shared.git
