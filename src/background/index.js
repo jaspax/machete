@@ -1,6 +1,7 @@
 const bg = require('./common.js');
 const kdp = require('./kdp.js');
 const sp = require('./sp.js');
+const data = require('./data-gather');
 
 bg.messageListener(function(req) { // eslint-disable-line complexity
     switch (req.action) {
@@ -41,6 +42,10 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return kdp.requestSalesData(req);
         case 'kdp.requestKuData':
             return kdp.requestKuData(req);
+
+        // data gather everything
+        case 'dataGather':
+            return data.dataGather(req.entities);
 
         default:
             throw new Error('unknown action: ' + req.action);
