@@ -1,8 +1,7 @@
-const _ = require('lodash');
 const moment = require('moment');
 require('moment-timezone');
 
-const ga = require('../shared/ga')(process.env.ANALYTICS_ID, process.env.HOSTNAME);
+const ga = require('../common/ga');
 const kdp = require('./kdp');
 const sp = require('./sp');
 const spData = require('../shared/sp-data');
@@ -12,37 +11,22 @@ const { stripPrefix, isPausable, isEnded, isAuthorEntity, parallelQueue } = requ
 
 const lastGatherKey = 'lastDataGather';
 
-let inProgress = false;
-let lastDataGather = null;
-
-let lastStatus = {
-    inProgress,
-    lastDataGather,
-};
-const observers = [];
 let statusBuffer = [];
 let statusBufferTag = '';
 
 const kdpEntity = { entityId: 'KDP', name: 'KDP' };
 
+function setLastDataGather(timestamp) {
+    return cacheSet(lastGatherKey, timestamp);
+}
+
+function getLastDataGather() {
+    return cacheGet(lastGatherKey);
+}
+
 function writeStatus(entity, msg, error) {
-    lastStatus = { 
-        lastDataGather,
-        inProgress, 
-        entity, 
-        msg,
-        error
-    };
-    console.log('Status log:', lastStatus);
     statusBuffer.push({ timestamp: new Date(), msg, error });
-    observers.forEach(x => {
-        try {
-            x.dataGatherStatus(lastStatus);
-        }
-        catch (ex) {
-            ga.merror(ex);
-        }
-    });
+    ga.info('data-gather', entity, msg, error);
 }
 
 function writeError(entity, error) {
@@ -64,65 +48,7 @@ function endStatusBuffer() {
     statusBufferTag = '';
 }
 
-async function dataGather(entities, currentEntity) { // eslint-disable-line max-statements
-    if (inProgress) {
-        console.log('Ignoring data sync while sync is in progress');
-        return;
-    }
-    inProgress = true;
-    lastDataGather = await cacheGet(lastGatherKey);
-
-    try {
-        // if we are responding to a client request, always sync that entityId first
-        if (currentEntity) {
-            entities = _.uniqBy([currentEntity, ...entities], 'entityId');
-        }
-        entities = entities.filter(x => x && x.entityId); // sanity check, in case we somehow have a bad entity being pushed down
-
-        await innerDataGather(entities);
-        lastDataGather = new Date();
-        await cacheSet(lastGatherKey, lastDataGather);
-    }
-    finally {
-        inProgress = false;
-        writeStatus(null, "Finished!");
-    }
-}
-
-function addDataGatherObserver(obs) {
-    const i = observers.indexOf(obs);
-    if (i < 0)
-        observers.push(obs);
-    obs.dataGatherStatus(lastStatus);
-}
-
-function removeDataGatherObserver(obs) {
-    const i = observers.indexOf(obs);
-    if (i >= 0)
-        observers.splice(i, 1);
-}
-
-async function innerDataGather(entities) {
-    console.log('dataGather', entities);
-    if (await kdp.hasPermission()) {
-        try {
-            startStatusBuffer(kdpEntity);
-            await dataGatherKdp();
-        }
-        catch (ex) {
-            writeError(kdpEntity, ex);
-        }
-        finally {
-            endStatusBuffer();
-        }
-    }
-
-    for (const entity of entities) {
-        await dataGatherEntity(entity);
-    }
-}
-
-const dataGatherEntity = cacheable(async function(entity) {
+const dataGather = cacheable(async function(entity) {
     if (isAuthorEntity(entity.entityId)) {
         return true;
     }
@@ -171,7 +97,7 @@ const dataGatherEntity = cacheable(async function(entity) {
     }
 
     return false;
-}, { name: 'dataGatherEntity', expireHours: 8, defaultValue: false });
+}, { name: 'dataGather', expireHours: 2, defaultValue: false });
 
 function shouldSyncKeywords(summary) {
     if (!summary.latestKeywordTimestamp)
@@ -214,7 +140,7 @@ const dataGatherKdp = cacheable(async function() {
             writeStatus(kdpEntity, `Error getting sales data for ASIN ${asinStr}`, ex);
         }
     });
-}, { name: 'dataGatherKdp', expireHours: 6, defaultValue: false });
+}, { name: 'dataGatherKdp', expireHours: 2, defaultValue: false });
 
 async function syncCampaignData(entity) {
     let lifetimeData = [];
@@ -299,9 +225,9 @@ async function syncKeywordData(entity, summary, adGroupId) {
 }
 
 module.exports = {
-    addDataGatherObserver,
     dataGather,
-    dataGatherEntity,
-    removeDataGatherObserver,
+    dataGatherKdp,
+    setLastDataGather,
+    getLastDataGather,
     syncKeywordData,
 };

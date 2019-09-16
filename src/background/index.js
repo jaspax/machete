@@ -43,9 +43,18 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
         case 'kdp.requestKuData':
             return kdp.requestKuData(req);
 
-        // data gather everything
-        case 'dataGather':
-            return data.dataGather(req.entities);
+        // Data gathering
+        case 'data.dataGather':
+            return data.dataGather(req.entity);
+        case 'data.dataGatherKdp':
+            return data.dataGatherKdp();
+        case 'data.syncKeywordData':
+            return data.syncKeywordData(req.entity, req.campaign, req.adGroupId);
+        case 'data.setLastDataGather':
+            return data.setLastDataGather(req.timestamp);
+        case 'data.getLastDataGather':
+            return data.getLastDataGather();
+
 
         default:
             throw new Error('unknown action: ' + req.action);
