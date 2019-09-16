@@ -2,7 +2,7 @@ const _ = require('lodash');
 const moment = require('moment');
 require('moment-timezone');
 
-const gafn = require('../shared/ga');
+const ga = require('../shared/ga')(process.env.ANALYTICS_ID, process.env.HOSTNAME);
 const kdp = require('./kdp');
 const sp = require('./sp');
 const spData = require('../shared/sp-data');
@@ -10,7 +10,6 @@ const { cacheable, cacheSet, cacheGet } = require('../shared/cache');
 const { handleServerErrors } = require('../shared/network');
 const { stripPrefix, isPausable, isEnded, isAuthorEntity, parallelQueue } = require('../shared/data-tools');
 
-const ga = gafn(process.env.ANALYTICS_ID, process.env.HOSTNAME);
 const lastGatherKey = 'lastDataGather';
 
 let inProgress = false;

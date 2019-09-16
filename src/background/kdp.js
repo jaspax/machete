@@ -5,11 +5,11 @@ const ga = require('../common/ga.js');
 const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
 
 function requestPermission() {
-    return ga.mpromise(resolve => chrome.permissions.request(kdpPermissions, resolve));
+    return new Promise(resolve => chrome.permissions.request(kdpPermissions, resolve));
 }
 
 function hasPermission() {
-    return ga.mpromise(resolve => chrome.permissions.contains(kdpPermissions, resolve));
+    return new Promise(resolve => chrome.permissions.contains(kdpPermissions, resolve));
 }
 
 function baseRequest(time) {

@@ -103,7 +103,7 @@ module.exports = function(domain, entityId) {
         });
 
         if (data.message) {
-            ga.mga('event', 'error-handled', 'asin-query-failure', `${adGroupId}: ${data.message}`);
+            ga.mevent('error-handled', 'asin-query-failure', `${adGroupId}: ${data.message}`);
             return null;
         }
 
@@ -131,7 +131,7 @@ module.exports = function(domain, entityId) {
         });
 
         if (response.message) {
-            ga.mga('event', 'error-handled', 'keyword-data-failure', `${adGroupId}: ${response.message}`);
+            ga.mevent('error-handled', 'keyword-data-failure', `${adGroupId}: ${response.message}`);
         }
 
         return response.aaData || [];

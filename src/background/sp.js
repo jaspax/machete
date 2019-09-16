@@ -37,13 +37,13 @@ async function getCollector(domain, entityId, scope = 'general') {
     }
     if (!collector) {
         ga.warn(`No valid collectors for ${domain} ${cacheTag}: ${errors}`);
-        ga.mga('event', 'no-valid-collector', cacheTag, errors.join(', '));
+        ga.mevent('no-valid-collector', cacheTag, errors.join(', '));
         throw new Error(`No valid collectors for ${domain}`);
     }
 
     collectorCache[cacheTag] = collector;
     ga.debug('Using collector', domain, cacheTag, collector.name);
-    ga.mga('event', 'collector-domain', domain, collector.name);
+    ga.mevent('collector-domain', domain, collector.name);
 
     return collector;
 }

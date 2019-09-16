@@ -61,9 +61,7 @@ function createMessageHandler(handler) {
             if (sender.tab)
                 chrome.pageAction.show(sender.tab.id);
 
-            ga.mga('event', 'background-message', req.action);
-            const begin = performance.now();
-
+            ga.mevent('background-message', req.action);
             try {
                 let data = await handler(req, sender);
                 if (typeof data == 'undefined')
@@ -96,9 +94,6 @@ function createMessageHandler(handler) {
                     handlePortDisconnected(ex, req.action);
                 }
             }
-
-            const end = performance.now();
-            ga.mga('timing', 'Background Task', req.action, Math.round(end - begin));
         }
         f();
 
@@ -117,36 +112,36 @@ function sayHello() {
 function handleServerErrors(ex, desc) {
     if (ex.url && ex.url.match(/machete-app.com/)) {
         if (ex.message.match(/^401/)) {
-            ga.mga('event', 'error-handled', 'auth-error-401', desc);
+            ga.mevent('error-handled', 'auth-error-401', desc);
             return 'notLoggedIn';
         }
         if (ex.message.match(/^402/)) {
-            ga.mga('event', 'error-handled', 'auth-error-402', desc);
+            ga.mevent('error-handled', 'auth-error-402', desc);
             return 'notAllowed';
         }
         if (ex.message.match(/^403/)) {
-            ga.mga('event', 'error-handled', 'auth-error-403', desc);
+            ga.mevent('error-handled', 'auth-error-403', desc);
             return 'notOwned';
         }
     }
     if (ex.message.match(/^401/)) {
-        ga.mga('event', 'error-handled', 'network-error-401', desc);
+        ga.mevent('error-handled', 'network-error-401', desc);
         return 'amazonNotLoggedIn';
     }
     if (ex.message.match(/^403/)) {
-        ga.mga('event', 'error-handled', 'network-error-403', desc);
+        ga.mevent('error-handled', 'network-error-403', desc);
         return 'amazonNotLoggedIn';
     }
     if (ex.message.match(/^404/)) {
-        ga.mga('event', 'error-handled', 'network-error-404', desc);
+        ga.mevent('error-handled', 'network-error-404', desc);
         return 'notFound';
     }
     if (ex.message.match(/^50/)) {
-        ga.mga('event', 'error-handled', 'server-error', desc);
+        ga.mevent('error-handled', 'server-error', desc);
         return 'serverError';
     }
     if (ex.message.match(/0 error/) || ex.message.match(/Failed to fetch/)) {
-        ga.mga('event', 'error-handled', 'network-error-unknown', desc);
+        ga.mevent('error-handled', 'network-error-unknown', desc);
         return 'amazonNotLoggedIn';
     }
     return null;
@@ -154,7 +149,7 @@ function handleServerErrors(ex, desc) {
 
 function handlePortDisconnected(ex, desc) {
     if (ex.message.match(/disconnected port object/)) {
-        ga.mga('event', 'error-handled', 'port-disconnected', desc);
+        ga.mevent('error-handled', 'port-disconnected', desc);
         return true;
     }
     return false;
