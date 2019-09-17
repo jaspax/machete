@@ -50,20 +50,11 @@ const dataGather = cacheable(async function(entity) {
             return false;
         }
 
-        const lifetimeData = await syncCampaignData(entity);
+        await syncCampaignData(entity);
         await syncPortfolios(entity);
 
         const summaries = await spData.getCampaignSummaries.force(entity.entityId);
-        await parallelQueue(lifetimeData, async function(campaignData) {
-            const campaignId = stripPrefix(campaignData.campaignId);
-            let summary = summaries.find(x => x.campaignId == campaignId);
-            if (!summary) {
-                summary = {
-                    campaignId,
-                    name: campaignData.name
-                };
-            }
-
+        await parallelQueue(summaries, async function(summary) {
             // TODO: task #252, don't use this check
             if ((!summary.programType || summary.programType == 'SP') && (summary.campaignId[0] != 'C')) {
                 const adGroupId = summary.adGroupId || await syncAdGroupId(entity, summary);
