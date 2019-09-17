@@ -1,6 +1,7 @@
-const bg = require('./common.js');
 const moment = require('moment');
 const ga = require('../common/ga.js');
+
+const { ajax } = require('../shared/network');
 
 const kdpPermissions = { origins: ['https://kdp.amazon.com/*'] };
 
@@ -33,7 +34,7 @@ function baseRequest(time) {
 
 const kdpUrl = 'https://kdp.amazon.com/en_US/reports-new/data';
 async function kdpAjax(request) {
-    const response = await bg.ajax(kdpUrl, {
+    const response = await ajax(kdpUrl, {
         method: 'POST',
         formData: request,
         responseType: 'json',

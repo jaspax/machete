@@ -1,9 +1,11 @@
 const _ = require('lodash');
 const ga = require('../common/ga.js');
-const bg = require('./common.js');
 const spData = require('../common/sp-data.js');
 const moment = require('moment');
 require('moment-timezone');
+
+const { ajax } = require('../shared/network');
+const { pageArray, parallelQueue } = require('../shared/data-tools');
 
 module.exports = function(domain, entityId) {
     function formatId(id) {
@@ -22,7 +24,7 @@ module.exports = function(domain, entityId) {
 
         const campaign = campaigns.find(x => x.campaignId.slice(0, 2) != 'AC');
         if (campaign) {
-            await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaign.campaignId}`, {
+            await ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${campaign.campaignId}`, {
                 method: 'GET',
                 responseType: 'text'
             });
@@ -36,7 +38,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getDailyCampaignData(date) {
-        const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
+        const data = await ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
             queryData: {
                 entityId,
@@ -50,7 +52,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getLifetimeCampaignData() {
-        const data = await bg.ajax(`https://${domain}/api/rta/campaigns`, {
+        const data = await ajax(`https://${domain}/api/rta/campaigns`, {
             method: 'GET',
             queryData: {
                 entityId,
@@ -65,8 +67,8 @@ module.exports = function(domain, entityId) {
         const allStatus = {};
 
         // Chop the campaignId list into bite-sized chunks
-        for (const chunk of bg.pageArray(campaignIds, 20)) {
-            const data = await bg.ajax(`https://${domain}/api/rta/campaign-status`, {
+        for (const chunk of pageArray(campaignIds, 20)) {
+            const data = await ajax(`https://${domain}/api/rta/campaign-status`, {
                 method: 'GET',
                 queryData: {
                     entityId, 
@@ -82,7 +84,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getAdGroupId(campaignId) {
-        let html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${formatId(campaignId)}`, {
+        let html = await ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${formatId(campaignId)}`, {
             method: 'GET',
             responseType: 'text'
         });
@@ -92,7 +94,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getCampaignAsin(campaignId, adGroupId) {
-        const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
+        const data = await ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
             method: 'POST',
             formData: {
                 entityId, 
@@ -120,7 +122,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getKeywordData(campaignId, adGroupId) {
-        const response = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
+        const response = await ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
             method: 'POST',
             formData: {
                 entityId, 
@@ -143,9 +145,9 @@ module.exports = function(domain, entityId) {
         // the parameters to the Amazon API imply that you can pass more than 1
         // keyword at a time, but testing this shows that doing so just
         // generates an error. So we do it the stupid way instead, with a loop.
-        await bg.parallelQueue(keywords, async function(kw) {
+        await parallelQueue(keywords, async function(kw) {
             try {
-                const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
+                const response = await ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
                     method: 'POST',
                     formData: Object.assign({operation, entityId, keywordIds: formatId(kw.id)}, dataValues),
                     responseType: 'json',
@@ -169,9 +171,9 @@ module.exports = function(domain, entityId) {
     async function addKeywords({ keywords, adGroupId }) {
         const rv = { fail: [], ok: [] };
         const bidGroups = _.groupBy(keywords, 'bid');
-        await bg.parallelQueue(Object.keys(bidGroups), async bid => {
+        await parallelQueue(Object.keys(bidGroups), async bid => {
             try {
-                const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
+                const response = await ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
                     method: 'POST',
                     formData: {
                         keywords: JSON.stringify(bidGroups[bid].map(item => ({ keyword: item.keyword, match: "BROAD" }))),

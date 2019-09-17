@@ -3,8 +3,10 @@ const moment = require('frozen-moment');
 require('moment-timezone');
 
 const ga = require('../common/ga');
-const bg = require('./common.js');
 const spData = require('../common/sp-data.js');
+
+const { ajax } = require('../shared/network');
+const { parallelQueue } = require('../shared/data-tools');
 
 module.exports = function(domain, entityId) {
     const latestCampaignData = {
@@ -45,7 +47,7 @@ module.exports = function(domain, entityId) {
         let accum = firstData.campaigns || firstData.keywords || firstData.portfolios;
 
         const pages = [...Array(firstData.summary.maxPageNumber).keys()].slice(1);
-        await bg.parallelQueue(pages, async pageOffset => {
+        await parallelQueue(pages, async pageOffset => {
             const data = await reqfn(pageOffset, pageSize);
             accum = accum.concat(data.campaigns || data.keywords || data.portfolios);
         });
@@ -54,7 +56,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function probe() {
-        const probeCampaign = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        const probeCampaign = await ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: {
@@ -77,7 +79,7 @@ module.exports = function(domain, entityId) {
 
         const campaign = probeCampaign.campaigns.find(x => x.id.slice(0, 2) != 'AC');
         if (campaign) {
-            await bg.ajax(`https://${domain}/cm/sp/campaigns/${campaign.id}`, {
+            await ajax(`https://${domain}/cm/sp/campaigns/${campaign.id}`, {
                 method: 'GET',
                 queryData: { entityId },
             });
@@ -92,7 +94,7 @@ module.exports = function(domain, entityId) {
 
     async function getDailyCampaignData(date) {
         const utcDay = moment.tz(date, 'UTC');
-        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        const allData = await requestDataPaged((pageOffset, pageSize) => ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: {
@@ -122,7 +124,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getLifetimeCampaignData() {
-        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
+        const allData = await requestDataPaged((pageOffset, pageSize) => ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: {
@@ -154,7 +156,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getAdGroupId(campaignId) {
-        const page = await bg.ajax(`https://${domain}/cm/sp/campaigns/${formatId(campaignId)}`, {
+        const page = await ajax(`https://${domain}/cm/sp/campaigns/${formatId(campaignId)}`, {
             method: 'GET',
             queryData: { entityId },
         });
@@ -166,7 +168,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getCampaignAsin(campaignId, adGroupId) {
-        const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/ads`, {
+        const response = await ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/ads`, {
             method: 'POST',
             responseType: 'json',
             queryData: { entityId },
@@ -187,7 +189,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getAdEntities() {
-        const html = await bg.ajax(`https://${domain}/accounts`, {
+        const html = await ajax(`https://${domain}/accounts`, {
             method: 'GET',
             responseType: 'text'
         });
@@ -207,7 +209,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getKeywordData(campaignId, adGroupId) {
-        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
+        const allData = await requestDataPaged((pageOffset, pageSize) => ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
             method: 'POST',
             responseType: 'json',
             queryData: { entityId },
@@ -233,10 +235,10 @@ module.exports = function(domain, entityId) {
         const result = { ok: [], fail: [] };
 
         const keywordsByAdGroup = _.groupBy(keywords, 'adGroupId');
-        await bg.parallelQueue(Object.keys(keywordsByAdGroup), async adGroupId => {
+        await parallelQueue(Object.keys(keywordsByAdGroup), async adGroupId => {
             const list = keywordsByAdGroup[adGroupId];
             try {
-                const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
+                const response = await ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
                     method: 'PATCH',
                     queryData: { entityId },
                     jsonData: list.map(kw => {
@@ -267,7 +269,7 @@ module.exports = function(domain, entityId) {
     async function updateCampaigns({ campaigns, operation, dataValues }) {
         const result = { ok: [], fail: [] };
         try {
-            const response = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
+            const response = await ajax(`https://${domain}/cm/api/campaigns`, {
                 method: 'PATCH',
                 query: { entityId },
                 jsonData: campaigns.map(x => {
@@ -294,7 +296,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function addKeywords({ keywords, adGroupId }) {
-        const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
+        const response = await ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: { keywords: keywords.map(kw => ({ keyword: kw.keyword, matchType: "BROAD", bid: { millicents: kw.bid * 100000, currencyCode } })) },
@@ -308,7 +310,7 @@ module.exports = function(domain, entityId) {
     }
 
     async function getPortfolios() {
-        const portfolios = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/portfolios/performance`, {
+        const portfolios = await requestDataPaged((pageOffset, pageSize) => ajax(`https://${domain}/cm/api/portfolios/performance`, {
             method: 'POST',
             queryData: { entityId },
             jsonData: {

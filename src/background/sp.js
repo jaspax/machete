@@ -1,7 +1,8 @@
-const bg = require('./common.js');
 const _ = require('lodash');
 const ga = require('../common/ga.js');
 const spData = require('../common/sp-data.js');
+
+const { handleServerErrors } = require('../shared/network');
 
 const spCm = require('./sp-cm.js');
 const spRta = require('./sp-rta.js');
@@ -23,7 +24,7 @@ async function getCollector(domain, entityId, scope = 'general') {
             break;
         }
         catch (ex) {
-            const handled = bg.handleServerErrors(ex, 'sp.getCollector:' + c.name);
+            const handled = handleServerErrors(ex, 'sp.getCollector:' + c.name);
             if (handled == 'amazonNotLoggedIn') {
                 // treat this as if it were success, then let the error
                 // propagate when we try to get the real page.
