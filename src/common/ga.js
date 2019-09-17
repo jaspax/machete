@@ -8,6 +8,7 @@ cache.setAnalytics(ga);
  */
 const logListeners = [];
 function mlog(msg) {
+    msg.msgs = msg.msgs.map(x => x instanceof Error ? ga.errorToObject(x) : x);
     for (const listener of logListeners) {
         try {
             listener.log(msg);

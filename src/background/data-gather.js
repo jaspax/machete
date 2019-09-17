@@ -4,9 +4,8 @@ require('moment-timezone');
 const ga = require('../common/ga');
 const kdp = require('./kdp');
 const sp = require('./sp');
-const spData = require('../shared/sp-data');
+const spData = require('../shared/sp-data')('https://' + process.env.HOSTNAME);
 const { cacheable, cacheSet, cacheGet } = require('../shared/cache');
-const { handleServerErrors } = require('../shared/network');
 const { stripPrefix, isPausable, isEnded, isAuthorEntity, parallelQueue } = require('../shared/data-tools');
 
 const lastGatherKey = 'lastDataGather';
@@ -27,14 +26,6 @@ function getLastDataGather() {
 function writeStatus(entity, msg, error) {
     statusBuffer.push({ timestamp: new Date(), msg, error });
     ga.info('data-gather', entity, msg, error);
-}
-
-function writeError(entity, error) {
-    error.handled = handleServerErrors(error, `sync ${JSON.stringify(entity)}`);
-    if (!error.handled) {
-        ga.merror(error);
-    }
-    writeStatus(entity, `Error getting data from ${entity.name}`, error);
 }
 
 function startStatusBuffer(entity) {
@@ -89,14 +80,9 @@ const dataGather = cacheable(async function(entity) {
         });
         return true;
     }
-    catch (ex) {
-        writeError(entity, ex);
-    }
     finally {
         endStatusBuffer();
     }
-
-    return false;
 }, { name: 'dataGather', expireHours: 2, defaultValue: false });
 
 function shouldSyncKeywords(summary) {
@@ -153,7 +139,7 @@ async function syncCampaignData(entity) {
         if (missing.needLifetime) {
             writeStatus(entity, 'Getting current lifetime campaign stats');
             const now = Date.now();
-            lifetimeData = await sp.requestLifetimeCampaignData(entity);
+            lifetimeData = await sp.requestLifetimeCampaignData({ entity });
             await spData.storeLifetimeCampaignData(entity.entityId, now, lifetimeData);
         }
 
@@ -166,7 +152,7 @@ async function syncCampaignData(entity) {
                 }
 
                 writeStatus(entity, `Getting daily campaign stats for ${moment(date).format('MMM DD')}`);
-                const data = await sp.requestDailyCampaignData(entity, date);
+                const data = await sp.requestDailyCampaignData({ entity, date });
                 await spData.storeDailyCampaignData(entity.entityId, timestamp, data);
             });
         }
@@ -181,7 +167,7 @@ async function syncCampaignData(entity) {
 
 async function syncPortfolios(entity) {
     writeStatus(entity, 'Getting portfolios');
-    const portfolios = await sp.requestPortfolios(entity);
+    const portfolios = await sp.requestPortfolios({ entity });
     if (portfolios.length)
         await spData.storePortfolios(entity.entityId, portfolios);
     return portfolios;
@@ -189,7 +175,7 @@ async function syncPortfolios(entity) {
 
 async function syncAdGroupId(entity, summary) {
     writeStatus(entity, `Getting ad groups for campaign ${summary.name}`);
-    const adGroupId = stripPrefix(await sp.requestAdGroupId(entity, summary.campaignId));
+    const adGroupId = stripPrefix(await sp.requestAdGroupId({ entity, campaignId: summary.campaignId }));
     if (adGroupId)
         await spData.storeAdGroupMetadata(entity.entityId, adGroupId, summary.campaignId);
     return adGroupId;
@@ -197,7 +183,7 @@ async function syncAdGroupId(entity, summary) {
 
 async function syncCampaignMetadata(entity, summary, adGroupId) {
     writeStatus(entity, `Getting product data for campaign ${summary.name}`);
-    const asin = await sp.requestCampaignAsin(entity, summary.campaignId, adGroupId);
+    const asin = await sp.requestCampaignAsin({ entity, campaignId: summary.campaignId, adGroupId });
     if (asin) {
         await spData.storeCampaignMetadata(entity.entityId, summary.campaignId, asin);
     }
@@ -206,7 +192,7 @@ async function syncCampaignMetadata(entity, summary, adGroupId) {
 
 async function syncKeywordData(entity, summary, adGroupId) {
     if (!(summary.campaignId && adGroupId)) {
-        ga.merror(`missing campaignId or adGroupId: entityId ${entity.entityId}, campaignId ${summary.campaignId}, adGroupId ${summary.adGroupId}`);
+        ga.merror('missing campaignId or adGroupId: entity', entity, 'campaign', summary);
         return;
     }
 
@@ -218,7 +204,7 @@ async function syncKeywordData(entity, summary, adGroupId) {
     
     writeStatus(entity, `Getting keyword data for campaign ${summary.name}`);
     const now = Date.now();
-    const data = await sp.requestKeywordData(entity, summary.campaignId, stripPrefix(adGroupId));
+    const data = await sp.requestKeywordData({ entity, campaignId: summary.campaignId, adGroupId: stripPrefix(adGroupId) });
     if (data && data.length) {
         await spData.storeKeywordData(entity.entityId, adGroupId, now, data);
     }

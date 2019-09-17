@@ -36,7 +36,7 @@ async function getCollector(domain, entityId, scope = 'general') {
         }
     }
     if (!collector) {
-        ga.warn(`No valid collectors for ${domain} ${cacheTag}: ${errors}`);
+        ga.warn('No valid collectors for', domain, cacheTag, errors);
         ga.mevent('no-valid-collector', cacheTag, errors.join(', '));
         throw new Error(`No valid collectors for ${domain}`);
     }
