@@ -101,30 +101,24 @@ const dataGatherKdp = cacheable(async function() {
     const asins = await kdp.requestAsins({ time });
     await parallelQueue(asins, async asinArray => {
         let asin = null;
-        try {
-            for (const item of asinArray) {
-                // valid ASINs are either Bxxxxxxxxx or 10-digit integers
-                if (item[0] != 'B' && isNaN(parseFloat(item[0])))
-                    continue;
-                asin = item.substring(0, 10);
-                break;
-            }
-            if (!asin) {
-                ga.mevent('kdp-warning', 'asin-unknown-format', JSON.stringify(asinArray));
-                return;
-            }
-
-            writeStatus(kdpEntity, `Requesting sales data for ASIN ${asin}`);
-
-            const sales = await kdp.requestSalesData({ time, asin: asinArray });
-            const ku = await kdp.requestKuData({ time, asin: asinArray });
-
-            await spData.storeKdpData(asin, sales, ku);
+        for (const item of asinArray) {
+            // valid ASINs are either Bxxxxxxxxx or 10-digit integers
+            if (item[0] != 'B' && isNaN(parseFloat(item[0])))
+                continue;
+            asin = item.substring(0, 10);
+            break;
         }
-        catch (ex) {
-            const asinStr = asin || JSON.stringify(asinArray);
-            writeStatus(kdpEntity, `Error getting sales data for ASIN ${asinStr}`, ex);
+        if (!asin) {
+            ga.mevent('kdp-warning', 'asin-unknown-format', JSON.stringify(asinArray));
+            return;
         }
+
+        writeStatus(kdpEntity, `Requesting sales data for ASIN ${asin}`);
+
+        const sales = await kdp.requestSalesData({ time, asin: asinArray });
+        const ku = await kdp.requestKuData({ time, asin: asinArray });
+
+        await spData.storeKdpData(asin, sales, ku);
     });
 }, { name: 'dataGatherKdp', expireHours: 2, defaultValue: false });
 
