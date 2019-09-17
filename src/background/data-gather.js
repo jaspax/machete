@@ -98,7 +98,7 @@ function shouldSyncKeywords(summary) {
 const dataGatherKdp = cacheable(async function() {
     writeStatus(kdpEntity, `Finding ASINs in your account`);
     const time = Date.now();
-    const asins = await kdp.requestAsins(time);
+    const asins = await kdp.requestAsins({ time });
     await parallelQueue(asins, async asinArray => {
         let asin = null;
         try {
@@ -116,8 +116,8 @@ const dataGatherKdp = cacheable(async function() {
 
             writeStatus(kdpEntity, `Requesting sales data for ASIN ${asin}`);
 
-            const sales = await kdp.requestSalesData(time, asinArray);
-            const ku = await kdp.requestKuData(time, asinArray);
+            const sales = await kdp.requestSalesData({ time, asin: asinArray });
+            const ku = await kdp.requestKuData({ time, asin: asinArray });
 
             await spData.storeKdpData(asin, sales, ku);
         }
@@ -160,7 +160,7 @@ async function syncCampaignData(entity) {
     catch (ex) {
         // Errors here shouldn't block us from attempting to get keyword data,
         // so we swallow and log this.
-        ga.merror(ex);
+        writeStatus(entity, 'Errors getting campaigns data', ex);
     }
     return lifetimeData;
 }
