@@ -200,6 +200,7 @@ async function dataGatherAlarm() {
             ga.merror(ex);
         }
     }
+    setLastDataGather(Date.now());
 }
 
 module.exports = {
