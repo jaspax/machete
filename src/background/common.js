@@ -1,6 +1,8 @@
-const ga = require('../common/ga.js');
-
 const serviceUrl = `https://${process.env.HOSTNAME}`;
+
+const ga = require('../common/ga.js');
+const sp = require('../shared/sp-data')(serviceUrl);
+const data = require('./data-gather');
 
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {
@@ -40,6 +42,26 @@ function messageListener(handler) {
     chrome.runtime.onMessageExternal.addListener(messageHandler);
     chrome.runtime.onConnect.addListener(handlePortConnect(messageHandler));
     chrome.runtime.onConnectExternal.addListener(handlePortConnect(messageHandler));
+}
+
+const dataGatherAlarmName = 'machete.alarm.data-gather';
+const dataGatherAlarmPeriod = 180;
+
+function registerAlarms() {
+    chrome.alarms.onAlarm.addListener(alarm => {
+        ga.debug('handling alarm', alarm);
+        if (alarm.name == dataGatherAlarmName) {
+            dataGatherAlarm();
+            return;
+        }
+        ga.info('Unhandled alarm', alarm);
+    });
+
+    chrome.alarms.get(dataGatherAlarmName, alarm => {
+        ga.debug('existing alarm:', alarm);
+        if (!alarm || alarm.periodInMinutes != dataGatherAlarmPeriod)
+            chrome.alarms.create(dataGatherAlarmName, { periodInMinutes: dataGatherAlarmPeriod });
+    });
 }
 
 function createMessageHandler(handler) {
@@ -161,7 +183,27 @@ function handleMessageTooLong(ex, req) {
     return false;
 }
 
+async function dataGatherAlarm() {
+    try {
+        await data.dataGatherKdp();
+    }
+    catch (ex) {
+        ga.merror(ex);
+    }
+
+    const entities = await sp.getEntityMetadata();
+    for (const entity of entities) {
+        try {
+            await data.dataGather(entity);
+        }
+        catch (ex) {
+            ga.merror(ex);
+        }
+    }
+}
+
 module.exports = {
     messageListener,
+    registerAlarms,
     sayHello,
 };

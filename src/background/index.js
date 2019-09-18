@@ -3,6 +3,7 @@ const kdp = require('./kdp.js');
 const sp = require('./sp.js');
 const data = require('./data-gather');
 
+bg.registerAlarms();
 bg.messageListener(function(req) { // eslint-disable-line complexity
     switch (req.action) {
         // Valid for every page
