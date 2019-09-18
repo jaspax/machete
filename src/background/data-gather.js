@@ -79,6 +79,8 @@ const dataGather = cacheable(async function(entity) {
 function shouldSyncKeywords(summary) {
     if (!summary.latestKeywordTimestamp)
         return true;
+    if (moment(summary.latestKeywordTimestamp).isAfter(moment().subtract(12, 'hours')))
+        return false;
     if (isPausable(summary))
         return true;
     if (isEnded(summary) && moment(summary.endDate).isAfter(summary.latestKeywordTimestamp))
