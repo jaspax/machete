@@ -5,7 +5,7 @@ const api = require('../shared/api')(serviceUrl);
 const data = require('./data-gather');
 
 const dataGatherAlarmName = 'machete.alarm.data-gather';
-const dataGatherAlarmPeriod = 30;
+const dataGatherAlarmPeriod = 200;
 
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {

@@ -74,7 +74,7 @@ const dataGather = cacheable(async function(entity) {
     finally {
         endStatusBuffer();
     }
-}, { name: 'dataGather', expireHours: 2, defaultValue: false });
+}, { name: 'dataGather', expireHours: 3, defaultValue: false });
 
 function shouldSyncKeywords(summary) {
     if (!summary.latestKeywordTimestamp)
@@ -113,7 +113,8 @@ const dataGatherKdp = cacheable(async function() {
 
         await api.storeKdpData(asin, sales, ku);
     });
-}, { name: 'dataGatherKdp', expireHours: 2, defaultValue: false });
+    return true;
+}, { name: 'dataGatherKdp', expireHours: 3, defaultValue: false });
 
 async function syncCampaignData(entity) {
     let lifetimeData = [];
