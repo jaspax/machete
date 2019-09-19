@@ -1,7 +1,7 @@
 const serviceUrl = `https://${process.env.HOSTNAME}`;
 
 const ga = require('../common/ga.js');
-const sp = require('../shared/sp-data')(serviceUrl);
+const api = require('../shared/api')(serviceUrl);
 const data = require('./data-gather');
 
 chrome.runtime.onInstalled.addListener(details => {
@@ -54,7 +54,7 @@ function registerAlarms() {
             dataGatherAlarm();
             return;
         }
-        ga.info('Unhandled alarm', alarm);
+        ga.warn('Unhandled alarm', alarm);
     });
 
     chrome.alarms.get(dataGatherAlarmName, alarm => {
@@ -191,7 +191,7 @@ async function dataGatherAlarm() {
         ga.merror(ex);
     }
 
-    const entities = await sp.getEntityMetadata();
+    const entities = await api.getEntityMetadata();
     for (const entity of entities) {
         try {
             await data.dataGather(entity);
