@@ -4,6 +4,9 @@ const ga = require('../common/ga.js');
 const api = require('../shared/api')(serviceUrl);
 const data = require('./data-gather');
 
+const dataGatherAlarmName = 'machete.alarm.data-gather';
+const dataGatherAlarmPeriod = 30;
+
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason == 'install') {
         chrome.tabs.create({ url: `${serviceUrl}/setup/postinstall` });
@@ -43,9 +46,6 @@ function messageListener(handler) {
     chrome.runtime.onConnect.addListener(handlePortConnect(messageHandler));
     chrome.runtime.onConnectExternal.addListener(handlePortConnect(messageHandler));
 }
-
-const dataGatherAlarmName = 'machete.alarm.data-gather';
-const dataGatherAlarmPeriod = 180;
 
 function registerAlarms() {
     chrome.alarms.onAlarm.addListener(alarm => {
@@ -200,7 +200,7 @@ async function dataGatherAlarm() {
             ga.merror(ex);
         }
     }
-    data.setLastDataGather(Date.now());
+    await data.setLastDataGather(Date.now());
 }
 
 module.exports = {
