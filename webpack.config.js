@@ -20,6 +20,8 @@ module.exports = (env = defaultEnv) => {
             'process.env.HOSTNAME': JSON.stringify(hostname),
             'process.env.PRODUCT': JSON.stringify('sp'),
             'process.env.NODE_ENV': JSON.stringify('production'),
+            'process.env.NODE_ENV': JSON.stringify('production'),
+            'process.env.ALARM_FREQ': JSON.stringify(200),
         });
     }
     else {
@@ -30,6 +32,7 @@ module.exports = (env = defaultEnv) => {
             'process.env.HOSTNAME': JSON.stringify(hostname),
             'process.env.PRODUCT': JSON.stringify('sp'),
             'process.env.NODE_ENV': JSON.stringify('development'),
+            'process.env.ALARM_FREQ': JSON.stringify(env.local ? 30 : 60),
         });
     }
 
