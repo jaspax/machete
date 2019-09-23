@@ -185,22 +185,27 @@ function handleMessageTooLong(ex, req) {
 
 async function dataGatherAlarm() {
     try {
-        await data.dataGatherKdp();
-    }
-    catch (ex) {
-        ga.merror(ex);
-    }
-
-    const entities = await api.getEntityMetadata();
-    for (const entity of entities) {
         try {
-            await data.dataGather(entity);
+            await data.dataGatherKdp();
         }
         catch (ex) {
-            ga.merror(ex);
+            ga.revent('clientLog', { tag: 'KDP', messages: [ga.errorToString(ex)] });
         }
+
+        const entities = await api.getEntityMetadata();
+        for (const entity of entities) {
+            try {
+                await data.dataGather(entity);
+            }
+            catch (ex) {
+                ga.revent('clientLog', { tag: entity.entityId, messages: [ga.errorToString(ex)] });
+            }
+        }
+        await data.setLastDataGather(Date.now());
     }
-    await data.setLastDataGather(Date.now());
+    catch (ex) {
+        ga.revent('clientLog', { tag: 'dataGather exception', messages: [ga.errorToString(ex)] });
+    }
 }
 
 module.exports = {
