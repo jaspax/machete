@@ -5,7 +5,7 @@ const ga = require('../common/ga');
 const kdp = require('./kdp');
 const sp = require('./sp');
 const api = require('../shared/api')('https://' + process.env.HOSTNAME);
-const { cacheable, cacheSet, cacheGet } = require('../shared/cache');
+const { cacheSet, cacheGet } = require('../shared/cache');
 const { stripPrefix, isPausable, isEnded, isAuthorEntity, parallelQueue } = require('../shared/data-tools');
 
 const lastGatherKey = 'lastDataGather';
@@ -39,7 +39,7 @@ function endStatusBuffer() {
     statusBufferTag = '';
 }
 
-const dataGather = cacheable(async function(entity) {
+async function dataGather(entity) {
     if (isAuthorEntity(entity.entityId)) {
         return true;
     }
@@ -74,7 +74,7 @@ const dataGather = cacheable(async function(entity) {
     finally {
         endStatusBuffer();
     }
-}, { name: 'dataGather', expireHours: 3, defaultValue: false });
+}
 
 function shouldSyncKeywords(summary) {
     if (!summary.latestKeywordTimestamp)
@@ -88,7 +88,7 @@ function shouldSyncKeywords(summary) {
     return false;
 }
 
-const dataGatherKdp = cacheable(async function() {
+async function dataGatherKdp() {
     writeStatus(kdpEntity, `Finding ASINs in your account`);
     const time = Date.now();
     const asins = await kdp.requestAsins({ time });
@@ -114,7 +114,7 @@ const dataGatherKdp = cacheable(async function() {
         await api.storeKdpData(asin, sales, ku);
     });
     return true;
-}, { name: 'dataGatherKdp', expireHours: 3, defaultValue: false });
+}
 
 async function syncCampaignData(entity) {
     let lifetimeData = [];
