@@ -75,7 +75,8 @@ function amsPageInit() {
 }
 
 function dashboardLink(entityId, campaignId, linkClass) {
-    const query = campaignId ? `entityId=${entityId}&ckey=id&cval=${spData.stripPrefix(campaignId)}` : `entityId=${entityId}`;
+    const entity = entityId ? `entityId=${entityId}` : '';
+    const query = campaignId ? `${entity}&ckey=id&cval=${spData.stripPrefix(campaignId)}` : entity;
     return $(`<a class="machete-dashboard-link ${linkClass}" target="_blank" href="https://${process.env.HOSTNAME}/dashboard/highlights?${query}">
         <span>View on Machete</span>
         <img src="https://${process.env.HOSTNAME}/static/images/external-link.svg" />
@@ -103,7 +104,14 @@ function addDashboardLinks() {
         }
 
         // there should typically only be 1 headline, but just in case...
-        const entityId = getEntityId();
+        let entityId = null;
+        try {
+            entityId = getEntityId();
+        }
+        catch (ex) {
+            ga.merror(ex);
+        }
+
         let headlines = Array.from($("[data-e2e-id='headline']"));
         headlines = headlines.concat(...Array.from($("[data-e2e-id='aac-page-name']")));
         for (const headline of headlines) {
