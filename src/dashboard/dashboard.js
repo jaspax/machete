@@ -6,7 +6,11 @@ amsPageInit();
 
 function getQueryArgs(str = window.location.toString()) {
     let qstring = str || window.location.toString();
-    qstring = qstring.split('?').pop();
+    const qmark = qstring.indexOf('?');
+    if (qmark < 0)
+        return {};
+
+    qstring = qstring.substring(qmark);
     if (qstring.includes('#')) {
         qstring = qstring.substring(0, qstring.lastIndexOf('#'));
     }
