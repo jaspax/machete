@@ -10,7 +10,7 @@ function getQueryArgs(str = window.location.toString()) {
     if (qmark < 0)
         return {};
 
-    qstring = qstring.substring(qmark);
+    qstring = qstring.substring(qmark + 1);
     if (qstring.includes('#')) {
         qstring = qstring.substring(0, qstring.lastIndexOf('#'));
     }
