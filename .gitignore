@@ -67,3 +67,8 @@ machete-*.zip
 tags
 tags.lock
 tags.temp
+
+# swap files
+*.swp
+*.swo
+*.swn
