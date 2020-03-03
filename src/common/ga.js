@@ -92,7 +92,7 @@ function merror(...msg) {
 function mcatch(fn) {
     return function(...args) {
         try {
-            return fn.apply(this, args);
+            return fn.apply(this, args); // eslint-disable-line no-invalid-this
         }
         catch (ex) {
             merror(ex);

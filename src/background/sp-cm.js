@@ -240,7 +240,7 @@ module.exports = function(domain, entityId) {
                     method: 'PATCH',
                     queryData: { entityId },
                     jsonData: list.map(kw => {
-                        const item = { id: formatId(kw.id), programType: "SP" };
+                        const item = { id: formatId(kw.kwid), programType: "SP" };
                         if (operation == 'PAUSE')
                             item.state = 'PAUSED';
                         if (operation == 'ENABLE')
@@ -257,7 +257,7 @@ module.exports = function(domain, entityId) {
             }
             catch (ex) {
                 ga.merror(ex);
-                result.fail.push(...list.map(kw => spData.stripPrefix(kw.id)));
+                result.fail.push(...list.map(kw => kw.kwid));
             }
         });
 
@@ -297,7 +297,7 @@ module.exports = function(domain, entityId) {
         const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
             method: 'POST',
             queryData: { entityId },
-            jsonData: { keywords: keywords.map(kw => ({ keyword: kw.keyword, matchType: "BROAD", bid: { millicents: kw.bid * 100000, currencyCode } })) },
+            jsonData: { keywords: keywords.map(kw => ({ keyword: kw.keyword, matchType: kw.matchType || "BROAD", bid: { millicents: kw.bid * 100000, currencyCode } })) },
             responseType: 'json',
         });
 
