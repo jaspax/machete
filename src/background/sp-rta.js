@@ -61,26 +61,6 @@ module.exports = function(domain, entityId) {
         return data.aaData;
     }
 
-    async function getCampaignStatus(campaignIds) {
-        const allStatus = {};
-
-        // Chop the campaignId list into bite-sized chunks
-        for (const chunk of bg.pageArray(campaignIds, 20)) {
-            const data = await bg.ajax(`https://${domain}/api/rta/campaign-status`, {
-                method: 'GET',
-                queryData: {
-                    entityId, 
-                    campaignIds: chunk.join(','),
-                },
-                responseType: 'json',
-            });
-
-            Object.assign(allStatus, data);
-        }
-
-        return allStatus;
-    }
-
     async function getAdGroupId(campaignId) {
         let html = await bg.ajax(`https://${domain}/rta/campaign/?entityId=${entityId}&campaignId=${formatId(campaignId)}`, {
             method: 'GET',
@@ -210,7 +190,6 @@ module.exports = function(domain, entityId) {
         entityId,
         getAdGroupId,
         getCampaignAsin,
-        getCampaignStatus,
         getDailyCampaignData,
         getKeywordData,
         getLifetimeCampaignData,

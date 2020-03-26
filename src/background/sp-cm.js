@@ -7,11 +7,6 @@ const bg = require('./common.js');
 const spData = require('../common/sp-data.js');
 
 module.exports = function(domain, entityId) {
-    const latestCampaignData = {
-        timestamp: 0,
-        data: [],
-    };
-
     const currencyCode = guessCurrencyCode();
 
     function formatId(id) {
@@ -113,11 +108,6 @@ module.exports = function(domain, entityId) {
 
         allData.forEach(x => x.campaignId = x.id);
 
-        if (date > latestCampaignData.timestamp) {
-            latestCampaignData.timestamp = date;
-            latestCampaignData.data = allData;
-        }
-
         return allData;
     }
 
@@ -143,14 +133,6 @@ module.exports = function(domain, entityId) {
 
         allData.forEach(x => x.campaignId = x.id);
         return allData;
-    }
-
-    function getCampaignStatus() {
-        const obj = {};
-        for (const item of latestCampaignData.data) {
-            obj[item.campaignId] = { stateName: item.state, statusName: item.status };
-        }
-        return obj;
     }
 
     async function getAdGroupId(campaignId) {
@@ -334,7 +316,6 @@ module.exports = function(domain, entityId) {
         getAdEntities,
         getAdGroupId,
         getCampaignAsin,
-        getCampaignStatus,
         getDailyCampaignData,
         getKeywordData,
         getLifetimeCampaignData,
