@@ -4,8 +4,8 @@
   "name": "Machete for Amazon",
   "short_name": "Machete",
   "description": "Make your Amazon Marketing reporting fully rad with campaign history graphs, keyword analytics, and extra awesome.",
-  "version": "2.1.8",
-  "version_name": "2.1 update 8",
+  "version": "2.1.512",
+  "version_name": "2.1 update 12",
   "icons": { 
       "16": "images/machete-16.png",
       "48": "images/machete-48.png",
