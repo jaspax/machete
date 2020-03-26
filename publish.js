@@ -82,10 +82,6 @@ async function authClient() {
     const data = await readAsync('../uploader-keys.json');
     const codes = JSON.parse(data);
     const oauthClient = new google.auth.OAuth2(codes.client_id, codes.client_secret, 'urn:ietf:wg:oauth:2.0:oob');
-    oauthClient.on('tokens', async tokens => {
-        console.log('Storing new tokens in ../new-tokens, please save these in ../uploader-tokens');
-        await new Promise((resolve, reject) => fs.writeFile('../new-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
-    });
     return oauthClient;
 }
 
@@ -106,6 +102,9 @@ async function authorizationHeader(oauthClient) {
     console.log(`  ${url}`);
     const accessCode = readline.question('Enter the authorization code here: ');
     const { tokens } = await oauthClient.getToken(accessCode);
+    oauthClient.setCredentials(tokens);
+    await new Promise((resolve, reject) => fs.writeFile('../new-tokens', JSON.stringify(tokens), err => (err && reject(err)) || resolve()));
+
     return oauthClient.getRequestHeaders();
 }
 
