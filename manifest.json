@@ -20,9 +20,7 @@
     }
   },
   "permissions": [
-    "alarms",
     "background", 
-    "notifications",
     "https://advertising.amazon.ca/*",
     "https://advertising.amazon.co.uk/*",
     "https://advertising.amazon.com/*",
