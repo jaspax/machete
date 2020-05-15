@@ -75,7 +75,7 @@ module.exports = function(domain, entityId) {
         const data = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupAdList`, {
             method: 'POST',
             formData: {
-                entityId, 
+                entityId,
                 adGroupId: formatId(adGroupId),
                 status: 'Lifetime',
             },
@@ -103,7 +103,7 @@ module.exports = function(domain, entityId) {
         const response = await bg.ajax(`https://${domain}/api/sponsored-products/getAdGroupKeywordList`, {
             method: 'POST',
             formData: {
-                entityId, 
+                entityId,
                 adGroupId: formatId(adGroupId),
                 status: 'Lifetime',
             },
@@ -115,6 +115,10 @@ module.exports = function(domain, entityId) {
         }
 
         return response.aaData || [];
+    }
+
+    function getDailyKeywordData() {
+        return []; // not implemented
     }
 
     async function updateKeywords({ keywords, operation, dataValues }) {
@@ -192,6 +196,7 @@ module.exports = function(domain, entityId) {
         getCampaignAsin,
         getDailyCampaignData,
         getKeywordData,
+        getDailyKeywordData,
         getLifetimeCampaignData,
         getPortfolios,
         probe,

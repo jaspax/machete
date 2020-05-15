@@ -25,6 +25,8 @@ bg.messageListener(function(req) { // eslint-disable-line complexity
             return sp.requestCampaignAsin(req);
         case 'sp.requestKeywordData':
             return sp.requestKeywordData(req);
+        case 'sp.requestDailyKeywordData':
+            return sp.requestDailyKeywordData(req);
         case 'sp.requestAdEntities':
             return sp.requestAdEntities(req);
         case 'sp.requestPortfolios':

@@ -62,7 +62,7 @@ module.exports = function(domain, entityId) {
                 filters: [],
                 interval: "SUMMARY",
                 programType: "SP",
-                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
+                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"],
                 queries: []
             },
             responseType: 'json'
@@ -100,7 +100,7 @@ module.exports = function(domain, entityId) {
                 filters: [],
                 interval: "SUMMARY",
                 programType: "SP",
-                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
+                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"],
                 queries: []
             },
             responseType: 'json'
@@ -125,7 +125,7 @@ module.exports = function(domain, entityId) {
                 filters: [],
                 interval: "SUMMARY",
                 programType: "SP",
-                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"], 
+                fields: ["CAMPAIGN_NAME", "CAMPAIGN_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS"],
                 queries: []
             },
             responseType: 'json'
@@ -194,20 +194,44 @@ module.exports = function(domain, entityId) {
             responseType: 'json',
             queryData: { entityId },
             jsonData: {
-                startDateUTC: 1,
-                endDateUTC: moment().valueOf(),
                 pageOffset,
                 pageSize,
-                sort: null, 
-                period: "LIFETIME", 
-                filters: [{ field: "KEYWORD_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false}], 
-                interval: "SUMMARY", 
-                programType: "SP", 
-                fields: ["KEYWORD_STATE", "KEYWORD", "KEYWORD_MATCH_TYPE", "KEYWORD_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "KEYWORD_BID"], 
+                startDateUTC: 1,
+                endDateUTC: moment().valueOf(),
+                period: "LIFETIME",
+                sort: null,
+                filters: [{ field: "KEYWORD_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false}],
+                interval: "SUMMARY",
+                programType: "SP",
+                fields: ["KEYWORD_STATE", "KEYWORD", "KEYWORD_MATCH_TYPE", "KEYWORD_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "KEYWORD_BID"],
                 queries: []
             },
         }));
-                                 
+
+        return allData;
+    }
+
+    async function getDailyKeywordData(campaignId, adGroupId, date) {
+        const utcDay = moment.tz(date, 'UTC');
+        const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
+            method: 'POST',
+            queryData: { entityId },
+            jsonData: {
+                pageOffset,
+                pageSize,
+                startDateUTC: utcDay.startOf('day').valueOf(),
+                endDateUTC: utcDay.endOf('day').valueOf(),
+                period: "CUSTOM",
+                sort: null,
+                filters: [{ field: "KEYWORD_STATE", operator: "EXACT", values: ["ENABLED", "PAUSED"], not: false}],
+                interval: "SUMMARY",
+                programType: "SP",
+                fields: ["KEYWORD_STATE", "KEYWORD", "KEYWORD_MATCH_TYPE", "KEYWORD_ELIGIBILITY_STATUS", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "KEYWORD_BID"],
+                queries: []
+            },
+            responseType: 'json'
+        }));
+
         return allData;
     }
 
@@ -298,8 +322,8 @@ module.exports = function(domain, entityId) {
                 pageSize,
                 startDateUTC: 1,
                 endDateUTC: moment().valueOf(),
-                sort: null, 
-                period: "LIFETIME", 
+                sort: null,
+                period: "LIFETIME",
                 filters: [{ "field": "CAMPAIGN_PROGRAM_TYPE", "not": false, "operator": "EXACT", "values": ["SP", "HSA"]}],
                 fields: ["PORTFOLIO_NAME", "PORTFOLIO_STATUS", "PORTFOLIO_BUDGET", "PORTFOLIO_BUDGET_TYPE", "IMPRESSIONS", "CLICKS", "SPEND", "CTR", "CPC", "ORDERS", "SALES", "ACOS", "NTB_ORDERS", "NTB_PERCENT_OF_ORDERS", "NTB_SALES", "NTB_PERCENT_OF_SALES"],
             },
@@ -317,6 +341,7 @@ module.exports = function(domain, entityId) {
         getAdGroupId,
         getCampaignAsin,
         getDailyCampaignData,
+        getDailyKeywordData,
         getKeywordData,
         getLifetimeCampaignData,
         getPortfolios,

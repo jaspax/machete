@@ -73,6 +73,11 @@ async function requestKeywordData({ entity, campaignId, adGroupId }) {
     return collector.getKeywordData(campaignId, adGroupId);
 }
 
+async function requestDailyKeywordData({ entity, campaignId, adGroupId, date }) {
+    const collector = await getCollector(entity.domain, entity.entityId);
+    return collector.getDailyKeywordData(campaignId, adGroupId, date);
+}
+
 function requestAdEntities({ domain }) {
     const collector = spCm(domain);
     return collector.getAdEntities();
@@ -124,6 +129,7 @@ module.exports = {
     requestCampaignAsin,
     requestDailyCampaignData,
     requestKeywordData,
+    requestDailyKeywordData,
     requestLifetimeCampaignData,
     requestPortfolios,
     updateCampaigns,
