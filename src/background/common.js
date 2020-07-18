@@ -141,6 +141,8 @@ function handleMessageTooLong(ex, req) {
     return false;
 }
 
+let lastSuccessfulEntityId = '';
+
 async function ajax(url, opts) {
     const init = {
         method: opts.method,
@@ -149,13 +151,12 @@ async function ajax(url, opts) {
         credentials: 'include',
     };
 
-    if (opts.queryData) {
-        const q = new URLSearchParams();
-        for (const key of Object.keys(opts.queryData)) {
-            q.append(key, opts.queryData[key]);
-        }
-        url += '?' + q.toString();
+    const queryData = opts.queryData || {};
+    const q = new URLSearchParams();
+    for (const key of Object.keys(queryData)) {
+        q.append(key, queryData[key]);
     }
+    url += '?' + q.toString();
 
     if (opts.formData && opts.jsonData)
         throw new Error('Cannot set both formData and jsonData on ajax request');
@@ -173,12 +174,14 @@ async function ajax(url, opts) {
     }
 
     const origStack = new Error().stack;
+    let retrySec = 1;
     while (true) { // eslint-disable-line no-constant-condition
         try {
             const response = await window.fetch(url, init);
             if (!response.ok) {
-                if (await shouldRetry(response)) {
-                    await sleep(5000);
+                if (retrySec < 60 && shouldRetry(response, queryData.entityId, lastSuccessfulEntityId)) {
+                    await sleep(retrySec * 1000);
+                    retrySec *= 2;
                     continue;
                 }
 
@@ -186,10 +189,14 @@ async function ajax(url, opts) {
             }
             if (response.redirected) {
                 // this is USUALLY because we got redirected to a login page. In
-                // this case we fake out a 401 so that calling code handles it
+                // this case we fake a 401 so that calling code handles it
                 // correctly.
                 url += ` (redirected to ${response.url})`;
                 throw new Error('401 Redirect');
+            }
+
+            if (queryData.entityId) {
+                lastSuccessfulEntityId = queryData.entityId;
             }
 
             if (response.status == 204)
@@ -211,13 +218,17 @@ async function ajax(url, opts) {
     }
 }
 
-async function shouldRetry(response) {
+function shouldRetry(response, currentEntityId, successfulEntityId) {
     if (response.status == 429) { // 429 Too Many Requests
         return true;
     }
     if (response.status == 403) { // 403 Access too frequently!
-        const text = await response.text();
-        return text.toLowerCase().includes("frequently");
+        // if the entity ID returning 403 is the same as the one that has
+        // previously succeeded, it means that this 403 actually means
+        // "Accessing Too Frequently" rather than "Not Logged In"
+        if (currentEntityId === successfulEntityId) {
+            return true;
+        }
     }
     return false;
 }
