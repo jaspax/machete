@@ -232,7 +232,7 @@ async function ajax(url, opts) {
 const retryStatuses = [403, 404, 429, 502];
 
 function shouldRetry(response, currentEntityId, successfulEntityId) {
-    return retryStatuses.contains(Number(response.status)) && currentEntityId === successfulEntityId;
+    return retryStatuses.includes(Number(response.status)) && currentEntityId === successfulEntityId;
 }
 
 module.exports = {
