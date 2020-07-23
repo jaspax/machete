@@ -1,5 +1,4 @@
 const ga = require('../common/ga.js');
-const qu = require('async/queue');
 const sleep = require('sleep-promise').default;
 
 const serviceUrl = `https://${process.env.HOSTNAME}`;
@@ -228,61 +227,17 @@ async function ajax(url, opts) {
     }
 }
 
+// These statuses are known to correspond to transient error conditions that
+// often succeed on retry. Yes, including the 404.
+const retryStatuses = [403, 404, 429, 502];
+
 function shouldRetry(response, currentEntityId, successfulEntityId) {
-    if (response.status == 429) { // 429 Too Many Requests
-        return true;
-    }
-    if (response.status == 403) { // 403 Access too frequently!
-        // if the entity ID returning 403 is the same as the one that has
-        // previously succeeded, it means that this 403 actually means
-        // "Accessing Too Frequently" rather than "Not Logged In"
-        if (currentEntityId === successfulEntityId) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function parallelQueue(items, fn) {
-    return new Promise((resolve, reject) => {
-        const results = [];
-        let error = null;
-        const queue = qu((item, callback) => {
-            fn(item).then(value => {
-                results.push(value);
-                callback(null, value);
-            })
-            .catch(ex => {
-                ga.merror(ex);
-                error = ex;
-                callback();
-            });
-        }, 3);
-
-        queue.drain = () => {
-            if (error)
-                reject(error);
-            else
-                resolve(results);
-        };
-        queue.error = reject; // shouldn't happen since we're swallowing errors until drain
-        queue.push(Array.from(items));
-    });
-}
-
-function* pageArray(array, step) {
-    if (!array || !array.length)
-        return;
-    for (let index = 0; index < array.length; index += step) {
-        yield array.slice(index, index + step);
-    }
+    return retryStatuses.contains(Number(response.status)) && currentEntityId === successfulEntityId;
 }
 
 module.exports = {
     ajax,
     handleServerErrors,
     messageListener,
-    pageArray,
-    parallelQueue,
     sayHello,
 };

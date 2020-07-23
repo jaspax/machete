@@ -40,10 +40,10 @@ module.exports = function(domain, entityId) {
         let accum = firstData.campaigns || firstData.keywords || firstData.portfolios;
 
         const pages = [...Array(firstData.summary.maxPageNumber).keys()].slice(1);
-        await bg.parallelQueue(pages, async pageOffset => {
+        for (const pageOffset of pages) {
             const data = await reqfn(pageOffset, pageSize);
             accum = accum.concat(data.campaigns || data.keywords || data.portfolios);
-        });
+        }
 
         return accum;
     }
@@ -239,7 +239,7 @@ module.exports = function(domain, entityId) {
         const result = { ok: [], fail: [] };
 
         const keywordsByAdGroup = _.groupBy(keywords, 'adGroupId');
-        await bg.parallelQueue(Object.keys(keywordsByAdGroup), async adGroupId => {
+        for (const adGroupId of Object.keys(keywordsByAdGroup)) {
             const list = keywordsByAdGroup[adGroupId];
             try {
                 const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
@@ -265,7 +265,7 @@ module.exports = function(domain, entityId) {
                 ga.merror(ex);
                 result.fail.push(...list.map(kw => kw.kwid));
             }
-        });
+        }
 
         return result;
     }

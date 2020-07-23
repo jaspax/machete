@@ -127,7 +127,7 @@ module.exports = function(domain, entityId) {
         // the parameters to the Amazon API imply that you can pass more than 1
         // keyword at a time, but testing this shows that doing so just
         // generates an error. So we do it the stupid way instead, with a loop.
-        await bg.parallelQueue(keywords, async function(kw) {
+        for (const kw of keywords) {
             try {
                 const response = await bg.ajax(`https://${domain}/api/sponsored-products/updateKeywords/`, {
                     method: 'POST',
@@ -145,7 +145,7 @@ module.exports = function(domain, entityId) {
                 console.error(ex);
                 result.fail.push(kw.id);
             }
-        });
+        }
 
         return result;
     }
@@ -153,7 +153,7 @@ module.exports = function(domain, entityId) {
     async function addKeywords({ keywords, adGroupId }) {
         const rv = { fail: [], ok: [] };
         const bidGroups = _.groupBy(keywords, 'bid');
-        await bg.parallelQueue(Object.keys(bidGroups), async bid => {
+        for (const bid of Object.keys(bidGroups)) {
             try {
                 const response = await bg.ajax(`https://${domain}/api/sponsored-products/keywordBulkUpload/`, {
                     method: 'POST',
@@ -177,7 +177,7 @@ module.exports = function(domain, entityId) {
             catch (ex) {
                 rv.fail.push(...bidGroups[bid].map(kw => ({ errorMessage: ex.message, keyword: kw})));
             }
-        });
+        }
 
         return rv;
     }
