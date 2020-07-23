@@ -4,6 +4,7 @@
   "description": "Your tool for cutting through Amazon Marketing Services",
   "main": "index.js",
   "scripts": {
+    "watch": "webpack --debug --watch --progress --env.beta --env.local",
     "publish-beta": "webpack --env.beta --progress && node publish.js beta",
     "publish-production": "webpack --env.release --progress && node publish.js release"
   },
