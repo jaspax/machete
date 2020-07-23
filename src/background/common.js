@@ -185,7 +185,17 @@ async function ajax(url, opts) {
                     continue;
                 }
 
-                throw new Error(`${response.status} ${response.statusText}`);
+                let errorStr = `${response.status} ${response.statusText}`;
+                try {
+                    const body = await response.text();
+                    if (body) {
+                        errorStr += `: ${body.substr(0, 100)}`;
+                    }
+                }
+                catch (ex) {
+                    console.error(ex);
+                }
+                throw new Error(errorStr);
             }
             if (response.redirected) {
                 // this is USUALLY because we got redirected to a login page. In
