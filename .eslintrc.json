@@ -217,7 +217,7 @@
             "error",
             "always"
         ],
-        "operator-linebreak": "error",
+        "operator-linebreak": "off",
         "padded-blocks": "off",
         "prefer-arrow-callback": "off",
         "prefer-const": "off",
