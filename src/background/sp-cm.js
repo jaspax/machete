@@ -8,6 +8,7 @@ const spData = require('../common/sp-data.js');
 
 module.exports = function(domain, entityId) {
     const currencyCode = guessCurrencyCode();
+    let csrfToken = '';
 
     function formatId(id) {
         if (id.match(/^A/)) {
@@ -48,10 +49,24 @@ module.exports = function(domain, entityId) {
         return accum;
     }
 
+    async function getCsrfToken() {
+        const campaignPage = await bg.ajax(`https://${domain}/cm/campaigns`, { 
+            method: 'GET', 
+            queryData: { entityId }
+        });
+
+        const match = campaignPage.match(/csrfToken *: *"([^"]+)"/i);
+        if (!match)
+            return null;
+        return match[1];
+    }
+
     async function probe() {
+        csrfToken = await getCsrfToken();
         const probeCampaign = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
             queryData: { entityId },
+            headers: { 'x-csrf-token': csrfToken },
             jsonData: {
                 pageOffset: 0,
                 pageSize: 5,
@@ -89,6 +104,7 @@ module.exports = function(domain, entityId) {
         const utcDay = moment.tz(date, 'UTC');
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             queryData: { entityId },
             jsonData: {
                 pageOffset,
@@ -114,6 +130,7 @@ module.exports = function(domain, entityId) {
     async function getLifetimeCampaignData() {
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/campaigns`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             queryData: { entityId },
             jsonData: {
                 pageOffset,
@@ -150,6 +167,7 @@ module.exports = function(domain, entityId) {
     async function getCampaignAsin(campaignId, adGroupId) {
         const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/ads`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             responseType: 'json',
             queryData: { entityId },
             jsonData: {
@@ -191,6 +209,7 @@ module.exports = function(domain, entityId) {
     async function getKeywordData(campaignId, adGroupId) {
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             responseType: 'json',
             queryData: { entityId },
             jsonData: {
@@ -215,6 +234,7 @@ module.exports = function(domain, entityId) {
         const utcDay = moment.tz(date, 'UTC');
         const allData = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/sp/campaigns/${formatId(campaignId)}/adgroups/${formatId(adGroupId)}/keywords`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             queryData: { entityId },
             jsonData: {
                 pageOffset,
@@ -244,6 +264,7 @@ module.exports = function(domain, entityId) {
             try {
                 const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keywords`, {
                     method: 'PATCH',
+                    headers: { 'x-csrf-token': csrfToken },
                     queryData: { entityId },
                     jsonData: list.map(kw => {
                         const item = { id: formatId(kw.kwid), programType: "SP" };
@@ -275,6 +296,7 @@ module.exports = function(domain, entityId) {
         try {
             const response = await bg.ajax(`https://${domain}/cm/api/campaigns`, {
                 method: 'PATCH',
+                headers: { 'x-csrf-token': csrfToken },
                 query: { entityId },
                 jsonData: campaigns.map(x => {
                     const item = { id: formatId(x.campaignId), programType: "SP" };
@@ -302,6 +324,7 @@ module.exports = function(domain, entityId) {
     async function addKeywords({ keywords, adGroupId }) {
         const response = await bg.ajax(`https://${domain}/cm/api/sp/adgroups/${formatId(adGroupId)}/keyword`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             queryData: { entityId },
             jsonData: { keywords: keywords.map(kw => ({ keyword: kw.keyword, matchType: kw.matchType || "BROAD", bid: { millicents: kw.bid * 100000, currencyCode } })) },
             responseType: 'json',
@@ -316,6 +339,7 @@ module.exports = function(domain, entityId) {
     async function getPortfolios() {
         const portfolios = await requestDataPaged((pageOffset, pageSize) => bg.ajax(`https://${domain}/cm/api/portfolios/performance`, {
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             queryData: { entityId },
             jsonData: {
                 pageOffset,

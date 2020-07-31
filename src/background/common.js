@@ -142,7 +142,7 @@ function handleMessageTooLong(ex, req) {
 
 let lastSuccessfulEntityId = '';
 
-async function ajax(url, opts) {
+async function ajax(url, opts) { // eslint-disable-line complexity
     const init = {
         method: opts.method,
         headers: new Headers(),
@@ -172,11 +172,23 @@ async function ajax(url, opts) {
         init.headers.set('Content-Type', 'application/json');
     }
 
+    if (opts.headers) {
+        for (const key of Object.keys(opts.headers)) {
+            init.headers.set(key, opts.headers[key]);
+        }
+    }
+
     const origStack = new Error().stack;
     let retrySec = 1;
     while (true) { // eslint-disable-line no-constant-condition
         try {
             const response = await window.fetch(url, init);
+            ga.revent('httpStatusCode', { 
+                status: response.status,
+                statusText: response.statusText,
+                url
+            });
+
             if (!response.ok) {
                 if (retrySec < 60 && shouldRetry(response, queryData.entityId, lastSuccessfulEntityId)) {
                     await sleep(retrySec * 1000);
@@ -184,7 +196,7 @@ async function ajax(url, opts) {
                     continue;
                 }
 
-                let errorStr = `${response.status} ${response.statusText}`;
+                let errorStr = `${response.status} ${response.statusText} (retried ${retrySec}s)`;
                 try {
                     const body = await response.text();
                     if (body) {
