@@ -174,7 +174,10 @@ async function ajax(url, opts) { // eslint-disable-line complexity
 
     if (opts.headers) {
         for (const key of Object.keys(opts.headers)) {
-            init.headers.set(key, opts.headers[key]);
+            if (opts.headers[key]) {
+                // only set headers with a non-empty value
+                init.headers.set(key, opts.headers[key]);
+            }
         }
     }
 
