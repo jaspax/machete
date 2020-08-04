@@ -184,11 +184,13 @@ async function ajax(url, opts) {
     while (true) { // eslint-disable-line no-constant-condition
         try {
             const response = await window.fetch(url, init);
+            /*
             ga.revent('httpStatusCode', { 
                 status: response.status,
                 statusText: response.statusText,
                 url
             });
+            */
 
             if (!response.ok) {
                 if (retrySec < 60 && shouldRetry(response)) {
