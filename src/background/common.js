@@ -140,9 +140,7 @@ function handleMessageTooLong(ex, req) {
     return false;
 }
 
-let lastSuccessfulEntityId = '';
-
-async function ajax(url, opts) { // eslint-disable-line complexity
+async function ajax(url, opts) {
     const init = {
         method: opts.method,
         headers: new Headers(),
@@ -193,23 +191,12 @@ async function ajax(url, opts) { // eslint-disable-line complexity
             });
 
             if (!response.ok) {
-                if (retrySec < 60 && shouldRetry(response, queryData.entityId, lastSuccessfulEntityId)) {
+                if (retrySec < 60 && shouldRetry(response)) {
                     await sleep(retrySec * 1000);
                     retrySec *= 2;
                     continue;
                 }
-
-                let errorStr = `${response.status} ${response.statusText} (retried ${retrySec}s)`;
-                try {
-                    const body = await response.text();
-                    if (body) {
-                        errorStr += `: ${body.substr(0, 100)}`;
-                    }
-                }
-                catch (ex) {
-                    console.error(ex);
-                }
-                throw new Error(errorStr);
+                throw await makeAjaxError(response, retrySec);
             }
             if (response.redirected) {
                 // this is USUALLY because we got redirected to a login page. In
@@ -217,10 +204,6 @@ async function ajax(url, opts) { // eslint-disable-line complexity
                 // correctly.
                 url += ` (redirected to ${response.url})`;
                 throw new Error('401 Redirect');
-            }
-
-            if (queryData.entityId) {
-                lastSuccessfulEntityId = queryData.entityId;
             }
 
             if (response.status == 204)
@@ -246,8 +229,22 @@ async function ajax(url, opts) { // eslint-disable-line complexity
 // often succeed on retry. Yes, including the 404.
 const retryStatuses = [403, 404, 429, 502];
 
-function shouldRetry(response, currentEntityId, successfulEntityId) {
-    return retryStatuses.includes(Number(response.status)) && currentEntityId === successfulEntityId;
+function shouldRetry(response) {
+    return retryStatuses.includes(Number(response.status));
+}
+
+async function makeAjaxError(response, retrySec) {
+    let errorStr = `${response.status} ${response.statusText} (retried ${retrySec}s)`;
+    try {
+        const body = await response.text();
+        if (body) {
+            errorStr += `: ${body.substr(0, 100)}`;
+        }
+    }
+    catch (ex) {
+        console.error(ex);
+    }
+    throw new Error(errorStr);
 }
 
 module.exports = {
