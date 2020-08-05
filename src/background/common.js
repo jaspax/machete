@@ -193,7 +193,7 @@ async function ajax(url, opts) {
             */
 
             if (!response.ok) {
-                if (retrySec < 60 && shouldRetry(response)) {
+                if (retrySec < 30 && shouldRetry(response)) {
                     await sleep(retrySec * 1000);
                     retrySec *= 2;
                     continue;
