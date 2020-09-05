@@ -198,9 +198,12 @@ module.exports = function(domain, entityId) {
         const elements = template.content.querySelectorAll("[data-entity-id]");
         for (const el of elements) {
             const entityId = el.getAttribute('data-entity-id');
+            const marketplaceId = el.getAttribute('data-marketplace-id');
+            const marketplaceDomain = el.getAttribute('data-marketplace-domain');
             const titleEl = el.querySelector('.item-content-title');
+
             const name = titleEl.innerText.trim();
-            entities.push({ domain, entityId, name, collector: 'cm' });
+            entities.push({ domain, entityId, name, marketplaceId, marketplaceDomain, collector: 'cm' });
         }
 
         return entities;
