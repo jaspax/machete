@@ -21,7 +21,7 @@
   "dependencies": {
     "frozen-moment": "^0.4.0",
     "jquery": "^3.4.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.21",
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.21",
     "qw": "^1.0.1",
